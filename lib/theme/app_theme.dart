@@ -31,6 +31,11 @@ class AppTheme {
         secondary: AppColors.accent,
         surface: AppColors.surface,
         error: AppColors.danger,
+        onPrimary: AppColors.textPrimary,
+        onSecondary: AppColors.textPrimary,
+        onSurface: AppColors.textPrimary,
+        onSurfaceVariant: AppColors.textSecondary,
+        onError: AppColors.textPrimary,
       ),
       textTheme: base.textTheme.apply(
         bodyColor: AppColors.textPrimary,
@@ -52,8 +57,10 @@ class AppTheme {
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: false,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: TextStyle(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w700,

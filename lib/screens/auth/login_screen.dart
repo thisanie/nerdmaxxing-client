@@ -21,7 +21,21 @@ class LoginScreen extends StatelessWidget {
               children: [
                 Icon(Icons.auto_awesome, size: 56, color: AppColors.primary),
                 const SizedBox(height: 24),
-                Text('NerdMaxxing', style: Theme.of(context).textTheme.headlineMedium),
+                RichText(
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    children: const [
+                      TextSpan(
+                        text: 'NERD',
+                        style: TextStyle(color: AppColors.textPrimary),
+                      ),
+                      TextSpan(
+                        text: 'MAXXING',
+                        style: TextStyle(color: AppColors.success),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'The internet should make you more\ninteresting, not more addicted.',

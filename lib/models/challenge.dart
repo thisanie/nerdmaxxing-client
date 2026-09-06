@@ -27,11 +27,11 @@ class ChallengeResource {
   }
 
   Map<String, dynamic> toCreateJson() => {
-        'title': title,
-        'url': url,
-        'resource_type': resourceType,
-        'rationale': rationale,
-      };
+    'title': title,
+    'url': url,
+    'resource_type': resourceType,
+    'rationale': rationale,
+  };
 }
 
 class Challenge {
@@ -48,10 +48,12 @@ class Challenge {
   final String visibility;
   final int? estimatedEffortMinMinutes;
   final int? estimatedEffortMaxMinutes;
+  final int? estimatedDurationMinutes;
   final String verificationType;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? publishedAt;
+  final int? enrollmentCount;
 
   Challenge({
     required this.id,
@@ -67,10 +69,12 @@ class Challenge {
     required this.visibility,
     this.estimatedEffortMinMinutes,
     this.estimatedEffortMaxMinutes,
+    this.estimatedDurationMinutes,
     required this.verificationType,
     this.createdAt,
     this.updatedAt,
     this.publishedAt,
+    this.enrollmentCount,
   });
 
   factory Challenge.fromJson(Map<String, dynamic> json) {
@@ -90,26 +94,57 @@ class Challenge {
       visibility: json['visibility'] ?? 'PUBLIC',
       estimatedEffortMinMinutes: json['estimated_effort_min_minutes'],
       estimatedEffortMaxMinutes: json['estimated_effort_max_minutes'],
+      estimatedDurationMinutes: _readInt(json, const ['estimated_duration_minutes']),
       verificationType: json['verification_type'] ?? 'SELF_REPORTED',
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at']) : null,
-      publishedAt: json['published_at'] != null ? DateTime.tryParse(json['published_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'])
+          : null,
+      publishedAt: json['published_at'] != null
+          ? DateTime.tryParse(json['published_at'])
+          : null,
+      enrollmentCount: _readInt(json, const [
+        'enrollment_count',
+        'participant_count',
+        'joined_count',
+        'participants_count',
+      ]),
     );
   }
 
+  static int? _readInt(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      final parsed = int.tryParse(value?.toString() ?? '');
+      if (parsed != null) return parsed;
+    }
+    return null;
+  }
+
   String get effortLabel {
-    if (estimatedEffortMinMinutes == null && estimatedEffortMaxMinutes == null) {
+    if (estimatedEffortMinMinutes == null &&
+      estimatedEffortMaxMinutes == null &&
+      estimatedDurationMinutes == null) {
       return 'Flexible';
     }
     String fmt(int minutes) {
       if (minutes < 60) return '${minutes}m';
       final h = minutes / 60;
-      return h == h.roundToDouble() ? '${h.round()}h' : '${h.toStringAsFixed(1)}h';
+      return h == h.roundToDouble()
+          ? '${h.round()}h'
+          : '${h.toStringAsFixed(1)}h';
     }
 
-    if (estimatedEffortMinMinutes != null && estimatedEffortMaxMinutes != null) {
+    if (estimatedEffortMinMinutes != null &&
+        estimatedEffortMaxMinutes != null) {
       return '${fmt(estimatedEffortMinMinutes!)} - ${fmt(estimatedEffortMaxMinutes!)}';
     }
-    return fmt(estimatedEffortMinMinutes ?? estimatedEffortMaxMinutes!);
+    return fmt(estimatedEffortMinMinutes ??
+        estimatedEffortMaxMinutes ??
+        estimatedDurationMinutes!);
   }
 }

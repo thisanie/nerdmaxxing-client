@@ -13,10 +13,19 @@ class ApiException implements Exception {
 
 /// Wraps Dio with base URL, auth header injection, and automatic token refresh.
 class ApiClient {
-  static const String baseUrl = String.fromEnvironment(
+  static const String _configuredBaseUrl = String.fromEnvironment(
     'NM_API_BASE_URL',
     defaultValue: 'https://nerdmaxxing-server-seven.vercel.app/api/v1',
   );
+
+  static String get baseUrl {
+    final value = _configuredBaseUrl.replaceFirst(RegExp(r'/+$'), '');
+    final uri = Uri.tryParse(value);
+    if (uri == null || uri.path.isEmpty || uri.path == '/') {
+      return '$value/api/v1';
+    }
+    return value;
+  }
 
   final Dio _dio;
   final TokenStorage tokenStorage;
