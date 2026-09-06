@@ -15,7 +15,7 @@ class ApiException implements Exception {
 class ApiClient {
   static const String baseUrl = String.fromEnvironment(
     'NM_API_BASE_URL',
-    defaultValue: 'http://192.168.1.37:8000/api/v1',
+    defaultValue: 'https://nerdmaxxing-server-seven.vercel.app/api/v1',
   );
 
   final Dio _dio;
