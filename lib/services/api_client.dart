@@ -65,11 +65,24 @@ class ApiClient {
     ));
   }
 
-  bool _refreshing = false;
+  Future<bool>? _refreshFuture;
 
   Future<bool> _tryRefresh() async {
-    if (_refreshing) return false;
-    _refreshing = true;
+    final existingRefresh = _refreshFuture;
+    if (existingRefresh != null) return existingRefresh;
+
+    final refresh = _refreshTokens();
+    _refreshFuture = refresh;
+    try {
+      return await refresh;
+    } finally {
+      if (identical(_refreshFuture, refresh)) {
+        _refreshFuture = null;
+      }
+    }
+  }
+
+  Future<bool> _refreshTokens() async {
     try {
       final refreshToken = await tokenStorage.refreshToken;
       if (refreshToken == null) return false;
@@ -81,15 +94,13 @@ class ApiClient {
       final data = response.data as Map<String, dynamic>;
       final userId = await tokenStorage.userId ?? '';
       await tokenStorage.saveTokens(
-        accessToken: data['access_token'],
-        refreshToken: data['refresh_token'],
+        accessToken: data['access_token'] as String,
+        refreshToken: data['refresh_token'] as String,
         userId: userId,
       );
       return true;
     } catch (_) {
       return false;
-    } finally {
-      _refreshing = false;
     }
   }
 
@@ -108,9 +119,16 @@ class ApiClient {
           message = detail.map((d) => d['msg'] ?? d.toString()).join('\n');
         }
       } else if (e.response == null) {
-        // No response reached the app: connection refused, timeout, or a
-        // CORS-blocked request on web all surface this way.
-        message = 'Could not reach the server. Check your connection or CORS configuration.';
+        final path = e.requestOptions.uri.path;
+        final reason = switch (e.type) {
+          DioExceptionType.connectionTimeout => 'The request timed out while connecting.',
+          DioExceptionType.sendTimeout => 'The request timed out while sending.',
+          DioExceptionType.receiveTimeout => 'The server took too long to respond.',
+          DioExceptionType.connectionError =>
+            'The connection was refused or blocked by CORS.',
+          _ => 'No response was received from the server.',
+        };
+        message = '$reason Request: ${e.requestOptions.method} $path';
       }
       throw ApiException(e.response?.statusCode, message);
     }

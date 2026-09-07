@@ -29,8 +29,10 @@ class ChallengesService {
     required String shortDescription,
     required String fullDescription,
     required String difficultyLevel,
+    required List<String> categoryIds,
     int? estimatedEffortMinMinutes,
     int? estimatedEffortMaxMinutes,
+    int? estimatedDurationMinutes,
     required String verificationType,
   }) async {
     final data = await api.post(
@@ -42,8 +44,10 @@ class ChallengesService {
         'short_description': shortDescription,
         'full_description': fullDescription,
         'difficulty_level': difficultyLevel,
+        'category_ids': categoryIds,
         'estimated_effort_min_minutes': ?estimatedEffortMinMinutes,
         'estimated_effort_max_minutes': ?estimatedEffortMaxMinutes,
+        'estimated_duration_minutes': ?estimatedDurationMinutes,
         'verification_type': verificationType,
       },
     );

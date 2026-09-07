@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
+import '../../models/discover.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
+import '../../services/discover_service.dart';
 import '../../theme/app_theme.dart';
 
 class CreateChallengeScreen extends StatefulWidget {
@@ -22,8 +24,13 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
   final _resourceTitle = TextEditingController();
   final _resourceUrl = TextEditingController();
   final _resourceRationale = TextEditingController();
+  final _effortMin = TextEditingController();
+  final _effortMax = TextEditingController();
+  final _duration = TextEditingController();
 
   String _difficulty = 'BEGINNER';
+  late final Future<DiscoverFeed> _categoriesFuture;
+  String? _selectedCategoryId;
   bool _submitting = false;
   String? _error;
 
@@ -37,14 +44,36 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
       _resourceTitle,
       _resourceUrl,
       _resourceRationale,
+      _effortMin,
+      _effortMax,
+      _duration,
     ]) {
       c.dispose();
     }
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _categoriesFuture = context.read<DiscoverService>().getFeed();
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final effortMin = int.tryParse(_effortMin.text.trim());
+    final effortMax = int.tryParse(_effortMax.text.trim());
+    final duration = int.tryParse(_duration.text.trim());
+    if (_selectedCategoryId == null ||
+        effortMin == null ||
+        effortMax == null ||
+        duration == null ||
+        effortMin < 1 ||
+        effortMax < effortMin ||
+        duration < 1) {
+      setState(() => _error = 'Choose a category and enter valid timing values.');
+      return;
+    }
     setState(() {
       _submitting = true;
       _error = null;
@@ -65,6 +94,10 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
             shortDescription: _shortDescription.text.trim(),
             fullDescription: _fullDescription.text.trim(),
             difficultyLevel: _difficulty,
+            categoryIds: [_selectedCategoryId!],
+            estimatedEffortMinMinutes: effortMin,
+            estimatedEffortMaxMinutes: effortMax,
+            estimatedDurationMinutes: duration,
             verificationType: 'SELF_REPORTED',
           );
       if (!mounted) return;
@@ -119,6 +152,32 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 16),
+            FutureBuilder<DiscoverFeed>(
+              future: _categoriesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const LinearProgressIndicator();
+                }
+                final categories = snapshot.data?.categories ?? const [];
+                if (categories.isEmpty) {
+                  return const Text('No categories are available right now.');
+                }
+                return DropdownButtonFormField<String>(
+                  initialValue: _selectedCategoryId,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: categories
+                      .map((category) => DropdownMenuItem(
+                            value: category.id,
+                            child: Text(category.name),
+                          ))
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => _selectedCategoryId = value),
+                  validator: (value) => value == null ? 'Required' : null,
+                );
+              },
+            ),
+            const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: _difficulty,
               decoration: const InputDecoration(labelText: 'Difficulty'),
@@ -128,6 +187,27 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
                 DropdownMenuItem(value: 'ADVANCED', child: Text('Advanced')),
               ],
               onChanged: (v) => setState(() => _difficulty = v ?? 'BEGINNER'),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _effortMin,
+              decoration: const InputDecoration(labelText: 'Minimum effort (minutes)'),
+              keyboardType: TextInputType.number,
+              validator: _positiveIntegerValidator,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _effortMax,
+              decoration: const InputDecoration(labelText: 'Maximum effort (minutes)'),
+              keyboardType: TextInputType.number,
+              validator: _positiveIntegerValidator,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _duration,
+              decoration: const InputDecoration(labelText: 'Duration (minutes)'),
+              keyboardType: TextInputType.number,
+              validator: _positiveIntegerValidator,
             ),
             const SizedBox(height: 24),
             Text('One resource to get started', style: Theme.of(context).textTheme.titleLarge),
@@ -165,5 +245,10 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
         ),
       ),
     );
+  }
+
+  String? _positiveIntegerValidator(String? value) {
+    final minutes = int.tryParse(value?.trim() ?? '');
+    return minutes == null || minutes < 1 ? 'Enter a positive number' : null;
   }
 }
