@@ -15,8 +15,10 @@ class ApiException implements Exception {
 class ApiClient {
   static const String _configuredBaseUrl = String.fromEnvironment(
     'NM_API_BASE_URL',
-    defaultValue: 'https://nerdmaxxing-server-seven.vercel.app/api/v1',
+      defaultValue: "http://127.0.0.1:8000/api/v1"
+    
   );
+  // defaultValue: 'https://nerdmaxxing-server-seven.vercel.app/api/v1',
 
   static String get baseUrl {
     final value = _configuredBaseUrl.replaceFirst(RegExp(r'/+$'), '');

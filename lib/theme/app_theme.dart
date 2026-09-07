@@ -42,17 +42,23 @@ class AppTheme {
         displayColor: AppColors.textPrimary,
       ).copyWith(
         headlineMedium: const TextStyle(
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w700,
           fontSize: 28,
           height: 1.15,
           letterSpacing: -0.5,
         ),
         headlineSmall: const TextStyle(
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w700,
           fontSize: 22,
           letterSpacing: -0.3,
         ),
-        titleLarge: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+        titleLarge: const TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
+        ),
         bodyMedium: const TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.4),
       ),
       appBarTheme: const AppBarTheme(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/auth_provider.dart';
 import '../../providers/skills_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
@@ -14,8 +13,6 @@ class SkillsScreen extends StatefulWidget {
 }
 
 class _SkillsScreenState extends State<SkillsScreen> {
-  bool _isSigningOut = false;
-
   @override
   void initState() {
     super.initState();
@@ -29,54 +26,9 @@ class _SkillsScreenState extends State<SkillsScreen> {
     final provider = context.watch<SkillsProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Skills'),
-        actions: [
-          PopupMenuButton<String>(
-            enabled: !_isSigningOut,
-            tooltip: 'Account options',
-            onSelected: (value) {
-              if (value == 'logout') _confirmLogout();
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem<String>(
-                value: 'logout',
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.logout),
-                  title: Text('Log out'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Skills')),
       body: _buildBody(provider),
     );
-  }
-
-  Future<void> _confirmLogout() async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Log out?'),
-        content: const Text('You will need to sign in again to access your account.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Log out'),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldLogout != true || !mounted) return;
-    setState(() => _isSigningOut = true);
-    await context.read<AuthProvider>().signOut();
   }
 
   Widget _buildBody(SkillsProvider provider) {

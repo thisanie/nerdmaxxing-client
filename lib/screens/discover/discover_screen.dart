@@ -10,14 +10,14 @@ import '../challenge/challenge_detail_screen.dart';
 import '../challenge/create_challenge_screen.dart';
 import 'category_challenges_screen.dart';
 
-class DiscoverScreen extends StatefulWidget {
-  const DiscoverScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<DiscoverScreen> createState() => _DiscoverScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _DiscoverScreenState extends State<DiscoverScreen> {
+class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
@@ -40,7 +40,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           slivers: [
             SliverAppBar(
               floating: true,
-              title: const Text('Discover'),
+              title: const Text('Home'),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.add),
