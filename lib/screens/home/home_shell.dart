@@ -50,9 +50,15 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _index == 0,
+      canPop:
+          _index == 0 &&
+          !(_navigatorKeys[_index].currentState?.canPop() ?? false),
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _index != 0) {
+        if (didPop) return;
+        final navigator = _navigatorKeys[_index].currentState;
+        if (navigator?.canPop() ?? false) {
+          navigator!.pop();
+        } else if (_index != 0) {
           setState(() => _index = 0);
         }
       },

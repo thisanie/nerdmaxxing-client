@@ -24,6 +24,11 @@ class ProfileService {
     return (data as List).map((e) => Challenge.fromJson(e)).toList();
   }
 
+  Future<List<Challenge>> listMyCreatedChallenges() async {
+    final data = await api.get('/users/me/challenges/created');
+    return (data as List).map((e) => Challenge.fromJson(e)).toList();
+  }
+
   Future<List<Challenge>> listCompletedChallenges(String username) async {
     final data = await api.get('/users/$username/challenges/completed');
     return (data as List).map((e) => Challenge.fromJson(e)).toList();

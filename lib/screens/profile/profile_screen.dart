@@ -8,6 +8,7 @@ import '../../models/participation.dart';
 import '../../providers/participation_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../services/api_client.dart';
+import '../../services/challenges_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
@@ -39,6 +40,7 @@ class _ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<_ProfileScreen> {
   bool _isSigningOut = false;
   bool _isFollowBusy = false;
+  Map<String, Challenge> _challengesById = {};
 
   @override
   void initState() {
@@ -51,6 +53,7 @@ class _ProfileScreenState extends State<_ProfileScreen> {
     final username = widget.username ?? auth.username;
     if (username != null && username.isNotEmpty) {
       final isOwnProfile = widget.username == null || username == auth.username;
+      final challengesService = context.read<ChallengesService>();
       await Future.wait([
         context.read<ProfileProvider>().load(
           username,
@@ -58,6 +61,19 @@ class _ProfileScreenState extends State<_ProfileScreen> {
         ),
         if (isOwnProfile) context.read<ParticipationProvider>().load(),
       ]);
+      if (isOwnProfile) {
+        try {
+          final challenges = await challengesService.list(limit: 100);
+          if (!mounted) return;
+          setState(() {
+            _challengesById = {
+              for (final challenge in challenges) challenge.id: challenge,
+            };
+          });
+        } catch (_) {
+          // Participation cards still show their IDs if the catalog is unavailable.
+        }
+      }
     }
   }
 
@@ -143,16 +159,29 @@ class _ProfileScreenState extends State<_ProfileScreen> {
     final isOwnProfile = _isOwnProfile(auth);
 
     if (provider.isLoading && profile == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: RefreshIndicator(
+          onRefresh: _load,
+          child: _RefreshableState(child: const CircularProgressIndicator()),
+        ),
+      );
     }
     if (provider.errorMessage != null && profile == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Profile')),
-        body: Center(child: Text(provider.errorMessage!)),
+        body: RefreshIndicator(
+          onRefresh: _load,
+          child: _RefreshableState(child: Text(provider.errorMessage!)),
+        ),
       );
     }
     if (profile == null) {
-      return const Scaffold(body: Center(child: Text('Profile unavailable')));
+      return Scaffold(
+        body: RefreshIndicator(
+          onRefresh: _load,
+          child: const _RefreshableState(child: Text('Profile unavailable')),
+        ),
+      );
     }
 
     return Scaffold(
@@ -265,6 +294,31 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
                   child: Text(
+                    'Created challenges',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ),
+              if (provider.createdChallenges.isEmpty)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                    child: Text('No challenges created yet.'),
+                  ),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _CreatedChallengeTile(
+                      challenge: provider.createdChallenges[index],
+                    ),
+                    childCount: provider.createdChallenges.length,
+                  ),
+                ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+                  child: Text(
                     'My challenges',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
@@ -293,6 +347,10 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                     (context, index) => _ParticipationTile(
                       participation:
                           participationProvider.participations[index],
+                      challenge:
+                          _challengesById[participationProvider
+                              .participations[index]
+                              .challengeId],
                       statusLabel: _statusLabel(
                         participationProvider.participations[index].status,
                       ),
@@ -354,6 +412,25 @@ class _ProfileScreenState extends State<_ProfileScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RefreshableState extends StatelessWidget {
+  final Widget child;
+
+  const _RefreshableState({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.7,
+          child: Center(child: child),
+        ),
+      ],
     );
   }
 }
@@ -500,12 +577,14 @@ class _ProfileChip extends StatelessWidget {
 
 class _ParticipationTile extends StatelessWidget {
   final Participation participation;
+  final Challenge? challenge;
   final String statusLabel;
   final Future<void> Function(Participation participation, String status)
   onChangeStatus;
 
   const _ParticipationTile({
     required this.participation,
+    required this.challenge,
     required this.statusLabel,
     required this.onChangeStatus,
   });
@@ -519,42 +598,98 @@ class _ParticipationTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Challenge $shortId${challengeId.length > 6 ? '...' : ''}',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+        child: InkWell(
+          onTap: challenge == null
+              ? null
+              : () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ChallengeDetailScreen(
+                      slug: challenge!.slug,
+                      initialChallenge: challenge,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      statusLabel,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ],
+                  ),
                 ),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        challenge?.title ??
+                            'Challenge $shortId${challengeId.length > 6 ? '...' : ''}',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        statusLabel,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                if (challenge != null)
+                  const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textSecondary,
+                  ),
+                if (participation.status == 'ACCEPTED')
+                  TextButton(
+                    onPressed: () =>
+                        onChangeStatus(participation, 'IN_PROGRESS'),
+                    child: const Text('Start'),
+                  ),
+                if (participation.status == 'IN_PROGRESS')
+                  TextButton(
+                    onPressed: () => onChangeStatus(participation, 'PAUSED'),
+                    child: const Text('Pause'),
+                  ),
+                if (participation.status == 'PAUSED')
+                  TextButton(
+                    onPressed: () =>
+                        onChangeStatus(participation, 'IN_PROGRESS'),
+                    child: const Text('Resume'),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CreatedChallengeTile extends StatelessWidget {
+  final Challenge challenge;
+
+  const _CreatedChallengeTile({required this.challenge});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      child: Card(
+        child: InkWell(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ChallengeDetailScreen(
+                slug: challenge.slug,
+                initialChallenge: challenge,
               ),
-              if (participation.status == 'ACCEPTED')
-                TextButton(
-                  onPressed: () => onChangeStatus(participation, 'IN_PROGRESS'),
-                  child: const Text('Start'),
-                ),
-              if (participation.status == 'IN_PROGRESS')
-                TextButton(
-                  onPressed: () => onChangeStatus(participation, 'PAUSED'),
-                  child: const Text('Pause'),
-                ),
-              if (participation.status == 'PAUSED')
-                TextButton(
-                  onPressed: () => onChangeStatus(participation, 'IN_PROGRESS'),
-                  child: const Text('Resume'),
-                ),
-            ],
+            ),
+          ),
+          borderRadius: BorderRadius.circular(12),
+          child: ListTile(
+            leading: const Icon(Icons.edit_note, color: AppColors.accent),
+            title: Text(challenge.title),
+            subtitle: Text(
+              '${challenge.status} • ${challenge.visibility}',
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            trailing: const Icon(Icons.chevron_right),
           ),
         ),
       ),

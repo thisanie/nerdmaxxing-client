@@ -10,6 +10,7 @@ class ProfileProvider extends ChangeNotifier {
 
   UserProfile? profile;
   List<Challenge> completedChallenges = [];
+  List<Challenge> createdChallenges = [];
   bool isOwnProfile = false;
   bool isLoading = false;
   String? errorMessage;
@@ -28,6 +29,9 @@ class ProfileProvider extends ChangeNotifier {
       completedChallenges = isOwnProfile
           ? await service.listMyCompletedChallenges()
           : await service.listCompletedChallenges(username);
+      createdChallenges = isOwnProfile
+          ? await service.listMyCreatedChallenges()
+          : [];
     } catch (e) {
       errorMessage = e.toString();
     } finally {

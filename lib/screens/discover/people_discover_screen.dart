@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/challenge.dart';
 import '../../models/user_profile.dart';
 import '../../services/api_client.dart';
+import '../../services/challenges_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/challenge_card.dart';
+import '../challenge/challenge_detail_screen.dart';
 import '../profile/profile_screen.dart';
 
 class PeopleDiscoverScreen extends StatefulWidget {
@@ -17,6 +21,7 @@ class PeopleDiscoverScreen extends StatefulWidget {
 class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
   final _usernameController = TextEditingController();
   UserProfile? _profile;
+  List<Challenge> _challenges = [];
   String? _errorMessage;
   bool _isLoading = false;
 
@@ -34,17 +39,50 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
       _isLoading = true;
       _errorMessage = null;
       _profile = null;
+      _challenges = [];
     });
-    try {
-      final profile = await context.read<ProfileService>().getProfile(username);
-      if (!mounted) return;
-      setState(() => _profile = profile);
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() => _errorMessage = e.message);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    UserProfile? profile;
+    List<Challenge> challenges = [];
+    String? profileError;
+    String? challengeError;
+
+    await Future.wait([
+      () async {
+        try {
+          profile = await context.read<ProfileService>().getProfile(username);
+        } on ApiException catch (e) {
+          profileError = e.message;
+        }
+      }(),
+      () async {
+        try {
+          final results = await context.read<ChallengesService>().list(
+            limit: 100,
+          );
+          final query = username.toLowerCase();
+          challenges = results.where((challenge) {
+            final searchable = [
+              challenge.title,
+              challenge.shortDescription,
+              challenge.fullDescription,
+            ].join(' ').toLowerCase();
+            return searchable.contains(query);
+          }).toList();
+        } on ApiException catch (e) {
+          challengeError = e.message;
+        }
+      }(),
+    ]);
+
+    if (!mounted) return;
+    setState(() {
+      _profile = profile;
+      _challenges = challenges;
+      _errorMessage = profile == null && challenges.isEmpty
+          ? challengeError ?? profileError ?? 'No matching results found.'
+          : null;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -59,7 +97,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _search(),
             decoration: InputDecoration(
-              hintText: 'Search people by username',
+              hintText: 'Search people or challenges',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
                 tooltip: 'Search',
@@ -80,13 +118,37 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
               _errorMessage!,
               style: const TextStyle(color: AppColors.danger),
             )
-          else if (_profile != null)
-            _ProfileResult(profile: _profile!)
-          else
+          else if (_profile == null && _challenges.isEmpty)
             const Text(
-              'Find people and explore what they have completed.',
+              'Search for people by username or find a challenge by title.',
               style: TextStyle(color: AppColors.textSecondary),
-            ),
+            )
+          else ...[
+            if (_profile != null) ...[
+              Text('People', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 10),
+              _ProfileResult(profile: _profile!),
+              const SizedBox(height: 24),
+            ],
+            if (_challenges.isNotEmpty) ...[
+              Text('Challenges', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 10),
+              ..._challenges.map(
+                (challenge) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: ChallengeCard(
+                    challenge: challenge,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ChallengeDetailScreen(slug: challenge.slug),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );

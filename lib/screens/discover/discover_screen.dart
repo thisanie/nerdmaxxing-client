@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/discover_provider.dart';
 import '../../providers/participation_provider.dart';
 import '../../models/participation.dart';
+import '../../services/challenges_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/challenge_section.dart';
@@ -24,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _profile;
+  Map<String, Challenge> _challengesById = {};
 
   @override
   void initState() {
@@ -40,13 +42,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final profileFuture = username != null && username.isNotEmpty
         ? context.read<ProfileService>().getProfile(username)
         : null;
+    final challengesFuture = context.read<ChallengesService>().list(limit: 100);
     try {
       await context.read<ParticipationProvider>().load();
       final profile = profileFuture == null ? null : await profileFuture;
+      final challenges = await challengesFuture;
       if (!mounted) return;
-      if (profile != null) {
-        setState(() => _profile = profile);
-      }
+      setState(() {
+        _profile = profile ?? _profile;
+        _challengesById = {
+          for (final challenge in challenges) challenge.id: challenge,
+        };
+      });
     } catch (_) {
       // The discovery feed remains usable if the home summary is unavailable.
     }
@@ -82,7 +89,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             SliverToBoxAdapter(child: _HomeHero(profile: _profile)),
-            SliverToBoxAdapter(child: _AttemptingChallenges()),
+            SliverToBoxAdapter(
+              child: _AttemptingChallenges(challengesById: _challengesById),
+            ),
             if (provider.isLoading &&
                 provider.feed.featured == null &&
                 _isEmpty(provider))
@@ -255,7 +264,9 @@ class _HomeHero extends StatelessWidget {
 }
 
 class _AttemptingChallenges extends StatelessWidget {
-  const _AttemptingChallenges();
+  final Map<String, Challenge> challengesById;
+
+  const _AttemptingChallenges({required this.challengesById});
 
   String _statusLabel(String status) {
     switch (status) {
@@ -297,6 +308,7 @@ class _AttemptingChallenges extends StatelessWidget {
                 (participation) => _AttemptingTile(
                   participation: participation,
                   statusLabel: _statusLabel(participation.status),
+                  challenge: challengesById[participation.challengeId],
                 ),
               ),
         ],
@@ -308,9 +320,11 @@ class _AttemptingChallenges extends StatelessWidget {
 class _AttemptingTile extends StatelessWidget {
   final Participation participation;
   final String statusLabel;
+  final Challenge? challenge;
   const _AttemptingTile({
     required this.participation,
     required this.statusLabel,
+    required this.challenge,
   });
 
   @override
@@ -324,9 +338,19 @@ class _AttemptingTile extends StatelessWidget {
           backgroundColor: AppColors.surfaceAlt,
           child: Icon(Icons.flag_outlined, color: AppColors.primary),
         ),
-        title: Text('Challenge $shortId'),
+        title: Text(challenge?.title ?? 'Challenge $shortId'),
         subtitle: Text(statusLabel),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+        onTap: challenge == null
+            ? null
+            : () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ChallengeDetailScreen(
+                    slug: challenge!.slug,
+                    initialChallenge: challenge,
+                  ),
+                ),
+              ),
       ),
     );
   }
