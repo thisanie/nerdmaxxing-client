@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/challenges_provider.dart';
 import 'providers/participation_provider.dart';
-import 'providers/profile_provider.dart';
 import 'providers/skills_provider.dart';
 import 'screens/auth_gate.dart';
 import 'services/api_client.dart';
@@ -64,9 +63,6 @@ class NerdMaxxingApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) =>
               ParticipationProvider(context.read<ParticipationService>()),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => ProfileProvider(context.read<ProfileService>()),
         ),
         ChangeNotifierProvider(
           create: (context) => SkillsProvider(context.read<SkillsService>()),

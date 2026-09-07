@@ -8,20 +8,37 @@ import '../../models/participation.dart';
 import '../../providers/participation_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../services/api_client.dart';
+import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
 import '../challenge/challenge_detail_screen.dart';
+import 'relationship_list_screen.dart';
+import 'update_profile_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   final String? username;
   const ProfileScreen({super.key, this.username});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => ProfileProvider(context.read<ProfileService>()),
+      child: _ProfileScreen(username: username),
+    );
+  }
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreen extends StatefulWidget {
+  final String? username;
+  const _ProfileScreen({this.username});
+
+  @override
+  State<_ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<_ProfileScreen> {
   bool _isSigningOut = false;
+  bool _isFollowBusy = false;
 
   @override
   void initState() {
@@ -103,6 +120,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _toggleFollow() async {
+    if (_isFollowBusy) return;
+    setState(() => _isFollowBusy = true);
+    try {
+      await context.read<ProfileProvider>().toggleFollow();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _isFollowBusy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProfileProvider>();
@@ -138,11 +169,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (_isOwnProfile(auth))
                   PopupMenuButton<String>(
                     enabled: !_isSigningOut,
+                    icon: const Icon(Icons.menu),
                     tooltip: 'Account options',
                     onSelected: (value) {
-                      if (value == 'logout') _confirmLogout();
+                      if (value == 'update') {
+                        Navigator.of(context)
+                            .push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    UpdateProfileScreen(profile: profile),
+                              ),
+                            )
+                            .then((updated) {
+                              if (updated == true && mounted) _load();
+                            });
+                      } else if (value == 'logout') {
+                        _confirmLogout();
+                      }
                     },
                     itemBuilder: (context) => const [
+                      PopupMenuItem<String>(
+                        value: 'update',
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.edit_outlined),
+                          title: Text('Update profile'),
+                        ),
+                      ),
                       PopupMenuItem<String>(
                         value: 'logout',
                         child: ListTile(
@@ -155,7 +208,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
               ],
             ),
-            SliverToBoxAdapter(child: _ProfileHeader(profile: profile)),
+            SliverToBoxAdapter(
+              child: _ProfileHeader(
+                profile: profile,
+                onFollowersTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RelationshipListScreen(
+                      userId: profile.id,
+                      type: RelationshipType.followers,
+                    ),
+                  ),
+                ),
+                onFollowingTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RelationshipListScreen(
+                      userId: profile.id,
+                      type: RelationshipType.following,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (!isOwnProfile)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _isFollowBusy ? null : _toggleFollow,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                      ),
+                      icon: _isFollowBusy
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Icon(
+                              profile.isFollowing
+                                  ? Icons.person_remove_outlined
+                                  : Icons.person_add_outlined,
+                            ),
+                      label: Text(profile.isFollowing ? 'Following' : 'Follow'),
+                    ),
+                  ),
+                ),
+              ),
             if (isOwnProfile) ...[
               SliverToBoxAdapter(
                 child: Padding(
@@ -222,7 +326,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(32),
                   child: Center(
                     child: Text(
-                      provider.isOwnProfile ? 'No completed challenges yet.' : 'Completed challenges are not available on public profiles yet.',
+                      'No completed challenges yet.',
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -256,7 +360,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 class _ProfileHeader extends StatelessWidget {
   final UserProfile profile;
-  const _ProfileHeader({required this.profile});
+  final VoidCallback onFollowersTap;
+  final VoidCallback onFollowingTap;
+
+  const _ProfileHeader({
+    required this.profile,
+    required this.onFollowersTap,
+    required this.onFollowingTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -289,10 +400,18 @@ class _ProfileHeader extends StatelessWidget {
                   children: [
                     _Stat(
                       value: profile.completedChallengesCount,
-                      label: 'completed',
+                      label: 'skills',
                     ),
-                    _Stat(value: profile.followerCount, label: 'followers'),
-                    _Stat(value: profile.followingCount, label: 'following'),
+                    _Stat(
+                      value: profile.followerCount,
+                      label: 'followers',
+                      onTap: onFollowersTap,
+                    ),
+                    _Stat(
+                      value: profile.followingCount,
+                      label: 'following',
+                      onTap: onFollowingTap,
+                    ),
                   ],
                 ),
               ),
@@ -331,22 +450,34 @@ class _ProfileHeader extends StatelessWidget {
 class _Stat extends StatelessWidget {
   final int value;
   final String label;
-  const _Stat({required this.value, required this.label});
+  final VoidCallback? onTap;
+
+  const _Stat({required this.value, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          '$value',
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          children: [
+            Text(
+              '$value',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 3),
-        Text(
-          label,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -16,6 +16,24 @@ class ProfileSkill {
   }
 }
 
+class UserSummary {
+  final String id;
+  final String? username;
+  final String? name;
+  final String? avatarUrl;
+
+  UserSummary({required this.id, this.username, this.name, this.avatarUrl});
+
+  factory UserSummary.fromJson(Map<String, dynamic> json) {
+    return UserSummary(
+      id: json['id']?.toString() ?? '',
+      username: json['username'],
+      name: json['name'],
+      avatarUrl: json['avatar_url'],
+    );
+  }
+}
+
 class UserProfile {
   final String id;
   final String? username;
@@ -66,6 +84,24 @@ class UserProfile {
           .map((e) => ProfileSkill.fromJson(e))
           .toList(),
       isFollowing: json['is_following'] ?? false,
+    );
+  }
+
+  UserProfile copyWith({bool? isFollowing, int? followerCount}) {
+    return UserProfile(
+      id: id,
+      username: username,
+      name: name,
+      bio: bio,
+      avatarUrl: avatarUrl,
+      auraPoints: auraPoints,
+      followerCount: followerCount ?? this.followerCount,
+      followingCount: followingCount,
+      skillsCount: skillsCount,
+      completedChallengesCount: completedChallengesCount,
+      createdChallengesCount: createdChallengesCount,
+      skills: skills,
+      isFollowing: isFollowing ?? this.isFollowing,
     );
   }
 }

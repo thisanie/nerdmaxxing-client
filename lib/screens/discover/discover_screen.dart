@@ -3,7 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
 import '../../models/discover.dart';
+import '../../models/user_profile.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/discover_provider.dart';
+import '../../providers/participation_provider.dart';
+import '../../models/participation.dart';
+import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/challenge_section.dart';
 import '../challenge/challenge_detail_screen.dart';
@@ -18,12 +23,33 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  UserProfile? _profile;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DiscoverProvider>().load();
+      _loadHomeData();
     });
+  }
+
+  Future<void> _loadHomeData() async {
+    final auth = context.read<AuthProvider>();
+    final username = auth.username;
+    final profileFuture = username != null && username.isNotEmpty
+        ? context.read<ProfileService>().getProfile(username)
+        : null;
+    try {
+      await context.read<ParticipationProvider>().load();
+      final profile = profileFuture == null ? null : await profileFuture;
+      if (!mounted) return;
+      if (profile != null) {
+        setState(() => _profile = profile);
+      }
+    } catch (_) {
+      // The discovery feed remains usable if the home summary is unavailable.
+    }
   }
 
   @override
@@ -32,7 +58,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       body: RefreshIndicator(
-        onRefresh: provider.load,
+        onRefresh: () async {
+          await Future.wait([provider.load(), _loadHomeData()]);
+        },
         color: AppColors.primary,
         backgroundColor: AppColors.surface,
         child: CustomScrollView(
@@ -53,6 +81,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+            SliverToBoxAdapter(child: _HomeHero(profile: _profile)),
+            SliverToBoxAdapter(child: _AttemptingChallenges()),
             if (provider.isLoading &&
                 provider.feed.featured == null &&
                 _isEmpty(provider))
@@ -145,6 +175,158 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CategoryChallengesScreen(name: title, slug: null),
+      ),
+    );
+  }
+}
+
+class _HomeHero extends StatelessWidget {
+  final UserProfile? profile;
+  const _HomeHero({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final greetingName =
+        profile?.name ?? auth.displayName ?? auth.username ?? 'NerdMaxxer';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'WELCOME BACK',
+                    style: TextStyle(
+                      color: AppColors.accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Good to see you, $greetingName.',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Keep learning. Keep levelling up.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              children: [
+                const Icon(Icons.bolt, color: AppColors.warning, size: 28),
+                const SizedBox(height: 3),
+                Text(
+                  '${profile?.auraPoints ?? 0}',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Text(
+                  'aura',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AttemptingChallenges extends StatelessWidget {
+  const _AttemptingChallenges();
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'ACCEPTED':
+        return 'Accepted';
+      case 'IN_PROGRESS':
+        return 'In progress';
+      case 'PAUSED':
+        return 'Paused';
+      case 'SUBMITTED':
+        return 'Submitted';
+      default:
+        return status;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = context
+        .watch<ParticipationProvider>()
+        .participations
+        .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
+        .toList();
+    if (active.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Currently attempting',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 12),
+          ...active
+              .take(3)
+              .map(
+                (participation) => _AttemptingTile(
+                  participation: participation,
+                  statusLabel: _statusLabel(participation.status),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttemptingTile extends StatelessWidget {
+  final Participation participation;
+  final String statusLabel;
+  const _AttemptingTile({
+    required this.participation,
+    required this.statusLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final id = participation.challengeId;
+    final shortId = id.length > 8 ? '${id.substring(0, 8)}...' : id;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: const CircleAvatar(
+          backgroundColor: AppColors.surfaceAlt,
+          child: Icon(Icons.flag_outlined, color: AppColors.primary),
+        ),
+        title: Text('Challenge $shortId'),
+        subtitle: Text(statusLabel),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
       ),
     );
   }
