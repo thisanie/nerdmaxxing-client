@@ -550,6 +550,7 @@ class _Stat extends StatelessWidget {
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],

@@ -34,6 +34,8 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
   Future<void> _search() async {
     final username = _usernameController.text.trim();
     if (username.isEmpty) return;
+    final profileService = context.read<ProfileService>();
+    final challengesService = context.read<ChallengesService>();
 
     setState(() {
       _isLoading = true;
@@ -49,27 +51,49 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
     await Future.wait([
       () async {
         try {
-          profile = await context.read<ProfileService>().getProfile(username);
+          profile = await profileService.getProfile(username);
         } on ApiException catch (e) {
           profileError = e.message;
         }
       }(),
       () async {
+        final query = username.toLowerCase();
+        final matches = <Challenge>[];
         try {
-          final results = await context.read<ChallengesService>().list(
-            limit: 100,
+          final results = await challengesService.list(limit: 100);
+          matches.addAll(
+            results.where((challenge) {
+              final searchable = [
+                challenge.title,
+                challenge.shortDescription,
+                challenge.fullDescription,
+              ].join(' ').toLowerCase();
+              return searchable.contains(query);
+            }),
           );
-          final query = username.toLowerCase();
-          challenges = results.where((challenge) {
-            final searchable = [
-              challenge.title,
-              challenge.shortDescription,
-              challenge.fullDescription,
-            ].join(' ').toLowerCase();
-            return searchable.contains(query);
-          }).toList();
         } on ApiException catch (e) {
           challengeError = e.message;
+        }
+        try {
+          final created = await profileService.listMyCreatedChallenges();
+          matches.addAll(
+            created.where((challenge) {
+              final searchable = [
+                challenge.title,
+                challenge.shortDescription,
+                challenge.fullDescription,
+              ].join(' ').toLowerCase();
+              return searchable.contains(query);
+            }),
+          );
+        } on ApiException catch (e) {
+          challengeError ??= e.message;
+        }
+        if (matches.isNotEmpty) {
+          final unique = <String, Challenge>{
+            for (final challenge in matches) challenge.id: challenge,
+          };
+          challenges = unique.values.toList();
         }
       }(),
     ]);
@@ -140,8 +164,10 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                     challenge: challenge,
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) =>
-                            ChallengeDetailScreen(slug: challenge.slug),
+                        builder: (_) => ChallengeDetailScreen(
+                          slug: challenge.slug,
+                          initialChallenge: challenge,
+                        ),
                       ),
                     ),
                   ),
