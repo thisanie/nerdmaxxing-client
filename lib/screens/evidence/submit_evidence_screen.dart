@@ -40,10 +40,10 @@ class _SubmitEvidenceScreenState extends State<SubmitEvidenceScreen> {
     });
     try {
       final submission = await context.read<EvidenceService>().submit(
-            widget.participation.id,
-            explanation: _explanation.text.trim(),
-            externalUrl: _link.text.trim(),
-          );
+        widget.participation.id,
+        explanation: _explanation.text.trim(),
+        externalUrl: _link.text.trim(),
+      );
       if (!mounted) return;
       setState(() => _submission = submission);
     } on ApiException catch (e) {
@@ -70,7 +70,10 @@ class _SubmitEvidenceScreenState extends State<SubmitEvidenceScreen> {
           title: const Text('Challenge Complete'),
           content: const Text('You earned a new skill.'),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Nice')),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Nice'),
+            ),
           ],
         ),
       );
@@ -105,13 +108,18 @@ class _SubmitEvidenceScreenState extends State<SubmitEvidenceScreen> {
           TextFormField(
             controller: _explanation,
             maxLines: 4,
-            decoration: const InputDecoration(labelText: 'What did you complete?'),
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+            decoration: const InputDecoration(
+              labelText: 'What did you complete?',
+            ),
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Required' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _link,
-            decoration: const InputDecoration(labelText: 'Link to your work (optional)'),
+            decoration: const InputDecoration(
+              labelText: 'Link to your work (optional)',
+            ),
           ),
           if (_error != null) ...[
             const SizedBox(height: 16),
@@ -131,9 +139,16 @@ class _SubmitEvidenceScreenState extends State<SubmitEvidenceScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.check_circle_outline, size: 48, color: AppColors.success),
+        const Icon(
+          Icons.check_circle_outline,
+          size: 48,
+          color: AppColors.success,
+        ),
         const SizedBox(height: 16),
-        Text('Evidence submitted', style: Theme.of(context).textTheme.headlineSmall),
+        Text(
+          'Evidence submitted',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         const SizedBox(height: 8),
         Text(
           'Confirm you completed this challenge to earn your skill.',

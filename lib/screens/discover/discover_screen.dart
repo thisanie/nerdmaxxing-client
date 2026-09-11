@@ -2,19 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
-import '../../models/discover.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/discover_provider.dart';
 import '../../providers/participation_provider.dart';
 import '../../models/participation.dart';
 import '../../services/challenges_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/challenge_section.dart';
 import '../challenge/challenge_detail_screen.dart';
-import '../challenge/create_challenge_screen.dart';
-import 'category_challenges_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DiscoverProvider>().load();
       _loadHomeData();
     });
   }
@@ -61,449 +55,599 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<DiscoverProvider>();
+    final auth = context.watch<AuthProvider>();
+    final participation = context.watch<ParticipationProvider>();
+    final name = _profile?.name ?? auth.displayName ?? auth.username ?? 'Pablo';
+    final active = participation.participations
+        .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
+        .take(2)
+        .toList();
+    final completed = _profile?.completedChallengesCount ?? 0;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        toolbarHeight: 60,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        titleSpacing: 20,
+        title: _HomeBrandHeader(
+          onNotificationsTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Notifications coming soon')),
+            );
+          },
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await Future.wait([provider.load(), _loadHomeData()]);
+          await _loadHomeData();
         },
         color: AppColors.primary,
         backgroundColor: AppColors.surface,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverAppBar(
-              floating: true,
-              title: const Text('Home'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: 'Create a challenge',
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const CreateChallengeScreen(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SliverToBoxAdapter(child: _HomeHero(profile: _profile)),
             SliverToBoxAdapter(
-              child: _AttemptingChallenges(challengesById: _challengesById),
-            ),
-            if (provider.isLoading &&
-                provider.feed.featured == null &&
-                _isEmpty(provider))
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (provider.errorMessage != null && _isEmpty(provider))
-              SliverFillRemaining(
-                child: _ErrorState(
-                  message: provider.errorMessage!,
-                  onRetry: provider.load,
-                ),
-              )
-            else ...[
-              if (provider.feed.featured != null)
-                SliverToBoxAdapter(
-                  child: _FeaturedChallenge(challenge: provider.feed.featured!),
-                ),
-              SliverToBoxAdapter(
-                child: CategorySection(
-                  categories: provider.feed.categories,
-                  onTap: _openCategory,
-                ),
-              ),
-              _section('Trending Now', provider.feed.trending, seeAll: true),
-              _section(
-                'New Challenges',
-                provider.feed.newChallenges,
-                seeAll: true,
-              ),
-              _section('Because You Completed...', provider.feed.recommended),
-              _section(
-                'Legendary Challenges',
-                provider.feed.legendary,
-                legendary: true,
-              ),
-              _section('Explore the Unexpected', provider.feed.unexpected),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  bool _isEmpty(DiscoverProvider provider) =>
-      provider.feed.featured == null &&
-      provider.feed.trending.isEmpty &&
-      provider.feed.categories.isEmpty &&
-      provider.feed.newChallenges.isEmpty &&
-      provider.feed.recommended.isEmpty &&
-      provider.feed.legendary.isEmpty &&
-      provider.feed.unexpected.isEmpty;
-
-  Widget _section(
-    String title,
-    List<Challenge> challenges, {
-    bool seeAll = false,
-    bool legendary = false,
-  }) {
-    return SliverToBoxAdapter(
-      child: ChallengeSection(
-        title: title,
-        challenges: challenges,
-        legendary: legendary,
-        onSeeAll: seeAll ? () => _openAll(title) : null,
-        onChallengeTap: _openChallenge,
-      ),
-    );
-  }
-
-  void _openChallenge(Challenge challenge) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChallengeDetailScreen(slug: challenge.slug),
-      ),
-    );
-  }
-
-  void _openCategory(DiscoverCategory category) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            CategoryChallengesScreen(name: category.name, slug: category.slug),
-      ),
-    );
-  }
-
-  void _openAll(String title) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CategoryChallengesScreen(name: title, slug: null),
-      ),
-    );
-  }
-}
-
-class _HomeHero extends StatelessWidget {
-  final UserProfile? profile;
-  const _HomeHero({required this.profile});
-
-  @override
-  Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final greetingName =
-        profile?.name ?? auth.displayName ?? auth.username ?? 'NerdMaxxer';
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-      child: Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'WELCOME BACK',
-                    style: TextStyle(
-                      color: AppColors.accent,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.2,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _Greeting(name: name, aura: _profile?.auraPoints ?? 0),
+                    const SizedBox(height: 18),
+                    _StatsRow(
+                      active: active.length,
+                      completed: completed,
+                      streak: 4,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Good to see you, $greetingName.',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Keep learning. Keep levelling up.',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    const _SectionTitle('Continue where you left off'),
+                    const SizedBox(height: 8),
+                    _ResumeCard(
+                      challenge: active.isNotEmpty
+                          ? _challengesById[active.first.challengeId]
+                          : null,
+                      onTap: active.isNotEmpty
+                          ? () => _openParticipation(active.first)
+                          : null,
+                    ),
+                    const SizedBox(height: 24),
+                    const _SectionTitle('Your challenges'),
+                    const SizedBox(height: 10),
+                    if (active.isEmpty)
+                      const _EmptyChallengeRow()
+                    else
+                      ...active.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _ChallengeRow(
+                            participation: item,
+                            challenge: _challengesById[item.challengeId],
+                            onTap: () => _openParticipation(item),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 14),
+                    const _SectionTitle('Maybe try next'),
+                    const SizedBox(height: 10),
+                    const _NudgeCard(),
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Column(
-              children: [
-                const Icon(Icons.bolt, color: AppColors.warning, size: 28),
-                const SizedBox(height: 3),
-                Text(
-                  '${profile?.auraPoints ?? 0}',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Text(
-                  'aura',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class _AttemptingChallenges extends StatelessWidget {
-  final Map<String, Challenge> challengesById;
-
-  const _AttemptingChallenges({required this.challengesById});
-
-  String _statusLabel(String status) {
-    switch (status) {
-      case 'ACCEPTED':
-        return 'Accepted';
-      case 'IN_PROGRESS':
-        return 'In progress';
-      case 'PAUSED':
-        return 'Paused';
-      case 'SUBMITTED':
-        return 'Submitted';
-      default:
-        return status;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final active = context
-        .watch<ParticipationProvider>()
-        .participations
-        .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
-        .toList();
-    if (active.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Currently attempting',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-          ...active
-              .take(3)
-              .map(
-                (participation) => _AttemptingTile(
-                  participation: participation,
-                  statusLabel: _statusLabel(participation.status),
-                  challenge: challengesById[participation.challengeId],
-                ),
-              ),
-        ],
+  void _openParticipation(Participation participation) {
+    final challenge = _challengesById[participation.challengeId];
+    if (challenge == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChallengeDetailScreen(
+          slug: challenge.slug,
+          initialChallenge: challenge,
+        ),
       ),
     );
   }
 }
 
-class _AttemptingTile extends StatelessWidget {
-  final Participation participation;
-  final String statusLabel;
-  final Challenge? challenge;
-  const _AttemptingTile({
-    required this.participation,
-    required this.statusLabel,
-    required this.challenge,
+class _HomeBrandHeader extends StatelessWidget {
+  final VoidCallback onNotificationsTap;
+
+  const _HomeBrandHeader({required this.onNotificationsTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        RichText(
+          text: TextSpan(
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.7,
+            ),
+            children: [
+              TextSpan(text: 'NERD'),
+              TextSpan(
+                text: 'MAXXING',
+                style: TextStyle(color: AppColors.primary),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: onNotificationsTap,
+          tooltip: 'Notifications',
+          icon: const Icon(Icons.notifications_none_rounded),
+          color: colorScheme.onSurface,
+          visualDensity: VisualDensity.compact,
+        ),
+      ],
+    );
+  }
+}
+
+class _Greeting extends StatelessWidget {
+  final String name;
+  final int aura;
+
+  const _Greeting({required this.name, required this.aura});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final inkColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.lightTextPrimary;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hey $name 👋',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                'Keep learning. Keep levelling up.',
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: inkColor,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            child: Text(
+              '⚡ $aura AURA',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatsRow extends StatelessWidget {
+  final int active;
+  final int completed;
+  final int streak;
+
+  const _StatsRow({
+    required this.active,
+    required this.completed,
+    required this.streak,
   });
 
   @override
   Widget build(BuildContext context) {
-    final id = participation.challengeId;
-    final shortId = id.length > 8 ? '${id.substring(0, 8)}...' : id;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: AppColors.surfaceAlt,
-          child: Icon(Icons.flag_outlined, color: AppColors.primary),
+    return Row(
+      children: [
+        _Stat(value: '$active', label: 'ACTIVE'),
+        const SizedBox(width: 10),
+        _Stat(value: '$completed', label: 'COMPLETED'),
+        const SizedBox(width: 10),
+        _Stat(value: '$streak🔥', label: 'DAY STREAK'),
+      ],
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _Stat({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border.all(color: colorScheme.outline),
+          borderRadius: BorderRadius.circular(14),
         ),
-        title: Text(challenge?.title ?? 'Challenge $shortId'),
-        subtitle: Text(statusLabel),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-        onTap: challenge == null
-            ? null
-            : () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ChallengeDetailScreen(
-                    slug: challenge!.slug,
-                    initialChallenge: challenge,
-                  ),
-                ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
               ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _FeaturedChallenge extends StatelessWidget {
-  final Challenge challenge;
-  const _FeaturedChallenge({required this.challenge});
+class _SectionTitle extends StatelessWidget {
+  final String title;
+
+  const _SectionTitle(this.title);
+
+  @override
+  Widget build(BuildContext context) => Text(
+    title,
+    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+  );
+}
+
+class _ResumeCard extends StatelessWidget {
+  final Challenge? challenge;
+  final VoidCallback? onTap;
+
+  const _ResumeCard({required this.challenge, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 34),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ChallengeDetailScreen(slug: challenge.slug),
-            ),
-          ),
+    final title = challenge?.title ?? "Solve a Rubik's Cube < 2 min";
+    final colorScheme = Theme.of(context).colorScheme;
+    final cardColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.lightTextPrimary;
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
-                aspectRatio: 1.75,
-                child: challenge.imageUrl != null
-                    ? Image.network(
-                        challenge.imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _featuredFallback(),
-                      )
-                    : _featuredFallback(),
+              const Text(
+                'CONTINUE CHALLENGE',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: .3,
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: 14),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: const LinearProgressIndicator(
+                  value: .58,
+                  minHeight: 6,
+                  backgroundColor: Color(0x332D3324),
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '58% to goal',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    'Day 4',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    'Resume challenge →',
+                    style: TextStyle(
+                      color: colorScheme.onPrimary,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChallengeRow extends StatelessWidget {
+  final Participation participation;
+  final Challenge? challenge;
+  final VoidCallback onTap;
+
+  const _ChallengeRow({
+    required this.participation,
+    required this.challenge,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isPaused = participation.status == 'PAUSED';
+    final colorScheme = Theme.of(context).colorScheme;
+    final inkColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.lightTextPrimary;
+    return Material(
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: inkColor,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(
+                  challenge?.title.toLowerCase().contains('chess') == true
+                      ? Icons.extension
+                      : Icons.grid_view_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'FEATURED CHALLENGE',
-                      style: TextStyle(
-                        color: AppColors.primary,
+                    Text(
+                      challenge?.title ?? 'Your challenge',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                        letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      challenge.title,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      challenge.shortDescription,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.schedule,
-                          size: 15,
-                          color: AppColors.textSecondary,
+                        _StatusPill(
+                          label: isPaused ? 'PAUSED' : 'ACTIVE',
+                          paused: isPaused,
                         ),
-                        const SizedBox(width: 5),
-                        Text(
-                          challenge.effortLabel,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                        const SizedBox(width: 8),
+                        if (isPaused)
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(99),
+                              child: LinearProgressIndicator(
+                                value: .32,
+                                minHeight: 5,
+                                backgroundColor: colorScheme.outline,
+                                color: AppColors.primaryMuted,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 14),
+                        if (isPaused) const SizedBox(width: 8),
                         Text(
-                          challenge.difficultyLevel,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
+                          isPaused ? '32%' : 'In progress',
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ChallengeDetailScreen(slug: challenge.slug),
-                          ),
-                        ),
-                        child: const Text('Take Challenge'),
-                      ),
-                    ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: Color(0xFFB8B6AA)),
             ],
           ),
         ),
       ),
     );
   }
-
-  Widget _featuredFallback() => Container(
-    color: AppColors.surfaceAlt,
-    alignment: Alignment.center,
-    child: const Icon(
-      Icons.auto_awesome,
-      size: 42,
-      color: AppColors.primaryMuted,
-    ),
-  );
 }
 
-class _ErrorState extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-  const _ErrorState({required this.message, required this.onRetry});
+class _StatusPill extends StatelessWidget {
+  final String label;
+  final bool paused;
+
+  const _StatusPill({required this.label, required this.paused});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: paused
+            ? (isDark ? const Color(0xFF4A3B12) : const Color(0xFFFFE7A3))
+            : (isDark ? const Color(0xFF203A15) : const Color(0xFFD7F0C2)),
+        borderRadius: BorderRadius.circular(999),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.wifi_off,
-              size: 36,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Couldn\'t load Discover',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: paused
+                ? (isDark ? const Color(0xFFFFD98A) : const Color(0xFF7A5A00))
+                : (isDark ? const Color(0xFF9CE87A) : const Color(0xFF2E5B12)),
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyChallengeRow extends StatelessWidget {
+  const _EmptyChallengeRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border.all(color: colorScheme.outline),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        'No active challenges yet. Pick one in Discover.',
+        style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13.5),
+      ),
+    );
+  }
+}
+
+class _NudgeCard extends StatelessWidget {
+  const _NudgeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final inkColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.lightTextPrimary;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border.all(color: colorScheme.outline),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: inkColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.back_hand_outlined,
+              color: AppColors.primary,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '#1 TRENDING',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                const Text(
+                  'Do a Handstand Hold',
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+        ],
       ),
     );
   }

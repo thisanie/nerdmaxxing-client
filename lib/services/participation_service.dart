@@ -15,8 +15,14 @@ class ParticipationService {
     return Participation.fromJson(data);
   }
 
-  Future<Participation> updateStatus(String participantId, String status) async {
-    final data = await api.patch('/participation/$participantId', data: {'status': status});
+  Future<Participation> updateStatus(
+    String participantId,
+    String status,
+  ) async {
+    final data = await api.patch(
+      '/participation/$participantId',
+      data: {'status': status},
+    );
     return Participation.fromJson(data);
   }
 }

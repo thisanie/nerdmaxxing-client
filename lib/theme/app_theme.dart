@@ -1,130 +1,195 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// Dark, editorial, intellectually-playful theme for NerdMaxxing.
 class AppColors {
-  static const background = Color(0xFF0B0B0F);
-  static const surface = Color(0xFF15151C);
-  static const surfaceAlt = Color(0xFF1D1D26);
-  static const primary = Color(0xFF7C5CFC);
-  static const primaryMuted = Color(0xFF534099);
-  static const accent = Color(0xFF3DD9C1);
-  static const textPrimary = Color(0xFFF3F2F8);
-  static const textSecondary = Color(0xFFA6A3B8);
-  static const border = Color(0xFF2A2A35);
-  static const success = Color(0xFF3DD9A0);
-  static const warning = Color(0xFFF0B45C);
-  static const danger = Color(0xFFE86A6A);
+  static const background = Color(0xFF15160F);
+  static const surface = Color(0xFF1F2117);
+  static const surfaceAlt = Color(0xFF1F2117);
+  static const primary = Color(0xFFC7EA5C);
+  static const primaryLight = Color(0xFF7FAE1A);
+  static const accent = Color(0xFF38BDF8);
+  static const puzzle = Color(0xFFA78BFA);
+  static const primaryMuted = Color(0xFFA9D732);
+  static const textPrimary = Color(0xFFF3F2E9);
+  static const textSecondary = Color(0xFF9A9C8E);
+  static const border = Color(0xFF34362A);
+  static const success = Color(0xFFC7EA5C);
+  static const dark = Color(0xFF0A0B07);
+  static const warning = Color(0xFFFACC15);
+  static const danger = Color(0xFFE85D75);
+  static const lightBackground = Color(0xFFF7F8F4);
+  static const lightSurface = Color(0xFFFFFFFF);
+  static const lightSurfaceAlt = Color(0xFFEFF1EC);
+  static const lightTextPrimary = Color(0xFF101315);
+  static const lightTextSecondary = Color(0xFF626A70);
+  static const lightBorder = Color(0xFFDDE1DC);
 
-  static const difficultyBeginner = Color(0xFF3DD9A0);
-  static const difficultyIntermediate = Color(0xFFF0B45C);
-  static const difficultyAdvanced = Color(0xFFE86A6A);
+  static const difficultyBeginner = Color(0xFF8CCF21);
+  static const difficultyIntermediate = Color(0xFFFB923C);
+  static const difficultyAdvanced = Color(0xFFFB7185);
 }
 
 class AppTheme {
-  static ThemeData get dark {
-    final base = ThemeData.dark(useMaterial3: true);
-    return base.copyWith(
-      scaffoldBackgroundColor: AppColors.background,
-      colorScheme: base.colorScheme.copyWith(
+  static ThemeData get dark => _buildTheme(
         brightness: Brightness.dark,
-        primary: AppColors.primary,
-        secondary: AppColors.accent,
+        background: AppColors.background,
         surface: AppColors.surface,
+        surfaceAlt: AppColors.surfaceAlt,
+        primary: AppColors.primary,
+        textPrimary: AppColors.textPrimary,
+        textSecondary: AppColors.textSecondary,
+        border: AppColors.border,
+        onPrimary: AppColors.dark,
+      );
+
+  static ThemeData get light => _buildTheme(
+        brightness: Brightness.light,
+        background: AppColors.lightBackground,
+        surface: AppColors.lightSurface,
+        surfaceAlt: AppColors.lightSurfaceAlt,
+        primary: AppColors.primaryLight,
+        textPrimary: AppColors.lightTextPrimary,
+        textSecondary: AppColors.lightTextSecondary,
+        border: AppColors.lightBorder,
+        onPrimary: AppColors.lightTextPrimary,
+      );
+
+  static ThemeData _buildTheme({
+    required Brightness brightness,
+    required Color background,
+    required Color surface,
+    required Color surfaceAlt,
+    required Color primary,
+    required Color textPrimary,
+    required Color textSecondary,
+    required Color border,
+    required Color onPrimary,
+  }) {
+    final subtleBorder = border.withValues(alpha: 0.6);
+    final base = ThemeData(
+      brightness: brightness,
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: brightness,
+        surface: surface,
+        onSurface: textPrimary,
+        primary: primary,
+        onPrimary: onPrimary,
         error: AppColors.danger,
-        onPrimary: AppColors.textPrimary,
-        onSecondary: AppColors.textPrimary,
-        onSurface: AppColors.textPrimary,
-        onSurfaceVariant: AppColors.textSecondary,
-        onError: AppColors.textPrimary,
       ),
-      textTheme: base.textTheme.apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
-      ).copyWith(
-        headlineMedium: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 28,
-          height: 1.15,
-          letterSpacing: -0.5,
-        ),
-        headlineSmall: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 22,
-          letterSpacing: -0.3,
-        ),
-        titleLarge: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
-          fontSize: 18,
-        ),
-        bodyMedium: const TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.4),
+    );
+    final textTheme = GoogleFonts.spaceGroteskTextTheme(base.textTheme).copyWith(
+      headlineMedium: GoogleFonts.spaceGrotesk(
+        color: textPrimary,
+        fontWeight: FontWeight.w700,
+        fontSize: 32,
+        height: 1.15,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
+      headlineSmall: GoogleFonts.spaceGrotesk(
+        color: textPrimary,
+        fontWeight: FontWeight.w700,
+        fontSize: 26,
+      ),
+      titleLarge: GoogleFonts.spaceGrotesk(
+        color: textPrimary,
+        fontWeight: FontWeight.w700,
+        fontSize: 20,
+      ),
+      titleMedium: GoogleFonts.spaceGrotesk(
+        color: textPrimary,
+        fontWeight: FontWeight.w600,
+        fontSize: 17,
+      ),
+      bodyMedium: GoogleFonts.spaceGrotesk(
+        color: textSecondary,
+        fontSize: 15,
+        height: 1.4,
+      ),
+    );
+
+    return base.copyWith(
+      scaffoldBackgroundColor: background,
+      colorScheme: base.colorScheme.copyWith(
+        primary: primary,
+        onPrimary: onPrimary,
+        surface: surface,
+        onSurface: textPrimary,
+        onSurfaceVariant: textSecondary,
+        outline: subtleBorder,
+        error: AppColors.danger,
+      ),
+      textTheme: textTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: background,
+        foregroundColor: textPrimary,
         elevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
-        titleTextStyle: TextStyle(
-          color: AppColors.textPrimary,
+        titleTextStyle: GoogleFonts.spaceGrotesk(
+          color: textPrimary,
           fontWeight: FontWeight.w700,
-          fontSize: 20,
+          fontSize: 21,
         ),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.surface,
+        color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: subtleBorder),
         ),
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 22),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700, fontSize: 15),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(color: AppColors.border),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          foregroundColor: textPrimary,
+          side: BorderSide(color: border),
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 22),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceAlt,
+        fillColor: surfaceAlt,
         contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: primary, width: 1.5),
         ),
-        hintStyle: const TextStyle(color: AppColors.textSecondary),
+        hintStyle: TextStyle(color: textSecondary),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: surface,
+        selectedItemColor: primary,
+        unselectedItemColor: textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      dividerColor: AppColors.border,
+      dividerColor: border,
     );
   }
 

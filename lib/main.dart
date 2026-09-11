@@ -8,6 +8,7 @@ import 'providers/auth_provider.dart';
 import 'providers/challenges_provider.dart';
 import 'providers/participation_provider.dart';
 import 'providers/skills_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/auth_gate.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
@@ -67,14 +68,20 @@ class NerdMaxxingApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => SkillsProvider(context.read<SkillsService>()),
         ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        title: 'NERDMAXXING',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.dark,
-        home: const AuthGate(),
+      child: Builder(
+        builder: (context) {
+          final themeProvider = context.watch<ThemeProvider>();
+          return MaterialApp(
+            title: 'NERDMAXXING',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeProvider.themeMode,
+            home: const AuthGate(),
+          );
+        },
       ),
     );
   }

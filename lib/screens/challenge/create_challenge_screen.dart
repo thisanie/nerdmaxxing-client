@@ -71,7 +71,9 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
         effortMin < 1 ||
         effortMax < effortMin ||
         duration < 1) {
-      setState(() => _error = 'Choose a category and enter valid timing values.');
+      setState(
+        () => _error = 'Choose a category and enter valid timing values.',
+      );
       return;
     }
     setState(() {
@@ -88,22 +90,23 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
         orderIndex: 0,
       );
       await context.read<ChallengesService>().create(
-            title: _title.text.trim(),
-            imageUrl: _imageUrl.text.trim(),
-            resources: [resource],
-            shortDescription: _shortDescription.text.trim(),
-            fullDescription: _fullDescription.text.trim(),
-            difficultyLevel: _difficulty,
-            categoryIds: [_selectedCategoryId!],
-            estimatedEffortMinMinutes: effortMin,
-            estimatedEffortMaxMinutes: effortMax,
-            estimatedDurationMinutes: duration,
-            verificationType: 'SELF_REPORTED',
-          );
+        title: _title.text.trim(),
+        imageUrl: _imageUrl.text.trim(),
+        resources: [resource],
+        shortDescription: _shortDescription.text.trim(),
+        fullDescription: _fullDescription.text.trim(),
+        difficultyLevel: _difficulty,
+        categoryIds: [_selectedCategoryId!],
+        estimatedEffortMinMinutes: effortMin,
+        estimatedEffortMaxMinutes: effortMax,
+        estimatedDurationMinutes: duration,
+        verificationType: 'SELF_REPORTED',
+      );
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Challenge created as a private draft.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Challenge created as a private draft.')),
+      );
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {
@@ -120,14 +123,17 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Text('Design a small adventure for someone curious.',
-                style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              'Design a small adventure for someone curious.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 20),
             TextFormField(
               controller: _title,
               decoration: const InputDecoration(labelText: 'Title'),
-              validator: (v) =>
-                  (v == null || v.trim().length < 3) ? 'At least 3 characters' : null,
+              validator: (v) => (v == null || v.trim().length < 3)
+                  ? 'At least 3 characters'
+                  : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -142,14 +148,18 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
               controller: _shortDescription,
               decoration: const InputDecoration(labelText: 'Short description'),
               maxLines: 2,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _fullDescription,
-              decoration: const InputDecoration(labelText: 'What will they do?'),
+              decoration: const InputDecoration(
+                labelText: 'What will they do?',
+              ),
               maxLines: 4,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 16),
             FutureBuilder<DiscoverFeed>(
@@ -166,10 +176,12 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
                   initialValue: _selectedCategoryId,
                   decoration: const InputDecoration(labelText: 'Category'),
                   items: categories
-                      .map((category) => DropdownMenuItem(
-                            value: category.id,
-                            child: Text(category.name),
-                          ))
+                      .map(
+                        (category) => DropdownMenuItem(
+                          value: category.id,
+                          child: Text(category.name),
+                        ),
+                      )
                       .toList(),
                   onChanged: (value) =>
                       setState(() => _selectedCategoryId = value),
@@ -183,7 +195,10 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
               decoration: const InputDecoration(labelText: 'Difficulty'),
               items: const [
                 DropdownMenuItem(value: 'BEGINNER', child: Text('Beginner')),
-                DropdownMenuItem(value: 'INTERMEDIATE', child: Text('Intermediate')),
+                DropdownMenuItem(
+                  value: 'INTERMEDIATE',
+                  child: Text('Intermediate'),
+                ),
                 DropdownMenuItem(value: 'ADVANCED', child: Text('Advanced')),
               ],
               onChanged: (v) => setState(() => _difficulty = v ?? 'BEGINNER'),
@@ -191,31 +206,41 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _effortMin,
-              decoration: const InputDecoration(labelText: 'Minimum effort (minutes)'),
+              decoration: const InputDecoration(
+                labelText: 'Minimum effort (minutes)',
+              ),
               keyboardType: TextInputType.number,
               validator: _positiveIntegerValidator,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _effortMax,
-              decoration: const InputDecoration(labelText: 'Maximum effort (minutes)'),
+              decoration: const InputDecoration(
+                labelText: 'Maximum effort (minutes)',
+              ),
               keyboardType: TextInputType.number,
               validator: _positiveIntegerValidator,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _duration,
-              decoration: const InputDecoration(labelText: 'Duration (minutes)'),
+              decoration: const InputDecoration(
+                labelText: 'Duration (minutes)',
+              ),
               keyboardType: TextInputType.number,
               validator: _positiveIntegerValidator,
             ),
             const SizedBox(height: 24),
-            Text('One resource to get started', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'One resource to get started',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _resourceTitle,
               decoration: const InputDecoration(labelText: 'Resource title'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -228,9 +253,12 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _resourceRationale,
-              decoration: const InputDecoration(labelText: 'Why is this resource useful?'),
+              decoration: const InputDecoration(
+                labelText: 'Why is this resource useful?',
+              ),
               maxLines: 2,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             if (_error != null) ...[
               const SizedBox(height: 16),

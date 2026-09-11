@@ -18,9 +18,15 @@ class ChallengeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       clipBehavior: Clip.antiAlias,
-      color: legendary ? const Color(0xFF211D2D) : null,
+      color: legendary
+          ? Color.alphaBlend(
+              AppColors.puzzle.withValues(alpha: 0.10),
+              colorScheme.surface,
+            )
+          : null,
       child: InkWell(
         onTap: onTap,
         child: Column(
@@ -40,7 +46,7 @@ class ChallengeCard extends StatelessWidget {
                             return Stack(
                               fit: StackFit.expand,
                               children: [
-                                _fallbackImage(),
+                                _fallbackImage(context),
                                 const Center(
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
@@ -49,9 +55,9 @@ class ChallengeCard extends StatelessWidget {
                               ],
                             );
                           },
-                      errorBuilder: (_, _, _) => _fallbackImage(),
+                      errorBuilder: (_, _, _) => _fallbackImage(context),
                     )
-                  : _fallbackImage(),
+                  : _fallbackImage(context),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -103,13 +109,13 @@ class ChallengeCard extends StatelessWidget {
                       Icon(
                         Icons.schedule,
                         size: 14,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         challenge.effortLabel,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),
@@ -117,8 +123,8 @@ class ChallengeCard extends StatelessWidget {
                         const Spacer(),
                         Text(
                           '${challenge.enrollmentCount} joined',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         ),
@@ -134,14 +140,15 @@ class ChallengeCard extends StatelessWidget {
     );
   }
 
-  Widget _fallbackImage() {
+  Widget _fallbackImage(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      color: AppColors.surfaceAlt,
+      color: colorScheme.surfaceContainerHighest,
       alignment: Alignment.center,
-      child: const Icon(
+      child: Icon(
         Icons.auto_awesome,
         size: 36,
-        color: AppColors.primaryMuted,
+        color: colorScheme.primary,
       ),
     );
   }

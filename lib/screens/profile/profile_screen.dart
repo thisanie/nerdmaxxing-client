@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
+import '../../models/participation.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
-import '../../models/participation.dart';
 import '../../providers/participation_provider.dart';
 import '../../providers/profile_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/profile_service.dart';
@@ -40,6 +41,7 @@ class _ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<_ProfileScreen> {
   bool _isSigningOut = false;
   bool _isFollowBusy = false;
+  int _selectedTab = 0;
   Map<String, Challenge> _challengesById = {};
 
   @override
@@ -150,6 +152,54 @@ class _ProfileScreenState extends State<_ProfileScreen> {
     }
   }
 
+  Future<void> _showAccountMenu(UserProfile profile) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Update profile'),
+              onTap: () => Navigator.pop(sheetContext, 'update'),
+            ),
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, _) => SwitchListTile.adaptive(
+                secondary: const Icon(Icons.brightness_6_outlined),
+                title: const Text('Dark theme'),
+                value: themeProvider.isDark,
+                onChanged: themeProvider.setDark,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Log out'),
+              onTap: () => Navigator.pop(sheetContext, 'logout'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (action == 'update') {
+      Navigator.of(context)
+          .push(
+            MaterialPageRoute(
+              builder: (_) => UpdateProfileScreen(profile: profile),
+            ),
+          )
+          .then((updated) {
+            if (updated == true && mounted) _load();
+          });
+    } else if (action == 'logout') {
+      _confirmLogout();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProfileProvider>();
@@ -196,44 +246,12 @@ class _ProfileScreenState extends State<_ProfileScreen> {
               floating: true,
               actions: [
                 if (_isOwnProfile(auth))
-                  PopupMenuButton<String>(
-                    enabled: !_isSigningOut,
+                  IconButton(
                     icon: const Icon(Icons.menu),
                     tooltip: 'Account options',
-                    onSelected: (value) {
-                      if (value == 'update') {
-                        Navigator.of(context)
-                            .push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    UpdateProfileScreen(profile: profile),
-                              ),
-                            )
-                            .then((updated) {
-                              if (updated == true && mounted) _load();
-                            });
-                      } else if (value == 'logout') {
-                        _confirmLogout();
-                      }
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem<String>(
-                        value: 'update',
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Icon(Icons.edit_outlined),
-                          title: Text('Update profile'),
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'logout',
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Icon(Icons.logout),
-                          title: Text('Log out'),
-                        ),
-                      ),
-                    ],
+                    onPressed: _isSigningOut
+                        ? null
+                        : () => _showAccountMenu(profile),
                   ),
               ],
             ),
@@ -264,151 +282,313 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: SizedBox(
                     width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _isFollowBusy ? null : _toggleFollow,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary),
-                      ),
-                      icon: _isFollowBusy
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                                strokeWidth: 2,
+                    child: profile.isFollowing
+                        ? OutlinedButton.icon(
+                            onPressed: _isFollowBusy ? null : _toggleFollow,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                  : AppColors.lightTextPrimary,
+                              side: BorderSide(
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.outline
+                                    : AppColors.lightTextPrimary.withValues(
+                                        alpha: 0.65,
+                                      ),
                               ),
-                            )
-                          : Icon(
-                              profile.isFollowing
-                                  ? Icons.person_remove_outlined
-                                  : Icons.person_add_outlined,
                             ),
-                      label: Text(profile.isFollowing ? 'Following' : 'Follow'),
+                            icon: _isFollowBusy
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.person_remove_outlined),
+                            label: const Text('Following'),
+                          )
+                        : FilledButton.icon(
+                            onPressed: _isFollowBusy ? null : _toggleFollow,
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.primary
+                                  : AppColors.lightTextPrimary,
+                              foregroundColor:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.dark
+                                  : Colors.white,
+                            ),
+                            icon: _isFollowBusy
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.person_add_outlined),
+                            label: const Text('Follow'),
+                          ),
+                  ),
+                ),
+              ),
+            SliverToBoxAdapter(
+              child: _ProfileTabs(
+                selectedIndex: _selectedTab,
+                showRewards: isOwnProfile,
+                onSelected: (index) => setState(() => _selectedTab = index),
+              ),
+            ),
+            if (_selectedTab == 0) ...[
+              if (isOwnProfile) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+                    child: Text(
+                      'Created challenges',
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
                 ),
-              ),
-            if (isOwnProfile) ...[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-                  child: Text(
-                    'Created challenges',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-              ),
-              if (provider.createdChallenges.isEmpty)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-                    child: Text('No challenges created yet.'),
-                  ),
-                )
-              else
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _CreatedChallengeTile(
-                      challenge: provider.createdChallenges[index],
+                if (provider.createdChallenges.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      child: Text('No challenges created yet.'),
                     ),
-                    childCount: provider.createdChallenges.length,
-                  ),
-                ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-                  child: Text(
-                    'My challenges',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-              ),
-              if (participationProvider.isLoading &&
-                  participationProvider.participations.isEmpty)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                )
-              else if (participationProvider.participations.isEmpty)
-                const SliverToBoxAdapter(
-                  child: EmptyState(
-                    icon: Icons.flag_outlined,
-                    title: 'Your next interesting thing is waiting.',
-                    message:
-                        'Discover a challenge and accept it to get started.',
-                  ),
-                )
-              else
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _ParticipationTile(
-                      participation:
-                          participationProvider.participations[index],
-                      challenge:
-                          _challengesById[participationProvider
-                              .participations[index]
-                              .challengeId],
-                      statusLabel: _statusLabel(
-                        participationProvider.participations[index].status,
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _CreatedChallengeTile(
+                        challenge: provider.createdChallenges[index],
                       ),
-                      onChangeStatus: _changeStatus,
+                      childCount: provider.createdChallenges.length,
                     ),
-                    childCount: participationProvider.participations.length,
+                  ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+                    child: Text(
+                      'My challenges',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ),
+                if (participationProvider.isLoading &&
+                    participationProvider.participations.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  )
+                else if (participationProvider.participations.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: EmptyState(
+                      icon: Icons.flag_outlined,
+                      title: 'Your next interesting thing is waiting.',
+                      message:
+                          'Discover a challenge and accept it to get started.',
+                    ),
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _ParticipationTile(
+                        participation:
+                            participationProvider.participations[index],
+                        challenge:
+                            _challengesById[participationProvider
+                                .participations[index]
+                                .challengeId],
+                        statusLabel: _statusLabel(
+                          participationProvider.participations[index].status,
+                        ),
+                        onChangeStatus: _changeStatus,
+                      ),
+                      childCount: participationProvider.participations.length,
+                    ),
+                  ),
+              ],
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        color: AppColors.accent,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Completed challenges',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (provider.completedChallenges.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Center(
+                      child: Text(
+                        'No completed challenges yet.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _ChallengeTile(
+                        challenge: provider.completedChallenges[index],
+                      ),
+                      childCount: provider.completedChallenges.length,
+                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 3,
+                          mainAxisSpacing: 3,
+                          childAspectRatio: 0.78,
+                        ),
                   ),
                 ),
             ],
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle_outline,
-                      color: AppColors.accent,
+            if (_selectedTab != 0)
+              const SliverToBoxAdapter(child: _ComingSoonPanel()),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileTabs extends StatelessWidget {
+  final int selectedIndex;
+  final bool showRewards;
+  final ValueChanged<int> onSelected;
+
+  const _ProfileTabs({
+    required this.selectedIndex,
+    required this.showRewards,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final tabs = [
+      (Icons.flag_outlined, 'Challenges'),
+      (Icons.groups_outlined, 'Groups'),
+      if (showRewards) (Icons.emoji_events_outlined, 'Rewards'),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      child: Row(
+        children: [
+          for (var index = 0; index < tabs.length; index++)
+            Expanded(
+              child: InkWell(
+                onTap: () => onSelected(index),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: selectedIndex == index
+                            ? AppColors.primaryMuted
+                            : AppColors.lightBorder,
+                        width: selectedIndex == index ? 2.5 : 1,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Completed challenges',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        tabs[index].$1,
+                        size: 16,
+                        color: selectedIndex == index
+                            ? colorScheme.onSurface
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        tabs[index].$2,
+                        style: TextStyle(
+                          color: selectedIndex == index
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurfaceVariant,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            if (provider.completedChallenges.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Center(
-                    child: Text(
-                      'No completed challenges yet.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _ChallengeTile(
-                      challenge: provider.completedChallenges[index],
-                    ),
-                    childCount: provider.completedChallenges.length,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 3,
-                    mainAxisSpacing: 3,
-                    childAspectRatio: 0.78,
-                  ),
-                ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ComingSoonPanel extends StatelessWidget {
+  const _ComingSoonPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 42),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border.all(color: colorScheme.outline),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.hourglass_empty_rounded,
+              size: 34,
+              color: AppColors.primaryMuted,
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Coming soon',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'This section is still being levelled up.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 13.5,
               ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ),
           ],
         ),
       ),
@@ -495,29 +675,49 @@ class _ProfileHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Text(
-            profile.name ?? profile.username ?? 'NerdMaxxer',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  profile.name ?? profile.username ?? 'NerdMaxxer',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 17,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Text(
+                    '⚡ ${profile.auraPoints} aura',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           if (profile.bio != null && profile.bio!.isNotEmpty) ...[
             const SizedBox(height: 5),
             Text(profile.bio!),
           ],
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _ProfileChip(
-                icon: Icons.bolt,
-                label: '${profile.auraPoints} aura',
-              ),
-              _ProfileChip(
-                icon: Icons.workspace_premium_outlined,
-                label: '${profile.skillsCount} skills',
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -556,22 +756,6 @@ class _Stat extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ProfileChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _ProfileChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      avatar: Icon(icon, size: 16, color: AppColors.accent),
-      label: Text(label),
-      backgroundColor: AppColors.surface,
-      side: const BorderSide(color: AppColors.border),
     );
   }
 }
@@ -684,7 +868,12 @@ class _CreatedChallengeTile extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(12),
           child: ListTile(
-            leading: const Icon(Icons.edit_note, color: AppColors.accent),
+            leading: Icon(
+              challenge.visibility.toUpperCase() == 'PRIVATE'
+                  ? Icons.lock_outline
+                  : Icons.edit_note,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             title: Text(challenge.title),
             subtitle: Text(
               '${challenge.status} • ${challenge.visibility}',

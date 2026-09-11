@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../discover/discover_screen.dart';
 import '../discover/people_discover_screen.dart';
+import '../challenge/create_challenge_screen.dart';
 import '../profile/profile_screen.dart';
 import '../skills/skills_screen.dart';
 import '../../theme/app_theme.dart';
@@ -67,16 +68,9 @@ class _HomeShellState extends State<HomeShell> {
           child: IndexedStack(index: _index, children: _tabNavigators),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _index,
+          currentIndex: _navigationIndex,
           selectedItemColor: _tabAtRoot[_index] ? null : AppColors.textPrimary,
-          onTap: (i) {
-            if (i == 3) {
-              _navigatorKeys[i].currentState?.popUntil(
-                (route) => route.isFirst,
-              );
-            }
-            setState(() => _index = i);
-          },
+          onTap: _onNavigationTap,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),
@@ -86,6 +80,7 @@ class _HomeShellState extends State<HomeShell> {
               icon: Icon(Icons.explore_outlined),
               label: 'Discover',
             ),
+            BottomNavigationBarItem(icon: _AddNavigationIcon(), label: ''),
             BottomNavigationBarItem(
               icon: Icon(Icons.workspace_premium_outlined),
               label: 'Skills',
@@ -97,6 +92,48 @@ class _HomeShellState extends State<HomeShell> {
           ],
         ),
       ),
+    );
+  }
+
+  int get _navigationIndex => _index >= 2 ? _index + 1 : _index;
+
+  void _onNavigationTap(int navigationIndex) {
+    if (navigationIndex == 2) {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const CreateChallengeScreen()));
+      return;
+    }
+    final tabIndex = navigationIndex > 2
+        ? navigationIndex - 1
+        : navigationIndex;
+    if (tabIndex == 3) {
+      _navigatorKeys[tabIndex].currentState?.popUntil((route) => route.isFirst);
+    }
+    setState(() => _index = tabIndex);
+  }
+}
+
+class _AddNavigationIcon extends StatelessWidget {
+  const _AddNavigationIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
     );
   }
 }
