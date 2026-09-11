@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
 import '../../models/participation.dart';
+import '../../models/progress_log.dart';
 import '../../providers/participation_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
+import '../../services/participation_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/difficulty_badge.dart';
 import '../evidence/submit_evidence_screen.dart';
@@ -213,17 +215,28 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     }
     final status = participation.status;
     if (status == 'ACCEPTED' || status == 'IN_PROGRESS' || status == 'PAUSED') {
-      return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) =>
-                  SubmitEvidenceScreen(participation: participation),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => _ProgressDialog(participation: participation),
             ),
+            icon: const Icon(Icons.timer_outlined),
+            label: const Text('Log Progress'),
           ),
-          child: const Text('Submit Evidence'),
-        ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    SubmitEvidenceScreen(participation: participation),
+              ),
+            ),
+            child: const Text('Submit Evidence'),
+          ),
+        ],
       );
     }
     return Container(
@@ -239,6 +252,164 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           Text('Status: ${status.toString().toLowerCase()}'),
         ],
       ),
+    );
+  }
+}
+
+class _ProgressDialog extends StatefulWidget {
+  final Participation participation;
+
+  const _ProgressDialog({required this.participation});
+
+  @override
+  State<_ProgressDialog> createState() => _ProgressDialogState();
+}
+
+class _ProgressDialogState extends State<_ProgressDialog> {
+  final _hoursController = TextEditingController();
+  final _noteController = TextEditingController();
+  List<ProgressLog> _logs = [];
+  bool _loading = true;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLogs();
+  }
+
+  @override
+  void dispose() {
+    _hoursController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadLogs() async {
+    try {
+      final logs = await context.read<ParticipationService>().listProgress(
+        widget.participation.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        _logs = logs;
+        _error = null;
+      });
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _save() async {
+    final hours = double.tryParse(_hoursController.text.trim());
+    if (hours == null || hours <= 0 || hours > 24) {
+      setState(() => _error = 'Enter a number of hours between 0 and 24.');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await context.read<ParticipationService>().logProgress(
+        widget.participation.id,
+        hoursSpent: hours,
+        note: _noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim(),
+      );
+      _hoursController.clear();
+      _noteController.clear();
+      await _loadLogs();
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  String _durationLabel(int minutes) {
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+    if (hours == 0) return '$remainingMinutes min';
+    if (remainingMinutes == 0) return '${hours}h';
+    return '${hours}h ${remainingMinutes}m';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Log progress'),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _hoursController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Hours spent',
+                  hintText: 'e.g. 1.5',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _noteController,
+                maxLength: 5000,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Note (optional)'),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 8),
+                Text(_error!, style: const TextStyle(color: AppColors.danger)),
+              ],
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _saving ? null : _save,
+                child: Text(_saving ? 'Saving...' : 'Save progress'),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Recent progress',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              if (_loading)
+                const Center(child: CircularProgressIndicator())
+              else if (_logs.isEmpty)
+                const Text('No progress logged yet.')
+              else
+                ..._logs.map(
+                  (log) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.schedule_outlined),
+                    title: Text(_durationLabel(log.minutesSpent)),
+                    subtitle: Text(
+                      [
+                        if (log.note != null && log.note!.isNotEmpty) log.note!,
+                        if (log.createdAt != null)
+                          log.createdAt!.toLocal().toString().split('.').first,
+                      ].join('\n'),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Done'),
+        ),
+      ],
     );
   }
 }

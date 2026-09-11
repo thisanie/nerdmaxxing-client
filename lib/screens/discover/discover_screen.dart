@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
+import '../../models/progress_log.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/participation_provider.dart';
 import '../../models/participation.dart';
 import '../../services/challenges_service.dart';
 import '../../services/profile_service.dart';
+import '../../services/participation_service.dart';
 import '../../theme/app_theme.dart';
 import '../challenge/challenge_detail_screen.dart';
 
@@ -21,6 +23,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _profile;
   Map<String, Challenge> _challengesById = {};
+  Challenge? _mostPopularChallenge;
+  Participation? _resumeParticipation;
+  List<ProgressLog> _resumeProgress = [];
+  bool _resumeProgressLoading = false;
 
   @override
   void initState() {
@@ -42,14 +48,62 @@ class _HomeScreenState extends State<HomeScreen> {
       final profile = profileFuture == null ? null : await profileFuture;
       final challenges = await challengesFuture;
       if (!mounted) return;
+      final challengeMap = {
+        for (final challenge in challenges) challenge.id: challenge,
+      };
+      final mostPopular = challenges
+          .where((challenge) => challenge.enrollmentCount != null)
+          .fold<Challenge?>(
+            null,
+            (popular, challenge) =>
+                popular == null ||
+                    challenge.enrollmentCount! > popular.enrollmentCount!
+                ? challenge
+                : popular,
+          );
+      final active =
+          context
+              .read<ParticipationProvider>()
+              .participations
+              .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
+              .toList()
+            ..sort(_newestParticipationFirst);
       setState(() {
         _profile = profile ?? _profile;
-        _challengesById = {
-          for (final challenge in challenges) challenge.id: challenge,
-        };
+        _challengesById = challengeMap;
+        _mostPopularChallenge = mostPopular;
+        _resumeParticipation = active.isEmpty ? null : active.first;
+        _resumeProgress = [];
       });
+      if (active.isNotEmpty) {
+        await _loadResumeProgress(active.first.id);
+      }
     } catch (_) {
       // The discovery feed remains usable if the home summary is unavailable.
+    }
+  }
+
+  static int _newestParticipationFirst(Participation a, Participation b) {
+    final aDate = a.startedAt ?? a.lastActivityAt;
+    final bDate = b.startedAt ?? b.lastActivityAt;
+    if (aDate == null && bDate == null) return 0;
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+    return bDate.compareTo(aDate);
+  }
+
+  Future<void> _loadResumeProgress(String participantId) async {
+    if (mounted) setState(() => _resumeProgressLoading = true);
+    try {
+      final logs = await context.read<ParticipationService>().listProgress(
+        participantId,
+        limit: 100,
+      );
+      if (mounted) setState(() => _resumeProgress = logs);
+    } catch (_) {
+      // The challenge remains available even if its progress history is unavailable.
+    } finally {
+      if (mounted) setState(() => _resumeProgressLoading = false);
     }
   }
 
@@ -106,12 +160,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     const _SectionTitle('Continue where you left off'),
                     const SizedBox(height: 8),
                     _ResumeCard(
-                      challenge: active.isNotEmpty
-                          ? _challengesById[active.first.challengeId]
-                          : null,
-                      onTap: active.isNotEmpty
-                          ? () => _openParticipation(active.first)
-                          : null,
+                      challenge: _resumeParticipation == null
+                          ? null
+                          : _challengesById[_resumeParticipation!.challengeId],
+                      progress: _resumeProgress,
+                      isLoading: _resumeProgressLoading,
+                      onTap: _resumeParticipation == null
+                          ? null
+                          : () => _openParticipation(_resumeParticipation!),
                     ),
                     const SizedBox(height: 24),
                     const _SectionTitle('Your challenges'),
@@ -132,7 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 14),
                     const _SectionTitle('Maybe try next'),
                     const SizedBox(height: 10),
-                    const _NudgeCard(),
+                    _NudgeCard(
+                      challenge: _mostPopularChallenge,
+                      onTap: _mostPopularChallenge == null
+                          ? null
+                          : () => _openChallenge(_mostPopularChallenge!),
+                    ),
                     const SizedBox(height: 8),
                   ],
                 ),
@@ -147,6 +208,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openParticipation(Participation participation) {
     final challenge = _challengesById[participation.challengeId];
     if (challenge == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChallengeDetailScreen(
+          slug: challenge.slug,
+          initialChallenge: challenge,
+        ),
+      ),
+    );
+  }
+
+  void _openChallenge(Challenge challenge) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ChallengeDetailScreen(
@@ -335,13 +407,31 @@ class _SectionTitle extends StatelessWidget {
 
 class _ResumeCard extends StatelessWidget {
   final Challenge? challenge;
+  final List<ProgressLog> progress;
+  final bool isLoading;
   final VoidCallback? onTap;
 
-  const _ResumeCard({required this.challenge, required this.onTap});
+  const _ResumeCard({
+    required this.challenge,
+    required this.progress,
+    required this.isLoading,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final title = challenge?.title ?? "Solve a Rubik's Cube < 2 min";
+    final title = challenge?.title ?? 'No active challenge yet';
+    final loggedMinutes = progress.fold(
+      0,
+      (total, log) => total + log.minutesSpent,
+    );
+    final targetMinutes =
+        challenge?.estimatedDurationMinutes ??
+        challenge?.estimatedEffortMaxMinutes ??
+        challenge?.estimatedEffortMinMinutes;
+    final progressValue = targetMinutes == null || targetMinutes <= 0
+        ? 0.0
+        : (loggedMinutes / targetMinutes).clamp(0.0, 1.0).toDouble();
     final colorScheme = Theme.of(context).colorScheme;
     final cardColor = Theme.of(context).brightness == Brightness.dark
         ? AppColors.dark
@@ -379,8 +469,8 @@ class _ResumeCard extends StatelessWidget {
               const SizedBox(height: 14),
               ClipRRect(
                 borderRadius: BorderRadius.circular(99),
-                child: const LinearProgressIndicator(
-                  value: .58,
+                child: LinearProgressIndicator(
+                  value: isLoading ? null : progressValue,
                   minHeight: 6,
                   backgroundColor: Color(0x332D3324),
                   color: AppColors.primary,
@@ -391,7 +481,9 @@ class _ResumeCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '58% to goal',
+                    targetMinutes == null
+                        ? '${_formatMinutes(loggedMinutes)} logged'
+                        : '${(progressValue * 100).round()}% to goal',
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 11.5,
@@ -399,7 +491,9 @@ class _ResumeCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Day 4',
+                    isLoading
+                        ? 'Loading progress...'
+                        : '${_formatMinutes(loggedMinutes)} logged',
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 11.5,
@@ -418,7 +512,9 @@ class _ResumeCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    'Resume challenge →',
+                    challenge == null
+                        ? 'Discover a challenge'
+                        : 'Resume challenge →',
                     style: TextStyle(
                       color: colorScheme.onPrimary,
                       fontSize: 13.5,
@@ -432,6 +528,15 @@ class _ResumeCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatMinutes(int minutes) {
+    if (minutes < 60) return '$minutes min';
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+    return remainingMinutes == 0
+        ? '${hours}h'
+        : '${hours}h ${remainingMinutes}m';
   }
 }
 
@@ -595,7 +700,10 @@ class _EmptyChallengeRow extends StatelessWidget {
 }
 
 class _NudgeCard extends StatelessWidget {
-  const _NudgeCard();
+  final Challenge? challenge;
+  final VoidCallback? onTap;
+
+  const _NudgeCard({required this.challenge, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -603,51 +711,74 @@ class _NudgeCard extends StatelessWidget {
     final inkColor = Theme.of(context).brightness == Brightness.dark
         ? AppColors.dark
         : AppColors.lightTextPrimary;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border.all(color: colorScheme.outline),
+    return Material(
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: inkColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.back_hand_outlined,
-              color: AppColors.primary,
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '#1 TRENDING',
-                  style: TextStyle(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                  ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: inkColor,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 3),
-                const Text(
-                  'Do a Handstand Hold',
-                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                child: const Icon(
+                  Icons.local_fire_department_outlined,
+                  color: AppColors.primary,
+                  size: 26,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      challenge == null
+                          ? 'NO CHALLENGES YET'
+                          : '#1 MOST JOINED',
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      challenge?.title ?? 'Discover a challenge',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (challenge?.enrollmentCount != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        '${challenge!.enrollmentCount} joined',
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+            ],
           ),
-          Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-        ],
+        ),
       ),
     );
   }

@@ -14,6 +14,7 @@ import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/challenges_service.dart';
 import 'services/evidence_service.dart';
+import 'services/groups_service.dart';
 import 'services/participation_service.dart';
 import 'services/profile_service.dart';
 import 'services/skills_service.dart';
@@ -41,6 +42,7 @@ class NerdMaxxingApp extends StatelessWidget {
         Provider(create: (_) => ParticipationService(apiClient)),
         Provider(create: (_) => ProfileService(apiClient)),
         Provider(create: (_) => EvidenceService(apiClient)),
+        Provider(create: (_) => GroupsService(apiClient)),
         Provider(create: (_) => DiscoverService(apiClient)),
         Provider(create: (_) => SkillsService(apiClient)),
         ChangeNotifierProvider(

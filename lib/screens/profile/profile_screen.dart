@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
+import '../../models/group.dart';
 import '../../models/participation.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
@@ -10,6 +11,7 @@ import '../../providers/profile_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
+import '../../services/groups_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
@@ -43,6 +45,10 @@ class _ProfileScreenState extends State<_ProfileScreen> {
   bool _isFollowBusy = false;
   int _selectedTab = 0;
   Map<String, Challenge> _challengesById = {};
+  List<Group> _myGroups = [];
+  List<Group> _publicGroups = [];
+  bool _groupsLoading = false;
+  String? _groupsError;
 
   @override
   void initState() {
@@ -56,6 +62,7 @@ class _ProfileScreenState extends State<_ProfileScreen> {
     if (username != null && username.isNotEmpty) {
       final isOwnProfile = widget.username == null || username == auth.username;
       final challengesService = context.read<ChallengesService>();
+      final groupsService = context.read<GroupsService>();
       await Future.wait([
         context.read<ProfileProvider>().load(
           username,
@@ -63,6 +70,15 @@ class _ProfileScreenState extends State<_ProfileScreen> {
         ),
         if (isOwnProfile) context.read<ParticipationProvider>().load(),
       ]);
+      if (isOwnProfile) {
+        await _loadOwnGroups(groupsService);
+      } else if (mounted) {
+        setState(() {
+          _myGroups = context.read<ProfileProvider>().profile?.groups ?? [];
+          _publicGroups = [];
+          _groupsError = null;
+        });
+      }
       if (isOwnProfile) {
         try {
           final challenges = await challengesService.list(limit: 100);
@@ -75,6 +91,95 @@ class _ProfileScreenState extends State<_ProfileScreen> {
         } catch (_) {
           // Participation cards still show their IDs if the catalog is unavailable.
         }
+      }
+    }
+  }
+
+  Future<void> _loadOwnGroups(GroupsService service) async {
+    if (mounted) setState(() => _groupsLoading = true);
+    try {
+      final results = await Future.wait([
+        service.listMine(),
+        service.listPublic(limit: 100),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _myGroups = results[0];
+        _publicGroups = results[1];
+        _groupsError = null;
+      });
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _groupsError = e.message);
+    } finally {
+      if (mounted) setState(() => _groupsLoading = false);
+    }
+  }
+
+  Future<void> _createGroup() async {
+    final draft = await showDialog<_GroupDraft>(
+      context: context,
+      builder: (_) => const _CreateGroupDialog(),
+    );
+    if (draft == null || !mounted) return;
+    try {
+      final group = await context.read<GroupsService>().create(
+        name: draft.name,
+        description: draft.description,
+        visibility: draft.visibility,
+      );
+      if (!mounted) return;
+      setState(() {
+        _myGroups = [group, ..._myGroups];
+        _publicGroups = [group, ..._publicGroups];
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  Future<void> _joinGroup(Group group) async {
+    try {
+      await context.read<GroupsService>().join(group.id);
+      if (!mounted) return;
+      setState(() {
+        _myGroups = [group, ..._myGroups.where((item) => item.id != group.id)];
+        _publicGroups = _publicGroups
+            .map(
+              (item) => item.id == group.id
+                  ? Group(
+                      id: item.id,
+                      name: item.name,
+                      description: item.description,
+                      visibility: item.visibility,
+                      creatorId: item.creatorId,
+                      memberCount: item.memberCount + 1,
+                      membershipStatus: 'ACTIVE',
+                      createdAt: item.createdAt,
+                    )
+                  : item,
+            )
+            .toList();
+      });
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
+  Future<void> _leaveGroup(Group group) async {
+    try {
+      await context.read<GroupsService>().leave(group.id);
+      if (mounted) {
+        setState(() => _myGroups.removeWhere((item) => item.id == group.id));
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -471,7 +576,20 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                   ),
                 ),
             ],
-            if (_selectedTab != 0)
+            if (_selectedTab == 1)
+              SliverToBoxAdapter(
+                child: _GroupsPanel(
+                  isOwnProfile: isOwnProfile,
+                  groups: isOwnProfile ? _myGroups : profile.groups,
+                  publicGroups: _publicGroups,
+                  isLoading: _groupsLoading,
+                  errorMessage: _groupsError,
+                  onCreate: isOwnProfile ? _createGroup : null,
+                  onJoin: isOwnProfile ? _joinGroup : null,
+                  onLeave: isOwnProfile ? _leaveGroup : null,
+                ),
+              )
+            else if (_selectedTab != 0)
               const SliverToBoxAdapter(child: _ComingSoonPanel()),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
@@ -547,6 +665,235 @@ class _ProfileTabs extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _GroupDraft {
+  final String name;
+  final String? description;
+  final String visibility;
+
+  const _GroupDraft({
+    required this.name,
+    required this.description,
+    required this.visibility,
+  });
+}
+
+class _CreateGroupDialog extends StatefulWidget {
+  const _CreateGroupDialog();
+
+  @override
+  State<_CreateGroupDialog> createState() => _CreateGroupDialogState();
+}
+
+class _CreateGroupDialogState extends State<_CreateGroupDialog> {
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  String _visibility = 'PUBLIC';
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) return;
+    Navigator.of(context).pop(
+      _GroupDraft(
+        name: name,
+        description: _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
+        visibility: _visibility,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Create group'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              autofocus: true,
+              maxLength: 120,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
+              controller: _descriptionController,
+              maxLength: 2000,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: _visibility,
+              decoration: const InputDecoration(labelText: 'Visibility'),
+              items: const [
+                DropdownMenuItem(value: 'PUBLIC', child: Text('Public')),
+                DropdownMenuItem(value: 'PRIVATE', child: Text('Private')),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _visibility = value);
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Create')),
+      ],
+    );
+  }
+}
+
+class _GroupsPanel extends StatelessWidget {
+  final bool isOwnProfile;
+  final List<Group> groups;
+  final List<Group> publicGroups;
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback? onCreate;
+  final Future<void> Function(Group group)? onJoin;
+  final Future<void> Function(Group group)? onLeave;
+
+  const _GroupsPanel({
+    required this.isOwnProfile,
+    required this.groups,
+    required this.publicGroups,
+    required this.isLoading,
+    required this.errorMessage,
+    this.onCreate,
+    this.onJoin,
+    this.onLeave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (errorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
+        child: Text(errorMessage!),
+      );
+    }
+
+    final joinedSection = [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 28, 20, 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                isOwnProfile ? 'My groups' : 'Groups',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            if (onCreate != null)
+              IconButton(
+                tooltip: 'Create group',
+                onPressed: onCreate,
+                icon: const Icon(Icons.add),
+              ),
+          ],
+        ),
+      ),
+      if (groups.isEmpty)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+          child: Text(
+            isOwnProfile
+                ? 'You have not joined any groups yet.'
+                : 'No groups yet.',
+          ),
+        )
+      else
+        ...groups.map((group) => _GroupTile(group: group, onLeave: onLeave)),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...joinedSection,
+        if (isOwnProfile) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+            child: Text(
+              'Discover public groups',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          if (publicGroups.isEmpty)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text('No public groups available.'),
+            )
+          else
+            ...publicGroups.map(
+              (group) => _GroupTile(group: group, onJoin: onJoin),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
+class _GroupTile extends StatelessWidget {
+  final Group group;
+  final Future<void> Function(Group group)? onJoin;
+  final Future<void> Function(Group group)? onLeave;
+
+  const _GroupTile({required this.group, this.onJoin, this.onLeave});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMember = group.membershipStatus == 'ACTIVE';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      child: Card(
+        child: ListTile(
+          leading: Icon(
+            group.visibility == 'PRIVATE'
+                ? Icons.lock_outline
+                : Icons.groups_outlined,
+          ),
+          title: Text(group.name),
+          subtitle: Text(
+            '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}'
+            '${group.description == null ? '' : '\n${group.description}'}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: onJoin != null && !isMember
+              ? TextButton(
+                  onPressed: () => onJoin!(group),
+                  child: const Text('Join'),
+                )
+              : onLeave != null && isMember
+              ? TextButton(
+                  onPressed: () => onLeave!(group),
+                  child: const Text('Leave'),
+                )
+              : null,
+        ),
       ),
     );
   }

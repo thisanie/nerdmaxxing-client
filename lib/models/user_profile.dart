@@ -1,3 +1,5 @@
+import 'group.dart';
+
 class ProfileSkill {
   final String id;
   final String name;
@@ -47,6 +49,7 @@ class UserProfile {
   final int completedChallengesCount;
   final int createdChallengesCount;
   final List<ProfileSkill> skills;
+  final List<Group> groups;
   final bool isFollowing;
 
   UserProfile({
@@ -62,6 +65,7 @@ class UserProfile {
     required this.completedChallengesCount,
     required this.createdChallengesCount,
     required this.skills,
+    required this.groups,
     required this.isFollowing,
   });
 
@@ -83,6 +87,9 @@ class UserProfile {
       skills: (json['skills'] as List? ?? [])
           .map((e) => ProfileSkill.fromJson(e))
           .toList(),
+      groups: (json['groups'] as List? ?? [])
+          .map((e) => Group.fromJson(e))
+          .toList(),
       isFollowing: json['is_following'] ?? false,
     );
   }
@@ -101,6 +108,7 @@ class UserProfile {
       completedChallengesCount: completedChallengesCount,
       createdChallengesCount: createdChallengesCount,
       skills: skills,
+      groups: groups,
       isFollowing: isFollowing ?? this.isFollowing,
     );
   }
