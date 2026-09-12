@@ -9,6 +9,18 @@ import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../theme/app_theme.dart';
 
+class _ResourceDraft {
+  final title = TextEditingController();
+  final url = TextEditingController();
+  final rationale = TextEditingController();
+
+  void dispose() {
+    title.dispose();
+    url.dispose();
+    rationale.dispose();
+  }
+}
+
 class CreateChallengeScreen extends StatefulWidget {
   const CreateChallengeScreen({super.key});
 
@@ -21,11 +33,9 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
   final _title = TextEditingController();
   final _shortDescription = TextEditingController();
   final _fullDescription = TextEditingController();
-  final _resourceTitle = TextEditingController();
-  final _resourceUrl = TextEditingController();
-  final _resourceRationale = TextEditingController();
   final _effortMin = TextEditingController();
   final _effortMax = TextEditingController();
+  final _resources = <_ResourceDraft>[_ResourceDraft()];
 
   String _difficulty = 'BEGINNER';
   final _imagePicker = ImagePicker();
@@ -40,13 +50,13 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
       _title,
       _shortDescription,
       _fullDescription,
-      _resourceTitle,
-      _resourceUrl,
-      _resourceRationale,
       _effortMin,
       _effortMax,
     ]) {
       c.dispose();
+    }
+    for (final resource in _resources) {
+      resource.dispose();
     }
     super.dispose();
   }
@@ -76,19 +86,21 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
       _error = null;
     });
     try {
-      final resource = ChallengeResource(
-        id: '',
-        title: _resourceTitle.text.trim(),
-        url: _resourceUrl.text.trim(),
-        resourceType: 'LINK',
-        rationale: _resourceRationale.text.trim(),
-        orderIndex: 0,
-      );
       await context.read<ChallengesService>().create(
         title: _title.text.trim(),
         imageBytes: _imageBytes!,
         imageFilename: _image!.name,
-        resources: [resource],
+        resources: [
+          for (var index = 0; index < _resources.length; index++)
+            ChallengeResource(
+              id: '',
+              title: _resources[index].title.text.trim(),
+              url: _resources[index].url.text.trim(),
+              resourceType: 'LINK',
+              rationale: _resources[index].rationale.text.trim(),
+              orderIndex: index,
+            ),
+        ],
         shortDescription: _shortDescription.text.trim(),
         fullDescription: _fullDescription.text.trim(),
         difficultyLevel: _difficulty,
@@ -122,6 +134,18 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
       _imageBytes = bytes;
       _error = null;
     });
+  }
+
+  void _addResource() {
+    if (_resources.length >= 20) return;
+    setState(() => _resources.add(_ResourceDraft()));
+  }
+
+  void _removeResource(int index) {
+    if (_resources.length == 1) return;
+    final resource = _resources.removeAt(index);
+    resource.dispose();
+    setState(() {});
   }
 
   @override
@@ -214,32 +238,86 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
               validator: _positiveIntegerValidator,
             ),
             const SizedBox(height: 24),
-            Text(
-              'One resource to get started',
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Resources',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                Text(
+                  '${_resources.length}/20',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _resourceTitle,
-              decoration: const InputDecoration(labelText: 'Resource title'),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _resourceUrl,
-              decoration: const InputDecoration(labelText: 'Resource URL'),
-              validator: _httpUrlValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _resourceRationale,
-              decoration: const InputDecoration(
-                labelText: 'Why is this resource useful?',
-              ),
-              maxLines: 2,
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ..._resources.asMap().entries.map((entry) {
+              final index = entry.key;
+              final resource = entry.value;
+              return Padding(
+                key: ValueKey(resource),
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Resource ${index + 1}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        if (_resources.length > 1)
+                          IconButton(
+                            onPressed: _submitting
+                                ? null
+                                : () => _removeResource(index),
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip: 'Remove resource',
+                          ),
+                      ],
+                    ),
+                    TextFormField(
+                      controller: resource.title,
+                      decoration: const InputDecoration(
+                        labelText: 'Resource title',
+                      ),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                          ? 'Required'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: resource.url,
+                      decoration: const InputDecoration(
+                        labelText: 'Resource URL',
+                      ),
+                      validator: _httpUrlValidator,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: resource.rationale,
+                      decoration: const InputDecoration(
+                        labelText: 'Why is this resource useful?',
+                      ),
+                      maxLines: 2,
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                          ? 'Required'
+                          : null,
+                    ),
+                  ],
+                ),
+              );
+            }),
+            OutlinedButton.icon(
+              onPressed: _submitting || _resources.length >= 20
+                  ? null
+                  : _addResource,
+              icon: const Icon(Icons.add),
+              label: const Text('Add resource'),
             ),
             if (_error != null) ...[
               const SizedBox(height: 16),
