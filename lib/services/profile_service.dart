@@ -1,4 +1,5 @@
 import '../models/challenge.dart';
+import '../models/user_stats.dart';
 import '../models/user_profile.dart';
 import 'api_client.dart';
 
@@ -9,6 +10,11 @@ class ProfileService {
   Future<UserProfile> getProfile(String username) async {
     final data = await api.get('/users/$username');
     return UserProfile.fromJson(data);
+  }
+
+  Future<UserStats> getMyStats() async {
+    final data = await api.get('/users/me/stats');
+    return UserStats.fromJson(data);
   }
 
   Future<void> updateUsername(String username) async {

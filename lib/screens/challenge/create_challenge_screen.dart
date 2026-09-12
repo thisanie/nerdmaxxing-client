@@ -1,11 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
-import '../../models/discover.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
-import '../../services/discover_service.dart';
 import '../../theme/app_theme.dart';
 
 class CreateChallengeScreen extends StatefulWidget {
@@ -18,7 +19,6 @@ class CreateChallengeScreen extends StatefulWidget {
 class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
-  final _imageUrl = TextEditingController();
   final _shortDescription = TextEditingController();
   final _fullDescription = TextEditingController();
   final _resourceTitle = TextEditingController();
@@ -26,11 +26,11 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
   final _resourceRationale = TextEditingController();
   final _effortMin = TextEditingController();
   final _effortMax = TextEditingController();
-  final _duration = TextEditingController();
 
   String _difficulty = 'BEGINNER';
-  late final Future<DiscoverFeed> _categoriesFuture;
-  String? _selectedCategoryId;
+  final _imagePicker = ImagePicker();
+  XFile? _image;
+  Uint8List? _imageBytes;
   bool _submitting = false;
   String? _error;
 
@@ -38,7 +38,6 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
   void dispose() {
     for (final c in [
       _title,
-      _imageUrl,
       _shortDescription,
       _fullDescription,
       _resourceTitle,
@@ -46,7 +45,6 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
       _resourceRationale,
       _effortMin,
       _effortMax,
-      _duration,
     ]) {
       c.dispose();
     }
@@ -56,24 +54,21 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = context.read<DiscoverService>().getFeed();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_image == null || _imageBytes == null) {
+      setState(() => _error = 'Choose a challenge image.');
+      return;
+    }
     final effortMin = int.tryParse(_effortMin.text.trim());
     final effortMax = int.tryParse(_effortMax.text.trim());
-    final duration = int.tryParse(_duration.text.trim());
-    if (_selectedCategoryId == null ||
-        effortMin == null ||
+    if (effortMin == null ||
         effortMax == null ||
-        duration == null ||
         effortMin < 1 ||
-        effortMax < effortMin ||
-        duration < 1) {
-      setState(
-        () => _error = 'Choose a category and enter valid timing values.',
-      );
+        effortMax < effortMin) {
+      setState(() => _error = 'Enter valid effort values.');
       return;
     }
     setState(() {
@@ -91,15 +86,14 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
       );
       await context.read<ChallengesService>().create(
         title: _title.text.trim(),
-        imageUrl: _imageUrl.text.trim(),
+        imageBytes: _imageBytes!,
+        imageFilename: _image!.name,
         resources: [resource],
         shortDescription: _shortDescription.text.trim(),
         fullDescription: _fullDescription.text.trim(),
         difficultyLevel: _difficulty,
-        categoryIds: [_selectedCategoryId!],
         estimatedEffortMinMinutes: effortMin,
         estimatedEffortMaxMinutes: effortMax,
-        estimatedDurationMinutes: duration,
         verificationType: 'SELF_REPORTED',
       );
       if (!mounted) return;
@@ -112,6 +106,22 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  Future<void> _pickImage() async {
+    final image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1600,
+    );
+    if (image == null) return;
+    final bytes = await image.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      _image = image;
+      _imageBytes = bytes;
+      _error = null;
+    });
   }
 
   @override
@@ -136,13 +146,23 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
                   : null,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _imageUrl,
-              decoration: const InputDecoration(labelText: 'Image URL'),
-              validator: (v) => (v == null || !v.trim().startsWith('http'))
-                  ? 'A valid http(s) URL is required'
-                  : null,
+            OutlinedButton.icon(
+              onPressed: _submitting ? null : _pickImage,
+              icon: const Icon(Icons.photo_library_outlined),
+              label: Text(_image == null ? 'Choose image' : 'Change image'),
             ),
+            if (_imageBytes != null) ...[
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  _imageBytes!,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             TextFormField(
               controller: _shortDescription,
@@ -160,34 +180,6 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
               maxLines: 4,
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            FutureBuilder<DiscoverFeed>(
-              future: _categoriesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LinearProgressIndicator();
-                }
-                final categories = snapshot.data?.categories ?? const [];
-                if (categories.isEmpty) {
-                  return const Text('No categories are available right now.');
-                }
-                return DropdownButtonFormField<String>(
-                  initialValue: _selectedCategoryId,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  items: categories
-                      .map(
-                        (category) => DropdownMenuItem(
-                          value: category.id,
-                          child: Text(category.name),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) =>
-                      setState(() => _selectedCategoryId = value),
-                  validator: (value) => value == null ? 'Required' : null,
-                );
-              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -221,15 +213,6 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
               keyboardType: TextInputType.number,
               validator: _positiveIntegerValidator,
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _duration,
-              decoration: const InputDecoration(
-                labelText: 'Duration (minutes)',
-              ),
-              keyboardType: TextInputType.number,
-              validator: _positiveIntegerValidator,
-            ),
             const SizedBox(height: 24),
             Text(
               'One resource to get started',
@@ -246,9 +229,7 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
             TextFormField(
               controller: _resourceUrl,
               decoration: const InputDecoration(labelText: 'Resource URL'),
-              validator: (v) => (v == null || !v.trim().startsWith('http'))
-                  ? 'A valid http(s) URL is required'
-                  : null,
+              validator: _httpUrlValidator,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -278,5 +259,12 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
   String? _positiveIntegerValidator(String? value) {
     final minutes = int.tryParse(value?.trim() ?? '');
     return minutes == null || minutes < 1 ? 'Enter a positive number' : null;
+  }
+
+  String? _httpUrlValidator(String? value) {
+    final uri = Uri.tryParse(value?.trim() ?? '');
+    return uri == null || (uri.scheme != 'http' && uri.scheme != 'https')
+        ? 'A valid http(s) URL is required'
+        : null;
   }
 }

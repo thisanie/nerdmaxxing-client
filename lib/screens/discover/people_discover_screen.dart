@@ -422,6 +422,25 @@ class _ChallengeFeatureCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.bolt,
+                          size: 13,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${challenge.auraPoints} aura',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

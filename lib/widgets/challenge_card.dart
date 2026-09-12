@@ -119,8 +119,22 @@ class ChallengeCard extends StatelessWidget {
                           fontSize: 12,
                         ),
                       ),
+                      const Spacer(),
+                      const Icon(
+                        Icons.bolt,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${challenge.auraPoints} aura',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                       if (challenge.enrollmentCount != null) ...[
-                        const Spacer(),
+                        const SizedBox(width: 10),
                         Text(
                           '${challenge.enrollmentCount} joined',
                           style: TextStyle(
@@ -145,11 +159,7 @@ class ChallengeCard extends StatelessWidget {
     return Container(
       color: colorScheme.surfaceContainerHighest,
       alignment: Alignment.center,
-      child: Icon(
-        Icons.auto_awesome,
-        size: 36,
-        color: colorScheme.primary,
-      ),
+      child: Icon(Icons.auto_awesome, size: 36, color: colorScheme.primary),
     );
   }
 }

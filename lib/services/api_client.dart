@@ -16,7 +16,7 @@ class ApiException implements Exception {
 class ApiClient {
   static const String _configuredBaseUrl = String.fromEnvironment(
     'NM_API_BASE_URL',
-    defaultValue: 'http://192.168.1.35:8000/api/v1',
+    defaultValue: 'https://nerdmaxxing-server-seven.vercel.app/api/v1',
   );
   // defaultValue: 'https://nerdmaxxing-server-seven.vercel.app/api/v1',
 
@@ -125,7 +125,13 @@ class ApiClient {
         if (detail is String) {
           message = detail;
         } else if (detail is List && detail.isNotEmpty) {
-          message = detail.map((d) => d['msg'] ?? d.toString()).join('\n');
+          message = detail
+              .map(
+                (d) => d is Map && d['loc'] != null
+                    ? '${(d['loc'] as List).join('.')}: ${d['msg'] ?? 'Invalid value'}'
+                    : d.toString(),
+              )
+              .join('\n');
         }
       } else if (e.response == null) {
         final path = e.requestOptions.uri.path;

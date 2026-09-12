@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/challenge.dart';
 import '../../models/progress_log.dart';
 import '../../models/user_profile.dart';
+import '../../models/user_stats.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/participation_provider.dart';
 import '../../models/participation.dart';
@@ -22,6 +23,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _profile;
+  UserStats? _stats;
   Map<String, Challenge> _challengesById = {};
   Challenge? _mostPopularChallenge;
   Participation? _resumeParticipation;
@@ -42,10 +44,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final profileFuture = username != null && username.isNotEmpty
         ? context.read<ProfileService>().getProfile(username)
         : null;
+    final statsFuture = context.read<ProfileService>().getMyStats();
     final challengesFuture = context.read<ChallengesService>().list(limit: 100);
     try {
       await context.read<ParticipationProvider>().load();
       final profile = profileFuture == null ? null : await profileFuture;
+      final stats = await statsFuture;
       final challenges = await challengesFuture;
       if (!mounted) return;
       final challengeMap = {
@@ -70,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ..sort(_newestParticipationFirst);
       setState(() {
         _profile = profile ?? _profile;
+        _stats = stats;
         _challengesById = challengeMap;
         _mostPopularChallenge = mostPopular;
         _resumeParticipation = active.isEmpty ? null : active.first;
@@ -116,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
         .take(2)
         .toList();
-    final completed = _profile?.completedChallengesCount ?? 0;
+    final stats = _stats;
 
     return Scaffold(
       appBar: AppBar(
@@ -149,12 +154,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Greeting(name: name, aura: _profile?.auraPoints ?? 0),
+                    _Greeting(name: name, aura: stats?.auraPoints ?? 0),
                     const SizedBox(height: 18),
                     _StatsRow(
-                      active: active.length,
-                      completed: completed,
-                      streak: 4,
+                      active: stats?.activeChallengeCount ?? 0,
+                      completed: stats?.completedChallengeCount ?? 0,
+                      streak: stats?.dayStreak ?? 0,
                     ),
                     const SizedBox(height: 24),
                     const _SectionTitle('Continue where you left off'),
@@ -631,6 +636,25 @@ class _ChallengeRow extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.bolt,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${challenge?.auraPoints ?? 0} aura',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -762,6 +786,27 @@ class _NudgeCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                    if (challenge?.auraPoints != null) ...[
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.bolt,
+                            size: 14,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${challenge?.auraPoints ?? 0} aura',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     if (challenge?.enrollmentCount != null) ...[
                       const SizedBox(height: 3),
                       Text(

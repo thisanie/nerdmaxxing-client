@@ -31,6 +31,7 @@ class ChallengeResource {
     'url': url,
     'resource_type': resourceType,
     'rationale': rationale,
+    'order_index': orderIndex,
   };
 }
 
@@ -44,6 +45,7 @@ class Challenge {
   final String fullDescription;
   final String creatorId;
   final String difficultyLevel;
+  final int auraPoints;
   final String status;
   final String visibility;
   final int? estimatedEffortMinMinutes;
@@ -65,6 +67,7 @@ class Challenge {
     required this.fullDescription,
     required this.creatorId,
     required this.difficultyLevel,
+    required this.auraPoints,
     required this.status,
     required this.visibility,
     this.estimatedEffortMinMinutes,
@@ -90,11 +93,14 @@ class Challenge {
       fullDescription: json['full_description'] ?? '',
       creatorId: json['creator_id']?.toString() ?? '',
       difficultyLevel: json['difficulty_level'] ?? 'BEGINNER',
+      auraPoints: _readInt(json, const ['aura_points']) ?? 0,
       status: json['status'] ?? 'PUBLISHED',
       visibility: json['visibility'] ?? 'PUBLIC',
       estimatedEffortMinMinutes: json['estimated_effort_min_minutes'],
       estimatedEffortMaxMinutes: json['estimated_effort_max_minutes'],
-      estimatedDurationMinutes: _readInt(json, const ['estimated_duration_minutes']),
+      estimatedDurationMinutes: _readInt(json, const [
+        'estimated_duration_minutes',
+      ]),
       verificationType: json['verification_type'] ?? 'SELF_REPORTED',
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])
@@ -127,8 +133,8 @@ class Challenge {
 
   String get effortLabel {
     if (estimatedEffortMinMinutes == null &&
-      estimatedEffortMaxMinutes == null &&
-      estimatedDurationMinutes == null) {
+        estimatedEffortMaxMinutes == null &&
+        estimatedDurationMinutes == null) {
       return 'Flexible';
     }
     String fmt(int minutes) {
@@ -143,8 +149,10 @@ class Challenge {
         estimatedEffortMaxMinutes != null) {
       return '${fmt(estimatedEffortMinMinutes!)} - ${fmt(estimatedEffortMaxMinutes!)}';
     }
-    return fmt(estimatedEffortMinMinutes ??
-        estimatedEffortMaxMinutes ??
-        estimatedDurationMinutes!);
+    return fmt(
+      estimatedEffortMinMinutes ??
+          estimatedEffortMaxMinutes ??
+          estimatedDurationMinutes!,
+    );
   }
 }

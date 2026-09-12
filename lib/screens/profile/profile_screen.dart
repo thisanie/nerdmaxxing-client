@@ -1223,7 +1223,7 @@ class _CreatedChallengeTile extends StatelessWidget {
             ),
             title: Text(challenge.title),
             subtitle: Text(
-              '${challenge.status} • ${challenge.visibility}',
+              '${challenge.status} • ${challenge.visibility} • ${challenge.auraPoints} aura',
               style: const TextStyle(color: AppColors.textSecondary),
             ),
             trailing: const Icon(Icons.chevron_right),
@@ -1270,6 +1270,34 @@ class _ChallengeTile extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 7,
+            right: 7,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bolt, size: 13, color: AppColors.primary),
+                    const SizedBox(width: 2),
+                    Text(
+                      '${challenge.auraPoints}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
