@@ -158,6 +158,14 @@ Response `200 OK`:
 }
 ```
 
+### `POST /api/v1/users/{user_id}/follow`
+
+Requires authentication. Makes the authenticated user follow the specified user.
+The followed user receives a `FOLLOW` notification containing the follower's
+`actor_id`; active push tokens receive the same event when Firebase is configured.
+
+Repeated follows are idempotent.
+
 ### `POST /api/v1/users/me/username`
 
 Requires authentication. Sets the current user's first username.

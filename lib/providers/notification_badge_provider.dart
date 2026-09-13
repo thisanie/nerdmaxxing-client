@@ -34,16 +34,9 @@ class NotificationBadgeController extends ChangeNotifier {
     unreadCount = 0;
     notifyListeners();
     try {
-      while (true) {
-        final notifications = await service.list(unreadOnly: true, limit: 100);
-        if (notifications.isEmpty) break;
-        await Future.wait(
-          notifications
-              .where((notification) => !notification.isRead)
-              .map((notification) => service.markRead(notification.id)),
-        );
-        if (notifications.length < 100) break;
-      }
+      final notifications = await service.list(unreadOnly: true, limit: 100);
+      final unread = notifications.where((notification) => !notification.isRead);
+      await Future.wait(unread.map((notification) => service.markRead(notification.id)));
     } catch (_) {
       // The screen can still display notifications if marking them fails.
     }

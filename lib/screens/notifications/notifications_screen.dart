@@ -184,6 +184,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
+  Future<void> _openNotification(AppNotification notification) async {
+    if (notification.isChallengeInvitation) {
+      await _viewChallenge(notification);
+    } else {
+      await _markRead(notification);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -218,7 +226,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 itemBuilder: (_, index) => _NotificationTile(
                   notification: _notifications[index],
                   isWorking: _workingId == _notifications[index].id,
-                  onTap: () => _viewChallenge(_notifications[index]),
+                  onTap: () => _openNotification(_notifications[index]),
                   onAccept: () => _accept(_notifications[index]),
                   onDecline: () => _decline(_notifications[index]),
                 ),
@@ -254,7 +262,7 @@ class _NotificationTile extends StatelessWidget {
           ? null
           : colorScheme.surfaceContainerHighest,
       child: InkWell(
-        onTap: notification.isChallengeInvitation ? onTap : null,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -265,7 +273,11 @@ class _NotificationTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    isInvitation ? Icons.mail_outline : Icons.notifications_none,
+                    isInvitation
+                        ? Icons.mail_outline
+                        : notification.isFollow
+                        ? Icons.person_add_alt_1_outlined
+                        : Icons.notifications_none,
                     color: AppColors.primary,
                   ),
                   const SizedBox(width: 12),
@@ -274,7 +286,9 @@ class _NotificationTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          notification.challengeTitle ?? 'Notification',
+                          notification.isFollow
+                              ? notification.actorName ?? 'New follower'
+                              : notification.challengeTitle ?? 'Notification',
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),

@@ -27,12 +27,24 @@ class AppNotification {
       : rawDataValue;
     final rawChallenge =
       json['challenge'] ?? (rawData is Map ? rawData['challenge'] : null);
+    final rawActor =
+      json['actor'] ?? (rawData is Map ? rawData['actor'] : null);
+    final actorData = rawActor is Map
+      ? rawActor.cast<String, dynamic>()
+      : const <String, dynamic>{};
     final challengeData = rawChallenge is Map
         ? rawChallenge.cast<String, dynamic>()
         : const <String, dynamic>{};
     final mergedData = <String, dynamic>{
       if (rawData is Map) ...rawData.cast<String, dynamic>(),
       ...challengeData,
+      ...actorData,
+      if (actorData['id'] != null && json['actor_id'] == null)
+        'actor_id': actorData['id'],
+      if (actorData['username'] != null && json['actor_username'] == null)
+        'actor_username': actorData['username'],
+      if (actorData['name'] != null && json['actor_name'] == null)
+        'actor_name': actorData['name'],
       if (json['invitation_id'] != null) 'invitation_id': json['invitation_id'],
       if (json['challenge_slug'] != null) 'challenge_slug': json['challenge_slug'],
       if (json['challenge_title'] != null) 'challenge_title': json['challenge_title'],
@@ -41,6 +53,10 @@ class AppNotification {
       if (json['entity_id'] != null) 'entity_id': json['entity_id'],
       if (json['resource_id'] != null) 'resource_id': json['resource_id'],
       if (json['target_id'] != null) 'target_id': json['target_id'],
+      if (json['actor_id'] != null) 'actor_id': json['actor_id'],
+      if (json['actor_username'] != null)
+        'actor_username': json['actor_username'],
+      if (json['actor_name'] != null) 'actor_name': json['actor_name'],
       if (json['invitation_status'] != null)
         'invitation_status': json['invitation_status'],
     };
@@ -61,7 +77,7 @@ class AppNotification {
 
   String? get invitationId =>
       _value('invitation_id') ??
-      (isChallengeInvitation ? _value('related_id') : null);
+      (_isInvitationType ? _value('related_id') : null);
   String? get challengeId =>
       _value('challenge_id') ??
       _value('resource_id') ??
@@ -71,9 +87,27 @@ class AppNotification {
       _value('challengeSlug') ??
       _value('slug');
   String? get challengeTitle => _value('challenge_title') ?? _value('title');
+  String? get actorId => _value('actor_id');
+  String? get actorUsername => _value('actor_username');
+  String? get actorName =>
+      _value('actor_name') ?? _value('name') ?? _value('actor_username');
 
-  bool get isChallengeInvitation =>
-      invitationId != null || type.toUpperCase().contains('INVITATION');
+  bool get isFollow {
+    final values = [
+      type,
+      data['notification_type']?.toString(),
+      data['event_type']?.toString(),
+    ];
+    return values.any((value) => value?.toUpperCase() == 'FOLLOW');
+  }
+
+  bool get isChallengeInvitation => _isInvitationType || invitationId != null;
+
+  bool get _isInvitationType =>
+      type.toUpperCase().contains('INVITATION') ||
+      _value('notification_type')?.toUpperCase().contains('INVITATION') == true ||
+      _value('event_type')?.toUpperCase().contains('INVITATION') == true ||
+      _value('invitation_status') != null;
 
   bool get isPendingInvitation =>
       isChallengeInvitation &&
