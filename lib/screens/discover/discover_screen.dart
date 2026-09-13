@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
 import '../../models/progress_log.dart';
+import '../../screens/notifications/notifications_screen.dart';
 import '../../models/user_profile.dart';
 import '../../models/user_stats.dart';
 import '../../providers/auth_provider.dart';
@@ -133,8 +134,10 @@ class _HomeScreenState extends State<HomeScreen> {
         titleSpacing: 20,
         title: _HomeBrandHeader(
           onNotificationsTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notifications coming soon')),
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const NotificationsScreen(),
+              ),
             );
           },
         ),

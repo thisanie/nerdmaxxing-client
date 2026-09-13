@@ -39,6 +39,14 @@ class ParticipationProvider extends ChangeNotifier {
     return participation;
   }
 
+  void add(Participation participation) {
+    participations = [
+      participation,
+      ...participations.where((item) => item.id != participation.id),
+    ];
+    notifyListeners();
+  }
+
   Future<Participation> updateStatus(String participantId, String status) async {
     final updated = await service.updateStatus(participantId, status);
     participations = participations.map((p) => p.id == participantId ? updated : p).toList();

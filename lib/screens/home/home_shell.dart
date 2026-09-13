@@ -99,9 +99,9 @@ class _HomeShellState extends State<HomeShell> {
 
   void _onNavigationTap(int navigationIndex) {
     if (navigationIndex == 2) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const CreateChallengeScreen()));
+      _navigatorKeys[_index].currentState?.push(
+        MaterialPageRoute(builder: (_) => const CreateChallengeScreen()),
+      );
       return;
     }
     final tabIndex = navigationIndex > 2

@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
+import '../../models/notification.dart';
 import '../../models/participation.dart';
 import '../../models/progress_log.dart';
+import '../../models/user_profile.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/participation_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
+import '../../services/invitations_service.dart';
+import '../../services/notifications_service.dart';
 import '../../services/participation_service.dart';
+import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/difficulty_badge.dart';
 import '../evidence/submit_evidence_screen.dart';
@@ -15,11 +22,13 @@ import '../evidence/submit_evidence_screen.dart';
 class ChallengeDetailScreen extends StatefulWidget {
   final String slug;
   final Challenge? initialChallenge;
+  final AppNotification? invitation;
 
   const ChallengeDetailScreen({
     super.key,
     required this.slug,
     this.initialChallenge,
+    this.invitation,
   });
 
   @override
@@ -30,6 +39,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   Challenge? _challenge;
   String? _error;
   bool _accepting = false;
+  bool _invitationWorking = false;
 
   @override
   void initState() {
@@ -67,6 +77,55 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           .showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
       if (mounted) setState(() => _accepting = false);
+    }
+  }
+
+  Future<void> _acceptInvitation() async {
+    final invitationId = widget.invitation?.invitationId;
+    if (invitationId == null) return;
+    final notifications = context.read<NotificationsService>();
+    final participations = context.read<ParticipationProvider>();
+    setState(() => _invitationWorking = true);
+    try {
+      final participation = await notifications.acceptInvitation(invitationId);
+      participations.add(participation);
+      await notifications.markRead(widget.invitation!.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invitation accepted.')),
+      );
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _invitationWorking = false);
+    }
+  }
+
+  Future<void> _declineInvitation() async {
+    final invitationId = widget.invitation?.invitationId;
+    if (invitationId == null) return;
+    final notifications = context.read<NotificationsService>();
+    setState(() => _invitationWorking = true);
+    try {
+      await notifications.declineInvitation(invitationId);
+      await notifications.markRead(widget.invitation!.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invitation declined.')),
+      );
+      Navigator.of(context).pop();
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _invitationWorking = false);
     }
   }
 
@@ -232,6 +291,55 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
 
   Widget _actionButton(Participation? participation) {
     if (participation == null) {
+      final invitation = widget.invitation;
+      if (invitation != null &&
+          invitation.invitationId != null &&
+          !invitation.isPendingInvitation) {
+        final status = invitation.invitationStatus?.toUpperCase();
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceAlt,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Text(
+            status == 'ACCEPTED' ? 'Invitation accepted.' : 'Invitation declined.',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        );
+      }
+      if (invitation?.invitationId != null) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'You have been invited to this challenge.',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _invitationWorking ? null : _declineInvitation,
+                    child: const Text('Decline'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _invitationWorking ? null : _acceptInvitation,
+                    child: Text(
+                      _invitationWorking ? 'Working...' : 'Accept Invitation',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      }
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton(
@@ -252,6 +360,15 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
             ),
             icon: const Icon(Icons.timer_outlined),
             label: const Text('Log Progress'),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => _InviteFriendsDialog(challenge: widget.slug),
+            ),
+            icon: const Icon(Icons.person_add_alt_1),
+            label: const Text('Challenge Friends'),
           ),
           const SizedBox(height: 10),
           OutlinedButton(
@@ -279,6 +396,198 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           Text('Status: ${status.toString().toLowerCase()}'),
         ],
       ),
+    );
+  }
+}
+
+class _InviteFriendsDialog extends StatefulWidget {
+  final String challenge;
+
+  const _InviteFriendsDialog({required this.challenge});
+
+  @override
+  State<_InviteFriendsDialog> createState() => _InviteFriendsDialogState();
+}
+
+class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
+  final _searchController = TextEditingController();
+  List<UserSummary> _followers = [];
+  bool _loading = true;
+  bool _linkLoading = false;
+  String? _error;
+  String? _invitingId;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadFollowers());
+  }
+
+  @override
+  void dispose() {
+    _searchController
+      ..removeListener(_onSearchChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() => setState(() {});
+
+  Future<void> _loadFollowers() async {
+    try {
+      final username = context.read<AuthProvider>().username;
+      if (username == null || username.isEmpty) {
+        throw ApiException(null, 'Your profile is not ready yet.');
+      }
+      final profileService = context.read<ProfileService>();
+      final profile = await profileService.getProfile(username);
+      final followers = await profileService.listFollowers(profile.id);
+      if (!mounted) return;
+      setState(() => _followers = followers);
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _invite(UserSummary user) async {
+    setState(() {
+      _invitingId = user.id;
+      _error = null;
+    });
+    try {
+      await context.read<InvitationsService>().inviteFollower(
+        widget.challenge,
+        inviteeId: user.id,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${user.name ?? user.username ?? 'Friend'} was invited.'),
+        ),
+      );
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _invitingId = null);
+    }
+  }
+
+  Future<void> _copyInviteLink() async {
+    setState(() {
+      _linkLoading = true;
+      _error = null;
+    });
+    try {
+      final link = await context.read<InvitationsService>().createInviteLink(
+        widget.challenge,
+      );
+      await Clipboard.setData(ClipboardData(text: link.url));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invite link copied to clipboard.')),
+      );
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _linkLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _searchController.text.trim().toLowerCase();
+    final users = _followers.where((user) {
+      return query.isEmpty ||
+          (user.username ?? '').toLowerCase().contains(query) ||
+          (user.name ?? '').toLowerCase().contains(query);
+    }).toList();
+
+    return AlertDialog(
+      title: const Text('Challenge friends'),
+      content: SizedBox(
+        width: 420,
+        child: _loading
+            ? const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      decoration: const InputDecoration(
+                        hintText: 'Search your followers',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_error != null)
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: AppColors.danger),
+                      ),
+                    if (_error != null) const SizedBox(height: 8),
+                    if (users.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Text('No matching followers.'),
+                      )
+                    else
+                      ...users.map(
+                        (user) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            backgroundImage: user.avatarUrl == null
+                                ? null
+                                : NetworkImage(user.avatarUrl!),
+                            child: user.avatarUrl == null
+                                ? const Icon(Icons.person_outline)
+                                : null,
+                          ),
+                          title: Text(
+                            user.name ?? user.username ?? 'NerdMaxxer',
+                          ),
+                          subtitle: user.username == null
+                              ? null
+                              : Text('@${user.username}'),
+                          trailing: _invitingId == user.id
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : IconButton(
+                                  tooltip: 'Challenge',
+                                  onPressed: _invitingId == null
+                                      ? () => _invite(user)
+                                      : null,
+                                  icon: const Icon(Icons.send_outlined),
+                                ),
+                        ),
+                      ),
+                    const Divider(height: 24),
+                    OutlinedButton.icon(
+                      onPressed: _linkLoading ? null : _copyInviteLink,
+                      icon: const Icon(Icons.link),
+                      label: Text(
+                        _linkLoading ? 'Creating link...' : 'Copy invite link',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Done'),
+        ),
+      ],
     );
   }
 }
