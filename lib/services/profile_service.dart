@@ -1,6 +1,8 @@
 import '../models/challenge.dart';
 import '../models/user_stats.dart';
 import '../models/user_profile.dart';
+import 'package:dio/dio.dart';
+
 import 'api_client.dart';
 
 class ProfileService {
@@ -21,8 +23,20 @@ class ProfileService {
     await api.patch('/users/me/username', data: {'username': username});
   }
 
-  Future<void> updateProfile({String? name, String? bio}) async {
-    await api.patch('/users/me/profile', data: {'name': name, 'bio': bio});
+  Future<UserProfile> updateProfile({
+    String? name,
+    String? bio,
+    MultipartFile? avatar,
+  }) async {
+    final data = await api.patch(
+      '/users/me/profile',
+      data: FormData.fromMap({
+        'name': name,
+        'bio': bio,
+        'avatar': ?avatar,
+      }),
+    );
+    return UserProfile.fromJson(data as Map<String, dynamic>);
   }
 
   Future<List<Challenge>> listMyCompletedChallenges() async {

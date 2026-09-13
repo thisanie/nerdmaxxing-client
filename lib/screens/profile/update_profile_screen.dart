@@ -1,4 +1,8 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/user_profile.dart';
@@ -19,6 +23,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   late final TextEditingController _usernameController;
   late final TextEditingController _nameController;
   late final TextEditingController _bioController;
+  final _imagePicker = ImagePicker();
+  XFile? _avatar;
+  Uint8List? _avatarBytes;
   bool _isSaving = false;
 
   @override
@@ -54,8 +61,16 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       await profileService.updateProfile(
         name: _nameController.text.trim(),
         bio: _bioController.text.trim(),
+        avatar: _avatarBytes == null
+            ? null
+            : MultipartFile.fromBytes(
+                _avatarBytes!,
+                filename: _avatar!.name,
+              ),
       );
-      await profileService.updateUsername(username);
+      if (username != (widget.profile.username ?? '')) {
+        await profileService.updateUsername(username);
+      }
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
@@ -67,6 +82,21 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     }
   }
 
+  Future<void> _pickAvatar() async {
+    final image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1200,
+    );
+    if (image == null) return;
+    final bytes = await image.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      _avatar = image;
+      _avatarBytes = bytes;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +104,35 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Center(
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 52,
+                  backgroundColor: AppColors.surfaceAlt,
+                  backgroundImage: _avatarBytes != null
+                      ? MemoryImage(_avatarBytes!)
+                      : widget.profile.avatarUrl != null
+                      ? NetworkImage(widget.profile.avatarUrl!)
+                      : null,
+                  child: _avatarBytes == null && widget.profile.avatarUrl == null
+                      ? const Icon(
+                          Icons.person_outline,
+                          size: 48,
+                          color: AppColors.textSecondary,
+                        )
+                      : null,
+                ),
+                IconButton.filled(
+                  onPressed: _isSaving ? null : _pickAvatar,
+                  tooltip: 'Change profile photo',
+                  icon: const Icon(Icons.camera_alt_outlined),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           Text('Username', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           TextField(
