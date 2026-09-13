@@ -1,35 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 
 import '../../models/challenge.dart';
 import '../../models/progress_log.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../models/user_profile.dart';
-import '../../models/user_stats.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/participation_provider.dart';
+import '../../providers/app_state_providers.dart';
 import '../../models/participation.dart';
 import '../../services/challenges_service.dart';
 import '../../services/profile_service.dart';
-import '../../services/participation_service.dart';
 import '../../theme/app_theme.dart';
 import '../challenge/challenge_detail_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   UserProfile? _profile;
-  UserStats? _stats;
   Map<String, Challenge> _challengesById = {};
   Challenge? _mostPopularChallenge;
   Participation? _resumeParticipation;
-  List<ProgressLog> _resumeProgress = [];
-  bool _resumeProgressLoading = false;
 
   @override
   void initState() {
@@ -45,12 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final profileFuture = username != null && username.isNotEmpty
         ? context.read<ProfileService>().getProfile(username)
         : null;
-    final statsFuture = context.read<ProfileService>().getMyStats();
     final challengesFuture = context.read<ChallengesService>().list(limit: 100);
     try {
-      await context.read<ParticipationProvider>().load();
+      await ref.read(participationControllerProvider.future);
       final profile = profileFuture == null ? null : await profileFuture;
-      final stats = await statsFuture;
       final challenges = await challengesFuture;
       if (!mounted) return;
       final challengeMap = {
@@ -67,23 +61,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 : popular,
           );
       final active =
-          context
-              .read<ParticipationProvider>()
-              .participations
+            (ref.read(participationControllerProvider).valueOrNull ?? [])
               .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
               .toList()
             ..sort(_newestParticipationFirst);
       setState(() {
         _profile = profile ?? _profile;
-        _stats = stats;
         _challengesById = challengeMap;
         _mostPopularChallenge = mostPopular;
         _resumeParticipation = active.isEmpty ? null : active.first;
-        _resumeProgress = [];
       });
-      if (active.isNotEmpty) {
-        await _loadResumeProgress(active.first.id);
-      }
     } catch (_) {
       // The discovery feed remains usable if the home summary is unavailable.
     }
@@ -98,31 +85,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return bDate.compareTo(aDate);
   }
 
-  Future<void> _loadResumeProgress(String participantId) async {
-    if (mounted) setState(() => _resumeProgressLoading = true);
-    try {
-      final logs = await context.read<ParticipationService>().listProgress(
-        participantId,
-        limit: 100,
-      );
-      if (mounted) setState(() => _resumeProgress = logs);
-    } catch (_) {
-      // The challenge remains available even if its progress history is unavailable.
-    } finally {
-      if (mounted) setState(() => _resumeProgressLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final participation = context.watch<ParticipationProvider>();
+    final participation = ref.watch(participationControllerProvider);
+    final participationItems = participation.valueOrNull ?? const [];
     final name = _profile?.name ?? auth.displayName ?? auth.username ?? 'Pablo';
-    final active = participation.participations
+    final active = participationItems
         .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
         .take(2)
         .toList();
-    final stats = _stats;
+    final stats = ref.watch(myStatsProvider).valueOrNull;
+    final resumeProgressState = _resumeParticipation == null
+      ? null
+      : ref.watch(progressLogsProvider(_resumeParticipation!.id));
 
     return Scaffold(
       appBar: AppBar(
@@ -171,8 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       challenge: _resumeParticipation == null
                           ? null
                           : _challengesById[_resumeParticipation!.challengeId],
-                      progress: _resumeProgress,
-                      isLoading: _resumeProgressLoading,
+                      progress: resumeProgressState?.valueOrNull ?? const [],
+                      isLoading: resumeProgressState?.isLoading ?? false,
                       onTap: _resumeParticipation == null
                           ? null
                           : () => _openParticipation(_resumeParticipation!),

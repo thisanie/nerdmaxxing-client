@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 
 import '../../models/evidence_submission.dart';
 import '../../models/participation.dart';
-import '../../providers/participation_provider.dart';
+import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
 import '../../services/evidence_service.dart';
 import '../../theme/app_theme.dart';
 
-class SubmitEvidenceScreen extends StatefulWidget {
+class SubmitEvidenceScreen extends ConsumerStatefulWidget {
   final Participation participation;
   const SubmitEvidenceScreen({super.key, required this.participation});
 
   @override
-  State<SubmitEvidenceScreen> createState() => _SubmitEvidenceScreenState();
+  ConsumerState<SubmitEvidenceScreen> createState() =>
+      _SubmitEvidenceScreenState();
 }
 
-class _SubmitEvidenceScreenState extends State<SubmitEvidenceScreen> {
+class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _explanation = TextEditingController();
   final _link = TextEditingController();
@@ -61,7 +63,9 @@ class _SubmitEvidenceScreenState extends State<SubmitEvidenceScreen> {
     });
     try {
       await context.read<EvidenceService>().selfVerify(_submission!.id);
-      await context.read<ParticipationProvider>().load();
+      await ref.read(participationControllerProvider.notifier).refresh();
+      ref.invalidate(myStatsProvider);
+      ref.invalidate(myCompletedChallengesProvider);
       if (!mounted) return;
       Navigator.of(context).pop();
       showDialog(

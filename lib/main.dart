@@ -3,10 +3,11 @@ import 'providers/discover_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 
+import 'providers/app_state_providers.dart';
 import 'providers/auth_provider.dart';
 import 'providers/challenges_provider.dart';
-import 'providers/participation_provider.dart';
 import 'providers/skills_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/auth_gate.dart';
@@ -36,8 +37,15 @@ class NerdMaxxingApp extends StatelessWidget {
     final apiClient = ApiClient(tokenStorage: tokenStorage);
     final authService = AuthService(api: apiClient, tokenStorage: tokenStorage);
 
-    return MultiProvider(
-      providers: [
+    return ProviderScope(
+      overrides: [
+        participationServiceProvider.overrideWithValue(
+          ParticipationService(apiClient),
+        ),
+        profileServiceProvider.overrideWithValue(ProfileService(apiClient)),
+      ],
+      child: MultiProvider(
+        providers: [
         Provider.value(value: apiClient),
         Provider.value(value: authService),
         Provider(create: (_) => ChallengesService(apiClient)),
@@ -68,26 +76,23 @@ class NerdMaxxingApp extends StatelessWidget {
               DiscoverProvider(context.read<DiscoverService>()),
         ),
         ChangeNotifierProvider(
-          create: (context) =>
-              ParticipationProvider(context.read<ParticipationService>()),
-        ),
-        ChangeNotifierProvider(
           create: (context) => SkillsProvider(context.read<SkillsService>()),
         ),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: Builder(
-        builder: (context) {
-          final themeProvider = context.watch<ThemeProvider>();
-          return MaterialApp(
-            title: 'NERDMAXXING',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.light,
-            darkTheme: AppTheme.dark,
-            themeMode: themeProvider.themeMode,
-            home: const AuthGate(),
-          );
-        },
+        ],
+        child: Builder(
+          builder: (context) {
+            final themeProvider = context.watch<ThemeProvider>();
+            return MaterialApp(
+              title: 'NERDMAXXING',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: themeProvider.themeMode,
+              home: const AuthGate(),
+            );
+          },
+        ),
       ),
     );
   }

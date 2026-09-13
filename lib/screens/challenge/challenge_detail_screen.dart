@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 
 import '../../models/challenge.dart';
 import '../../models/notification.dart';
@@ -8,18 +9,17 @@ import '../../models/participation.dart';
 import '../../models/progress_log.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/participation_provider.dart';
+import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/invitations_service.dart';
 import '../../services/notifications_service.dart';
-import '../../services/participation_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/difficulty_badge.dart';
 import '../evidence/submit_evidence_screen.dart';
 
-class ChallengeDetailScreen extends StatefulWidget {
+class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final String slug;
   final Challenge? initialChallenge;
   final AppNotification? invitation;
@@ -32,10 +32,11 @@ class ChallengeDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<ChallengeDetailScreen> createState() => _ChallengeDetailScreenState();
+  ConsumerState<ChallengeDetailScreen> createState() =>
+      _ChallengeDetailScreenState();
 }
 
-class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
+class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   Challenge? _challenge;
   String? _error;
   bool _accepting = false;
@@ -64,7 +65,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   Future<void> _accept() async {
     setState(() => _accepting = true);
     try {
-      await context.read<ParticipationProvider>().accept(widget.slug);
+      await ref.read(participationControllerProvider.notifier).accept(widget.slug);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -84,7 +85,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     final invitationId = widget.invitation?.invitationId;
     if (invitationId == null) return;
     final notifications = context.read<NotificationsService>();
-    final participations = context.read<ParticipationProvider>();
+    final participations = ref.read(participationControllerProvider.notifier);
     setState(() => _invitationWorking = true);
     try {
       final participation = await notifications.acceptInvitation(invitationId);
@@ -143,9 +144,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final challenge = _challenge!;
-    final participation = context.watch<ParticipationProvider>().forChallenge(
-      challenge.id,
-    );
+    final participation = ref
+        .watch(participationControllerProvider)
+        .valueOrNull
+        ?.where((item) => item.challengeId == challenge.id)
+        .firstOrNull;
 
     return Scaffold(
       body: CustomScrollView(
@@ -158,7 +161,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                   ? Image.network(
                       challenge.imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
+                      errorBuilder: (_, _, _) =>
                           Container(color: AppColors.surfaceAlt),
                     )
                   : Container(color: AppColors.surfaceAlt),
@@ -592,27 +595,24 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
   }
 }
 
-class _ProgressDialog extends StatefulWidget {
+class _ProgressDialog extends ConsumerStatefulWidget {
   final Participation participation;
 
   const _ProgressDialog({required this.participation});
 
   @override
-  State<_ProgressDialog> createState() => _ProgressDialogState();
+  ConsumerState<_ProgressDialog> createState() => _ProgressDialogState();
 }
 
-class _ProgressDialogState extends State<_ProgressDialog> {
+class _ProgressDialogState extends ConsumerState<_ProgressDialog> {
   final _hoursController = TextEditingController();
   final _noteController = TextEditingController();
-  List<ProgressLog> _logs = [];
-  bool _loading = true;
   bool _saving = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadLogs();
   }
 
   @override
@@ -620,23 +620,6 @@ class _ProgressDialogState extends State<_ProgressDialog> {
     _hoursController.dispose();
     _noteController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadLogs() async {
-    try {
-      final logs = await context.read<ParticipationService>().listProgress(
-        widget.participation.id,
-      );
-      if (!mounted) return;
-      setState(() {
-        _logs = logs;
-        _error = null;
-      });
-    } on ApiException catch (e) {
-      if (mounted) setState(() => _error = e.message);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
   }
 
   Future<void> _save() async {
@@ -650,7 +633,7 @@ class _ProgressDialogState extends State<_ProgressDialog> {
       _error = null;
     });
     try {
-      await context.read<ParticipationService>().logProgress(
+      await ref.read(participationControllerProvider.notifier).logProgress(
         widget.participation.id,
         hoursSpent: hours,
         note: _noteController.text.trim().isEmpty
@@ -659,7 +642,6 @@ class _ProgressDialogState extends State<_ProgressDialog> {
       );
       _hoursController.clear();
       _noteController.clear();
-      await _loadLogs();
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
@@ -677,6 +659,8 @@ class _ProgressDialogState extends State<_ProgressDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final logsState = ref.watch(progressLogsProvider(widget.participation.id));
+    final logs = logsState.valueOrNull ?? const <ProgressLog>[];
     return AlertDialog(
       title: const Text('Log progress'),
       content: SizedBox(
@@ -717,12 +701,12 @@ class _ProgressDialogState extends State<_ProgressDialog> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
-              if (_loading)
+              if (logsState.isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (_logs.isEmpty)
+              else if (logs.isEmpty)
                 const Text('No progress logged yet.')
               else
-                ..._logs.map(
+                ...logs.map(
                   (log) => ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.schedule_outlined),

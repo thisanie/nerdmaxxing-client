@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+  hide Provider, ChangeNotifierProvider, Consumer;
 
 import '../../models/challenge.dart';
 import '../../models/group.dart';
 import '../../models/participation.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/participation_provider.dart';
+import '../../providers/app_state_providers.dart';
 import '../../providers/profile_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/api_client.dart';
@@ -32,15 +34,15 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class _ProfileScreen extends StatefulWidget {
+class _ProfileScreen extends ConsumerStatefulWidget {
   final String? username;
   const _ProfileScreen({this.username});
 
   @override
-  State<_ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<_ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<_ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   bool _isSigningOut = false;
   bool _isFollowBusy = false;
   int _selectedTab = 0;
@@ -68,7 +70,8 @@ class _ProfileScreenState extends State<_ProfileScreen> {
           username,
           isOwnProfile: isOwnProfile,
         ),
-        if (isOwnProfile) context.read<ParticipationProvider>().load(),
+        if (isOwnProfile)
+          ref.read(participationControllerProvider.notifier).refresh(),
       ]);
       if (isOwnProfile) {
         await _loadOwnGroups(groupsService);
@@ -232,7 +235,7 @@ class _ProfileScreenState extends State<_ProfileScreen> {
 
   Future<void> _changeStatus(Participation participation, String status) async {
     try {
-      await context.read<ParticipationProvider>().updateStatus(
+      await ref.read(participationControllerProvider.notifier).updateStatus(
         participation.id,
         status,
       );
@@ -308,10 +311,17 @@ class _ProfileScreenState extends State<_ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProfileProvider>();
-    final participationProvider = context.watch<ParticipationProvider>();
+    final participationState = ref.watch(participationControllerProvider);
+    final participations = participationState.valueOrNull ?? const [];
     final auth = context.watch<AuthProvider>();
     final profile = provider.profile;
     final isOwnProfile = _isOwnProfile(auth);
+    final completedChallenges = isOwnProfile
+      ? ref.watch(myCompletedChallengesProvider).valueOrNull ?? const []
+      : provider.completedChallenges;
+    final createdChallenges = isOwnProfile
+      ? ref.watch(myCreatedChallengesProvider).valueOrNull ?? const []
+      : provider.createdChallenges;
 
     if (provider.isLoading && profile == null) {
       return Scaffold(
@@ -465,7 +475,7 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                     ),
                   ),
                 ),
-                if (provider.createdChallenges.isEmpty)
+                if (createdChallenges.isEmpty)
                   const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -476,9 +486,9 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _CreatedChallengeTile(
-                        challenge: provider.createdChallenges[index],
+                        challenge: createdChallenges[index],
                       ),
-                      childCount: provider.createdChallenges.length,
+                      childCount: createdChallenges.length,
                     ),
                   ),
                 SliverToBoxAdapter(
@@ -490,15 +500,14 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                     ),
                   ),
                 ),
-                if (participationProvider.isLoading &&
-                    participationProvider.participations.isEmpty)
+                if (participationState.isLoading && participations.isEmpty)
                   const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Center(child: CircularProgressIndicator()),
                     ),
                   )
-                else if (participationProvider.participations.isEmpty)
+                else if (participations.isEmpty)
                   const SliverToBoxAdapter(
                     child: EmptyState(
                       icon: Icons.flag_outlined,
@@ -511,18 +520,15 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _ParticipationTile(
-                        participation:
-                            participationProvider.participations[index],
+                        participation: participations[index],
                         challenge:
-                            _challengesById[participationProvider
-                                .participations[index]
-                                .challengeId],
+                            _challengesById[participations[index].challengeId],
                         statusLabel: _statusLabel(
-                          participationProvider.participations[index].status,
+                          participations[index].status,
                         ),
                         onChangeStatus: _changeStatus,
                       ),
-                      childCount: participationProvider.participations.length,
+                      childCount: participations.length,
                     ),
                   ),
               ],
@@ -544,7 +550,7 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                   ),
                 ),
               ),
-              if (provider.completedChallenges.isEmpty)
+              if (completedChallenges.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(32),
@@ -562,9 +568,9 @@ class _ProfileScreenState extends State<_ProfileScreen> {
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _ChallengeTile(
-                        challenge: provider.completedChallenges[index],
+                        challenge: completedChallenges[index],
                       ),
-                      childCount: provider.completedChallenges.length,
+                      childCount: completedChallenges.length,
                     ),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(

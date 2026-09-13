@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 
 import '../../models/challenge.dart';
 import '../../models/notification.dart';
-import '../../providers/participation_provider.dart';
+import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/notifications_service.dart';
 import '../../theme/app_theme.dart';
 import '../challenge/challenge_detail_screen.dart';
 
-class NotificationsScreen extends StatefulWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   List<AppNotification> _notifications = [];
   bool _loading = true;
   String? _error;
@@ -68,7 +69,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final invitationId = notification.invitationId;
     if (invitationId == null) return;
     final notifications = context.read<NotificationsService>();
-    final participations = context.read<ParticipationProvider>();
+    final participations = ref.read(participationControllerProvider.notifier);
     setState(() => _workingId = notification.id);
     try {
       final participation = await notifications.acceptInvitation(invitationId);
