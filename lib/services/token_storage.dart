@@ -13,6 +13,7 @@ class TokenStorage {
   static const _refreshKey = 'nm_refresh_token';
   static const _userIdKey = 'nm_user_id';
   static const _usernameKey = 'nm_username';
+  static const _pushTokenKey = 'nm_push_token';
 
   final _secureStorage = const FlutterSecureStorage();
   SharedPreferences? _prefs;
@@ -57,11 +58,15 @@ class TokenStorage {
   }
 
   Future<void> saveUsername(String username) => _write(_usernameKey, username);
+  Future<void> savePushToken(String token) => _write(_pushTokenKey, token);
 
   Future<String?> get accessToken => _read(_accessKey);
   Future<String?> get refreshToken => _read(_refreshKey);
   Future<String?> get userId => _read(_userIdKey);
   Future<String?> get username => _read(_usernameKey);
+  Future<String?> get pushToken => _read(_pushTokenKey);
+
+  Future<void> clearPushToken() => _delete(_pushTokenKey);
 
   Future<void> clear() async {
     await Future.wait([
@@ -69,6 +74,7 @@ class TokenStorage {
       _delete(_refreshKey),
       _delete(_userIdKey),
       _delete(_usernameKey),
+      _delete(_pushTokenKey),
     ]);
   }
 }

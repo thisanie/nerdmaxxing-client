@@ -12,6 +12,7 @@
 
 - **Timestamps:** ISO 8601 datetime strings in UTC.
 - **IDs:** Strings.
+- **File uploads:** Uploaded files are stored in the configured S3-compatible blob storage.
 - **Validation failures:** FastAPI returns `422 Unprocessable Entity` with a `detail` array.
 - **Rate limiting:** Google authentication, token refresh, and username availability are rate limited per client IP.
 
@@ -26,6 +27,21 @@ Application errors use this shape:
   "detail": "Human-readable explanation."
 }
 ```
+
+### Blob storage configuration
+
+Uploads require these environment variables:
+
+```text
+AWS_ENDPOINT_URL_S3=https://your-branch.storage.c-2.us-east-2.aws.neon.tech
+NEON_STORAGE_BUCKET=your-bucket
+AWS_ACCESS_KEY_ID=your-neon-token-id
+AWS_SECRET_ACCESS_KEY=your-neon-s3-secret
+AWS_REGION=us-east-2
+S3_PUBLIC_URL=https://your-public-bucket-url
+```
+
+Create the bucket in Neon with `public_read` access if API responses should contain directly readable object URLs; set `S3_PUBLIC_URL` to the bucket's public base URL. Uploads are limited to 10 MB and support JPEG, PNG, WebP, PDF, and plain text.
 
 ## Health
 
@@ -126,6 +142,22 @@ Response `200 OK`:
 
 Returns `422 Unprocessable Entity` for an invalid username.
 
+### `GET /api/v1/users/{username}`
+
+Public profile view. The `completed_challenges` collection contains only challenges that are both `PUBLIC` and `PUBLISHED`, and that the user has completed. Private, draft, active, and incomplete challenges are excluded. The completed challenge count uses the same filter.
+
+### `GET /api/v1/users/{user_id}/follow-status`
+
+Requires authentication. Returns whether the authenticated user follows the specified user.
+
+Response `200 OK`:
+
+```json
+{
+  "is_following": true
+}
+```
+
 ### `POST /api/v1/users/me/username`
 
 Requires authentication. Sets the current user's first username.
@@ -154,6 +186,87 @@ Requires authentication. Updates the current user's username. The request, respo
 
 Returns `409 Conflict` when the requested username is unavailable.
 
+### `PATCH /api/v1/users/me/profile`
+
+Requires authentication. Accepts `multipart/form-data` with optional `name`, `bio`, and `avatar` fields. The `avatar` field must be an image file and replaces the current profile avatar in blob storage.
+
+### `GET /api/v1/users/me/followers?search={search}&limit={limit}&offset={offset}`
+
+Requires authentication. Lists the authenticated user's followers for selecting challenge invitees. `search` matches usernames and display names case-insensitively. `limit` defaults to `20` and must be 1-100.
+
+### `GET /api/v1/users/me/invitations`
+
+Requires authentication. Lists pending challenge invitations addressed to the authenticated user, newest first.
+
+### `POST /api/v1/users/me/push-tokens`
+
+Requires authentication. Registers or reactivates an FCM device token for the authenticated user. The client should call this after sign-in and whenever Firebase refreshes the token.
+
+Request:
+
+```json
+{
+  "token": "fcm-registration-token",
+  "platform": "android"
+}
+```
+
+`platform` must be `ios`, `android`, or `web`. The token is associated with the authenticated user; clients must not send a user ID.
+
+### `DELETE /api/v1/users/me/push-tokens/{token}`
+
+Requires authentication. Removes the authenticated user's registered FCM token. Call this when signing out if the device should stop receiving that user's pushes.
+
+## Groups
+
+### `POST /api/v1/groups`
+
+Requires authentication. Creates a group and makes the creator its first active member.
+
+Request:
+
+```json
+{
+  "name": "Distributed Systems Study",
+  "description": "A focused study group.",
+  "visibility": "PRIVATE"
+}
+```
+
+`visibility` is `PUBLIC` or `PRIVATE` and defaults to `PUBLIC`.
+
+### `GET /api/v1/groups`
+
+Requires authentication. Lists public groups. Supports `limit` (1-100, default 20) and `offset` (default 0). Each group includes the caller's `membership_status` when applicable.
+
+### `GET /api/v1/groups/me`
+
+Requires authentication. Lists every group where the authenticated user has active membership. This is also the group collection included in authenticated and public user profile responses as `groups`.
+
+### `GET /api/v1/groups/{group_id}`
+
+Requires authentication. Returns a group and its active member count.
+
+### `POST /api/v1/groups/{group_id}/join`
+
+Requires authentication. Joins a public group immediately and returns an `ACTIVE` membership. For a private group, creates a `PENDING` request for the creator's approval. Repeated requests return `409 Conflict`.
+
+### `DELETE /api/v1/groups/{group_id}/leave`
+
+Requires authentication. Removes the caller's active membership or pending request. The creator cannot leave their own group.
+
+### `GET /api/v1/groups/{group_id}/join-requests`
+
+Requires authentication by the group creator. Lists pending requests with the requester's user information.
+
+### `POST /api/v1/groups/{group_id}/join-requests/{user_id}/approve`
+
+Requires authentication by the group creator. Converts the pending request to an active membership.
+
+### `DELETE /api/v1/groups/{group_id}/join-requests/{user_id}`
+
+Requires authentication by the group creator. Rejects and removes the pending request.
+
 ## Challenges
 
 ### `GET /api/v1/challenges?limit={limit}&offset={offset}`
@@ -161,6 +274,12 @@ Returns `409 Conflict` when the requested username is unavailable.
 Lists public, published challenges, newest first. `limit` defaults to `20` and must be 1-100. `offset` defaults to `0` and must be non-negative.
 
 Response `200 OK`: an array of [Challenge](#challenge-object) objects.
+
+### `GET /api/v1/challenges/private?limit={limit}&offset={offset}`
+
+Requires authentication. Lists the authenticated user's private challenges, newest first. `limit` defaults to `20` and must be 1-100. `offset` defaults to `0` and must be non-negative.
+
+Response `200 OK`: an array of [Challenge](#challenge-object) objects with `status` and `visibility` set to `PRIVATE`.
 
 ### `GET /api/v1/challenges/{slug}`
 
@@ -172,18 +291,18 @@ Returns `404 Not Found` when no public, published challenge matches the slug.
 
 ### `POST /api/v1/challenges`
 
-Requires authentication. Creates a private challenge owned by the caller.
+Requires authentication. Creates a private challenge owned by the caller. Accepts `multipart/form-data` with a `payload` field containing the challenge JSON, an optional `image` file, and one `resource_files` file for each resource in `payload.resources`, in the same order.
 
 Request:
 
 ```json
 {
   "title": "Build a personal knowledge system",
-  "image_url": "https://example.com/knowledge-system.png",
+  "image_url": null,
   "resources": [
     {
       "title": "Getting Started",
-      "url": "https://example.com/guide",
+      "url": null,
       "resource_type": "LINK",
       "rationale": "Provides the foundation for the challenge."
     }
@@ -202,12 +321,91 @@ Response `201 Created`: a [Challenge](#challenge-object) object with `status` an
 Rules:
 
 - `title`: 3-160 characters.
-- `image_url`: HTTP(S) URL.
+- `image`: optional JPEG, PNG, or WebP file; the default image is used when omitted.
 - `resources`: 1-20 resources.
+- Each resource requires a corresponding uploaded `resource_files` file.
 - `short_description`: 1-300 characters.
 - `full_description`: at least 1 character.
 - Each resource `title` is 1-160 characters and `rationale` is 1-1000 characters.
 - `estimated_effort_min_minutes` and `estimated_effort_max_minutes`, when provided, must be at least 1; minimum cannot exceed maximum.
+- `aura_points` is calculated by the backend from difficulty and estimated effort; challenge creators do not provide it.
+
+## Challenge Invitations
+
+### `POST /api/v1/challenges/{slug}/invitations`
+
+Requires authentication and an existing participation in the challenge. Invites one of the caller's followers.
+
+Request:
+
+```json
+{
+  "invitee_id": "user-id"
+}
+```
+
+Response `201 Created`: a pending invitation. The invitee receives an in-app notification whose body identifies the challenger and challenge.
+
+Returns `403 Forbidden` when the target does not follow the caller, or when the caller has not joined the challenge. Returns `409 Conflict` when the invitation was already accepted or the target already participates.
+
+### `POST /api/v1/invitations/{invitation_id}/accept`
+
+Requires authentication by the invited user. Accepts the invitation and creates an accepted participation. The normal five-active-challenge limit applies.
+
+Response `200 OK`: a [Participation](#participation-object) object.
+
+### `POST /api/v1/invitations/{invitation_id}/decline`
+
+Requires authentication by the invited user. Marks the pending invitation as `DECLINED` and returns the invitation.
+
+### `POST /api/v1/challenges/{slug}/invite-link`
+
+Requires authentication and an existing participation in the challenge. Creates a random, expiring link valid for 30 days. The token is stored hashed and the returned URL can be shared through any messaging app.
+
+Response `200 OK`:
+
+```json
+{
+  "url": "https://app.example.com/challenge-invites/token",
+  "inviter_id": "user-id",
+  "inviter_username": "ada_lovelace",
+  "challenge_id": "challenge-id",
+  "expires_at": "2026-10-05T12:00:00Z"
+}
+```
+
+The URL base is configured with `APP_BASE_URL` and defaults to `http://localhost:3000`.
+
+### `GET /api/v1/invitations/links/{token}`
+
+Public endpoint. Returns the challenge title, inviter, and link status so a client can render a preview before sign-in.
+
+### `POST /api/v1/invitations/links/{token}/accept`
+
+Requires authentication. Accepts a valid share link and creates an accepted participation. Share links are available to any user except the inviter and are subject to the five-active-challenge limit.
+
+### `GET /api/v1/users/me/notifications?unread_only={boolean}&limit={limit}&offset={offset}`
+
+Requires authentication. Lists the authenticated user's in-app notifications, newest first. Set `unread_only=true` to filter to unread notifications. Challenge invitation notifications include the current `invitation_status`, so the status remains accurate after accepting or declining.
+
+Notification response example:
+
+```json
+{
+  "id": "notification-id",
+  "notification_type": "CHALLENGE_INVITATION",
+  "title": "New challenge invitation",
+  "body": "ada_lovelace challenged you to Build a habit.",
+  "invitation_id": "invitation-id",
+  "invitation_status": "ACCEPTED",
+  "is_read": true,
+  "created_at": "2026-09-13T12:00:00Z"
+}
+```
+
+### `PATCH /api/v1/notifications/{notification_id}/read`
+
+Requires authentication. Marks an owned notification as read.
 
 ## Participation
 
@@ -249,23 +447,42 @@ Permitted transitions:
 
 Returns `404 Not Found` for a participation not owned by the caller and `409 Conflict` for an invalid transition.
 
+### `POST /api/v1/participation/{participant_id}/progress`
+
+Requires authentication. Logs time and an optional note for an active participation. `hours_spent` must be greater than 0 and no more than 24.
+
+```json
+{
+  "hours_spent": 1.5,
+  "note": "Built the first prototype."
+}
+```
+
+Response `201 Created`: a progress log object. Logging progress updates the participation activity timestamp and the user's streak. A streak resets to `0` after more than 24 hours without a progress log.
+
+### `GET /api/v1/participation/{participant_id}/progress`
+
+Requires authentication. Lists progress logs for a participation owned by the caller, newest first.
+
+### `GET /api/v1/users/me/stats`
+
+Requires authentication. Returns the current user's activity summary: `active_challenge_count`, `completed_challenge_count`, `day_streak`, and `aura_points`.
+
 ## Evidence
 
 ### `POST /api/v1/evidence/participation/{participant_id}`
 
-Requires authentication. Submits evidence for the caller's participation. The participation must be `ACCEPTED`, `IN_PROGRESS`, or `PAUSED`; submission moves it to `SUBMITTED` with pending verification.
+Requires authentication. Submits evidence for the caller's participation. Accepts `multipart/form-data` with optional `explanation`, optional `text_content`, and an optional `file`. The participation must be `ACCEPTED`, `IN_PROGRESS`, or `PAUSED`; submission moves it to `SUBMITTED` with pending verification.
 
 Request:
 
 ```json
-{
-  "explanation": "I completed the work and published the notes.",
-  "text_content": "https://example.com/my-notes",
-  "external_url": "https://example.com/my-notes"
-}
+explanation=I completed the work and published the notes.
+text_content=The work is complete.
+file=<uploaded PDF, image, or text file>
 ```
 
-At least one of `text_content` or `external_url` is required. `explanation` is limited to 5,000 characters and `text_content` to 20,000 characters.
+At least one of `text_content` or `file` is required. `explanation` is limited to 5,000 characters and `text_content` to 20,000 characters.
 
 Response `201 Created`: an [Evidence submission](#evidence-submission-object) object.
 
@@ -311,6 +528,7 @@ Response `200 OK`: an array of [User skill](#user-skill-object) objects.
   "full_description": "Define the workflow, choose tools, and create an initial set of notes.",
   "creator_id": "user-id",
   "difficulty_level": "BEGINNER",
+  "aura_points": 20,
   "status": "PUBLISHED",
   "visibility": "PUBLIC",
   "estimated_effort_min_minutes": 60,

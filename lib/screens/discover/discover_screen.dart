@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer, Provider;
 
 import '../../models/challenge.dart';
 import '../../models/progress_log.dart';
@@ -8,6 +8,7 @@ import '../../screens/notifications/notifications_screen.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/app_state_providers.dart';
+import '../../providers/notification_badge_provider.dart';
 import '../../models/participation.dart';
 import '../../services/challenges_service.dart';
 import '../../services/profile_service.dart';
@@ -32,6 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadHomeData();
+      context.read<NotificationBadgeController>().refresh();
     });
   }
 
@@ -110,11 +112,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         titleSpacing: 20,
         title: _HomeBrandHeader(
           onNotificationsTap: () {
+            final badge = context.read<NotificationBadgeController>();
+            badge.markAllRead();
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const NotificationsScreen(),
               ),
-            );
+            ).then((_) => context.read<NotificationBadgeController>().refresh());
           },
         ),
       ),
@@ -242,12 +246,36 @@ class _HomeBrandHeader extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
-          onPressed: onNotificationsTap,
-          tooltip: 'Notifications',
-          icon: const Icon(Icons.notifications_none_rounded),
-          color: colorScheme.onSurface,
-          visualDensity: VisualDensity.compact,
+        Consumer<NotificationBadgeController>(
+          builder: (context, badge, _) => Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                onPressed: onNotificationsTap,
+                tooltip: 'Notifications',
+                icon: const Icon(Icons.notifications_none_rounded),
+                color: colorScheme.onSurface,
+                visualDensity: VisualDensity.compact,
+              ),
+              if (badge.unreadCount > 0)
+                Positioned(
+                  top: 7,
+                  right: 7,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorScheme.surface,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );

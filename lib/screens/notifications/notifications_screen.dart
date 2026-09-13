@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 import '../../models/challenge.dart';
 import '../../models/notification.dart';
 import '../../providers/app_state_providers.dart';
+import '../../providers/notification_badge_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/notifications_service.dart';
@@ -50,6 +51,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     if (notification.isRead) return;
     try {
       await context.read<NotificationsService>().markRead(notification.id);
+      context.read<NotificationBadgeController>().markRead();
       if (!mounted) return;
       setState(() {
         _notifications = _notifications
@@ -75,6 +77,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       final participation = await notifications.acceptInvitation(invitationId);
       participations.add(participation);
       await notifications.markRead(notification.id);
+      context.read<NotificationBadgeController>().markRead();
       if (!mounted) return;
       setState(() {
         _notifications = _notifications
@@ -103,6 +106,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     try {
       await notifications.declineInvitation(invitationId);
       await notifications.markRead(notification.id);
+      context.read<NotificationBadgeController>().markRead();
       if (!mounted) return;
       setState(() {
         _notifications = _notifications
@@ -243,9 +247,12 @@ class _NotificationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isInvitation = notification.isChallengeInvitation;
     final isPendingInvitation = notification.isPendingInvitation;
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       margin: EdgeInsets.zero,
-      color: notification.isRead ? null : AppColors.surfaceAlt,
+      color: notification.isRead
+          ? null
+          : colorScheme.surfaceContainerHighest,
       child: InkWell(
         onTap: notification.isChallengeInvitation ? onTap : null,
         borderRadius: BorderRadius.circular(12),

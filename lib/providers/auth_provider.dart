@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/auth_session.dart';
 import '../services/auth_service.dart';
+import '../services/push_notification_service.dart';
 import '../services/token_storage.dart';
 
 enum AuthStatus { unknown, signedOut, needsUsername, authenticated }
 
 class AuthProvider extends ChangeNotifier {
   final AuthService authService;
+  final PushNotificationService pushNotificationService;
   final TokenStorage tokenStorage;
   // No extra scopes: requesting them forces web into the access-token OAuth
   // flow instead of the ID-token/credential flow the backend needs.
@@ -18,7 +22,11 @@ class AuthProvider extends ChangeNotifier {
         : null,
   );
 
-  AuthProvider({required this.authService, required this.tokenStorage}) {
+  AuthProvider({
+    required this.authService,
+    required this.pushNotificationService,
+    required this.tokenStorage,
+  }) {
     _restore();
     if (kIsWeb) {
       // On web, sign-in only completes reliably through the rendered GIS
@@ -52,6 +60,9 @@ class AuthProvider extends ChangeNotifier {
       username = storedUsername;
       status = AuthStatus.authenticated;
     }
+    if (token != null) {
+      unawaited(pushNotificationService.registerCurrentToken());
+    }
     notifyListeners();
   }
 
@@ -77,6 +88,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _completeSignIn(String idToken) async {
     final AuthSession session = await authService.signInWithGoogle(idToken);
+    unawaited(pushNotificationService.registerCurrentToken());
     displayName = session.displayName;
     avatarUrl = session.avatarUrl;
     username = session.username;
@@ -117,6 +129,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    await pushNotificationService.unregisterCurrentToken();
     await authService.logout();
     await _googleSignIn.signOut();
     username = null;
