@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/challenge.dart';
 import '../../models/notification.dart';
@@ -130,6 +131,24 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     }
   }
 
+  Future<void> _openResource(String rawUrl) async {
+    final uri = Uri.tryParse(rawUrl.trim());
+    if (uri == null || !{'http', 'https'}.contains(uri.scheme)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This source has an invalid URL.')),
+      );
+      return;
+    }
+
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open this source.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
@@ -248,23 +267,54 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
                     ...challenge.resources.map(
                       (r) => Card(
                         margin: const EdgeInsets.only(bottom: 12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                r.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: r.url.trim().isEmpty
+                              ? null
+                              : () => _openResource(r.url),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        r.title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    if (r.url.trim().isNotEmpty)
+                                      const Icon(
+                                        Icons.open_in_new,
+                                        size: 18,
+                                      ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                r.rationale,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
+                                const SizedBox(height: 4),
+                                Text(
+                                  r.rationale,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                if (r.url.trim().isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    r.url,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
