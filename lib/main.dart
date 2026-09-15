@@ -50,7 +50,10 @@ class NerdMaxxingApp extends StatelessWidget {
     );
     final notificationsService = NotificationsService(apiClient);
     final notificationBadge = NotificationBadgeController(notificationsService);
+    final notificationNavigation = NotificationNavigationController();
     pushNotificationService.onNotificationReceived = notificationBadge.increment;
+    pushNotificationService.onNotificationTap =
+      notificationNavigation.requestNotifications;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       pushNotificationService.initialize();
     });
@@ -75,6 +78,7 @@ class NerdMaxxingApp extends StatelessWidget {
         Provider(create: (_) => InvitationsService(apiClient)),
         Provider.value(value: notificationsService),
         ChangeNotifierProvider.value(value: notificationBadge),
+        ChangeNotifierProvider.value(value: notificationNavigation),
         Provider(create: (_) => DiscoverService(apiClient)),
         Provider(create: (_) => SkillsService(apiClient)),
         ChangeNotifierProvider(

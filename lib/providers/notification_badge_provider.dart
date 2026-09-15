@@ -42,3 +42,18 @@ class NotificationBadgeController extends ChangeNotifier {
     }
   }
 }
+
+class NotificationNavigationController extends ChangeNotifier {
+  bool _openNotificationsRequested = false;
+
+  bool get openNotificationsRequested => _openNotificationsRequested;
+
+  void requestNotifications() {
+    _openNotificationsRequested = true;
+    notifyListeners();
+  }
+
+  void consumeNotificationsRequest() {
+    _openNotificationsRequested = false;
+  }
+}

@@ -15,12 +15,17 @@ const _notificationChannelName = 'Challenge notifications';
 final FlutterLocalNotificationsPlugin _localNotifications =
     FlutterLocalNotificationsPlugin();
 
-Future<void> _initializeLocalNotifications() async {
+Future<void> _initializeLocalNotifications({VoidCallback? onTap}) async {
   const settings = InitializationSettings(
     android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     iOS: DarwinInitializationSettings(),
   );
-  await _localNotifications.initialize(settings);
+  await _localNotifications.initialize(
+    settings,
+    onDidReceiveNotificationResponse: onTap == null
+        ? null
+        : (response) => onTap(),
+  );
   await _localNotifications
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
@@ -72,6 +77,7 @@ class PushNotificationService {
   Future<void>? _initialization;
   StreamSubscription<String>? _tokenRefreshSubscription;
   VoidCallback? onNotificationReceived;
+  VoidCallback? onNotificationTap;
 
   PushNotificationService({required this.api, required this.tokenStorage});
 
@@ -90,13 +96,16 @@ class PushNotificationService {
         await Firebase.initializeApp();
       }
 
-      await _initializeLocalNotifications();
+      await _initializeLocalNotifications(onTap: _handleNotificationTap);
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(alert: true, badge: true, sound: true);
       FirebaseMessaging.onMessage.listen((message) async {
         await _showLocalNotification(message);
         onNotificationReceived?.call();
       });
+      FirebaseMessaging.onMessageOpenedApp.listen((_) => _handleNotificationTap());
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) _handleNotificationTap();
       _tokenRefreshSubscription = messaging.onTokenRefresh.listen(
         registerToken,
       );
@@ -104,6 +113,10 @@ class PushNotificationService {
     } catch (error) {
       debugPrint('Push notification setup skipped: $error');
     }
+  }
+
+  void _handleNotificationTap() {
+    onNotificationTap?.call();
   }
 
   Future<void> registerCurrentToken() async {

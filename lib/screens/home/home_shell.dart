@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../discover/discover_screen.dart';
 import '../discover/people_discover_screen.dart';
@@ -6,6 +7,8 @@ import '../challenge/create_challenge_screen.dart';
 import '../profile/profile_screen.dart';
 import '../skills/skills_screen.dart';
 import '../../theme/app_theme.dart';
+import '../../providers/notification_badge_provider.dart';
+import '../notifications/notifications_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -47,6 +50,38 @@ class _HomeShellState extends State<HomeShell> {
         onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => _screens[i]),
       ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigation = context.read<NotificationNavigationController>();
+      navigation.addListener(_handleNotificationRequest);
+      _handleNotificationRequest();
+    });
+  }
+
+  @override
+  void dispose() {
+    context
+        .read<NotificationNavigationController>()
+        .removeListener(_handleNotificationRequest);
+    super.dispose();
+  }
+
+  void _handleNotificationRequest() {
+    final navigation = context.read<NotificationNavigationController>();
+    if (!navigation.openNotificationsRequested || !mounted) return;
+    navigation.consumeNotificationsRequest();
+    _index = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _navigatorKeys[0].currentState?.push(
+        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+      );
+    });
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
