@@ -18,6 +18,7 @@ import '../../services/notifications_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import 'challenge_journey.dart';
+import 'path_screen.dart';
 
 class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -161,17 +162,14 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           onDecline: widget.invitation?.invitationId != null
             ? _declineInvitation
             : null,
-      onTrain: () => _showPrototypeSheet(
-        'Train',
-        _trainingMessage(detail),
-      ),
+      onTrain: () => _openPath(detail),
       onProve: () => _showPrototypeSheet(
         'Prove it',
         detail.verification.instructions.isEmpty
             ? 'Submit evidence for the requirements shown on this challenge.'
             : detail.verification.instructions,
       ),
-      onOpenResource: (message) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message))),
+      onOpenResource: (_) => _openPath(detail),
           invited: widget.invitation?.invitationId != null,
     );
   }
@@ -203,6 +201,14 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         ? ''
         : '${primary.target!.toStringAsFixed(primary.target! % 1 == 0 ? 0 : 2)} ${primary.unit}'.trim();
     return 'Build progress${target.isEmpty ? '' : ' toward $target'}, then log the result.';
+  }
+
+  void _openPath(ChallengeDetail detail) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PathScreen(challenge: _challenge!, detail: detail),
+      ),
+    );
   }
 
 }

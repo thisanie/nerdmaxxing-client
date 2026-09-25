@@ -13,7 +13,7 @@ class ChallengeJourney extends StatefulWidget {
   final VoidCallback onTrain;
   final VoidCallback onProve;
   final VoidCallback? onDecline;
-  final ValueChanged<String> onOpenResource;
+  final ValueChanged<ChallengeResource> onOpenResource;
   final bool accepting;
   final bool invited;
 
@@ -376,7 +376,13 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   Widget _stat(String label, String value, {bool warning = false}) => Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(label), const SizedBox(height: 7), Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: warning ? AppColors.warning : AppColors.textPrimary))]));
   Widget _fact(String label, String value, {bool accent = false}) => Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(label), const SizedBox(height: 8), Text(value, style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: accent ? AppColors.primary : AppColors.textPrimary))]));
   Widget _step(String no, String title, String detail, bool done, {bool current = false}) => Container(decoration: BoxDecoration(border: const Border(bottom: BorderSide(color: AppColors.border)), color: current ? AppColors.primary.withValues(alpha: .08) : null), padding: const EdgeInsets.symmetric(vertical: 18), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(no, style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 30, fontWeight: FontWeight.w800)), const SizedBox(width: 18), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: done ? AppColors.textSecondary : AppColors.textPrimary, decoration: done ? TextDecoration.lineThrough : null)), const SizedBox(height: 4), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))])), Text(done ? '✓' : current ? '→' : '→', style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 22))]));
-  Widget _resource(BuildContext context, String meta, String title, String detail, {bool featured = false}) => InkWell(onTap: () => widget.onOpenResource('Prototype resource: $title'), child: Container(decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))), padding: const EdgeInsets.symmetric(vertical: 19), child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(meta), const SizedBox(height: 7), Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: featured ? AppColors.primary : AppColors.textPrimary)), const SizedBox(height: 5), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))])), const Icon(Icons.north_east, size: 18, color: AppColors.textSecondary)])));
+  Widget _resource(BuildContext context, String meta, String title, String detail, {bool featured = false}) {
+    final resource = widget.challenge.resources.firstWhere(
+      (item) => item.title == title,
+      orElse: () => ChallengeResource(id: '', title: title, url: '', resourceType: meta, rationale: detail, orderIndex: 0),
+    );
+    return InkWell(onTap: () => widget.onOpenResource(resource), child: Container(decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))), padding: const EdgeInsets.symmetric(vertical: 19), child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(meta), const SizedBox(height: 7), Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: featured ? AppColors.primary : AppColors.textPrimary)), const SizedBox(height: 5), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))])), const Icon(Icons.north_east, size: 18, color: AppColors.textSecondary)])));
+  }
   Widget _progressRuler(ChallengeMetric metric) {
     final current = metric.current ?? 0;
     final target = metric.target ?? 0;
