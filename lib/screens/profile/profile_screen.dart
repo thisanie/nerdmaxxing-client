@@ -359,6 +359,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             SliverAppBar(
               title: Text('@${profile.username ?? 'profile'}'),
               floating: true,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
               actions: [
                 if (_isOwnProfile(auth))
                   IconButton(
@@ -625,7 +628,7 @@ class _ProfileTabs extends StatelessWidget {
       if (showRewards) (Icons.emoji_events_outlined, 'Rewards'),
     ];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
       child: Row(
         children: [
           for (var index = 0; index < tabs.length; index++)
@@ -633,14 +636,14 @@ class _ProfileTabs extends StatelessWidget {
               child: InkWell(
                 onTap: () => onSelected(index),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  padding: const EdgeInsets.only(bottom: 14),
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
                         color: selectedIndex == index
-                            ? AppColors.primaryMuted
-                            : AppColors.lightBorder,
-                        width: selectedIndex == index ? 2.5 : 1,
+                            ? AppColors.primary
+                            : colorScheme.outline,
+                        width: selectedIndex == index ? 2 : 1,
                       ),
                     ),
                   ),
@@ -661,8 +664,8 @@ class _ProfileTabs extends StatelessWidget {
                           color: selectedIndex == index
                               ? colorScheme.onSurface
                               : colorScheme.onSurfaceVariant,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -982,31 +985,47 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 42,
-                backgroundColor: AppColors.surfaceAlt,
-                backgroundImage: profile.avatarUrl != null
-                    ? NetworkImage(profile.avatarUrl!)
-                    : null,
-                child: profile.avatarUrl == null
-                    ? const Icon(
-                        Icons.person_outline,
-                        size: 42,
-                        color: AppColors.textSecondary,
-                      )
-                    : null,
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 84,
+                    height: 84,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: .55),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  CircleAvatar(
+                    radius: 38,
+                    backgroundColor: AppColors.surfaceAlt,
+                    backgroundImage: profile.avatarUrl != null
+                        ? NetworkImage(profile.avatarUrl!)
+                        : null,
+                    child: profile.avatarUrl == null
+                        ? const Icon(
+                            Icons.person_outline,
+                            size: 38,
+                            color: AppColors.textSecondary,
+                          )
+                        : null,
+                  ),
+                ],
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 20),
               Expanded(
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _Stat(
                       value: profile.completedChallengesCount,
@@ -1027,7 +1046,7 @@ class _ProfileHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
@@ -1037,28 +1056,26 @@ class _ProfileHeader extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 17,
+                    fontSize: 24,
+                    letterSpacing: -.3,
                   ),
                 ),
               ),
               const SizedBox(width: 10),
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: Colors.transparent,
                   border: Border.all(
                     color: Theme.of(context).colorScheme.outline,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(3),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   child: Text(
                     '⚡ ${profile.auraPoints} aura',
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: AppColors.primary,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1095,15 +1112,20 @@ class _Stat extends StatelessWidget {
           children: [
             Text(
               '$value',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 30,
+                height: 1,
+              ),
             ),
             const SizedBox(height: 3),
             Text(
-              label,
+              label.toUpperCase(),
               style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontSize: 10,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -1136,6 +1158,7 @@ class _ParticipationTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
+        color: Colors.transparent,
         child: InkWell(
           onTap: challenge == null
               ? null
@@ -1147,9 +1170,9 @@ class _ParticipationTile extends StatelessWidget {
                     ),
                   ),
                 ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(3),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
             child: Row(
               children: [
                 Expanded(
@@ -1210,6 +1233,7 @@ class _CreatedChallengeTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
+        color: Colors.transparent,
         child: InkWell(
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
@@ -1219,17 +1243,21 @@ class _CreatedChallengeTile extends StatelessWidget {
               ),
             ),
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(3),
           child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
             leading: Icon(
               challenge.visibility.toUpperCase() == 'PRIVATE'
                   ? Icons.lock_outline
                   : Icons.edit_note,
-              color: Theme.of(context).colorScheme.primary,
+              color: AppColors.primary,
             ),
-            title: Text(challenge.title),
+            title: Text(
+              challenge.title,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            ),
             subtitle: Text(
-              '${challenge.status} • ${challenge.visibility} • ${challenge.auraPoints} aura',
+              '${challenge.status} · ${challenge.visibility} · ${challenge.auraPoints} aura',
               style: const TextStyle(color: AppColors.textSecondary),
             ),
             trailing: const Icon(Icons.chevron_right),

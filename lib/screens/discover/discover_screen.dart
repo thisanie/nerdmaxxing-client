@@ -27,6 +27,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Map<String, Challenge> _challengesById = {};
   Challenge? _mostPopularChallenge;
   Participation? _resumeParticipation;
+  bool _isScrolled = false;
 
   @override
   void initState() {
@@ -106,7 +107,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface.withValues(
+          alpha: _isScrolled ? 0.88 : 1,
+        ),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         titleSpacing: 20,
@@ -122,31 +125,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           },
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await _loadHomeData();
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          final isScrolled = notification.metrics.pixels > 4;
+          if (isScrolled != _isScrolled) {
+            setState(() => _isScrolled = isScrolled);
+          }
+          return false;
         },
-        color: AppColors.primary,
-        backgroundColor: AppColors.surface,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await _loadHomeData();
+          },
+          color: AppColors.primary,
+          backgroundColor: AppColors.surface,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Greeting(name: name, aura: stats?.auraPoints ?? 0),
+                    _Greeting(
+                      name: name,
+                      streak: stats?.dayStreak ?? 0,
+                    ),
                     const SizedBox(height: 18),
                     _StatsRow(
                       active: stats?.activeChallengeCount ?? 0,
+                      aura: stats?.auraPoints ?? 0,
                       completed: stats?.completedChallengeCount ?? 0,
-                      streak: stats?.dayStreak ?? 0,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 42),
                     const _SectionTitle('Continue where you left off'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 22),
                     _ResumeCard(
                       challenge: _resumeParticipation == null
                           ? null
@@ -157,25 +171,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ? null
                           : () => _openParticipation(_resumeParticipation!),
                     ),
-                    const SizedBox(height: 24),
-                    const _SectionTitle('Your challenges'),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 44),
+                    const _SectionHeader(title: 'Your challenges', action: 'View all'),
+                    const SizedBox(height: 20),
                     if (active.isEmpty)
                       const _EmptyChallengeRow()
                     else
                       ...active.map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _ChallengeRow(
-                            participation: item,
-                            challenge: _challengesById[item.challengeId],
-                            onTap: () => _openParticipation(item),
-                          ),
+                        (item) => _ChallengeRow(
+                          participation: item,
+                          challenge: _challengesById[item.challengeId],
+                          onTap: () => _openParticipation(item),
                         ),
                       ),
-                    const SizedBox(height: 14),
-                    const _SectionTitle('Maybe try next'),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 44),
+                    const _SectionHeader(title: 'Maybe try next', action: 'Discover'),
+                    const SizedBox(height: 20),
                     _NudgeCard(
                       challenge: _mostPopularChallenge,
                       onTap: _mostPopularChallenge == null
@@ -187,7 +198,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -284,54 +296,38 @@ class _HomeBrandHeader extends StatelessWidget {
 
 class _Greeting extends StatelessWidget {
   final String name;
-  final int aura;
+  final int streak;
 
-  const _Greeting({required this.name, required this.aura});
+  const _Greeting({required this.name, required this.streak});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final inkColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.dark
-        : AppColors.lightTextPrimary;
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hey $name 👋',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                'Keep learning. Keep levelling up.',
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
+        Text(
+          'Hey $name 👋',
+          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.05),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: inkColor,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        const SizedBox(height: 8),
+        Text(
+          'Keep learning. Keep levelling up.',
+          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 15),
+        ),
+        const SizedBox(height: 20),
+        Container(height: 1, color: colorScheme.outline),
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Align(
+            alignment: Alignment.centerRight,
             child: Text(
-              '⚡ $aura AURA',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+              '$streak DAY STREAK',
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 11,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -343,24 +339,37 @@ class _Greeting extends StatelessWidget {
 
 class _StatsRow extends StatelessWidget {
   final int active;
+  final int aura;
   final int completed;
-  final int streak;
 
   const _StatsRow({
     required this.active,
+    required this.aura,
     required this.completed,
-    required this.streak,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _Stat(value: '$active', label: 'ACTIVE'),
-        const SizedBox(width: 10),
-        _Stat(value: '$completed', label: 'COMPLETED'),
-        const SizedBox(width: 10),
-        _Stat(value: '$streak🔥', label: 'DAY STREAK'),
+        Expanded(child: _Stat(value: '$active', label: 'ACTIVE')),
+        Expanded(
+          child: _Stat(
+            value: '$aura',
+            label: 'AURA',
+            color: AppColors.primary,
+            bordered: true,
+            centered: true,
+          ),
+        ),
+        Expanded(
+          child: _Stat(
+            value: '$completed',
+            label: 'COMPLETED',
+            bordered: true,
+            centered: true,
+          ),
+        ),
       ],
     );
   }
@@ -369,40 +378,80 @@ class _StatsRow extends StatelessWidget {
 class _Stat extends StatelessWidget {
   final String value;
   final String label;
+  final Color? color;
+  final bool bordered;
+  final bool centered;
 
-  const _Stat({required this.value, required this.label});
+  const _Stat({
+    required this.value,
+    required this.label,
+    this.color,
+    this.bordered = false,
+    this.centered = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          border: Border.all(color: colorScheme.outline),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+    return Container(
+      padding: EdgeInsets.only(top: 16, left: bordered ? 16 : 0),
+      decoration: BoxDecoration(
+        border: bordered
+            ? Border(left: BorderSide(color: colorScheme.outline))
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 44,
+              fontWeight: FontWeight.w800,
+              height: 1,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 10,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String action;
+
+  const _SectionHeader({required this.title, required this.action});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    crossAxisAlignment: CrossAxisAlignment.baseline,
+    textBaseline: TextBaseline.alphabetic,
+    children: [
+      Expanded(child: _SectionTitle(title)),
+      Text(
+        action,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontSize: 12,
+          letterSpacing: .7,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ],
+  );
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -446,16 +495,14 @@ class _ResumeCard extends StatelessWidget {
         : (loggedMinutes / targetMinutes).clamp(0.0, 1.0).toDouble();
     final colorScheme = Theme.of(context).colorScheme;
     final cardColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.dark
-        : AppColors.lightTextPrimary;
+        ? Colors.transparent
+        : Colors.transparent;
     return Material(
-      color: cardColor,
-      borderRadius: BorderRadius.circular(20),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+          padding: EdgeInsets.zero,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -464,27 +511,26 @@ class _ResumeCard extends StatelessWidget {
                 style: TextStyle(
                   color: AppColors.primary,
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: .3,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 1.2,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 title,
                 style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18,
+                  color: colorScheme.onSurface,
+                  fontSize: 28,
                   fontWeight: FontWeight.w700,
-                  height: 1.25,
+                  height: 1.1,
                 ),
               ),
               const SizedBox(height: 14),
               ClipRRect(
-                borderRadius: BorderRadius.circular(99),
                 child: LinearProgressIndicator(
                   value: isLoading ? null : progressValue,
                   minHeight: 6,
-                  backgroundColor: Color(0x332D3324),
+                  backgroundColor: AppColors.borderStrong,
                   color: AppColors.primary,
                 ),
               ),
@@ -517,22 +563,25 @@ class _ResumeCard extends StatelessWidget {
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 11),
+                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 22),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(3),
                 ),
-                child: Center(
-                  child: Text(
-                    challenge == null
-                        ? 'Discover a challenge'
-                        : 'Resume challenge →',
-                    style: TextStyle(
-                      color: colorScheme.onPrimary,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      challenge == null ? 'Discover a challenge' : 'RESUME CHALLENGE',
+                      style: TextStyle(
+                        color: colorScheme.onPrimary,
+                        fontSize: 14,
+                        letterSpacing: .8,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
+                    Icon(Icons.arrow_forward, color: colorScheme.onPrimary, size: 18),
+                  ],
                 ),
               ),
             ],
@@ -571,24 +620,25 @@ class _ChallengeRow extends StatelessWidget {
         ? AppColors.dark
         : AppColors.lightTextPrimary;
     return Material(
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outline),
-      ),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: colorScheme.outline),
+            ),
+          ),
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  color: inkColor,
-                  borderRadius: BorderRadius.circular(11),
+                  color: Colors.transparent,
+                  border: Border.all(color: colorScheme.outline),
+                  borderRadius: BorderRadius.circular(3),
                 ),
                 child: Icon(
                   challenge?.title.toLowerCase().contains('chess') == true
@@ -598,7 +648,7 @@ class _ChallengeRow extends StatelessWidget {
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 13),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -608,8 +658,8 @@ class _ChallengeRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -666,7 +716,7 @@ class _ChallengeRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: Color(0xFFB8B6AA)),
+              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -739,28 +789,24 @@ class _NudgeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final inkColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.dark
-        : AppColors.lightTextPrimary;
     return Material(
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outline),
-      ),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: colorScheme.outline)),
+          ),
           child: Row(
             children: [
               Container(
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: inkColor,
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.transparent,
+                  border: Border.all(color: colorScheme.outline),
+                  borderRadius: BorderRadius.circular(3),
                 ),
                 child: const Icon(
                   Icons.local_fire_department_outlined,

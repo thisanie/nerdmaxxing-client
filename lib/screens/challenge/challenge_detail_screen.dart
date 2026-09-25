@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/challenge.dart';
+import '../../models/challenge_detail.dart';
 import '../../models/notification.dart';
 import '../../models/participation.dart';
 import '../../models/progress_log.dart';
@@ -17,8 +17,7 @@ import '../../services/invitations_service.dart';
 import '../../services/notifications_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/difficulty_badge.dart';
-import '../evidence/submit_evidence_screen.dart';
+import 'challenge_journey.dart';
 
 class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -39,27 +38,32 @@ class ChallengeDetailScreen extends ConsumerStatefulWidget {
 
 class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   Challenge? _challenge;
+  ChallengeDetail? _detail;
   String? _error;
   bool _accepting = false;
-  bool _invitationWorking = false;
 
   @override
   void initState() {
     super.initState();
     _challenge = widget.initialChallenge;
-    if (_challenge == null) _load();
+    _load();
   }
 
   Future<void> _load() async {
     try {
-      final challenge = await context.read<ChallengesService>().getBySlug(
+      final detail = await context.read<ChallengesService>().getDetailBySlug(
         widget.slug,
       );
       if (!mounted) return;
-      setState(() => _challenge = challenge);
+      setState(() {
+        _detail = detail;
+        _challenge = detail.challenge;
+      });
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.message);
+      if (_challenge == null) {
+        setState(() => _error = e.message);
+      }
     }
   }
 
@@ -87,7 +91,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     if (invitationId == null) return;
     final notifications = context.read<NotificationsService>();
     final participations = ref.read(participationControllerProvider.notifier);
-    setState(() => _invitationWorking = true);
     try {
       final participation = await notifications.acceptInvitation(invitationId);
       participations.add(participation);
@@ -102,8 +105,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           SnackBar(content: Text(e.message)),
         );
       }
-    } finally {
-      if (mounted) setState(() => _invitationWorking = false);
     }
   }
 
@@ -111,7 +112,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     final invitationId = widget.invitation?.invitationId;
     if (invitationId == null) return;
     final notifications = context.read<NotificationsService>();
-    setState(() => _invitationWorking = true);
     try {
       await notifications.declineInvitation(invitationId);
       await notifications.markRead(widget.invitation!.id);
@@ -126,26 +126,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           SnackBar(content: Text(e.message)),
         );
       }
-    } finally {
-      if (mounted) setState(() => _invitationWorking = false);
-    }
-  }
-
-  Future<void> _openResource(String rawUrl) async {
-    final uri = Uri.tryParse(rawUrl.trim());
-    if (uri == null || !{'http', 'https'}.contains(uri.scheme)) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This source has an invalid URL.')),
-      );
-      return;
-    }
-
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to open this source.')),
-      );
     }
   }
 
@@ -163,294 +143,49 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final challenge = _challenge!;
+    final detail = _detail ?? ChallengeDetail.fromChallenge(challenge);
     final participation = ref
         .watch(participationControllerProvider)
         .valueOrNull
         ?.where((item) => item.challengeId == challenge.id)
         .firstOrNull;
 
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 220,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: challenge.imageUrl != null
-                  ? Image.network(
-                      challenge.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) =>
-                          Container(color: AppColors.surfaceAlt),
-                    )
-                  : Container(color: AppColors.surfaceAlt),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    challenge.title,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      DifficultyBadge(level: challenge.difficultyLevel),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.schedule,
-                            size: 16,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            challenge.effortLabel,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.bolt,
-                            size: 18,
-                            color: AppColors.accent,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${challenge.auraPoints} aura',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    challenge.shortDescription,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 24),
-                  _actionButton(participation),
-                  const SizedBox(height: 32),
-                  Text(
-                    'What you will do',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    challenge.fullDescription,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  if (challenge.resources.isNotEmpty) ...[
-                    const SizedBox(height: 32),
-                    Text(
-                      'Resources',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 12),
-                    ...challenge.resources.map(
-                      (r) => Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: r.url.trim().isEmpty
-                              ? null
-                              : () => _openResource(r.url),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        r.title,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    if (r.url.trim().isNotEmpty)
-                                      const Icon(
-                                        Icons.open_in_new,
-                                        size: 18,
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  r.rationale,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                                if (r.url.trim().isNotEmpty) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    r.url,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 32),
-                  Text(
-                    'Verification',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    challenge.verificationType == 'SELF_REPORTED'
-                        ? 'You\'ll confirm you completed this yourself.'
-                        : 'This challenge requires verification of your evidence.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
-          ),
-        ],
+    return ChallengeJourney(
+      challenge: challenge,
+      detail: detail,
+      participation: participation,
+      accepting: _accepting,
+        onAccept: widget.invitation?.invitationId != null
+          ? _acceptInvitation
+          : _accept,
+          onDecline: widget.invitation?.invitationId != null
+            ? _declineInvitation
+            : null,
+      onTrain: () => _showPrototypeSheet('Train', 'Accuracy first.\n\nYour next drill is ready. Type cleanly for 30 seconds, then log the result.'),
+      onProve: () => _showPrototypeSheet('Prove it', 'Show that you have reached 60 WPM.\n\nA verified 60-second test will start here in the full product.'),
+      onOpenResource: (message) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message))),
+          invited: widget.invitation?.invitationId != null,
+    );
+  }
+
+  void _showPrototypeSheet(String title, String message) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      showDragHandle: true,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.fromLTRB(22, 8, 22, 34),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title.toUpperCase(), style: const TextStyle(color: AppColors.primary, fontSize: 11, letterSpacing: 2, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 18),
+          Text(message, style: const TextStyle(fontSize: 24, height: 1.1, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 24),
+          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('GOT IT')),
+        ]),
       ),
     );
   }
 
-  Widget _actionButton(Participation? participation) {
-    if (participation == null) {
-      final invitation = widget.invitation;
-      if (invitation != null &&
-          invitation.invitationId != null &&
-          !invitation.isPendingInvitation) {
-        final status = invitation.invitationStatus?.toUpperCase();
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceAlt,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Text(
-            status == 'ACCEPTED' ? 'Invitation accepted.' : 'Invitation declined.',
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        );
-      }
-      if (invitation?.invitationId != null) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'You have been invited to this challenge.',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _invitationWorking ? null : _declineInvitation,
-                    child: const Text('Decline'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: _invitationWorking ? null : _acceptInvitation,
-                    child: Text(
-                      _invitationWorking ? 'Working...' : 'Accept Invitation',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      }
-      return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _accepting ? null : _accept,
-          child: Text(_accepting ? 'Accepting...' : 'Accept Challenge'),
-        ),
-      );
-    }
-    final status = participation.status;
-    if (status == 'ACCEPTED' || status == 'IN_PROGRESS' || status == 'PAUSED') {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ElevatedButton.icon(
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (_) => _ProgressDialog(participation: participation),
-            ),
-            icon: const Icon(Icons.timer_outlined),
-            label: const Text('Log Progress'),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (_) => _InviteFriendsDialog(challenge: widget.slug),
-            ),
-            icon: const Icon(Icons.person_add_alt_1),
-            label: const Text('Challenge Friends'),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    SubmitEvidenceScreen(participation: participation),
-              ),
-            ),
-            child: const Text('Submit Evidence'),
-          ),
-        ],
-      );
-    }
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: AppColors.success),
-          const SizedBox(width: 8),
-          Text('Status: ${status.toString().toLowerCase()}'),
-        ],
-      ),
-    );
-  }
 }
 
 class _InviteFriendsDialog extends StatefulWidget {

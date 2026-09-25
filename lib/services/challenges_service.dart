@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../models/challenge.dart';
+import '../models/challenge_detail.dart';
 import 'api_client.dart';
 
 class ChallengesService {
@@ -25,6 +26,11 @@ class ChallengesService {
   Future<Challenge> getBySlug(String slug) async {
     final data = await api.get('/challenges/$slug');
     return Challenge.fromJson(data);
+  }
+
+  Future<ChallengeDetail> getDetailBySlug(String slug) async {
+    final data = await api.get('/challenges/$slug/detail');
+    return ChallengeDetail.fromJson(Map<String, dynamic>.from(data as Map));
   }
 
   Future<Challenge> create({

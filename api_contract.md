@@ -297,6 +297,106 @@ Response `200 OK`: a [Challenge](#challenge-object) object.
 
 Returns `404 Not Found` when no public, published challenge matches the slug.
 
+### `GET /api/v1/challenges/{slug}/detail`
+
+Requires authentication when the caller wants personal progress data. Returns the
+complete read model used by the challenge journey screen. Public challenge
+metadata and aggregate participant data may be returned for anonymous callers;
+`progress` is empty when the caller has no participation.
+
+Response `200 OK`:
+
+```json
+{
+  "challenge": {
+    "id": "challenge-id",
+    "title": "Build a personal knowledge system",
+    "image_url": "https://example.com/knowledge-system.png",
+    "resources": [],
+    "slug": "build-a-personal-knowledge-system-a1b2c3d4",
+    "short_description": "Create a system for capturing and finding useful knowledge.",
+    "full_description": "Define the workflow, choose tools, and create an initial set of notes.",
+    "creator_id": "user-id",
+    "difficulty_level": "BEGINNER",
+    "aura_points": 20,
+    "status": "PUBLISHED",
+    "visibility": "PUBLIC",
+    "estimated_effort_min_minutes": 60,
+    "estimated_effort_max_minutes": 180,
+    "estimated_duration_minutes": null,
+    "verification_type": "SELF_REPORTED",
+    "created_at": "2026-09-05T12:00:00Z",
+    "updated_at": "2026-09-05T12:00:00Z",
+    "published_at": "2026-09-05T12:00:00Z"
+  },
+  "stats": {
+    "participant_count": 47,
+    "completed_participant_count": 12
+  },
+  "progress": {
+    "current_value": 42,
+    "target_value": 60,
+    "unit": "WPM",
+    "baseline_value": 30,
+    "best_value": 46,
+    "average_value": 41,
+    "accuracy_percent": 94,
+    "attempt_count": 17,
+    "logged_minutes": 120
+  },
+  "milestones": [
+    {
+      "id": "milestone-id",
+      "order_index": 1,
+      "title": "Reach 45 WPM",
+      "description": "Build a steady pace above 92% accuracy.",
+      "status": "CURRENT",
+      "current_value": 42,
+      "target_value": 45
+    }
+  ],
+  "attempts": [
+    {
+      "id": "attempt-id",
+      "value": 42,
+      "unit": "WPM",
+      "accuracy_percent": 94,
+      "created_at": "2026-09-05T12:00:00Z"
+    }
+  ],
+  "participants": [
+    {
+      "user_id": "user-id",
+      "username": "pablo",
+      "display_name": "Pablo",
+      "avatar_url": null,
+      "status": "IN_PROGRESS",
+      "completed_at": null
+    }
+  ],
+  "verification": {
+    "type": "SELF_REPORTED",
+    "target_value": 60,
+    "target_unit": "WPM",
+    "min_accuracy_percent": 95,
+    "required_runs": 1,
+    "instructions": "Complete one timed run with no paste or autocorrect."
+  }
+}
+```
+
+Rules:
+
+- `challenge` uses the same shape as the [Challenge object](#challenge-object).
+- `progress` contains the authenticated user's values when they participate;
+  otherwise return zero values and the challenge's target metric.
+- `milestones` must be ordered by `order_index`. Valid `status` values are
+  `LOCKED`, `CURRENT`, and `COMPLETED`.
+- `attempts` must be newest first and may be limited to the latest 20 records.
+- `participants` may be limited to five preview users. The aggregate counts in
+  `stats` must always represent the complete challenge population.
+- `verification` must describe the requirements enforced by the evidence API.
+
 ### `POST /api/v1/challenges`
 
 Requires authentication. Creates a private challenge owned by the caller. Accepts `multipart/form-data` with a `payload` field containing the challenge JSON, an optional `image` file, and one `resource_files` file for each resource in `payload.resources`, in the same order.

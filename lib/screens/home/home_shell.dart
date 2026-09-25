@@ -102,29 +102,9 @@ class _HomeShellState extends State<HomeShell> {
         body: SafeArea(
           child: IndexedStack(index: _index, children: _tabNavigators),
         ),
-        bottomNavigationBar: BottomNavigationBar(
+        bottomNavigationBar: _BottomNavigationBar(
           currentIndex: _navigationIndex,
-          selectedItemColor: _tabAtRoot[_index] ? null : AppColors.textPrimary,
           onTap: _onNavigationTap,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore_outlined),
-              label: 'Discover',
-            ),
-            BottomNavigationBarItem(icon: _AddNavigationIcon(), label: ''),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.workspace_premium_outlined),
-              label: 'Skills',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              label: 'Profile',
-            ),
-          ],
         ),
       ),
     );
@@ -133,6 +113,7 @@ class _HomeShellState extends State<HomeShell> {
   int get _navigationIndex => _index >= 2 ? _index + 1 : _index;
 
   void _onNavigationTap(int navigationIndex) {
+    _resetTabStacks();
     if (navigationIndex == 2) {
       _navigatorKeys[_index].currentState?.push(
         MaterialPageRoute(builder: (_) => const CreateChallengeScreen()),
@@ -142,10 +123,13 @@ class _HomeShellState extends State<HomeShell> {
     final tabIndex = navigationIndex > 2
         ? navigationIndex - 1
         : navigationIndex;
-    if (tabIndex == 3) {
-      _navigatorKeys[tabIndex].currentState?.popUntil((route) => route.isFirst);
-    }
     setState(() => _index = tabIndex);
+  }
+
+  void _resetTabStacks() {
+    for (final key in _navigatorKeys) {
+      key.currentState?.popUntil((route) => route.isFirst);
+    }
   }
 }
 
@@ -169,6 +153,93 @@ class _AddNavigationIcon extends StatelessWidget {
         ],
       ),
       child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+    );
+  }
+}
+
+class _BottomNavigationBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  const _BottomNavigationBar({
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  static const _items = [
+    (Icons.home_outlined, 'Home'),
+    (Icons.explore_outlined, 'Discover'),
+    (null, ''),
+    (Icons.workspace_premium_outlined, 'Skills'),
+    (Icons.person_outline, 'Profile'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Material(
+      color: colorScheme.surface,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
+          child: Row(
+            children: [
+              for (var index = 0; index < _items.length; index++)
+                Expanded(
+                  child: InkWell(
+                    onTap: () => onTap(index),
+                    child: _items[index].$1 == null
+                        ? const Center(child: _AddNavigationIcon())
+                        : _NavigationItem(
+                            icon: _items[index].$1!,
+                            label: _items[index].$2,
+                            selected: currentIndex == index,
+                          ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavigationItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+
+  const _NavigationItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = selected
+        ? colorScheme.onSurface
+        : colorScheme.onSurfaceVariant;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              letterSpacing: .3,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

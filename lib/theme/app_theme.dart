@@ -2,31 +2,118 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  static const background = Color(0xFF15160F);
-  static const surface = Color(0xFF1F2117);
-  static const surfaceAlt = Color(0xFF1F2117);
-  static const primary = Color(0xFFC7EA5C);
-  static const primaryLight = Color(0xFF7FAE1A);
-  static const accent = Color(0xFF38BDF8);
-  static const puzzle = Color(0xFFA78BFA);
-  static const primaryMuted = Color(0xFFA9D732);
-  static const textPrimary = Color(0xFFF3F2E9);
-  static const textSecondary = Color(0xFF9A9C8E);
-  static const border = Color(0xFF34362A);
-  static const success = Color(0xFFC7EA5C);
-  static const dark = Color(0xFF0A0B07);
-  static const warning = Color(0xFFFACC15);
-  static const danger = Color(0xFFE85D75);
-  static const lightBackground = Color(0xFFF7F8F4);
-  static const lightSurface = Color(0xFFFFFFFF);
-  static const lightSurfaceAlt = Color(0xFFEFF1EC);
-  static const lightTextPrimary = Color(0xFF101315);
-  static const lightTextSecondary = Color(0xFF626A70);
-  static const lightBorder = Color(0xFFDDE1DC);
+  // ---- Dark theme (primary) ----
+  static const background = Color(0xFF0F0F0E);      // near-black charcoal
+  static const surface = Color(0xFF161615);          // one step up from bg, for sheets/top bars only
+  static const surfaceAlt = Color(0xFF1B1B19);        // inputs, slightly lifted
+  static const primary = Color(0xFFC8FF2E);           // acid lime — the one accent
+  static const primaryLight = Color(0xFF6E8A1E);       // lime, dimmed for light-theme legibility
+  static const accent = Color(0xFFFFAB3D);            // amber — reserved for warnings/gates only
+  static const puzzle = Color(0xFFFF7A3D);            // ember — secondary accent, used sparingly (e.g. "trending")
+  static const primaryMuted = Color(0xFF232414);        // lime at ~14% over bg, for wash fills behind lime text
+  static const textPrimary = Color(0xFFECEBE3);        // off-white
+  static const textSecondary = Color(0xFF8C8C84);       // muted gray
+  static const textDim = Color(0xFF5A5A53);            // faint metadata / disabled
+  static const border = Color(0xFF2C2C2A);            // hairline, ~13% ink over bg
+  static const borderStrong = Color(0xFF444441);        // ~24% ink over bg, for emphasis rules
+  static const success = Color(0xFFC8FF2E);
+  static const dark = Color(0xFF0B0C05);              // text-on-lime
+  static const warning = Color(0xFFFFAB3D);
+  static const danger = Color(0xFFE8556B);
 
-  static const difficultyBeginner = Color(0xFF8CCF21);
-  static const difficultyIntermediate = Color(0xFFFB923C);
-  static const difficultyAdvanced = Color(0xFFFB7185);
+  // ---- Light theme ----
+  static const lightBackground = Color(0xFFF6F6F1);
+  static const lightSurface = Color(0xFFFFFFFF);
+  static const lightSurfaceAlt = Color(0xFFECEBE2);
+  static const lightTextPrimary = Color(0xFF141410);
+  static const lightTextSecondary = Color(0xFF5E5E55);
+  static const lightBorder = Color(0xFFDDDCD1);
+
+  // Rank/difficulty scale — keep it inside the same restrained palette
+  // rather than a generic green/orange/red traffic light.
+  static const difficultyBeginner = Color(0xFFC8FF2E);     // lime
+  static const difficultyIntermediate = Color(0xFFFFAB3D); // amber
+  static const difficultyAdvanced = Color(0xFFFF6B57);     // ember-red
+}
+
+/// Font roles, matching the HTML prototypes:
+///  - display (Bricolage Grotesque): headlines, section titles, and the big
+///    poster numerals ("60", "42 WPM"). Bricolage ships as a variable font
+///    with a width axis, which is what gives the numerals their tight,
+///    slightly compressed "poster" look.
+///  - body (Instrument Sans): paragraphs, labels, buttons, form fields.
+class AppFonts {
+  static TextStyle display({
+    required Color color,
+    double fontSize = 20,
+    FontWeight fontWeight = FontWeight.w700,
+    double? height,
+    double letterSpacingEm = -0.02,
+    double wdth = 100,
+  }) {
+    return GoogleFonts.bricolageGrotesque(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      height: height,
+      letterSpacing: letterSpacingEm * fontSize,
+    ).copyWith(
+      // Only takes effect if the variable-font asset is loaded (see note in
+      // pubspec below); GoogleFonts falls back to the nearest static cut
+      // otherwise, which is still fine for anything except the very large
+      // poster numerals.
+      fontVariations: [FontVariation('wdth', wdth)],
+    );
+  }
+
+  /// The big poster numerals — "60", "42 WPM", giant challenge goals.
+  /// Always call with an explicit [fontSize]; these are meant to be huge.
+  static TextStyle poster({
+    required double fontSize,
+    Color color = AppColors.textPrimary,
+    double wdth = 75,
+    double height = 0.9,
+  }) {
+    return display(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: FontWeight.w800,
+      height: height,
+      letterSpacingEm: -0.05,
+      wdth: wdth,
+    ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+  }
+
+  static TextStyle body({
+    required Color color,
+    double fontSize = 15,
+    FontWeight fontWeight = FontWeight.w400,
+    double height = 1.4,
+    double letterSpacingEm = 0,
+  }) {
+    return GoogleFonts.instrumentSans(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      height: height,
+      letterSpacing: letterSpacingEm * fontSize,
+    );
+  }
+
+  /// Small uppercase metadata labels ("ACTIVE", "RANK", "TYPING").
+  /// Remember to also call `.toUpperCase()` on the string itself.
+  static TextStyle label({
+    Color color = AppColors.textSecondary,
+    double fontSize = 11,
+    FontWeight fontWeight = FontWeight.w500,
+  }) {
+    return body(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      letterSpacingEm: 0.12,
+    );
+  }
 }
 
 class AppTheme {
@@ -51,7 +138,7 @@ class AppTheme {
         textPrimary: AppColors.lightTextPrimary,
         textSecondary: AppColors.lightTextSecondary,
         border: AppColors.lightBorder,
-        onPrimary: AppColors.lightTextPrimary,
+        onPrimary: AppColors.lightSurface,
       );
 
   static ThemeData _buildTheme({
@@ -79,33 +166,56 @@ class AppTheme {
         error: AppColors.danger,
       ),
     );
-    final textTheme = GoogleFonts.spaceGroteskTextTheme(base.textTheme).copyWith(
-      headlineMedium: GoogleFonts.spaceGrotesk(
+
+    // Base text theme in Instrument Sans (body copy), with the display
+    // roles overridden to Bricolage Grotesque below.
+    final textTheme = GoogleFonts.instrumentSansTextTheme(base.textTheme).copyWith(
+      // Poster-scale display numerals. Compose with AppFonts.poster() at
+      // point of use for anything larger than this (e.g. the giant "60").
+      displayLarge: AppFonts.display(
         color: textPrimary,
-        fontWeight: FontWeight.w700,
+        fontSize: 64,
+        fontWeight: FontWeight.w800,
+        height: 0.85,
+        letterSpacingEm: -0.05,
+        wdth: 75,
+      ),
+      headlineMedium: AppFonts.display(
+        color: textPrimary,
         fontSize: 32,
-        height: 1.15,
-      ),
-      headlineSmall: GoogleFonts.spaceGrotesk(
-        color: textPrimary,
         fontWeight: FontWeight.w700,
+        height: 1.0,
+        letterSpacingEm: -0.03,
+        wdth: 88,
+      ),
+      headlineSmall: AppFonts.display(
+        color: textPrimary,
         fontSize: 26,
-      ),
-      titleLarge: GoogleFonts.spaceGrotesk(
-        color: textPrimary,
         fontWeight: FontWeight.w700,
-        fontSize: 20,
+        height: 1.02,
+        letterSpacingEm: -0.02,
+        wdth: 90,
       ),
-      titleMedium: GoogleFonts.spaceGrotesk(
+      titleLarge: AppFonts.display(
         color: textPrimary,
-        fontWeight: FontWeight.w600,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        height: 1.15,
+        letterSpacingEm: -0.015,
+        wdth: 92,
+      ),
+      titleMedium: AppFonts.display(
+        color: textPrimary,
         fontSize: 17,
+        fontWeight: FontWeight.w600,
+        height: 1.15,
+        letterSpacingEm: -0.01,
+        wdth: 95,
       ),
-      bodyMedium: GoogleFonts.spaceGrotesk(
-        color: textSecondary,
-        fontSize: 15,
-        height: 1.4,
-      ),
+      bodyMedium: AppFonts.body(color: textSecondary, fontSize: 15),
+      bodyLarge: AppFonts.body(color: textPrimary, fontSize: 16),
+      bodySmall: AppFonts.body(color: textSecondary, fontSize: 13),
+      labelSmall: AppFonts.label(color: textSecondary),
     );
 
     return base.copyWith(
@@ -125,17 +235,20 @@ class AppTheme {
         foregroundColor: textPrimary,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.spaceGrotesk(
+        titleTextStyle: AppFonts.display(
           color: textPrimary,
-          fontWeight: FontWeight.w700,
           fontSize: 21,
+          fontWeight: FontWeight.w700,
+          letterSpacingEm: -0.02,
         ),
       ),
+      // Flatter, hairline-bordered surfaces instead of soft rounded cards —
+      // radius 3 reads as "structure," not a SaaS card kit.
       cardTheme: CardThemeData(
         color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(3),
           side: BorderSide(color: subtleBorder),
         ),
         margin: EdgeInsets.zero,
@@ -145,15 +258,28 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 22),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700, fontSize: 15),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+          // Buttons use body font, uppercase + tracked, per the prototype's
+          // ".btn" style — not the display font.
+          textStyle: AppFonts.body(
+            color: onPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            letterSpacingEm: 0.09,
+          ),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: onPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+          textStyle: AppFonts.body(
+            color: onPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            letterSpacingEm: 0.09,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -161,7 +287,13 @@ class AppTheme {
           foregroundColor: textPrimary,
           side: BorderSide(color: border),
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 22),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+          textStyle: AppFonts.body(
+            color: textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacingEm: 0.06,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -169,18 +301,18 @@ class AppTheme {
         fillColor: surfaceAlt,
         contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(3),
           borderSide: BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(3),
           borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(3),
           borderSide: BorderSide(color: primary, width: 1.5),
         ),
-        hintStyle: TextStyle(color: textSecondary),
+        hintStyle: AppFonts.body(color: textSecondary),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: surface,
@@ -188,6 +320,8 @@ class AppTheme {
         unselectedItemColor: textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
+        selectedLabelStyle: AppFonts.label(color: primary, fontSize: 10),
+        unselectedLabelStyle: AppFonts.label(color: textSecondary, fontSize: 10),
       ),
       dividerColor: border,
     );
