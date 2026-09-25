@@ -71,7 +71,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           ),
           SliverToBoxAdapter(child: _hero(context, challenge)),
           if (active) SliverToBoxAdapter(child: _section(context, 'NEXT MILESTONE', _nextMilestone(context))),
-          if (!active) SliverToBoxAdapter(child: _section(context, 'WHY BOTHER TYPING PROPERLY?', _why(context))),
+          if (!active) SliverToBoxAdapter(child: _section(context, 'WHY TAKE THIS ON?', _why(context))),
           SliverToBoxAdapter(child: _section(context, active ? 'THE GRIND' : 'THE PATH', _path(context))),
           SliverToBoxAdapter(child: _section(context, active ? 'YOUR LOADOUT' : 'LOADOUT', _loadout(context))),
           if (active) SliverToBoxAdapter(child: _section(context, 'RECENT ATTEMPTS', _attempts(context))),
@@ -85,12 +85,10 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   }
 
   Widget _hero(BuildContext context, Challenge challenge) {
-    final progress = widget.detail.progress;
-    final verification = widget.detail.verification;
-    final current = _formatValue(progress.currentValue);
-    final target = _formatValue(
-      verification.targetValue ?? progress.targetValue,
-    );
+    final primary = widget.detail.primaryMetric;
+    final current = _formatValue(primary?.current);
+    final target = _formatValue(primary?.target);
+    final unit = primary?.unit ?? '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 20, 22, 38),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -110,31 +108,27 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           const SizedBox(height: 8),
           _number(current, 112, AppColors.textPrimary),
           Row(children: [
-            _numberLabel(progress.unit.toUpperCase()),
+            _numberLabel(unit.toUpperCase()),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
-                progress.baselineValue == null
+                primary?.baseline == null || primary?.current == null
                     ? 'Progress is being tracked'
-                    : '↑ ${_formatValue(progress.currentValue - progress.baselineValue!)} ${progress.unit} since starting',
+                    : '↑ ${_formatValue(primary!.current! - primary.baseline!)} $unit since starting',
                 style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
               ),
             ),
           ]),
           const SizedBox(height: 24),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.end, children: [
-            _stat('BEST', _formatValue(progress.bestValue)),
-            _stat('AVERAGE', _formatValue(progress.averageValue)),
-            _stat('ACCURACY', _formatPercent(progress.accuracyPercent), warning: true),
-            _stat('ATTEMPTS', '${progress.attemptCount}'),
-          ]),
+          _metricStats(),
           const SizedBox(height: 28),
-          _progressRuler(),
+          if (primary != null && primary.target != null && primary.current != null)
+            _progressRuler(primary),
         ] else ...[
           _number(target, 148, AppColors.primary),
-          _numberLabel((verification.targetUnit.isEmpty ? progress.unit : verification.targetUnit).toUpperCase()),
+          _numberLabel(unit.toUpperCase()),
           const SizedBox(height: 24),
-          _eyebrow('THE TOUCH-TYPING TRIAL'),
+          _eyebrow('THE CHALLENGE'),
           const SizedBox(height: 12),
           Text(
             challenge.shortDescription,
@@ -181,8 +175,9 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         style: Theme.of(context).textTheme.bodyLarge,
       );
     }
-    final target = milestone.targetValue ?? widget.detail.progress.targetValue;
-    final current = milestone.currentValue ?? widget.detail.progress.currentValue;
+    final primary = widget.detail.primaryMetric;
+    final target = milestone.targetValue ?? primary?.target ?? 0;
+    final current = milestone.currentValue ?? primary?.current ?? 0;
     final ratio = target <= 0 ? 0.0 : (current / target).clamp(0.0, 1.0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +192,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         ]),
         const SizedBox(height: 12),
         Text(
-          '${_formatValue(current)} / ${_formatValue(target)} ${widget.detail.progress.unit}',
+          '${_formatValue(current)} / ${_formatValue(target)} ${primary?.unit ?? ''}',
           style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
         ),
       ],
@@ -268,10 +263,12 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   children: [
                     Text('#${widget.detail.attempts.length - index}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                     const SizedBox(width: 22),
-                    Text(_formatValue(widget.detail.attempts[index].value), style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
-                    Text(' ${widget.detail.attempts[index].unit}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                    const Spacer(),
-                    Text(_formatPercent(widget.detail.attempts[index].accuracyPercent), style: const TextStyle(color: AppColors.warning)),
+                    Expanded(
+                      child: Text(
+                        _attemptSummary(widget.detail.attempts[index]),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -306,18 +303,12 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _verification(BuildContext context) {
     final verification = widget.detail.verification;
-    final target = _formatValue(verification.targetValue ?? widget.detail.progress.targetValue);
-    final unit = verification.targetUnit.isEmpty
-        ? widget.detail.progress.unit
-        : verification.targetUnit;
-    final accuracy = _formatPercent(verification.minAccuracyPercent);
+    final requirements = widget.detail.effectiveRequirements;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Text(
-      active
-          ? 'Show that you have actually reached $target $unit.'
-          : (verification.instructions.isEmpty
-              ? 'Submit evidence that proves you completed this challenge.'
-              : verification.instructions),
+      verification.instructions.isEmpty
+          ? 'Submit evidence that proves you completed this challenge.'
+          : verification.instructions,
       style: const TextStyle(fontSize: 25, height: 1.08, fontWeight: FontWeight.w700),
     ),
     const SizedBox(height: 18),
@@ -329,9 +320,13 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     ),
     if (!active) ...[
       const SizedBox(height: 24),
-      _requirement('TARGET', '$target $unit'),
-      _requirement('ACCURACY', accuracy),
-      _requirement('VERIFIED RUNS NEEDED', '${verification.requiredRuns}'),
+      for (final requirement in requirements)
+        _requirement(
+          requirement.label.isEmpty ? requirement.metricKey : requirement.label,
+          '${_formatValue(requirement.value)} ${requirement.unit}'.trim(),
+        ),
+      if (verification.requiredRuns > 0)
+        _requirement('VERIFIED RUNS NEEDED', '${verification.requiredRuns}'),
       const SizedBox(height: 24),
       _proofStep('01', 'A baseline first.', 'Your first result is logged so you can see how far you move.'),
       _proofStep('02', 'The path opens.', '${widget.detail.milestones.length} milestones are matched to your stage.'),
@@ -366,7 +361,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     child: active
         ? TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('DROP THIS TRIAL'))
         : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Can you become someone who types 60?', style: TextStyle(fontSize: 40, height: .95, fontWeight: FontWeight.w800, letterSpacing: -2)),
+          Text('Ready to take on ${widget.challenge.title}?', style: const TextStyle(fontSize: 40, height: .95, fontWeight: FontWeight.w800, letterSpacing: -2)),
             const SizedBox(height: 24),
             SizedBox(width: double.infinity, child: FilledButton(onPressed: widget.accepting ? null : widget.onAccept, child: const Text('ACCEPT THE CHALLENGE'))),
             const SizedBox(height: 8),
@@ -382,19 +377,20 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   Widget _fact(String label, String value, {bool accent = false}) => Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(label), const SizedBox(height: 8), Text(value, style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: accent ? AppColors.primary : AppColors.textPrimary))]));
   Widget _step(String no, String title, String detail, bool done, {bool current = false}) => Container(decoration: BoxDecoration(border: const Border(bottom: BorderSide(color: AppColors.border)), color: current ? AppColors.primary.withValues(alpha: .08) : null), padding: const EdgeInsets.symmetric(vertical: 18), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(no, style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 30, fontWeight: FontWeight.w800)), const SizedBox(width: 18), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: done ? AppColors.textSecondary : AppColors.textPrimary, decoration: done ? TextDecoration.lineThrough : null)), const SizedBox(height: 4), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))])), Text(done ? '✓' : current ? '→' : '→', style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 22))]));
   Widget _resource(BuildContext context, String meta, String title, String detail, {bool featured = false}) => InkWell(onTap: () => widget.onOpenResource('Prototype resource: $title'), child: Container(decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))), padding: const EdgeInsets.symmetric(vertical: 19), child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(meta), const SizedBox(height: 7), Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: featured ? AppColors.primary : AppColors.textPrimary)), const SizedBox(height: 5), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))])), const Icon(Icons.north_east, size: 18, color: AppColors.textSecondary)])));
-  Widget _progressRuler() {
-    final progress = widget.detail.progress;
-    final ratio = progress.targetValue <= 0
+  Widget _progressRuler(ChallengeMetric metric) {
+    final current = metric.current ?? 0;
+    final target = metric.target ?? 0;
+    final ratio = target <= 0
         ? 0.0
-        : (progress.currentValue / progress.targetValue).clamp(0.0, 1.0);
+        : (current / target).clamp(0.0, 1.0);
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('START ${_formatValue(progress.baselineValue)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-            Text('CURRENT ${_formatValue(progress.currentValue)}', style: const TextStyle(color: AppColors.primary, fontSize: 11)),
-            Text('TARGET ${_formatValue(progress.targetValue)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+            Text('START ${_formatValue(metric.baseline)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+            Text('CURRENT ${_formatValue(metric.current)}', style: const TextStyle(color: AppColors.primary, fontSize: 11)),
+            Text('TARGET ${_formatValue(metric.target)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
           ],
         ),
         const SizedBox(height: 10),
@@ -411,5 +407,41 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     return value == value.roundToDouble() ? value.round().toString() : value.toStringAsFixed(1);
   }
 
-  String _formatPercent(double? value) => value == null ? '--' : '${_formatValue(value)}%';
+  Widget _metricStats() {
+    final metrics = widget.detail.metricDefinitions
+        .where((metric) => metric.current != null)
+        .take(4)
+        .toList();
+    if (metrics.isEmpty) {
+      return const Text(
+        'No metric progress logged yet.',
+        style: TextStyle(color: AppColors.textSecondary),
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        for (final metric in metrics)
+          _stat(metric.label.toUpperCase(), _formatMetric(metric, metric.current)),
+      ],
+    );
+  }
+
+  String _formatMetric(ChallengeMetric metric, double? value) {
+    final formatted = _formatValue(value);
+    if (formatted == '--' || metric.unit.isEmpty) return formatted;
+    return '$formatted ${metric.unit}';
+  }
+
+  String _attemptSummary(ChallengeAttempt attempt) {
+    if (attempt.metrics.isEmpty) return 'No metric values recorded';
+    return attempt.metrics.entries.map((entry) {
+      final metric = widget.detail.metricDefinitions
+          .where((item) => item.key == entry.key)
+          .firstOrNull;
+      if (metric == null) return '${entry.key}: ${_formatValue(entry.value)}';
+      return '${metric.label}: ${_formatMetric(metric, entry.value)}';
+    }).join('  ·  ');
+  }
 }
+  

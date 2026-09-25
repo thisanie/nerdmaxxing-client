@@ -35,10 +35,133 @@ class ChallengeResource {
   };
 }
 
+class ChallengeMetric {
+  final String key;
+  final String label;
+  final String kind;
+  final String unit;
+  final double? target;
+  final double? current;
+  final double? baseline;
+  final double? best;
+  final double? average;
+  final String direction;
+  final bool isPrimary;
+  final String format;
+
+  const ChallengeMetric({
+    required this.key,
+    required this.label,
+    required this.kind,
+    required this.unit,
+    this.target,
+    this.current,
+    this.baseline,
+    this.best,
+    this.average,
+    required this.direction,
+    required this.isPrimary,
+    required this.format,
+  });
+
+  factory ChallengeMetric.fromJson(Map<String, dynamic> json) {
+    double? readDouble(String key) {
+      final value = json[key];
+      return value is num ? value.toDouble() : double.tryParse('$value');
+    }
+
+    return ChallengeMetric(
+      key: json['key']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+      kind: json['kind']?.toString() ?? 'COUNT',
+      unit: json['unit']?.toString() ?? '',
+      target: readDouble('target'),
+      current: readDouble('current'),
+      baseline: readDouble('baseline'),
+      best: readDouble('best'),
+      average: readDouble('average'),
+      direction: json['direction']?.toString() ?? 'AT_LEAST',
+      isPrimary: json['is_primary'] == true,
+      format: json['format']?.toString() ?? 'DECIMAL_2',
+    );
+  }
+
+  ChallengeMetric withValues({
+    double? current,
+    double? baseline,
+    double? best,
+    double? average,
+  }) {
+    return ChallengeMetric(
+      key: key,
+      label: label,
+      kind: kind,
+      unit: unit,
+      target: target,
+      current: current ?? this.current,
+      baseline: baseline ?? this.baseline,
+      best: best ?? this.best,
+      average: average ?? this.average,
+      direction: direction,
+      isPrimary: isPrimary,
+      format: format,
+    );
+  }
+
+  ChallengeMetric merge(ChallengeMetric other) {
+    return ChallengeMetric(
+      key: key.isEmpty ? other.key : key,
+      label: other.label.isEmpty ? label : other.label,
+      kind: other.kind == 'COUNT' && kind != 'COUNT' ? kind : other.kind,
+      unit: other.unit.isEmpty ? unit : other.unit,
+      target: other.target ?? target,
+      current: other.current ?? current,
+      baseline: other.baseline ?? baseline,
+      best: other.best ?? best,
+      average: other.average ?? average,
+      direction: other.direction == 'AT_LEAST' && direction != 'AT_LEAST'
+          ? direction
+          : other.direction,
+      isPrimary: other.isPrimary || isPrimary,
+      format: other.format == 'DECIMAL_2' && format != 'DECIMAL_2'
+          ? format
+          : other.format,
+    );
+  }
+}
+
+class ChallengeRequirement {
+  final String metricKey;
+  final String operator;
+  final double? value;
+  final String unit;
+  final String label;
+
+  const ChallengeRequirement({
+    required this.metricKey,
+    required this.operator,
+    this.value,
+    required this.unit,
+    required this.label,
+  });
+
+  factory ChallengeRequirement.fromJson(Map<String, dynamic> json) {
+    final rawValue = json['value'];
+    return ChallengeRequirement(
+      metricKey: json['metric_key']?.toString() ?? '',
+      operator: json['operator']?.toString() ?? 'AT_LEAST',
+      value: rawValue is num ? rawValue.toDouble() : double.tryParse('$rawValue'),
+      unit: json['unit']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+    );
+  }
+}
+
 class Challenge {
   final String id;
   final String title;
   final String? imageUrl;
+  final String? imageKey;
   final List<ChallengeResource> resources;
   final String slug;
   final String shortDescription;
@@ -56,11 +179,18 @@ class Challenge {
   final DateTime? updatedAt;
   final DateTime? publishedAt;
   final int? enrollmentCount;
+  final int? completionCount;
+  final bool featured;
+  final bool legendary;
+  final List<Map<String, dynamic>> categories;
+  final List<ChallengeMetric> metrics;
+  final List<ChallengeRequirement> requirements;
 
   Challenge({
     required this.id,
     required this.title,
     this.imageUrl,
+    this.imageKey,
     required this.resources,
     required this.slug,
     required this.shortDescription,
@@ -78,6 +208,12 @@ class Challenge {
     this.updatedAt,
     this.publishedAt,
     this.enrollmentCount,
+    this.completionCount,
+    this.featured = false,
+    this.legendary = false,
+    this.categories = const [],
+    this.metrics = const [],
+    this.requirements = const [],
   });
 
   factory Challenge.fromJson(Map<String, dynamic> json) {
@@ -85,6 +221,7 @@ class Challenge {
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? '',
       imageUrl: json['image_url'],
+      imageKey: json['image_key']?.toString(),
       resources: (json['resources'] as List? ?? [])
           .map((e) => ChallengeResource.fromJson(e))
           .toList(),
@@ -117,6 +254,20 @@ class Challenge {
         'joined_count',
         'participants_count',
       ]),
+        completionCount: _readInt(json, const ['completion_count']),
+        featured: json['featured'] == true,
+        legendary: json['legendary'] == true,
+        categories: (json['categories'] as List? ?? [])
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList(),
+        metrics: _readList(json['metrics'])
+          .map(ChallengeMetric.fromJson)
+            .where((metric) => metric.key.isNotEmpty)
+          .toList(),
+        requirements: _readList(json['requirements'])
+          .map(ChallengeRequirement.fromJson)
+          .toList(),
     );
   }
 
@@ -129,6 +280,12 @@ class Challenge {
       if (parsed != null) return parsed;
     }
     return null;
+  }
+
+  static List<Map<String, dynamic>> _readList(Object? value) {
+    return value is List
+        ? value.whereType<Map>().map(Map<String, dynamic>.from).toList()
+        : const [];
   }
 
   String get effortLabel {

@@ -161,8 +161,16 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           onDecline: widget.invitation?.invitationId != null
             ? _declineInvitation
             : null,
-      onTrain: () => _showPrototypeSheet('Train', 'Accuracy first.\n\nYour next drill is ready. Type cleanly for 30 seconds, then log the result.'),
-      onProve: () => _showPrototypeSheet('Prove it', 'Show that you have reached 60 WPM.\n\nA verified 60-second test will start here in the full product.'),
+      onTrain: () => _showPrototypeSheet(
+        'Train',
+        _trainingMessage(detail),
+      ),
+      onProve: () => _showPrototypeSheet(
+        'Prove it',
+        detail.verification.instructions.isEmpty
+            ? 'Submit evidence for the requirements shown on this challenge.'
+            : detail.verification.instructions,
+      ),
       onOpenResource: (message) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message))),
           invited: widget.invitation?.invitationId != null,
     );
@@ -184,6 +192,17 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         ]),
       ),
     );
+  }
+
+  String _trainingMessage(ChallengeDetail detail) {
+    final primary = detail.primaryMetric;
+    if (primary == null) {
+      return 'Your next practice session is ready. Log your progress when you finish.';
+    }
+    final target = primary.target == null
+        ? ''
+        : '${primary.target!.toStringAsFixed(primary.target! % 1 == 0 ? 0 : 2)} ${primary.unit}'.trim();
+    return 'Build progress${target.isEmpty ? '' : ' toward $target'}, then log the result.';
   }
 
 }

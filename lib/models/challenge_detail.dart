@@ -93,33 +93,32 @@ class ChallengeMilestone {
 
 class ChallengeAttempt {
   final String id;
-  final double value;
-  final String unit;
-  final double? accuracyPercent;
+  final Map<String, double> metrics;
   final DateTime? createdAt;
 
   const ChallengeAttempt({
     required this.id,
-    required this.value,
-    required this.unit,
-    this.accuracyPercent,
+    this.metrics = const {},
     this.createdAt,
   });
 
   factory ChallengeAttempt.fromJson(Map<String, dynamic> json) {
-    double readDouble(String key) {
-      final value = json[key];
-      return value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+    final rawMetrics = json['metrics'];
+    final metrics = <String, double>{};
+    if (rawMetrics is Map) {
+      for (final entry in rawMetrics.entries) {
+        final value = entry.value;
+        if (value is num) {
+          metrics[entry.key.toString()] = value.toDouble();
+        } else {
+          final parsed = double.tryParse('$value');
+          if (parsed != null) metrics[entry.key.toString()] = parsed;
+        }
+      }
     }
-
-    final accuracy = json['accuracy_percent'];
     return ChallengeAttempt(
       id: json['id']?.toString() ?? '',
-      value: readDouble('value'),
-      unit: json['unit']?.toString() ?? '',
-      accuracyPercent: accuracy is num
-          ? accuracy.toDouble()
-          : double.tryParse('$accuracy'),
+      metrics: metrics,
       createdAt: json['created_at'] == null
           ? null
           : DateTime.tryParse(json['created_at'].toString()),
@@ -160,31 +159,27 @@ class ChallengeParticipant {
 
 class ChallengeVerification {
   final String type;
-  final double? targetValue;
-  final String targetUnit;
-  final double? minAccuracyPercent;
+  final List<ChallengeRequirement> requirements;
   final int requiredRuns;
   final String instructions;
 
   const ChallengeVerification({
     required this.type,
-    this.targetValue,
-    required this.targetUnit,
-    this.minAccuracyPercent,
+    this.requirements = const [],
     required this.requiredRuns,
     required this.instructions,
   });
 
   factory ChallengeVerification.fromJson(Map<String, dynamic> json) {
-    final target = json['target_value'];
-    final accuracy = json['min_accuracy_percent'];
+    final rawRequirements = json['requirements'];
     return ChallengeVerification(
       type: json['type']?.toString() ?? 'SELF_REPORTED',
-      targetValue: target is num ? target.toDouble() : double.tryParse('$target'),
-      targetUnit: json['target_unit']?.toString() ?? '',
-      minAccuracyPercent: accuracy is num
-          ? accuracy.toDouble()
-          : double.tryParse('$accuracy'),
+      requirements: rawRequirements is List
+          ? rawRequirements
+              .whereType<Map>()
+              .map((item) => ChallengeRequirement.fromJson(Map<String, dynamic>.from(item)))
+              .toList()
+          : const [],
       requiredRuns: (json['required_runs'] as num?)?.toInt() ?? 1,
       instructions: json['instructions']?.toString() ?? '',
     );
@@ -192,7 +187,6 @@ class ChallengeVerification {
 
   static const empty = ChallengeVerification(
     type: 'SELF_REPORTED',
-    targetUnit: '',
     requiredRuns: 1,
     instructions: '',
   );
@@ -200,7 +194,8 @@ class ChallengeVerification {
 
 class ChallengeDetail {
   final Challenge challenge;
-  final ChallengeProgressSnapshot progress;
+  final List<ChallengeMetric> metrics;
+  final List<ChallengeRequirement> requirements;
   final List<ChallengeMilestone> milestones;
   final List<ChallengeAttempt> attempts;
   final List<ChallengeParticipant> participants;
@@ -210,7 +205,8 @@ class ChallengeDetail {
 
   const ChallengeDetail({
     required this.challenge,
-    this.progress = ChallengeProgressSnapshot.empty,
+    this.metrics = const [],
+    this.requirements = const [],
     this.milestones = const [],
     this.attempts = const [],
     this.participants = const [],
@@ -231,8 +227,9 @@ class ChallengeDetail {
     }
 
     final stats = json['stats'] is Map
-        ? Map<String, dynamic>.from(json['stats'] as Map)
-        : const <String, dynamic>{};
+      ? Map<String, dynamic>.from(json['stats'] as Map)
+      : const <String, dynamic>{};
+
     final verification = json['verification'] is Map
         ? ChallengeVerification.fromJson(
             Map<String, dynamic>.from(json['verification'] as Map),
@@ -241,11 +238,13 @@ class ChallengeDetail {
 
     return ChallengeDetail(
       challenge: Challenge.fromJson(challengeJson),
-      progress: json['progress'] is Map
-          ? ChallengeProgressSnapshot.fromJson(
-              Map<String, dynamic>.from(json['progress'] as Map),
-            )
-          : ChallengeProgressSnapshot.empty,
+        metrics: listOfMaps('metrics')
+          .map(ChallengeMetric.fromJson)
+          .where((metric) => metric.key.isNotEmpty)
+          .toList(),
+      requirements: listOfMaps('requirements')
+          .map(ChallengeRequirement.fromJson)
+          .toList(),
       milestones: listOfMaps('milestones')
           .map(ChallengeMilestone.fromJson)
           .toList(),
@@ -264,6 +263,34 @@ class ChallengeDetail {
 
   factory ChallengeDetail.fromChallenge(Challenge challenge) => ChallengeDetail(
         challenge: challenge,
+        metrics: challenge.metrics,
+        requirements: challenge.requirements,
         participantCount: challenge.enrollmentCount ?? 0,
       );
+
+  ChallengeMetric? get primaryMetric {
+    for (final metric in metricDefinitions) {
+      if (metric.isPrimary) return metric;
+    }
+    return metricDefinitions.isEmpty ? null : metricDefinitions.first;
+  }
+
+  List<ChallengeMetric> get metricDefinitions {
+    final merged = <String, ChallengeMetric>{
+      for (final metric in challenge.metrics)
+        if (metric.key.isNotEmpty) metric.key: metric,
+    };
+    for (final metric in metrics) {
+      if (metric.key.isEmpty) continue;
+      final existing = merged[metric.key];
+      merged[metric.key] = existing == null ? metric : existing.merge(metric);
+    }
+    return merged.values.toList();
+  }
+
+  List<ChallengeRequirement> get effectiveRequirements {
+    if (requirements.isNotEmpty) return requirements;
+    if (verification.requirements.isNotEmpty) return verification.requirements;
+    return challenge.requirements;
+  }
 }
