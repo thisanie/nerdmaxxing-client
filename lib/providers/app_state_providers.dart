@@ -77,7 +77,6 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     ref.invalidate(myStatsProvider);
     ref.invalidate(myCompletedChallengesProvider);
     ref.invalidate(myCreatedChallengesProvider);
-    ref.invalidate(participationControllerProvider);
     return log;
   }
 
@@ -100,7 +99,6 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
       logProgress: logProgress,
     );
     ref.invalidate(progressLogsProvider(participantId));
-    ref.invalidate(participationControllerProvider);
     return result;
   }
 
