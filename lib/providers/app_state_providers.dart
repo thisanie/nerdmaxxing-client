@@ -85,8 +85,8 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     String participantId, {
     required String milestoneId,
     required String resourceId,
-    required double resourceMinutes,
-    required double milestoneMinutes,
+    required int resourceMinutes,
+    required int milestoneMinutes,
     String? note,
     bool logProgress = false,
   }) async {
