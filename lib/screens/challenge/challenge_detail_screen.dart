@@ -228,7 +228,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: const Text('ACCEPT CHALLENGE'),
+                  child: const Text('ACCEPT'),
                 ),
               ),
             ],
