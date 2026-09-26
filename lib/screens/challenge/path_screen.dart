@@ -15,6 +15,7 @@ class PathScreen extends ConsumerStatefulWidget {
   final ChallengeDetail detail;
   final int initialMilestoneIndex;
   final Participation? participation;
+  final Future<ChallengeDetail> Function()? onRefresh;
 
   const PathScreen({
     super.key,
@@ -22,6 +23,7 @@ class PathScreen extends ConsumerStatefulWidget {
     required this.detail,
     this.initialMilestoneIndex = 0,
     this.participation,
+    this.onRefresh,
   });
 
   @override
@@ -30,11 +32,13 @@ class PathScreen extends ConsumerStatefulWidget {
 
 class _PathScreenState extends ConsumerState<PathScreen> {
   late final List<_PathMilestone> _milestones;
+  late ChallengeDetail _detail;
   var _selectedMilestone = 0;
 
   @override
   void initState() {
     super.initState();
+    _detail = widget.detail;
     _milestones = _buildMilestones();
     _selectedMilestone = _milestones.isEmpty
       ? 0
@@ -42,7 +46,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   }
 
   List<_PathMilestone> _buildMilestones() {
-    final apiMilestones = widget.detail.milestones;
+    final apiMilestones = _detail.milestones;
     if (apiMilestones.isEmpty) {
       return const [];
     }
@@ -78,6 +82,20 @@ class _PathScreenState extends ConsumerState<PathScreen> {
 
   _PathMilestone get _milestone => _milestones[_selectedMilestone];
 
+  Future<void> _refresh() async {
+    final detail = await widget.onRefresh?.call();
+    if (!mounted || detail == null) return;
+    setState(() {
+      _detail = detail;
+      _milestones
+        ..clear()
+        ..addAll(_buildMilestones());
+      _selectedMilestone = _milestones.isEmpty
+          ? 0
+          : _selectedMilestone.clamp(0, _milestones.length - 1);
+    });
+  }
+
   int get _completedCount => _milestone.resources.where((resource) => resource.completed).length;
 
     int get _milestoneCompletedCount => _milestone.totalResourceCount > 0
@@ -94,8 +112,15 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('YOUR PATH')),
-        body: const Center(
-          child: Text('This challenge has no configured milestones yet.'),
+        body: RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: const [
+              SizedBox(height: 260),
+              Center(child: Text('This challenge has no configured milestones yet.')),
+            ],
+          ),
         ),
       );
     }
@@ -105,8 +130,11 @@ class _PathScreenState extends ConsumerState<PathScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
           SliverAppBar(
             pinned: true,
             backgroundColor: AppColors.background.withValues(alpha: .94),
@@ -129,7 +157,8 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                 : _resourceList(resources),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 38)),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -261,7 +290,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   Future<void> _completeResource(_PathResource resource) async {
     final input = await showDialog<_CompletionInput>(
       context: context,
-      builder: (_) => _CompletionDialog(metric: widget.detail.primaryMetric),
+      builder: (_) => _CompletionDialog(metric: _detail.primaryMetric),
     );
     if (input == null) return;
 
@@ -269,11 +298,12 @@ class _PathScreenState extends ConsumerState<PathScreen> {
     setState(() {
       resource.completed = true;
       resource.saving = true;
+      if (!wasCompleted) _milestone.completedResourceCount++;
     });
 
-    final milestone = widget.detail.milestones.isEmpty
+    final milestone = _detail.milestones.isEmpty
         ? null
-        : widget.detail.milestones[_selectedMilestone];
+      : _detail.milestones[_selectedMilestone];
     final participation = widget.participation;
 
     try {
@@ -290,7 +320,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
           logProgress: input.logProgress,
         );
         if (input.logProgress && input.metricValue != null) {
-          final metric = widget.detail.primaryMetric;
+          final metric = _detail.primaryMetric;
           if (metric != null) {
             await ref.read(participationControllerProvider.notifier).logMetricAttempt(
               participation.id,
@@ -322,6 +352,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       if (mounted) {
         setState(() {
           resource.completed = wasCompleted;
+          if (!wasCompleted) _milestone.completedResourceCount--;
           resource.saving = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
@@ -332,6 +363,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       if (mounted) {
         setState(() {
           resource.completed = wasCompleted;
+          if (!wasCompleted) _milestone.completedResourceCount--;
           resource.saving = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -351,7 +383,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
 class _PathMilestone {
   final String title;
   final String description;
-  final int completedResourceCount;
+  int completedResourceCount;
   final int totalResourceCount;
   final int loggedMinutes;
   final List<_PathResource> resources;

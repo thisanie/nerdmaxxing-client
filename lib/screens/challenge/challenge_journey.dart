@@ -17,6 +17,7 @@ class ChallengeJourney extends StatefulWidget {
   final ValueChanged<ChallengeResource> onOpenResource;
   final bool accepting;
   final bool invited;
+  final Future<void> Function()? onRefresh;
 
   const ChallengeJourney({
     super.key,
@@ -31,6 +32,7 @@ class ChallengeJourney extends StatefulWidget {
     required this.onOpenResource,
     required this.accepting,
     this.invited = false,
+    this.onRefresh,
   });
 
   @override
@@ -47,8 +49,11 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     final challenge = widget.challenge;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
+      body: RefreshIndicator(
+        onRefresh: widget.onRefresh ?? () async {},
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
           SliverAppBar(
             pinned: true,
             backgroundColor: AppColors.background.withValues(alpha: .92),
@@ -82,7 +87,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           if (!active) SliverToBoxAdapter(child: _section(context, 'HOW YOU PROVE IT', _verification(context))),
           if (active) SliverToBoxAdapter(child: _section(context, 'PROVE IT', _verification(context))),
           SliverToBoxAdapter(child: _finalCta(context)),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -170,9 +176,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _challengeProgress(BuildContext context) {
     final milestones = widget.detail.milestones;
-    final completed = milestones
-        .where((milestone) => milestone.status.toUpperCase() == 'COMPLETED')
-        .length;
+    final completed = milestones.where(_isMilestoneComplete).length;
     final total = milestones.length;
     final ratio = total == 0 ? 0.0 : completed / total;
 
@@ -214,9 +218,19 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     );
   }
 
+  bool _isMilestoneComplete(ChallengeMilestone milestone) {
+    final total = milestone.totalResourceCount > 0
+        ? milestone.totalResourceCount
+        : milestone.resources.length;
+    final completed = milestone.totalResourceCount > 0
+        ? milestone.completedResourceCount
+        : milestone.resources.where((resource) => resource.completed).length;
+    return total > 0 && completed >= total;
+  }
+
   Widget _nextMilestone(BuildContext context) {
     final milestone = widget.detail.milestones
-        .where((item) => item.status != 'COMPLETED')
+      .where((item) => !_isMilestoneComplete(item))
         .firstOrNull;
     if (milestone == null) {
       return Text(
@@ -277,8 +291,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       milestone.orderIndex.toString().padLeft(2, '0'),
       milestone.title,
       milestone.description,
-      milestone.status == 'COMPLETED',
-      current: milestone.status == 'CURRENT',
+      _isMilestoneComplete(milestone),
+      current: !_isMilestoneComplete(milestone),
     ),
   );
 

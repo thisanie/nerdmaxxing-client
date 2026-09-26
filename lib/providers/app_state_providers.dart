@@ -97,6 +97,9 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
       logProgress: logProgress,
     );
     ref.invalidate(progressLogsProvider(participantId));
+    ref.invalidate(myStatsProvider);
+    ref.invalidate(myCompletedChallengesProvider);
+    ref.invalidate(myCreatedChallengesProvider);
     return result;
   }
 
@@ -107,13 +110,17 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     required String unit,
     String? note,
   }) {
-    return _service.logMetricAttempt(
+    final result = await _service.logMetricAttempt(
       participantId,
       metricKey: metricKey,
       value: value,
       unit: unit,
       note: note,
     );
+    ref.invalidate(myStatsProvider);
+    ref.invalidate(myCompletedChallengesProvider);
+    ref.invalidate(myCreatedChallengesProvider);
+    return result;
   }
 
   void add(Participation participation) => _replace(participation);

@@ -52,19 +52,28 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
 
   Future<void> _load() async {
     try {
+      await _refreshDetail();
+    } on ApiException {
+      // Initial-load errors are represented by _error when no fallback exists.
+    }
+  }
+
+  Future<ChallengeDetail> _refreshDetail() async {
+    try {
       final detail = await context.read<ChallengesService>().getDetailBySlug(
         widget.slug,
       );
-      if (!mounted) return;
-      setState(() {
+      if (mounted) setState(() {
         _detail = detail;
         _challenge = detail.challenge;
       });
+      return detail;
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) rethrow;
       if (_challenge == null) {
         setState(() => _error = e.message);
       }
+      rethrow;
     }
   }
 
@@ -164,6 +173,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             : null,
       onTrain: () => _openPath(detail),
       onOpenMilestone: (index) => _openPath(detail, milestoneIndex: index),
+          onRefresh: _refreshDetail,
       onProve: () => _showPrototypeSheet(
         'Prove it',
         detail.verification.instructions.isEmpty
@@ -215,6 +225,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           participation: ref.read(participationControllerProvider).valueOrNull
               ?.where((item) => item.challengeId == _challenge!.id)
               .firstOrNull,
+            onRefresh: _load,
         ),
       ),
     ).then((_) => _load());
