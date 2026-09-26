@@ -225,6 +225,17 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     return total > 0 && completed >= total;
   }
 
+  double _milestoneProgress(ChallengeMilestone milestone) {
+    final total = milestone.totalResourceCount > 0
+        ? milestone.totalResourceCount
+        : milestone.resources.length;
+    if (total == 0) return 0;
+    final completed = milestone.totalResourceCount > 0
+        ? milestone.completedResourceCount
+        : milestone.resources.where((resource) => resource.completed).length;
+    return (completed / total).clamp(0.0, 1.0);
+  }
+
   bool _isNextMilestone(int index) {
     for (var milestoneIndex = 0; milestoneIndex < widget.detail.milestones.length; milestoneIndex++) {
       if (!_isMilestoneComplete(widget.detail.milestones[milestoneIndex])) {
@@ -295,6 +306,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       milestone.description,
       _isMilestoneComplete(milestone),
       current: _isNextMilestone(index),
+      progress: _milestoneProgress(milestone),
     ),
   );
 
@@ -422,7 +434,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   Widget _numberLabel(String text) => Text(text, style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, letterSpacing: -1));
   Widget _stat(String label, String value, {bool warning = false}) => Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(label), const SizedBox(height: 7), Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: warning ? AppColors.warning : AppColors.textPrimary))]));
   Widget _fact(String label, String value, {bool accent = false}) => Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(label), const SizedBox(height: 8), Text(value, style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: accent ? AppColors.primary : AppColors.textPrimary))]));
-  Widget _step(String no, String title, String detail, bool done, {bool current = false}) => Container(decoration: BoxDecoration(border: const Border(bottom: BorderSide(color: AppColors.border)), color: current ? AppColors.primary.withValues(alpha: .08) : null), padding: const EdgeInsets.symmetric(vertical: 18), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(no, style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 30, fontWeight: FontWeight.w800)), const SizedBox(width: 18), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: done ? AppColors.textSecondary : AppColors.textPrimary, decoration: done ? TextDecoration.lineThrough : null)), const SizedBox(height: 4), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)), const SizedBox(height: 12), _progressBar(done ? 1 : current ? .5 : 0)])), const SizedBox(width: 14), Text(done ? '✓' : current ? '→' : '→', style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 22))]));
+  Widget _step(String no, String title, String detail, bool done, {bool current = false, double progress = 0}) => Container(decoration: BoxDecoration(border: const Border(bottom: BorderSide(color: AppColors.border)), color: current ? AppColors.primary.withValues(alpha: .08) : null), padding: const EdgeInsets.symmetric(vertical: 18), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(no, style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 30, fontWeight: FontWeight.w800)), const SizedBox(width: 18), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: done ? AppColors.textSecondary : AppColors.textPrimary, decoration: done ? TextDecoration.lineThrough : null)), const SizedBox(height: 4), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)), const SizedBox(height: 12), _progressBar(progress)])), const SizedBox(width: 14), Text(done ? '✓' : '→', style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 22))]));
 
   Widget _progressBar(double ratio) => ClipRRect(
     borderRadius: BorderRadius.circular(2),
