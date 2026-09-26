@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/challenge.dart';
 import '../../models/challenge_detail.dart';
@@ -39,25 +40,25 @@ class _PathScreenState extends State<PathScreen> {
           title: 'Build the baseline',
           description: 'Get familiar with the fundamentals before you increase the pace.',
           resources: [
-            _PathResource('The beginner guide', 'READ', 'A short primer to get your first session moving.', true),
-            _PathResource('Set up your practice space', 'WATCH', 'A quick walkthrough for removing friction.', true),
-            _PathResource('First focused session', 'DO', 'Put the ideas into practice for 20 minutes.', false),
+            _PathResource('The beginner guide', 'READ', 'A short primer to get your first session moving.', 'https://example.com/nerdmaxxing/beginner-guide', true),
+            _PathResource('Set up your practice space', 'WATCH', 'A quick walkthrough for removing friction.', 'https://example.com/nerdmaxxing/practice-space', true),
+            _PathResource('First focused session', 'DO', 'Put the ideas into practice for 20 minutes.', 'https://example.com/nerdmaxxing/focused-session', false),
           ],
         ),
         _PathMilestone(
           title: 'Raise the standard',
           description: 'Turn the basics into a repeatable routine.',
           resources: [
-            _PathResource('The consistency playbook', 'READ', 'A practical system for showing up every day.', false),
-            _PathResource('Deliberate practice drill', 'DO', 'One focused drill for your next session.', false),
+            _PathResource('The consistency playbook', 'READ', 'A practical system for showing up every day.', 'https://example.com/nerdmaxxing/consistency', false),
+            _PathResource('Deliberate practice drill', 'DO', 'One focused drill for your next session.', 'https://example.com/nerdmaxxing/deliberate-practice', false),
           ],
         ),
         _PathMilestone(
           title: 'Prove your progress',
           description: 'Take the final step and submit a result you are proud of.',
           resources: [
-            _PathResource('Final challenge checklist', 'READ', 'Everything to review before your verified attempt.', false),
-            _PathResource('Verified attempt', 'PROVE', 'Submit the evidence that clears this challenge.', false),
+            _PathResource('Final challenge checklist', 'READ', 'Everything to review before your verified attempt.', 'https://example.com/nerdmaxxing/final-checklist', false),
+            _PathResource('Verified attempt', 'PROVE', 'Submit the evidence that clears this challenge.', 'https://example.com/nerdmaxxing/verified-attempt', false),
           ],
         ),
       ];
@@ -68,21 +69,32 @@ class _PathScreenState extends State<PathScreen> {
         _PathMilestone(
           title: milestone.title,
           description: milestone.description,
-          resources: _dummyResourcesFor(milestone.orderIndex),
+          resources: milestone.resources.isEmpty
+              ? _dummyResourcesFor(milestone.orderIndex)
+              : [
+                  for (final resource in milestone.resources)
+                    _PathResource(
+                      resource.title,
+                      resource.resourceType,
+                      resource.rationale,
+                      resource.url,
+                      false,
+                    ),
+                ],
         ),
     ];
   }
 
   List<_PathResource> _dummyResourcesFor(int order) {
     final resources = [
-      _PathResource('Core concept guide', 'READ', 'A focused guide for this stage of the path.', true),
-      _PathResource('Practice session', 'DO', 'A short exercise to turn the idea into a habit.', true),
-      _PathResource('Checkpoint notes', 'READ', 'A final reference before you move forward.', false),
+      _PathResource('Core concept guide', 'READ', 'A focused guide for this stage of the path.', 'https://example.com/nerdmaxxing/core-concept', true),
+      _PathResource('Practice session', 'DO', 'A short exercise to turn the idea into a habit.', 'https://example.com/nerdmaxxing/practice-session', true),
+      _PathResource('Checkpoint notes', 'READ', 'A final reference before you move forward.', 'https://example.com/nerdmaxxing/checkpoint', false),
     ];
     if (order == 1) return resources;
     return [
       for (final resource in resources)
-        _PathResource(resource.title, resource.type, resource.description, false),
+        _PathResource(resource.title, resource.type, resource.description, resource.url, false),
     ];
   }
 
@@ -181,14 +193,19 @@ class _PathScreenState extends State<PathScreen> {
     ]),
   );
 
-  Widget _resourceTile(_PathResource resource, int index) => InkWell(
-    onTap: () => setState(() => resource.completed = !resource.completed),
-    child: Container(
+  Widget _resourceTile(_PathResource resource, int index) => Container(
       decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
       padding: const EdgeInsets.symmetric(vertical: 18),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(resource.completed ? Icons.check_circle : Icons.radio_button_unchecked, color: resource.completed ? AppColors.primary : AppColors.textDim, size: 22),
-        const SizedBox(width: 15),
+        InkWell(
+          onTap: () => setState(() => resource.completed = !resource.completed),
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: Icon(resource.completed ? Icons.check_circle : Icons.radio_button_unchecked, color: resource.completed ? AppColors.primary : AppColors.textDim, size: 22),
+          ),
+        ),
+        const SizedBox(width: 13),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('${(index + 1).toString().padLeft(2, '0')}  ${resource.type}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, letterSpacing: 1.3, fontWeight: FontWeight.w700)),
           const SizedBox(height: 7),
@@ -197,10 +214,34 @@ class _PathScreenState extends State<PathScreen> {
           Text(resource.description, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.3)),
         ])),
         const SizedBox(width: 10),
-        Icon(resource.completed ? Icons.done : Icons.arrow_forward, color: resource.completed ? AppColors.primary : AppColors.textSecondary, size: 18),
+        IconButton(
+          tooltip: 'Open resource',
+          onPressed: () => _openResource(resource),
+          icon: const Icon(Icons.open_in_new, size: 19),
+          color: AppColors.primary,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        ),
       ]),
-    ),
   );
+
+  Future<void> _openResource(_PathResource resource) async {
+    final uri = Uri.tryParse(resource.url);
+    if (uri == null || !uri.hasScheme) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This resource link is not available yet.')),
+        );
+      }
+      return;
+    }
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open this resource.')),
+      );
+    }
+  }
 }
 
 class _PathMilestone {
@@ -215,7 +256,8 @@ class _PathResource {
   final String title;
   final String type;
   final String description;
+  final String url;
   bool completed;
 
-  _PathResource(this.title, this.type, this.description, this.completed);
+  _PathResource(this.title, this.type, this.description, this.url, this.completed);
 }

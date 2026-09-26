@@ -62,6 +62,7 @@ class ChallengeMilestone {
   final String status;
   final double? currentValue;
   final double? targetValue;
+  final List<ChallengeResource> resources;
 
   const ChallengeMilestone({
     required this.id,
@@ -71,6 +72,7 @@ class ChallengeMilestone {
     required this.status,
     this.currentValue,
     this.targetValue,
+    this.resources = const [],
   });
 
   factory ChallengeMilestone.fromJson(Map<String, dynamic> json) {
@@ -87,6 +89,10 @@ class ChallengeMilestone {
       status: json['status']?.toString() ?? 'LOCKED',
       currentValue: readOptional('current_value'),
       targetValue: readOptional('target_value'),
+        resources: (json['resources'] as List? ?? [])
+          .whereType<Map>()
+          .map((item) => ChallengeResource.fromJson(Map<String, dynamic>.from(item)))
+          .toList(),
     );
   }
 }
