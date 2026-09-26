@@ -84,7 +84,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                       resource.resourceType,
                       resource.rationale,
                       resource.url,
-                      false,
+                      resource.completed,
                       id: resource.id,
                     ),
                 ],
@@ -305,6 +305,17 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               note: input.note,
             );
           }
+        }
+      }
+      final completedResource = widget.challenge.resources.where(
+        (candidate) => candidate.id == resource.id,
+      );
+      for (final candidate in completedResource) {
+        candidate.completed = true;
+      }
+      if (milestone != null) {
+        for (final candidate in milestone.resources) {
+          if (candidate.id == resource.id) candidate.completed = true;
         }
       }
       if (!mounted) return;

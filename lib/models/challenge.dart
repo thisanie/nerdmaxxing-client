@@ -5,6 +5,7 @@ class ChallengeResource {
   final String resourceType;
   final String rationale;
   final int orderIndex;
+  bool completed;
 
   ChallengeResource({
     required this.id,
@@ -13,6 +14,7 @@ class ChallengeResource {
     required this.resourceType,
     required this.rationale,
     required this.orderIndex,
+    this.completed = false,
   });
 
   factory ChallengeResource.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,9 @@ class ChallengeResource {
       resourceType: json['resource_type'] ?? 'LINK',
       rationale: json['rationale'] ?? '',
       orderIndex: json['order_index'] ?? 0,
+      completed: json['completed'] == true ||
+          json['is_completed'] == true ||
+          json['completed_at'] != null,
     );
   }
 
