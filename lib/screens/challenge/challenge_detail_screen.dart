@@ -182,7 +182,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             ? 'Submit evidence for the requirements shown on this challenge.'
             : detail.verification.instructions,
       ),
-      onOpenResource: (_) => _openPath(detail),
           invited: widget.invitation?.invitationId != null,
     );
   }

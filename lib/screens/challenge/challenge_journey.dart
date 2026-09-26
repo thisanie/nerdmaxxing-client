@@ -14,7 +14,6 @@ class ChallengeJourney extends StatefulWidget {
   final VoidCallback onProve;
   final VoidCallback? onDecline;
   final ValueChanged<int> onOpenMilestone;
-  final ValueChanged<ChallengeResource> onOpenResource;
   final bool accepting;
   final bool invited;
   final Future<void> Function()? onRefresh;
@@ -29,7 +28,6 @@ class ChallengeJourney extends StatefulWidget {
     required this.onProve,
     this.onDecline,
     required this.onOpenMilestone,
-    required this.onOpenResource,
     required this.accepting,
     this.invited = false,
     this.onRefresh,
@@ -81,7 +79,6 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           if (active) SliverToBoxAdapter(child: _section(context, 'CHALLENGE PROGRESS', _challengeProgress(context))),
           if (!active) SliverToBoxAdapter(child: _section(context, 'WHY TAKE THIS ON?', _why(context))),
           SliverToBoxAdapter(child: _section(context, active ? 'THE GRIND' : 'THE PATH', _path(context))),
-          SliverToBoxAdapter(child: _section(context, active ? 'YOUR LOADOUT' : 'LOADOUT', _loadout(context))),
           if (active) SliverToBoxAdapter(child: _section(context, 'RECENT ATTEMPTS', _attempts(context))),
           SliverToBoxAdapter(child: _section(context, 'PEOPLE ON THIS TRIAL', _people(context))),
           if (!active) SliverToBoxAdapter(child: _section(context, 'HOW YOU PROVE IT', _verification(context))),
@@ -271,25 +268,6 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     ]),
   ]);
 
-  Widget _path(BuildContext context) => Column(
-    children: widget.detail.milestones.isEmpty
-        ? [
-            Text(
-              'Milestones will appear here when the challenge path is configured.',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ]
-        : [
-            for (var index = 0; index < widget.detail.milestones.length; index++)
-              _milestoneStep(widget.detail.milestones[index], index),
-          ],
-  );
-
-  Widget _milestoneStep(ChallengeMilestone milestone, int index) => InkWell(
-    onTap: () => widget.onOpenMilestone(index),
-    child: _step(
-      milestone.orderIndex.toString().padLeft(2, '0'),
-      milestone.title,
       milestone.description,
       _isMilestoneComplete(milestone),
       current: !_isMilestoneComplete(milestone),
@@ -449,13 +427,6 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       FractionallySizedBox(widthFactor: ratio.clamp(0.0, 1.0), child: Container(height: 6, color: AppColors.primary)),
     ]),
   );
-  Widget _resource(BuildContext context, String meta, String title, String detail, {bool featured = false}) {
-    final resource = widget.challenge.resources.firstWhere(
-      (item) => item.title == title,
-      orElse: () => ChallengeResource(id: '', title: title, url: '', resourceType: meta, rationale: detail, orderIndex: 0),
-    );
-    return InkWell(onTap: () => widget.onOpenResource(resource), child: Container(decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))), padding: const EdgeInsets.symmetric(vertical: 19), child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(meta), const SizedBox(height: 7), Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: featured ? AppColors.primary : AppColors.textPrimary)), const SizedBox(height: 5), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))])), const Icon(Icons.north_east, size: 18, color: AppColors.textSecondary)])));
-  }
   Widget _progressRuler(ChallengeMetric metric) {
     final current = metric.current ?? 0;
     final target = metric.target ?? 0;
