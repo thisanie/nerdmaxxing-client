@@ -163,6 +163,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             ? _declineInvitation
             : null,
       onTrain: () => _openPath(detail),
+      onOpenMilestone: (index) => _openPath(detail, milestoneIndex: index),
       onProve: () => _showPrototypeSheet(
         'Prove it',
         detail.verification.instructions.isEmpty
@@ -203,12 +204,24 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     return 'Build progress${target.isEmpty ? '' : ' toward $target'}, then log the result.';
   }
 
-  void _openPath(ChallengeDetail detail) {
+  void _openPath(ChallengeDetail detail, {int? milestoneIndex}) {
+    final currentIndex = milestoneIndex ?? _currentMilestoneIndex(detail);
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PathScreen(challenge: _challenge!, detail: detail),
+        builder: (_) => PathScreen(
+          challenge: _challenge!,
+          detail: detail,
+          initialMilestoneIndex: currentIndex,
+        ),
       ),
     );
+  }
+
+  int _currentMilestoneIndex(ChallengeDetail detail) {
+    final index = detail.milestones.indexWhere(
+      (milestone) => milestone.status != 'COMPLETED',
+    );
+    return index < 0 ? 0 : index;
   }
 
 }

@@ -7,11 +7,13 @@ import '../../theme/app_theme.dart';
 class PathScreen extends StatefulWidget {
   final Challenge challenge;
   final ChallengeDetail detail;
+  final int initialMilestoneIndex;
 
   const PathScreen({
     super.key,
     required this.challenge,
     required this.detail,
+    this.initialMilestoneIndex = 0,
   });
 
   @override
@@ -26,6 +28,7 @@ class _PathScreenState extends State<PathScreen> {
   void initState() {
     super.initState();
     _milestones = _buildMilestones();
+    _selectedMilestone = widget.initialMilestoneIndex.clamp(0, _milestones.length - 1);
   }
 
   List<_PathMilestone> _buildMilestones() {

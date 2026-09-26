@@ -13,6 +13,7 @@ class ChallengeJourney extends StatefulWidget {
   final VoidCallback onTrain;
   final VoidCallback onProve;
   final VoidCallback? onDecline;
+  final ValueChanged<int> onOpenMilestone;
   final ValueChanged<ChallengeResource> onOpenResource;
   final bool accepting;
   final bool invited;
@@ -26,6 +27,7 @@ class ChallengeJourney extends StatefulWidget {
     required this.onTrain,
     required this.onProve,
     this.onDecline,
+    required this.onOpenMilestone,
     required this.onOpenResource,
     required this.accepting,
     this.invited = false,
@@ -186,10 +188,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         const SizedBox(height: 10),
         Text(milestone.description, style: Theme.of(context).textTheme.bodyLarge),
         const SizedBox(height: 22),
-        Stack(children: [
-          Container(height: 4, color: AppColors.border),
-          FractionallySizedBox(widthFactor: ratio, child: Container(height: 4, color: AppColors.primary)),
-        ]),
+        _progressBar(ratio),
         const SizedBox(height: 12),
         Text(
           '${_formatValue(current)} / ${_formatValue(target)} ${primary?.unit ?? ''}',
@@ -220,15 +219,20 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             ),
           ]
         : [
-            for (final milestone in widget.detail.milestones)
-              _step(
-                milestone.orderIndex.toString().padLeft(2, '0'),
-                milestone.title,
-                milestone.description,
-                milestone.status == 'COMPLETED',
-                current: milestone.status == 'CURRENT',
-              ),
+            for (var index = 0; index < widget.detail.milestones.length; index++)
+              _milestoneStep(widget.detail.milestones[index], index),
           ],
+  );
+
+  Widget _milestoneStep(ChallengeMilestone milestone, int index) => InkWell(
+    onTap: () => widget.onOpenMilestone(index),
+    child: _step(
+      milestone.orderIndex.toString().padLeft(2, '0'),
+      milestone.title,
+      milestone.description,
+      milestone.status == 'COMPLETED',
+      current: milestone.status == 'CURRENT',
+    ),
   );
 
   Widget _loadout(BuildContext context) => Column(
@@ -375,7 +379,15 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   Widget _numberLabel(String text) => Text(text, style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, letterSpacing: -1));
   Widget _stat(String label, String value, {bool warning = false}) => Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(label), const SizedBox(height: 7), Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: warning ? AppColors.warning : AppColors.textPrimary))]));
   Widget _fact(String label, String value, {bool accent = false}) => Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_eyebrow(label), const SizedBox(height: 8), Text(value, style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: accent ? AppColors.primary : AppColors.textPrimary))]));
-  Widget _step(String no, String title, String detail, bool done, {bool current = false}) => Container(decoration: BoxDecoration(border: const Border(bottom: BorderSide(color: AppColors.border)), color: current ? AppColors.primary.withValues(alpha: .08) : null), padding: const EdgeInsets.symmetric(vertical: 18), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(no, style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 30, fontWeight: FontWeight.w800)), const SizedBox(width: 18), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: done ? AppColors.textSecondary : AppColors.textPrimary, decoration: done ? TextDecoration.lineThrough : null)), const SizedBox(height: 4), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))])), Text(done ? '✓' : current ? '→' : '→', style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 22))]));
+  Widget _step(String no, String title, String detail, bool done, {bool current = false}) => Container(decoration: BoxDecoration(border: const Border(bottom: BorderSide(color: AppColors.border)), color: current ? AppColors.primary.withValues(alpha: .08) : null), padding: const EdgeInsets.symmetric(vertical: 18), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(no, style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 30, fontWeight: FontWeight.w800)), const SizedBox(width: 18), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: done ? AppColors.textSecondary : AppColors.textPrimary, decoration: done ? TextDecoration.lineThrough : null)), const SizedBox(height: 4), Text(detail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)), const SizedBox(height: 12), _progressBar(done ? 1 : current ? .5 : 0)])), const SizedBox(width: 14), Text(done ? '✓' : current ? '→' : '→', style: TextStyle(color: done || current ? AppColors.primary : AppColors.textSecondary, fontSize: 22))]));
+
+  Widget _progressBar(double ratio) => ClipRRect(
+    borderRadius: BorderRadius.circular(2),
+    child: Stack(children: [
+      Container(height: 6, color: AppColors.border),
+      FractionallySizedBox(widthFactor: ratio.clamp(0.0, 1.0), child: Container(height: 6, color: AppColors.primary)),
+    ]),
+  );
   Widget _resource(BuildContext context, String meta, String title, String detail, {bool featured = false}) {
     final resource = widget.challenge.resources.firstWhere(
       (item) => item.title == title,
