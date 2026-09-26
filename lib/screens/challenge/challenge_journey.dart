@@ -400,9 +400,23 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _requirement(String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 13),
-    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-      Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+      Expanded(
+        child: Text(
+          label,
+          softWrap: true,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+      ),
+      const SizedBox(width: 16),
+      Flexible(
+        child: Text(
+          value,
+          textAlign: TextAlign.right,
+          softWrap: true,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+        ),
+      ),
     ]),
   );
 
