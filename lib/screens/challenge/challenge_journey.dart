@@ -138,6 +138,9 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           const SizedBox(height: 12),
           Text(
             challenge.shortDescription,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            softWrap: true,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 22, height: 1.15),
           ),
           const SizedBox(height: 28),

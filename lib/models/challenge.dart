@@ -103,11 +103,16 @@ class ChallengeMetric {
       return value is num ? value.toDouble() : double.tryParse('$value');
     }
 
+    final rawUnit = json['unit']?.toString().trim() ?? '';
+    final unit = rawUnit.toLowerCase() == 'sseconds'
+      ? 'seconds'
+      : rawUnit;
+
     return ChallengeMetric(
       key: json['key']?.toString() ?? '',
       label: json['label']?.toString() ?? '',
       kind: json['kind']?.toString() ?? 'COUNT',
-      unit: json['unit']?.toString() ?? '',
+      unit: unit,
       target: readDouble('target'),
       current: readDouble('current'),
       baseline: readDouble('baseline'),
