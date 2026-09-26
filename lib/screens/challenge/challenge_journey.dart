@@ -73,6 +73,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           ),
           SliverToBoxAdapter(child: _hero(context, challenge)),
           if (active) SliverToBoxAdapter(child: _section(context, 'NEXT MILESTONE', _nextMilestone(context))),
+          if (active) SliverToBoxAdapter(child: _section(context, 'CHALLENGE PROGRESS', _challengeProgress(context))),
           if (!active) SliverToBoxAdapter(child: _section(context, 'WHY TAKE THIS ON?', _why(context))),
           SliverToBoxAdapter(child: _section(context, active ? 'THE GRIND' : 'THE PATH', _path(context))),
           SliverToBoxAdapter(child: _section(context, active ? 'YOUR LOADOUT' : 'LOADOUT', _loadout(context))),
@@ -88,7 +89,6 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _hero(BuildContext context, Challenge challenge) {
     final primary = widget.detail.primaryMetric;
-    final progress = widget.detail.progress;
     final current = _formatValue(primary?.current);
     final target = _formatValue(primary?.target);
     final unit = primary?.unit ?? '';
@@ -127,18 +127,6 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           const SizedBox(height: 28),
           if (primary != null && primary.target != null && primary.current != null)
             _progressRuler(primary),
-          if (progress.totalResourceCount > 0) ...[
-            const SizedBox(height: 24),
-            Text(
-              '${progress.completedResourceCount} / ${progress.totalResourceCount} resources complete',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${progress.completedMilestoneCount} / ${progress.totalMilestoneCount} milestones complete  ·  ${progress.loggedMinutes} minutes logged',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            ),
-          ],
         ] else ...[
           _number(target, 148, AppColors.primary),
           _numberLabel(unit.toUpperCase()),
@@ -177,6 +165,52 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             TextButton(onPressed: widget.onDecline, child: const Text('Decline invitation')),
         ],
       ]),
+    );
+  }
+
+  Widget _challengeProgress(BuildContext context) {
+    final milestones = widget.detail.milestones;
+    final completed = milestones
+        .where((milestone) => milestone.status.toUpperCase() == 'COMPLETED')
+        .length;
+    final total = milestones.length;
+    final ratio = total == 0 ? 0.0 : completed / total;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _number('$completed', 72, AppColors.textPrimary),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 5),
+              child: Text(' / ', style: TextStyle(color: AppColors.textSecondary, fontSize: 24)),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: Text(
+                '$total MILESTONES',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _progressBar(ratio),
+        const SizedBox(height: 12),
+        Text(
+          total == 0
+              ? 'No milestones configured yet.'
+              : '${(ratio * 100).round()}% of the challenge complete',
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+      ],
     );
   }
 
