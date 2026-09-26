@@ -135,7 +135,7 @@ class _BottomNavigationBar extends StatelessWidget {
   static const _items = [
     (Icons.home_outlined, 'Home'),
     (Icons.explore_outlined, 'Discover'),
-    (Icons.workspace_premium_outlined, 'Skills'),
+    (Icons.leaderboard_outlined, 'Rank'),
     (Icons.person_outline, 'Profile'),
   ];
 
