@@ -57,7 +57,14 @@ class ParticipationService {
         'log_progress': logProgress,
       },
     );
-    return ResourceCompletion.fromJson(data);
+    final response = _responseMap(data);
+    return ResourceCompletion.fromJson(
+      response ?? {
+        'resource_id': resourceId,
+        'milestone_id': milestoneId,
+        'completed': true,
+      },
+    );
   }
 
   Future<MetricAttempt> logMetricAttempt(
@@ -76,7 +83,14 @@ class ParticipationService {
         'note': note,
       },
     );
-    return MetricAttempt.fromJson(data);
+    final response = _responseMap(data);
+    return MetricAttempt.fromJson(
+      response ?? {
+        'metric_key': metricKey,
+        'value': value,
+        'unit': unit,
+      },
+    );
   }
 
   Future<List<ProgressLog>> listProgress(
@@ -89,5 +103,12 @@ class ParticipationService {
       query: {'limit': limit, 'offset': offset},
     );
     return (data as List).map((e) => ProgressLog.fromJson(e)).toList();
+  }
+
+  Map<String, dynamic>? _responseMap(dynamic data) {
+    if (data is! Map) return null;
+    final nested = data['data'] ?? data['result'];
+    if (nested is Map) return Map<String, dynamic>.from(nested);
+    return Map<String, dynamic>.from(data);
   }
 }
