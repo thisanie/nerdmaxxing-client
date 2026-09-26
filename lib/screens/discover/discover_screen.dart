@@ -352,7 +352,13 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _Stat(value: '$active', label: 'ACTIVE')),
+        Expanded(
+          child: _Stat(
+            value: '$active',
+            label: 'ACTIVE',
+            centered: true,
+          ),
+        ),
         Expanded(
           child: _Stat(
             value: '$aura',
@@ -394,7 +400,7 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: EdgeInsets.only(top: 16, left: bordered ? 16 : 0),
+      padding: const EdgeInsets.only(top: 16),
       decoration: BoxDecoration(
         border: bordered
             ? Border(left: BorderSide(color: colorScheme.outline))
