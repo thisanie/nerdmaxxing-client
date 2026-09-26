@@ -144,7 +144,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Text('$_milestoneCompletedCount', style: const TextStyle(fontSize: 64, height: .82, fontWeight: FontWeight.w800, letterSpacing: -4)),
         const Padding(padding: EdgeInsets.only(bottom: 5), child: Text(' / ', style: TextStyle(color: AppColors.textSecondary, fontSize: 24))),
-        Padding(padding: const EdgeInsets.only(bottom: 5), child: Text('$totalCount COMPLETE', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, letterSpacing: 1.2, fontWeight: FontWeight.w700))),
+        Padding(padding: const EdgeInsets.only(bottom: 5), child: Text('$_milestoneTotalCount COMPLETE', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, letterSpacing: 1.2, fontWeight: FontWeight.w700))),
       ]),
       const SizedBox(height: 14),
       Stack(children: [
