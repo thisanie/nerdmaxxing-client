@@ -81,6 +81,45 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     return log;
   }
 
+  Future<ResourceCompletion> completeResource(
+    String participantId, {
+    required String milestoneId,
+    required String resourceId,
+    required double resourceMinutes,
+    required double milestoneMinutes,
+    String? note,
+    bool logProgress = false,
+  }) async {
+    final result = await _service.completeResource(
+      participantId,
+      milestoneId: milestoneId,
+      resourceId: resourceId,
+      resourceMinutes: resourceMinutes,
+      milestoneMinutes: milestoneMinutes,
+      note: note,
+      logProgress: logProgress,
+    );
+    ref.invalidate(progressLogsProvider(participantId));
+    ref.invalidate(participationControllerProvider);
+    return result;
+  }
+
+  Future<MetricAttempt> logMetricAttempt(
+    String participantId, {
+    required String metricKey,
+    required double value,
+    required String unit,
+    String? note,
+  }) {
+    return _service.logMetricAttempt(
+      participantId,
+      metricKey: metricKey,
+      value: value,
+      unit: unit,
+      note: note,
+    );
+  }
+
   void add(Participation participation) => _replace(participation);
 
   Participation? forChallenge(String challengeId) {

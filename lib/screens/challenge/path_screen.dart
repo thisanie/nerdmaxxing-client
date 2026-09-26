@@ -1,27 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/challenge.dart';
 import '../../models/challenge_detail.dart';
+import '../../models/participation.dart';
+import '../../providers/app_state_providers.dart';
+import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 
-class PathScreen extends StatefulWidget {
+class PathScreen extends ConsumerStatefulWidget {
   final Challenge challenge;
   final ChallengeDetail detail;
   final int initialMilestoneIndex;
+  final Participation? participation;
 
   const PathScreen({
     super.key,
     required this.challenge,
     required this.detail,
     this.initialMilestoneIndex = 0,
+    this.participation,
   });
 
   @override
   State<PathScreen> createState() => _PathScreenState();
 }
 
-class _PathScreenState extends State<PathScreen> {
+class _PathScreenState extends ConsumerState<PathScreen> {
   late final List<_PathMilestone> _milestones;
   var _selectedMilestone = 0;
 
@@ -79,6 +85,7 @@ class _PathScreenState extends State<PathScreen> {
                       resource.rationale,
                       resource.url,
                       false,
+                      id: resource.id,
                     ),
                 ],
         ),
@@ -96,6 +103,7 @@ class _PathScreenState extends State<PathScreen> {
             resource.rationale,
             resource.url,
             false,
+            id: resource.id,
           ),
       ];
     }
@@ -215,7 +223,7 @@ class _PathScreenState extends State<PathScreen> {
       padding: const EdgeInsets.symmetric(vertical: 18),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         InkWell(
-          onTap: () => setState(() => resource.completed = !resource.completed),
+          onTap: resource.completed ? null : () => _completeResource(resource),
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(2),
@@ -259,6 +267,57 @@ class _PathScreenState extends State<PathScreen> {
       );
     }
   }
+
+  Future<void> _completeResource(_PathResource resource) async {
+    final input = await showDialog<_CompletionInput>(
+      context: context,
+      builder: (_) => _CompletionDialog(metric: widget.detail.primaryMetric),
+    );
+    if (input == null) return;
+
+    final milestone = widget.detail.milestones.isEmpty
+        ? null
+        : widget.detail.milestones[_selectedMilestone];
+    final participation = widget.participation;
+
+    try {
+      if (participation != null &&
+          milestone != null &&
+          milestone.id.isNotEmpty &&
+          resource.id.isNotEmpty) {
+        await ref.read(participationControllerProvider.notifier).completeResource(
+          participation.id,
+          milestoneId: milestone.id,
+          resourceId: resource.id,
+          resourceMinutes: input.resourceMinutes,
+          milestoneMinutes: input.milestoneMinutes,
+          note: input.note,
+          logProgress: input.logProgress,
+        );
+        if (input.logProgress && input.metricValue != null) {
+          final metric = widget.detail.primaryMetric;
+          if (metric != null) {
+            await ref.read(participationControllerProvider.notifier).logMetricAttempt(
+              participation.id,
+              metricKey: metric.key,
+              value: input.metricValue!,
+              unit: metric.unit,
+              note: input.note,
+            );
+          }
+        }
+      }
+      if (!mounted) return;
+      setState(() => resource.completed = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Resource marked complete.')),
+      );
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    }
+  }
 }
 
 class _PathMilestone {
@@ -274,7 +333,120 @@ class _PathResource {
   final String type;
   final String description;
   final String url;
+  final String id;
   bool completed;
 
-  _PathResource(this.title, this.type, this.description, this.url, this.completed);
+  _PathResource(this.title, this.type, this.description, this.url, this.completed, {this.id = ''});
+}
+
+class _CompletionInput {
+  final double resourceMinutes;
+  final double milestoneMinutes;
+  final String? note;
+  final bool logProgress;
+  final double? metricValue;
+
+  const _CompletionInput({
+    required this.resourceMinutes,
+    required this.milestoneMinutes,
+    required this.note,
+    required this.logProgress,
+    required this.metricValue,
+  });
+}
+
+class _CompletionDialog extends StatefulWidget {
+  final ChallengeMetric? metric;
+
+  const _CompletionDialog({required this.metric});
+
+  @override
+  State<_CompletionDialog> createState() => _CompletionDialogState();
+}
+
+class _CompletionDialogState extends State<_CompletionDialog> {
+  final _resourceMinutes = TextEditingController();
+  final _milestoneMinutes = TextEditingController();
+  final _note = TextEditingController();
+  final _metricValue = TextEditingController();
+  bool _logProgress = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _resourceMinutes.dispose();
+    _milestoneMinutes.dispose();
+    _note.dispose();
+    _metricValue.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final resourceMinutes = double.tryParse(_resourceMinutes.text.trim());
+    final milestoneMinutes = double.tryParse(_milestoneMinutes.text.trim());
+    final metricValue = double.tryParse(_metricValue.text.trim());
+    if (resourceMinutes == null || resourceMinutes <= 0 ||
+        milestoneMinutes == null || milestoneMinutes <= 0) {
+      setState(() => _error = 'Enter valid time for the resource and milestone.');
+      return;
+    }
+    if (_logProgress && widget.metric != null && metricValue == null) {
+      setState(() => _error = 'Enter the measured progress value.');
+      return;
+    }
+    Navigator.of(context).pop(_CompletionInput(
+      resourceMinutes: resourceMinutes,
+      milestoneMinutes: milestoneMinutes,
+      note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+      logProgress: _logProgress,
+      metricValue: metricValue,
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Mark resource complete'),
+    content: SingleChildScrollView(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(
+          controller: _resourceMinutes,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'Minutes on this resource'),
+        ),
+        TextField(
+          controller: _milestoneMinutes,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'Total milestone minutes'),
+        ),
+        TextField(
+          controller: _note,
+          maxLines: 3,
+          maxLength: 5000,
+          decoration: const InputDecoration(labelText: 'Description (optional)'),
+        ),
+        if (widget.metric != null)
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _logProgress,
+            onChanged: (value) => setState(() => _logProgress = value ?? false),
+            title: const Text('Log my measured progress'),
+          ),
+        if (_logProgress && widget.metric != null)
+          TextField(
+            controller: _metricValue,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(labelText: 'Progress (${widget.metric!.unit})'),
+          ),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(_error!, style: const TextStyle(color: AppColors.danger)),
+          ),
+      ]),
+    ),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+      FilledButton(onPressed: _submit, child: const Text('Complete resource')),
+    ],
+  );
 }

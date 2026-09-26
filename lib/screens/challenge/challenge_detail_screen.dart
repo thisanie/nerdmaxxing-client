@@ -212,6 +212,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           challenge: _challenge!,
           detail: detail,
           initialMilestoneIndex: currentIndex,
+          participation: ref.read(participationControllerProvider).valueOrNull
+              ?.where((item) => item.challengeId == _challenge!.id)
+              .firstOrNull,
         ),
       ),
     );

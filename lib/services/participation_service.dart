@@ -39,6 +39,46 @@ class ParticipationService {
     return ProgressLog.fromJson(data);
   }
 
+  Future<ResourceCompletion> completeResource(
+    String participantId, {
+    required String milestoneId,
+    required String resourceId,
+    required double resourceMinutes,
+    required double milestoneMinutes,
+    String? note,
+    bool logProgress = false,
+  }) async {
+    final data = await api.post(
+      '/participation/$participantId/milestones/$milestoneId/resources/$resourceId/complete',
+      data: {
+        'resource_minutes': resourceMinutes,
+        'milestone_minutes': milestoneMinutes,
+        'note': note,
+        'log_progress': logProgress,
+      },
+    );
+    return ResourceCompletion.fromJson(data);
+  }
+
+  Future<MetricAttempt> logMetricAttempt(
+    String participantId, {
+    required String metricKey,
+    required double value,
+    required String unit,
+    String? note,
+  }) async {
+    final data = await api.post(
+      '/participation/$participantId/metric-attempts',
+      data: {
+        'metric_key': metricKey,
+        'value': value,
+        'unit': unit,
+        'note': note,
+      },
+    );
+    return MetricAttempt.fromJson(data);
+  }
+
   Future<List<ProgressLog>> listProgress(
     String participantId, {
     int limit = 20,
