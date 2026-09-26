@@ -24,7 +24,7 @@ class PathScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  State<PathScreen> createState() => _PathScreenState();
+  ConsumerState<PathScreen> createState() => _PathScreenState();
 }
 
 class _PathScreenState extends ConsumerState<PathScreen> {
