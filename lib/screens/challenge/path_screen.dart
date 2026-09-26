@@ -147,6 +147,8 @@ class _PathScreenState extends ConsumerState<PathScreen> {
             title: const Text('YOUR PATH', style: TextStyle(fontSize: 11, letterSpacing: 2, fontWeight: FontWeight.w700)),
           ),
           SliverToBoxAdapter(child: _header(progress)),
+          if (widget.participation != null && _detail.metricDefinitions.isNotEmpty)
+            SliverToBoxAdapter(child: _logResultAction()),
           SliverToBoxAdapter(child: _milestoneRail()),
           SliverToBoxAdapter(
             child: resources.isEmpty
@@ -223,6 +225,15 @@ class _PathScreenState extends ConsumerState<PathScreen> {
           ),
         ),
       ),
+    ),
+  );
+
+  Widget _logResultAction() => Padding(
+    padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+    child: OutlinedButton.icon(
+      onPressed: _logResult,
+      icon: const Icon(Icons.add_chart_outlined, size: 18),
+      label: const Text('LOG A RESULT'),
     ),
   );
 
@@ -388,6 +399,34 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       }
     }
   }
+
+  Future<void> _logResult() async {
+    final input = await showDialog<_MetricInput>(
+      context: context,
+      builder: (_) => _MetricDialog(metrics: _detail.metricDefinitions),
+    );
+    if (input == null || widget.participation == null) return;
+
+    try {
+      await ref.read(participationControllerProvider.notifier).logMetricAttempt(
+        widget.participation!.id,
+        metricKey: input.metric.key,
+        value: input.value,
+        unit: input.metric.unit,
+        note: input.note,
+      );
+      await _refresh();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Result logged.')),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    }
+  }
 }
 
 class _PathMilestone {
@@ -516,6 +555,105 @@ class _CompletionDialogState extends State<_CompletionDialog> {
     actions: [
       TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
       FilledButton(onPressed: _submit, child: const Text('Complete resource')),
+    ],
+  );
+}
+
+class _MetricInput {
+  final ChallengeMetric metric;
+  final double value;
+  final String? note;
+
+  const _MetricInput({required this.metric, required this.value, this.note});
+}
+
+class _MetricDialog extends StatefulWidget {
+  final List<ChallengeMetric> metrics;
+
+  const _MetricDialog({required this.metrics});
+
+  @override
+  State<_MetricDialog> createState() => _MetricDialogState();
+}
+
+class _MetricDialogState extends State<_MetricDialog> {
+  final _value = TextEditingController();
+  final _note = TextEditingController();
+  late ChallengeMetric _metric;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _metric = widget.metrics.first;
+  }
+
+  @override
+  void dispose() {
+    _value.dispose();
+    _note.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = double.tryParse(_value.text.trim());
+    if (value == null || value < 0) {
+      setState(() => _error = 'Enter a valid result.');
+      return;
+    }
+    Navigator.of(context).pop(_MetricInput(
+      metric: _metric,
+      value: value,
+      note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Log a result'),
+    content: SingleChildScrollView(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        if (widget.metrics.length > 1)
+          DropdownButtonFormField<ChallengeMetric>(
+            value: _metric,
+            decoration: const InputDecoration(labelText: 'Metric'),
+            items: [
+              for (final metric in widget.metrics)
+                DropdownMenuItem(
+                  value: metric,
+                  child: Text(metric.label),
+                ),
+            ],
+            onChanged: (metric) {
+              if (metric != null) setState(() => _metric = metric);
+            },
+          ),
+        TextField(
+          controller: _value,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: _metric.label,
+            suffixText: _metric.unit,
+            hintText: 'e.g. 5',
+          ),
+        ),
+        TextField(
+          controller: _note,
+          maxLength: 5000,
+          maxLines: 3,
+          decoration: const InputDecoration(labelText: 'Note (optional)'),
+        ),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(_error!, style: const TextStyle(color: AppColors.danger)),
+          ),
+      ]),
+    ),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+      FilledButton(onPressed: _submit, child: const Text('Log result')),
     ],
   );
 }
