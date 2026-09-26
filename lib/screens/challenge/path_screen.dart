@@ -388,7 +388,7 @@ class _PathMilestone {
   final int loggedMinutes;
   final List<_PathResource> resources;
 
-  const _PathMilestone({
+  _PathMilestone({
     required this.title,
     required this.description,
     required this.completedResourceCount,

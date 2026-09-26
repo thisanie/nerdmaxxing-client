@@ -225,7 +225,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           participation: ref.read(participationControllerProvider).valueOrNull
               ?.where((item) => item.challengeId == _challenge!.id)
               .firstOrNull,
-            onRefresh: _load,
+            onRefresh: _refreshDetail,
         ),
       ),
     ).then((_) => _load());
