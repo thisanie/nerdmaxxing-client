@@ -268,30 +268,25 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     ]),
   ]);
 
+  Widget _path(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: widget.detail.milestones.isEmpty
+        ? [Text('This challenge has no configured milestones yet.', style: Theme.of(context).textTheme.bodyLarge)]
+        : [
+            for (var index = 0; index < widget.detail.milestones.length; index++)
+              _milestoneStep(widget.detail.milestones[index], index),
+          ],
+  );
+
+  Widget _milestoneStep(ChallengeMilestone milestone, int index) => InkWell(
+    onTap: () => widget.onOpenMilestone(index),
+    child: _step(
+      milestone.orderIndex.toString().padLeft(2, '0'),
+      milestone.title,
       milestone.description,
       _isMilestoneComplete(milestone),
       current: !_isMilestoneComplete(milestone),
     ),
-  );
-
-  Widget _loadout(BuildContext context) => Column(
-    children: widget.challenge.resources.isEmpty
-        ? [
-            Text(
-              'Resources will appear here when they are added to the challenge.',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ]
-        : [
-            for (var index = 0; index < widget.challenge.resources.length; index++)
-              _resource(
-                context,
-                widget.challenge.resources[index].resourceType,
-                widget.challenge.resources[index].title,
-                widget.challenge.resources[index].rationale,
-                featured: index == 0,
-              ),
-          ],
   );
 
   Widget _attempts(BuildContext context) => Column(
