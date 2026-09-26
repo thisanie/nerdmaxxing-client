@@ -174,7 +174,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             ? _declineInvitation
             : null,
       onTrain: () => _openPath(detail),
-      onOpenMilestone: (index) => _openPath(detail, milestoneIndex: index),
+          onOpenMilestone: (index) => participation == null
+            ? _promptToAccept()
+            : _openPath(detail, milestoneIndex: index),
           onRefresh: _refreshDetail,
       onProve: () => _showPrototypeSheet(
         'Prove it',
@@ -202,6 +204,35 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         ]),
       ),
     );
+  }
+
+  Future<void> _promptToAccept() async {
+    final shouldAccept = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Accept this challenge first'),
+        content: const Text(
+          'Accept the challenge to unlock its milestones and resources.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('ACCEPT CHALLENGE'),
+          ),
+        ],
+      ),
+    );
+    if (shouldAccept == true && mounted) {
+      if (widget.invitation?.invitationId != null) {
+        await _acceptInvitation();
+      } else {
+        await _accept();
+      }
+    }
   }
 
   void _openPath(ChallengeDetail detail, {int? milestoneIndex}) {
