@@ -206,7 +206,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
             padding: const EdgeInsets.all(12),
             color: index == _selectedMilestone ? AppColors.primaryMuted : Colors.transparent,
             child: Row(children: [
-              Text('${(index + 1).toString().padLeft(2, '0')}', style: TextStyle(color: index == _selectedMilestone ? AppColors.primary : AppColors.textSecondary, fontWeight: FontWeight.w800)),
+              Text((index + 1).toString().padLeft(2, '0'), style: TextStyle(color: index == _selectedMilestone ? AppColors.primary : AppColors.textSecondary, fontWeight: FontWeight.w800)),
               const SizedBox(width: 12),
               Expanded(child: Text(_milestones[index].title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, color: index == _selectedMilestone ? AppColors.primary : AppColors.textPrimary))),
             ]),

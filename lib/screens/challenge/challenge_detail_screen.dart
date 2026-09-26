@@ -63,10 +63,12 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       final detail = await context.read<ChallengesService>().getDetailBySlug(
         widget.slug,
       );
-      if (mounted) setState(() {
-        _detail = detail;
-        _challenge = detail.challenge;
-      });
+      if (mounted) {
+        setState(() {
+          _detail = detail;
+          _challenge = detail.challenge;
+        });
+      }
       return detail;
     } on ApiException catch (e) {
       if (!mounted) rethrow;
@@ -201,17 +203,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         ]),
       ),
     );
-  }
-
-  String _trainingMessage(ChallengeDetail detail) {
-    final primary = detail.primaryMetric;
-    if (primary == null) {
-      return 'Your next practice session is ready. Log your progress when you finish.';
-    }
-    final target = primary.target == null
-        ? ''
-        : '${primary.target!.toStringAsFixed(primary.target! % 1 == 0 ? 0 : 2)} ${primary.unit}'.trim();
-    return 'Build progress${target.isEmpty ? '' : ' toward $target'}, then log the result.';
   }
 
   void _openPath(ChallengeDetail detail, {int? milestoneIndex}) {
