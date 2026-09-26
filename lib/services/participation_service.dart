@@ -44,7 +44,6 @@ class ParticipationService {
     required String milestoneId,
     required String resourceId,
     required int resourceMinutes,
-    required int milestoneMinutes,
     String? note,
     bool logProgress = false,
   }) async {
@@ -52,7 +51,6 @@ class ParticipationService {
       '/participation/$participantId/milestones/$milestoneId/resources/$resourceId/complete',
       data: {
         'resource_minutes': resourceMinutes,
-        'milestone_minutes': milestoneMinutes,
         'note': note,
         'log_progress': logProgress,
       },

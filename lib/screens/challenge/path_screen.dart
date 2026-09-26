@@ -286,7 +286,6 @@ class _PathScreenState extends ConsumerState<PathScreen> {
           milestoneId: milestone.id,
           resourceId: resource.id,
           resourceMinutes: input.resourceMinutes,
-          milestoneMinutes: input.milestoneMinutes,
           note: input.note,
           logProgress: input.logProgress,
         );
@@ -381,14 +380,12 @@ class _PathResource {
 
 class _CompletionInput {
   final int resourceMinutes;
-  final int milestoneMinutes;
   final String? note;
   final bool logProgress;
   final double? metricValue;
 
   const _CompletionInput({
     required this.resourceMinutes,
-    required this.milestoneMinutes,
     required this.note,
     required this.logProgress,
     required this.metricValue,
@@ -406,7 +403,6 @@ class _CompletionDialog extends StatefulWidget {
 
 class _CompletionDialogState extends State<_CompletionDialog> {
   final _resourceMinutes = TextEditingController();
-  final _milestoneMinutes = TextEditingController();
   final _note = TextEditingController();
   final _metricValue = TextEditingController();
   bool _logProgress = false;
@@ -415,7 +411,6 @@ class _CompletionDialogState extends State<_CompletionDialog> {
   @override
   void dispose() {
     _resourceMinutes.dispose();
-    _milestoneMinutes.dispose();
     _note.dispose();
     _metricValue.dispose();
     super.dispose();
@@ -423,11 +418,9 @@ class _CompletionDialogState extends State<_CompletionDialog> {
 
   void _submit() {
     final resourceMinutes = int.tryParse(_resourceMinutes.text.trim());
-    final milestoneMinutes = int.tryParse(_milestoneMinutes.text.trim());
     final metricValue = double.tryParse(_metricValue.text.trim());
-    if (resourceMinutes == null || resourceMinutes <= 0 ||
-        milestoneMinutes == null || milestoneMinutes <= 0) {
-      setState(() => _error = 'Enter valid time for the resource and milestone.');
+    if (resourceMinutes == null || resourceMinutes <= 0) {
+      setState(() => _error = 'Enter valid time for the resource.');
       return;
     }
     if (_logProgress && widget.metric != null && metricValue == null) {
@@ -436,7 +429,6 @@ class _CompletionDialogState extends State<_CompletionDialog> {
     }
     Navigator.of(context).pop(_CompletionInput(
       resourceMinutes: resourceMinutes,
-      milestoneMinutes: milestoneMinutes,
       note: _note.text.trim().isEmpty ? null : _note.text.trim(),
       logProgress: _logProgress,
       metricValue: metricValue,
@@ -452,11 +444,6 @@ class _CompletionDialogState extends State<_CompletionDialog> {
           controller: _resourceMinutes,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(labelText: 'Minutes on this resource'),
-        ),
-        TextField(
-          controller: _milestoneMinutes,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(labelText: 'Total milestone minutes'),
         ),
         TextField(
           controller: _note,
