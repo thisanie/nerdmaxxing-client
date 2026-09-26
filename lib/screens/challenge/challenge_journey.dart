@@ -88,6 +88,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _hero(BuildContext context, Challenge challenge) {
     final primary = widget.detail.primaryMetric;
+    final progress = widget.detail.progress;
     final current = _formatValue(primary?.current);
     final target = _formatValue(primary?.target);
     final unit = primary?.unit ?? '';
@@ -126,6 +127,18 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           const SizedBox(height: 28),
           if (primary != null && primary.target != null && primary.current != null)
             _progressRuler(primary),
+          if (progress.totalResourceCount > 0) ...[
+            const SizedBox(height: 24),
+            Text(
+              '${progress.completedResourceCount} / ${progress.totalResourceCount} resources complete',
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${progress.completedMilestoneCount} / ${progress.totalMilestoneCount} milestones complete  ·  ${progress.loggedMinutes} minutes logged',
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+          ],
         ] else ...[
           _number(target, 148, AppColors.primary),
           _numberLabel(unit.toUpperCase()),

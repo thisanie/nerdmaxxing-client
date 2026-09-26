@@ -6,6 +6,9 @@ class ChallengeResource {
   final String rationale;
   final int orderIndex;
   bool completed;
+  DateTime? completedAt;
+  int? resourceMinutes;
+  String? note;
 
   ChallengeResource({
     required this.id,
@@ -15,19 +18,44 @@ class ChallengeResource {
     required this.rationale,
     required this.orderIndex,
     this.completed = false,
+    this.completedAt,
+    this.resourceMinutes,
+    this.note,
   });
 
   factory ChallengeResource.fromJson(Map<String, dynamic> json) {
     return ChallengeResource(
-      id: json['id']?.toString() ?? '',
-      title: json['title'] ?? '',
-      url: json['url'] ?? '',
-      resourceType: json['resource_type'] ?? 'LINK',
-      rationale: json['rationale'] ?? '',
-      orderIndex: json['order_index'] ?? 0,
+      id: json['resource_id']?.toString() ?? json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      url: json['url']?.toString() ?? '',
+      resourceType: json['resource_type']?.toString() ?? 'LINK',
+      rationale: json['rationale']?.toString() ?? '',
+      orderIndex: (json['order_index'] as num?)?.toInt() ?? 0,
       completed: json['completed'] == true ||
           json['is_completed'] == true ||
           json['completed_at'] != null,
+      completedAt: json['completed_at'] == null
+          ? null
+          : DateTime.tryParse(json['completed_at'].toString()),
+      resourceMinutes: (json['resource_minutes'] as num?)?.toInt(),
+      note: json['note']?.toString(),
+    );
+  }
+
+  ChallengeResource withProgress(Map<String, dynamic> json) {
+    return ChallengeResource(
+      id: id,
+      title: title,
+      url: url,
+      resourceType: resourceType,
+      rationale: rationale,
+      orderIndex: orderIndex,
+      completed: json['completed'] == true || json['completed_at'] != null,
+      completedAt: json['completed_at'] == null
+          ? null
+          : DateTime.tryParse(json['completed_at'].toString()),
+      resourceMinutes: (json['resource_minutes'] as num?)?.toInt(),
+      note: json['note']?.toString(),
     );
   }
 

@@ -52,6 +52,9 @@ class _PathScreenState extends ConsumerState<PathScreen> {
         _PathMilestone(
           title: milestone.title,
           description: milestone.description,
+          completedResourceCount: milestone.completedResourceCount,
+          totalResourceCount: milestone.totalResourceCount,
+          loggedMinutes: milestone.loggedMinutes,
           resources: milestone.resources.isEmpty
               ? _resourcesForMilestone(milestone.orderIndex)
               : [
@@ -77,6 +80,14 @@ class _PathScreenState extends ConsumerState<PathScreen> {
 
   int get _completedCount => _milestone.resources.where((resource) => resource.completed).length;
 
+    int get _milestoneCompletedCount => _milestone.totalResourceCount > 0
+      ? _milestone.completedResourceCount
+      : _completedCount;
+
+    int get _milestoneTotalCount => _milestone.totalResourceCount > 0
+      ? _milestone.totalResourceCount
+      : _milestone.resources.length;
+
   @override
   Widget build(BuildContext context) {
     if (_milestones.isEmpty) {
@@ -89,7 +100,8 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       );
     }
     final resources = _milestone.resources;
-    final progress = resources.isEmpty ? 0.0 : _completedCount / resources.length;
+    final totalCount = _milestoneTotalCount;
+    final progress = totalCount == 0 ? 0.0 : _milestoneCompletedCount / totalCount;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -130,9 +142,9 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       Text(widget.challenge.title, style: Theme.of(context).textTheme.headlineSmall),
       const SizedBox(height: 28),
       Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Text('$_completedCount', style: const TextStyle(fontSize: 64, height: .82, fontWeight: FontWeight.w800, letterSpacing: -4)),
+        Text('$_milestoneCompletedCount', style: const TextStyle(fontSize: 64, height: .82, fontWeight: FontWeight.w800, letterSpacing: -4)),
         const Padding(padding: EdgeInsets.only(bottom: 5), child: Text(' / ', style: TextStyle(color: AppColors.textSecondary, fontSize: 24))),
-        Padding(padding: const EdgeInsets.only(bottom: 5), child: Text('${_milestone.resources.length} COMPLETE', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, letterSpacing: 1.2, fontWeight: FontWeight.w700))),
+        Padding(padding: const EdgeInsets.only(bottom: 5), child: Text('$totalCount COMPLETE', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, letterSpacing: 1.2, fontWeight: FontWeight.w700))),
       ]),
       const SizedBox(height: 14),
       Stack(children: [
@@ -141,6 +153,10 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       ]),
       const SizedBox(height: 12),
       Text('${(progress * 100).round()}% of this milestone complete', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      if (_milestone.loggedMinutes > 0) ...[
+        const SizedBox(height: 6),
+        Text('${_milestone.loggedMinutes} minutes logged', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      ],
     ]),
   );
 
@@ -336,9 +352,19 @@ class _PathScreenState extends ConsumerState<PathScreen> {
 class _PathMilestone {
   final String title;
   final String description;
+  final int completedResourceCount;
+  final int totalResourceCount;
+  final int loggedMinutes;
   final List<_PathResource> resources;
 
-  const _PathMilestone({required this.title, required this.description, required this.resources});
+  const _PathMilestone({
+    required this.title,
+    required this.description,
+    required this.completedResourceCount,
+    required this.totalResourceCount,
+    required this.loggedMinutes,
+    required this.resources,
+  });
 }
 
 class _PathResource {

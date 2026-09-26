@@ -1,49 +1,42 @@
 import 'challenge.dart';
 
 class ChallengeProgressSnapshot {
-  final double currentValue;
-  final double targetValue;
+  final Object? currentValue;
+  final Object? targetValue;
   final String unit;
-  final double? baselineValue;
-  final double? bestValue;
-  final double? averageValue;
-  final double? accuracyPercent;
-  final int attemptCount;
+  final int completedResourceCount;
+  final int totalResourceCount;
+  final int completedMilestoneCount;
+  final int totalMilestoneCount;
   final int loggedMinutes;
+  final String challengeStatus;
+  final bool readyForProof;
 
   const ChallengeProgressSnapshot({
-    required this.currentValue,
-    required this.targetValue,
+    this.currentValue,
+    this.targetValue,
     required this.unit,
-    this.baselineValue,
-    this.bestValue,
-    this.averageValue,
-    this.accuracyPercent,
-    this.attemptCount = 0,
+    this.completedResourceCount = 0,
+    this.totalResourceCount = 0,
+    this.completedMilestoneCount = 0,
+    this.totalMilestoneCount = 0,
     this.loggedMinutes = 0,
+    this.challengeStatus = 'ACTIVE',
+    this.readyForProof = false,
   });
 
   factory ChallengeProgressSnapshot.fromJson(Map<String, dynamic> json) {
-    double readDouble(String key, [double fallback = 0]) {
-      final value = json[key];
-      return value is num ? value.toDouble() : double.tryParse('$value') ?? fallback;
-    }
-
-    double? readOptional(String key) {
-      final value = json[key];
-      return value is num ? value.toDouble() : double.tryParse('$value');
-    }
-
     return ChallengeProgressSnapshot(
-      currentValue: readDouble('current_value'),
-      targetValue: readDouble('target_value'),
+      currentValue: json['current_value'],
+      targetValue: json['target_value'],
       unit: json['unit']?.toString() ?? '',
-      baselineValue: readOptional('baseline_value'),
-      bestValue: readOptional('best_value'),
-      averageValue: readOptional('average_value'),
-      accuracyPercent: readOptional('accuracy_percent'),
-      attemptCount: (json['attempt_count'] as num?)?.toInt() ?? 0,
+      completedResourceCount: (json['completed_resource_count'] as num?)?.toInt() ?? 0,
+      totalResourceCount: (json['total_resource_count'] as num?)?.toInt() ?? 0,
+      completedMilestoneCount: (json['completed_milestone_count'] as num?)?.toInt() ?? 0,
+      totalMilestoneCount: (json['total_milestone_count'] as num?)?.toInt() ?? 0,
       loggedMinutes: (json['logged_minutes'] as num?)?.toInt() ?? 0,
+      challengeStatus: json['challenge_status']?.toString() ?? 'ACTIVE',
+      readyForProof: json['ready_for_proof'] == true,
     );
   }
 
@@ -62,6 +55,9 @@ class ChallengeMilestone {
   final String status;
   final double? currentValue;
   final double? targetValue;
+  final int completedResourceCount;
+  final int totalResourceCount;
+  final int loggedMinutes;
   final List<ChallengeResource> resources;
 
   const ChallengeMilestone({
@@ -72,6 +68,9 @@ class ChallengeMilestone {
     required this.status,
     this.currentValue,
     this.targetValue,
+    this.completedResourceCount = 0,
+    this.totalResourceCount = 0,
+    this.loggedMinutes = 0,
     this.resources = const [],
   });
 
@@ -91,7 +90,7 @@ class ChallengeMilestone {
           final resourceId = item['resource_id']?.toString();
           if (resourceId != null && resourceId.isNotEmpty) {
             for (final resource in resourceCatalog) {
-              if (resource.id == resourceId) return resource;
+              if (resource.id == resourceId) return resource.withProgress(item);
             }
           }
           return ChallengeResource.fromJson(item);
@@ -107,6 +106,9 @@ class ChallengeMilestone {
       status: json['status']?.toString() ?? 'LOCKED',
       currentValue: readOptional('current_value'),
       targetValue: readOptional('target_value'),
+      completedResourceCount: (json['completed_resource_count'] as num?)?.toInt() ?? 0,
+      totalResourceCount: (json['total_resource_count'] as num?)?.toInt() ?? resources.length,
+      loggedMinutes: (json['logged_minutes'] as num?)?.toInt() ?? 0,
       resources: resources,
     );
   }
@@ -222,6 +224,7 @@ class ChallengeDetail {
   final List<ChallengeParticipant> participants;
   final int participantCount;
   final int completedParticipantCount;
+  final ChallengeProgressSnapshot progress;
   final ChallengeVerification verification;
 
   const ChallengeDetail({
@@ -233,6 +236,7 @@ class ChallengeDetail {
     this.participants = const [],
     this.participantCount = 0,
     this.completedParticipantCount = 0,
+    this.progress = ChallengeProgressSnapshot.empty,
     this.verification = ChallengeVerification.empty,
   });
 
@@ -250,6 +254,12 @@ class ChallengeDetail {
     final stats = json['stats'] is Map
       ? Map<String, dynamic>.from(json['stats'] as Map)
       : const <String, dynamic>{};
+
+    final progress = json['progress'] is Map
+        ? ChallengeProgressSnapshot.fromJson(
+            Map<String, dynamic>.from(json['progress'] as Map),
+          )
+        : ChallengeProgressSnapshot.empty;
 
     final verification = json['verification'] is Map
         ? ChallengeVerification.fromJson(
@@ -285,6 +295,7 @@ class ChallengeDetail {
       participantCount: (stats['participant_count'] as num?)?.toInt() ?? 0,
       completedParticipantCount:
           (stats['completed_participant_count'] as num?)?.toInt() ?? 0,
+        progress: progress,
       verification: verification,
     );
   }
