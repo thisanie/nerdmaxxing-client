@@ -223,11 +223,19 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       padding: const EdgeInsets.symmetric(vertical: 18),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         InkWell(
-          onTap: resource.completed ? null : () => _completeResource(resource),
+          onTap: resource.completed || resource.saving
+              ? null
+              : () => _completeResource(resource),
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(2),
-            child: Icon(resource.completed ? Icons.check_circle : Icons.radio_button_unchecked, color: resource.completed ? AppColors.primary : AppColors.textDim, size: 22),
+            child: resource.saving
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(resource.completed ? Icons.check_circle : Icons.radio_button_unchecked, color: resource.completed ? AppColors.primary : AppColors.textDim, size: 22),
           ),
         ),
         const SizedBox(width: 13),
@@ -275,6 +283,12 @@ class _PathScreenState extends ConsumerState<PathScreen> {
     );
     if (input == null) return;
 
+    final wasCompleted = resource.completed;
+    setState(() {
+      resource.completed = true;
+      resource.saving = true;
+    });
+
     final milestone = widget.detail.milestones.isEmpty
         ? null
         : widget.detail.milestones[_selectedMilestone];
@@ -319,13 +333,27 @@ class _PathScreenState extends ConsumerState<PathScreen> {
         }
       }
       if (!mounted) return;
-      setState(() => resource.completed = true);
+      setState(() => resource.saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Resource marked complete.')),
       );
     } on ApiException catch (error) {
       if (mounted) {
+        setState(() {
+          resource.completed = wasCompleted;
+          resource.saving = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          resource.completed = wasCompleted;
+          resource.saving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('The resource could not be saved. Please try again.')),
+        );
       }
     }
   }
@@ -346,6 +374,7 @@ class _PathResource {
   final String url;
   final String id;
   bool completed;
+  bool saving = false;
 
   _PathResource(this.title, this.type, this.description, this.url, this.completed, {this.id = ''});
 }
