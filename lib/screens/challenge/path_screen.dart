@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -345,14 +346,22 @@ class _PathScreenState extends ConsumerState<PathScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('Resource completion failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
       if (mounted) {
         setState(() {
           resource.completed = wasCompleted;
           resource.saving = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('The resource could not be saved. Please try again.')),
+          SnackBar(
+            content: Text(
+              kDebugMode
+                  ? 'Resource save failed: $error'
+                  : 'The resource could not be saved. Please try again.',
+            ),
+          ),
         );
       }
     }
@@ -380,8 +389,8 @@ class _PathResource {
 }
 
 class _CompletionInput {
-  final double resourceMinutes;
-  final double milestoneMinutes;
+  final int resourceMinutes;
+  final int milestoneMinutes;
   final String? note;
   final bool logProgress;
   final double? metricValue;
@@ -422,8 +431,8 @@ class _CompletionDialogState extends State<_CompletionDialog> {
   }
 
   void _submit() {
-    final resourceMinutes = double.tryParse(_resourceMinutes.text.trim());
-    final milestoneMinutes = double.tryParse(_milestoneMinutes.text.trim());
+    final resourceMinutes = int.tryParse(_resourceMinutes.text.trim());
+    final milestoneMinutes = int.tryParse(_milestoneMinutes.text.trim());
     final metricValue = double.tryParse(_metricValue.text.trim());
     if (resourceMinutes == null || resourceMinutes <= 0 ||
         milestoneMinutes == null || milestoneMinutes <= 0) {
