@@ -94,7 +94,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _hero(BuildContext context, Challenge challenge) {
     final primary = widget.detail.primaryMetric;
-    final current = _formatValue(primary?.current);
+    final current = _formatValue(_progressMetricValue);
     final target = _formatValue(primary?.target);
     final unit = primary?.unit ?? '';
     return Padding(
@@ -120,9 +120,9 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             const SizedBox(width: 14),
             Expanded(
               child: Text(
-                primary?.baseline == null || primary?.current == null
+                _progressMetricValue == null || _progressBaselineValue == null
                     ? 'Progress is being tracked'
-                    : '↑ ${_formatValue(primary!.current! - primary.baseline!)} $unit since starting',
+                  : '↑ ${_formatValue(_progressMetricValue! - _progressBaselineValue!)} $unit since starting',
                 style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
               ),
             ),
@@ -130,7 +130,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           const SizedBox(height: 24),
           _metricStats(),
           const SizedBox(height: 28),
-          if (primary != null && primary.target != null && primary.current != null)
+          if (primary != null && primary.target != null && _progressMetricValue != null)
             _progressRuler(primary),
         ] else ...[
           _number(target, 148, AppColors.primary),
@@ -473,8 +473,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('START ${_formatValue(metric.baseline)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-            Text('CURRENT ${_formatValue(metric.current)}', style: const TextStyle(color: AppColors.primary, fontSize: 11)),
+            Text('START ${_formatValue(_progressBaselineValue ?? metric.baseline)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+            Text('CURRENT ${_formatValue(_progressMetricValue ?? metric.current)}', style: const TextStyle(color: AppColors.primary, fontSize: 11)),
             Text('TARGET ${_formatValue(metric.target)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
           ],
         ),
@@ -494,7 +494,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _metricStats() {
     final metrics = widget.detail.metricDefinitions
-        .where((metric) => metric.current != null)
+        .where((metric) => metric.current != null || metric.isPrimary && _progressMetricValue != null)
         .take(4)
         .toList();
     if (metrics.isEmpty) {
@@ -507,9 +507,25 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         for (final metric in metrics)
-          _stat(metric.label.toUpperCase(), _formatMetric(metric, metric.current)),
+          _stat(
+            metric.label.toUpperCase(),
+            _formatMetric(
+              metric,
+              metric.isPrimary ? _progressMetricValue : metric.current,
+            ),
+          ),
       ],
     );
+  }
+
+  double? get _progressMetricValue {
+    final value = widget.detail.progress.currentValue;
+    return value is num ? value.toDouble() : double.tryParse('$value');
+  }
+
+  double? get _progressBaselineValue {
+    final value = widget.detail.progress.baselineValue;
+    return value is num ? value.toDouble() : double.tryParse('$value');
   }
 
   String _formatMetric(ChallengeMetric metric, double? value) {

@@ -3,6 +3,7 @@ import 'challenge.dart';
 class ChallengeProgressSnapshot {
   final Object? currentValue;
   final Object? targetValue;
+  final Object? baselineValue;
   final String unit;
   final int completedResourceCount;
   final int totalResourceCount;
@@ -15,6 +16,7 @@ class ChallengeProgressSnapshot {
   const ChallengeProgressSnapshot({
     this.currentValue,
     this.targetValue,
+    this.baselineValue,
     required this.unit,
     this.completedResourceCount = 0,
     this.totalResourceCount = 0,
@@ -29,6 +31,7 @@ class ChallengeProgressSnapshot {
     return ChallengeProgressSnapshot(
       currentValue: json['current_value'],
       targetValue: json['target_value'],
+      baselineValue: json['baseline_value'],
       unit: json['unit']?.toString() ?? '',
       completedResourceCount: (json['completed_resource_count'] as num?)?.toInt() ?? 0,
       totalResourceCount: (json['total_resource_count'] as num?)?.toInt() ?? 0,
@@ -117,11 +120,15 @@ class ChallengeMilestone {
 class ChallengeAttempt {
   final String id;
   final Map<String, double> metrics;
+  final String? note;
+  final bool? meetsTarget;
   final DateTime? createdAt;
 
   const ChallengeAttempt({
     required this.id,
     this.metrics = const {},
+    this.note,
+    this.meetsTarget,
     this.createdAt,
   });
 
@@ -139,9 +146,17 @@ class ChallengeAttempt {
         }
       }
     }
+    final metricKey = json['metric_key']?.toString();
+    final rawValue = json['value'];
+    if (metricKey != null && metricKey.isNotEmpty) {
+      final value = rawValue is num ? rawValue.toDouble() : double.tryParse('$rawValue');
+      if (value != null) metrics[metricKey] = value;
+    }
     return ChallengeAttempt(
       id: json['id']?.toString() ?? '',
       metrics: metrics,
+      note: json['note']?.toString(),
+      meetsTarget: json['meets_target'] is bool ? json['meets_target'] as bool : null,
       createdAt: json['created_at'] == null
           ? null
           : DateTime.tryParse(json['created_at'].toString()),
