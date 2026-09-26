@@ -70,7 +70,7 @@ class _PathScreenState extends State<PathScreen> {
           title: milestone.title,
           description: milestone.description,
           resources: milestone.resources.isEmpty
-              ? _dummyResourcesFor(milestone.orderIndex)
+              ? _resourcesForMilestone(milestone.orderIndex)
               : [
                   for (final resource in milestone.resources)
                     _PathResource(
@@ -83,6 +83,23 @@ class _PathScreenState extends State<PathScreen> {
                 ],
         ),
     ];
+  }
+
+  List<_PathResource> _resourcesForMilestone(int orderIndex) {
+    final challengeResources = widget.challenge.resources;
+    if (challengeResources.isNotEmpty) {
+      return [
+        for (final resource in challengeResources)
+          _PathResource(
+            resource.title,
+            resource.resourceType,
+            resource.rationale,
+            resource.url,
+            false,
+          ),
+      ];
+    }
+    return _dummyResourcesFor(orderIndex);
   }
 
   List<_PathResource> _dummyResourcesFor(int order) {
