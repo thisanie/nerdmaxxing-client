@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../discover/discover_screen.dart';
 import '../discover/people_discover_screen.dart';
-import '../challenge/create_challenge_screen.dart';
 import '../profile/profile_screen.dart';
 import '../skills/skills_screen.dart';
 import '../../theme/app_theme.dart';
@@ -110,50 +109,17 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  int get _navigationIndex => _index >= 2 ? _index + 1 : _index;
+  int get _navigationIndex => _index;
 
   void _onNavigationTap(int navigationIndex) {
     _resetTabStacks();
-    if (navigationIndex == 2) {
-      _navigatorKeys[_index].currentState?.push(
-        MaterialPageRoute(builder: (_) => const CreateChallengeScreen()),
-      );
-      return;
-    }
-    final tabIndex = navigationIndex > 2
-        ? navigationIndex - 1
-        : navigationIndex;
-    setState(() => _index = tabIndex);
+    setState(() => _index = navigationIndex);
   }
 
   void _resetTabStacks() {
     for (final key in _navigatorKeys) {
       key.currentState?.popUntil((route) => route.isFirst);
     }
-  }
-}
-
-class _AddNavigationIcon extends StatelessWidget {
-  const _AddNavigationIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.25),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
-    );
   }
 }
 
@@ -169,7 +135,6 @@ class _BottomNavigationBar extends StatelessWidget {
   static const _items = [
     (Icons.home_outlined, 'Home'),
     (Icons.explore_outlined, 'Discover'),
-    (null, ''),
     (Icons.workspace_premium_outlined, 'Skills'),
     (Icons.person_outline, 'Profile'),
   ];
@@ -189,13 +154,11 @@ class _BottomNavigationBar extends StatelessWidget {
                 Expanded(
                   child: InkWell(
                     onTap: () => onTap(index),
-                    child: _items[index].$1 == null
-                        ? const Center(child: _AddNavigationIcon())
-                        : _NavigationItem(
-                            icon: _items[index].$1!,
-                            label: _items[index].$2,
-                            selected: currentIndex == index,
-                          ),
+                    child: _NavigationItem(
+                      icon: _items[index].$1,
+                      label: _items[index].$2,
+                      selected: currentIndex == index,
+                    ),
                   ),
                 ),
             ],
