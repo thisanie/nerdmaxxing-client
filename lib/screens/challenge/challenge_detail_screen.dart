@@ -214,14 +214,24 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         content: const Text(
           'Accept the challenge to unlock its milestones and resources.',
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('CANCEL'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('ACCEPT CHALLENGE'),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('CANCEL'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('ACCEPT CHALLENGE'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
