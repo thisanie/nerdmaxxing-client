@@ -225,6 +225,15 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     return total > 0 && completed >= total;
   }
 
+  bool _isNextMilestone(int index) {
+    for (var milestoneIndex = 0; milestoneIndex < widget.detail.milestones.length; milestoneIndex++) {
+      if (!_isMilestoneComplete(widget.detail.milestones[milestoneIndex])) {
+        return milestoneIndex == index;
+      }
+    }
+    return false;
+  }
+
   Widget _nextMilestone(BuildContext context) {
     final milestone = widget.detail.milestones
       .where((item) => !_isMilestoneComplete(item))
@@ -285,7 +294,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       milestone.title,
       milestone.description,
       _isMilestoneComplete(milestone),
-      current: !_isMilestoneComplete(milestone),
+      current: _isNextMilestone(index),
     ),
   );
 
