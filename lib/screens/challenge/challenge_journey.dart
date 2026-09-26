@@ -48,7 +48,9 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
-        onRefresh: widget.onRefresh ?? () async {},
+        onRefresh: () async {
+          await widget.onRefresh?.call();
+        },
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [

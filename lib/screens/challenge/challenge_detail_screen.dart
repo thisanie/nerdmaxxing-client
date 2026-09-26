@@ -249,7 +249,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             onRefresh: _refreshDetail,
         ),
       ),
-    ).then((_) => _load());
+    ).then((_) async {
+      if (mounted) await _refreshDetail();
+    });
   }
 
   int _currentMilestoneIndex(ChallengeDetail detail) {
