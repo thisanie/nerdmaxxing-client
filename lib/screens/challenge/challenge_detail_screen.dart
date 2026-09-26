@@ -217,7 +217,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
               .firstOrNull,
         ),
       ),
-    );
+    ).then((_) => _load());
   }
 
   int _currentMilestoneIndex(ChallengeDetail detail) {

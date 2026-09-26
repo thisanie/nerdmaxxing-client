@@ -36,39 +36,15 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   void initState() {
     super.initState();
     _milestones = _buildMilestones();
-    _selectedMilestone = widget.initialMilestoneIndex.clamp(0, _milestones.length - 1);
+    _selectedMilestone = _milestones.isEmpty
+      ? 0
+      : widget.initialMilestoneIndex.clamp(0, _milestones.length - 1);
   }
 
   List<_PathMilestone> _buildMilestones() {
     final apiMilestones = widget.detail.milestones;
     if (apiMilestones.isEmpty) {
-      return [
-        _PathMilestone(
-          title: 'Build the baseline',
-          description: 'Get familiar with the fundamentals before you increase the pace.',
-          resources: [
-            _PathResource('The beginner guide', 'READ', 'A short primer to get your first session moving.', 'https://example.com/nerdmaxxing/beginner-guide', true),
-            _PathResource('Set up your practice space', 'WATCH', 'A quick walkthrough for removing friction.', 'https://example.com/nerdmaxxing/practice-space', true),
-            _PathResource('First focused session', 'DO', 'Put the ideas into practice for 20 minutes.', 'https://example.com/nerdmaxxing/focused-session', false),
-          ],
-        ),
-        _PathMilestone(
-          title: 'Raise the standard',
-          description: 'Turn the basics into a repeatable routine.',
-          resources: [
-            _PathResource('The consistency playbook', 'READ', 'A practical system for showing up every day.', 'https://example.com/nerdmaxxing/consistency', false),
-            _PathResource('Deliberate practice drill', 'DO', 'One focused drill for your next session.', 'https://example.com/nerdmaxxing/deliberate-practice', false),
-          ],
-        ),
-        _PathMilestone(
-          title: 'Prove your progress',
-          description: 'Take the final step and submit a result you are proud of.',
-          resources: [
-            _PathResource('Final challenge checklist', 'READ', 'Everything to review before your verified attempt.', 'https://example.com/nerdmaxxing/final-checklist', false),
-            _PathResource('Verified attempt', 'PROVE', 'Submit the evidence that clears this challenge.', 'https://example.com/nerdmaxxing/verified-attempt', false),
-          ],
-        ),
-      ];
+      return const [];
     }
 
     return [
@@ -94,34 +70,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   }
 
   List<_PathResource> _resourcesForMilestone(int orderIndex) {
-    final challengeResources = widget.challenge.resources;
-    if (challengeResources.isNotEmpty) {
-      return [
-        for (final resource in challengeResources)
-          _PathResource(
-            resource.title,
-            resource.resourceType,
-            resource.rationale,
-            resource.url,
-            false,
-            id: resource.id,
-          ),
-      ];
-    }
-    return _dummyResourcesFor(orderIndex);
-  }
-
-  List<_PathResource> _dummyResourcesFor(int order) {
-    final resources = [
-      _PathResource('Core concept guide', 'READ', 'A focused guide for this stage of the path.', 'https://example.com/nerdmaxxing/core-concept', true),
-      _PathResource('Practice session', 'DO', 'A short exercise to turn the idea into a habit.', 'https://example.com/nerdmaxxing/practice-session', true),
-      _PathResource('Checkpoint notes', 'READ', 'A final reference before you move forward.', 'https://example.com/nerdmaxxing/checkpoint', false),
-    ];
-    if (order == 1) return resources;
-    return [
-      for (final resource in resources)
-        _PathResource(resource.title, resource.type, resource.description, resource.url, false),
-    ];
+    return const [];
   }
 
   _PathMilestone get _milestone => _milestones[_selectedMilestone];
@@ -130,6 +79,15 @@ class _PathScreenState extends ConsumerState<PathScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_milestones.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(title: const Text('YOUR PATH')),
+        body: const Center(
+          child: Text('This challenge has no configured milestones yet.'),
+        ),
+      );
+    }
     final resources = _milestone.resources;
     final progress = resources.isEmpty ? 0.0 : _completedCount / resources.length;
 
@@ -150,7 +108,14 @@ class _PathScreenState extends ConsumerState<PathScreen> {
           ),
           SliverToBoxAdapter(child: _header(progress)),
           SliverToBoxAdapter(child: _milestoneRail()),
-          SliverToBoxAdapter(child: _resourceList(resources)),
+          SliverToBoxAdapter(
+            child: resources.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(22),
+                    child: Text('No resources are configured for this milestone.'),
+                  )
+                : _resourceList(resources),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 38)),
         ],
       ),

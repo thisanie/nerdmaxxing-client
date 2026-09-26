@@ -572,6 +572,21 @@ Response `201 Created`: a progress log object. Logging progress updates the part
 
 Requires authentication. Lists progress logs for a participation owned by the caller, newest first.
 
+### Resource completion state
+
+The resource completion endpoint records the caller's completion state:
+
+`POST /api/v1/participation/{participant_id}/milestones/{milestone_id}/resources/{resource_id}/complete`
+
+The authenticated `GET /api/v1/challenges/{slug}/detail` response must return the caller's
+completion state when the caller has an active participation. Each milestone resource should
+include `completed` and `completed_at` fields, and each milestone should include its persisted
+status and progress values. The response should also expose challenge-level progress so the client
+can render progress after an app restart without relying on local UI state.
+
+The public challenge definition must remain unchanged for unauthenticated callers; completion
+fields are per-user state and must not be stored on the shared challenge resource catalog.
+
 ### `GET /api/v1/users/me/stats`
 
 Requires authentication. Returns the current user's activity summary: `active_challenge_count`, `completed_challenge_count`, `day_streak`, and `aura_points`.
