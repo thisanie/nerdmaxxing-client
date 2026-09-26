@@ -75,11 +75,29 @@ class ChallengeMilestone {
     this.resources = const [],
   });
 
-  factory ChallengeMilestone.fromJson(Map<String, dynamic> json) {
+  factory ChallengeMilestone.fromJson(
+    Map<String, dynamic> json, {
+    List<ChallengeResource> resourceCatalog = const [],
+  }) {
     double? readOptional(String key) {
       final value = json[key];
       return value is num ? value.toDouble() : double.tryParse('$value');
     }
+
+    final resources = (json['resources'] as List? ?? [])
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .map((item) {
+          final resourceId = item['resource_id']?.toString();
+          if (resourceId != null && resourceId.isNotEmpty) {
+            for (final resource in resourceCatalog) {
+              if (resource.id == resourceId) return resource;
+            }
+          }
+          return ChallengeResource.fromJson(item);
+        })
+        .where((resource) => resource.title.isNotEmpty || resource.url.isNotEmpty)
+        .toList();
 
     return ChallengeMilestone(
       id: json['id']?.toString() ?? '',
@@ -89,10 +107,7 @@ class ChallengeMilestone {
       status: json['status']?.toString() ?? 'LOCKED',
       currentValue: readOptional('current_value'),
       targetValue: readOptional('target_value'),
-        resources: (json['resources'] as List? ?? [])
-          .whereType<Map>()
-          .map((item) => ChallengeResource.fromJson(Map<String, dynamic>.from(item)))
-          .toList(),
+      resources: resources,
     );
   }
 }
@@ -242,8 +257,10 @@ class ChallengeDetail {
           )
         : ChallengeVerification.empty;
 
+    final challenge = Challenge.fromJson(challengeJson);
+
     return ChallengeDetail(
-      challenge: Challenge.fromJson(challengeJson),
+      challenge: challenge,
         metrics: listOfMaps('metrics')
           .map(ChallengeMetric.fromJson)
           .where((metric) => metric.key.isNotEmpty)
@@ -252,7 +269,12 @@ class ChallengeDetail {
           .map(ChallengeRequirement.fromJson)
           .toList(),
       milestones: listOfMaps('milestones')
-          .map(ChallengeMilestone.fromJson)
+          .map(
+            (milestone) => ChallengeMilestone.fromJson(
+              milestone,
+              resourceCatalog: challenge.resources,
+            ),
+          )
           .toList(),
       attempts: listOfMaps('attempts')
           .map(ChallengeAttempt.fromJson)
