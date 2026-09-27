@@ -615,7 +615,7 @@ class _MetricDialogState extends State<_MetricDialog> {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         if (widget.metrics.length > 1)
           DropdownButtonFormField<ChallengeMetric>(
-            value: _metric,
+            initialValue: _metric,
             decoration: const InputDecoration(labelText: 'Metric'),
             items: [
               for (final metric in widget.metrics)

@@ -37,7 +37,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   bool _loadingMore = false;
   bool _posting = false;
   String? _error;
-  final _replyKeys = <String, GlobalKey>{};
+  BuildContext? _targetReplyContext;
 
   @override
   void initState() {
@@ -96,10 +96,10 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     await _loadReplies(comment);
     if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = _replyKeys[replyId]?.currentContext;
-      if (context != null) {
+      final targetContext = _targetReplyContext;
+      if (targetContext != null && targetContext.mounted) {
         Scrollable.ensureVisible(
-          context,
+          targetContext,
           alignment: .35,
           duration: const Duration(milliseconds: 350),
         );
@@ -483,19 +483,20 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   Widget _replyView(String discussionId, DiscussionComment reply) {
     final name = reply.author.name ?? reply.author.username ?? 'NerdMaxxer';
     final isTarget = reply.id == widget.initialReplyId;
-    final replyKey = _replyKeys.putIfAbsent(reply.id, GlobalKey.new);
-    return Container(
-      key: replyKey,
-      padding: const EdgeInsets.all(8),
-      decoration: isTarget
-          ? BoxDecoration(
-              color: AppColors.primary.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(8),
-            )
-          : null,
-      child: Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
+    return Builder(
+      builder: (context) {
+        if (isTarget) _targetReplyContext = context;
+        return Container(
+          padding: const EdgeInsets.all(8),
+          decoration: isTarget
+              ? BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(8),
+                )
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
@@ -535,7 +536,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
           ),
         ],
       ),
-      ),
+          ),
+        );
+      },
     );
   }
 

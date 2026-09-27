@@ -5,7 +5,6 @@ import '../discover/discover_screen.dart';
 import '../discover/people_discover_screen.dart';
 import '../profile/profile_screen.dart';
 import '../skills/skills_screen.dart';
-import '../../theme/app_theme.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../notifications/notifications_screen.dart';
 

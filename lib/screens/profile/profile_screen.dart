@@ -10,7 +10,6 @@ import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/app_state_providers.dart';
 import '../../providers/profile_provider.dart';
-import '../../providers/theme_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/groups_service.dart';

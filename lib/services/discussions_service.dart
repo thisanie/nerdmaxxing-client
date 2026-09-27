@@ -8,7 +8,7 @@ class DiscussionsService {
   Future<DiscussionPage> list(String challengeSlug, {String? cursor}) async {
     final data = await api.get(
       '/challenges/$challengeSlug/discussions',
-      query: {if (cursor != null) 'cursor': cursor},
+      query: {'cursor': ?cursor},
       skipAuth: true,
     );
     return _page(data);
@@ -46,7 +46,7 @@ class DiscussionsService {
   Future<DiscussionPage> listReplies(String discussionId, {String? cursor}) async {
     final data = await api.get(
       '/discussions/$discussionId/replies',
-      query: {if (cursor != null) 'cursor': cursor},
+      query: {'cursor': ?cursor},
       skipAuth: true,
     );
     return _page(data);
