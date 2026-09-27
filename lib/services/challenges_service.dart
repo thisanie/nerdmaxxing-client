@@ -33,6 +33,23 @@ class ChallengesService {
     return ChallengeDetail.fromJson(Map<String, dynamic>.from(data as Map));
   }
 
+  Future<bool> getSaveStatus(String slug) async {
+    final data = await api.get('/challenges/$slug/save-status');
+    if (data is bool) return data;
+    if (data is Map) {
+      return data['saved'] == true || data['is_saved'] == true;
+    }
+    return false;
+  }
+
+  Future<void> save(String slug) async {
+    await api.post('/challenges/$slug/save');
+  }
+
+  Future<void> unsave(String slug) async {
+    await api.delete('/challenges/$slug/save');
+  }
+
   Future<Challenge> create({
     required String title,
     required Uint8List imageBytes,

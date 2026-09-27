@@ -42,6 +42,8 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   ChallengeDetail? _detail;
   String? _error;
   bool _accepting = false;
+  bool _saved = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -53,8 +55,30 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   Future<void> _load() async {
     try {
       await _refreshDetail();
+      final saved = await context.read<ChallengesService>().getSaveStatus(widget.slug);
+      if (mounted) setState(() => _saved = saved);
     } on ApiException {
       // Initial-load errors are represented by _error when no fallback exists.
+    }
+  }
+
+  Future<void> _toggleSave() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      final service = context.read<ChallengesService>();
+      if (_saved) {
+        await service.unsave(widget.slug);
+      } else {
+        await service.save(widget.slug);
+      }
+      if (mounted) setState(() => _saved = !_saved);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -175,6 +199,8 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             : null,
           onInvite: participation == null ? null : _inviteFriend,
           onDrop: participation == null ? null : _dropChallenge,
+          saved: _saved,
+          onToggleSave: _saving ? null : _toggleSave,
       onTrain: () => _openPath(detail),
           onOpenMilestone: (index) => participation == null
             ? _promptToAccept()

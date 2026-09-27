@@ -17,6 +17,8 @@ class ChallengeJourney extends StatefulWidget {
   final VoidCallback? onDecline;
   final VoidCallback? onInvite;
   final VoidCallback? onDrop;
+  final Future<void> Function()? onToggleSave;
+  final bool saved;
   final ValueChanged<int> onOpenMilestone;
   final bool accepting;
   final bool invited;
@@ -33,6 +35,8 @@ class ChallengeJourney extends StatefulWidget {
     this.onDecline,
     this.onInvite,
     this.onDrop,
+    this.onToggleSave,
+    this.saved = false,
     required this.onOpenMilestone,
     required this.accepting,
     this.invited = false,
@@ -44,8 +48,6 @@ class ChallengeJourney extends StatefulWidget {
 }
 
 class _ChallengeJourneyState extends State<ChallengeJourney> {
-  bool _saved = false;
-
   bool get active => widget.participation != null;
 
   @override
@@ -84,8 +86,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                       value: _ChallengeMenuAction.save,
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(_saved ? Icons.bookmark : Icons.bookmark_border),
-                        title: Text(_saved ? 'Remove saved challenge' : 'Save challenge'),
+                        leading: Icon(widget.saved ? Icons.bookmark : Icons.bookmark_border),
+                        title: Text(widget.saved ? 'Remove saved challenge' : 'Save challenge'),
                       ),
                     ),
                     const PopupMenuItem(
@@ -110,8 +112,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
               else
                 IconButton(
                   tooltip: _saved ? 'Saved' : 'Save challenge',
-                  onPressed: () => setState(() => _saved = !_saved),
-                  icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border, size: 21),
+                  onPressed: widget.onToggleSave,
+                  icon: Icon(widget.saved ? Icons.bookmark : Icons.bookmark_border, size: 21),
                 ),
             ],
           ),
@@ -134,7 +136,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   void _handleMenuAction(_ChallengeMenuAction action) {
     switch (action) {
       case _ChallengeMenuAction.save:
-        setState(() => _saved = !_saved);
+        widget.onToggleSave?.call();
       case _ChallengeMenuAction.invite:
         widget.onInvite?.call();
       case _ChallengeMenuAction.drop:
@@ -210,7 +212,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             Expanded(child: OutlinedButton(onPressed: widget.onProve, child: const Text('PROVE IT'))),
           ] else ...[
             const SizedBox(width: 10),
-            IconButton(onPressed: () => setState(() => _saved = !_saved), icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border)),
+            IconButton(onPressed: widget.onToggleSave, icon: Icon(widget.saved ? Icons.bookmark : Icons.bookmark_border)),
           ],
         ]),
         if (!active) ...[
@@ -493,7 +495,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             const SizedBox(height: 24),
             SizedBox(width: double.infinity, child: FilledButton(onPressed: widget.accepting ? null : widget.onAccept, child: const Text('ACCEPT THE CHALLENGE'))),
             const SizedBox(height: 8),
-            Center(child: TextButton(onPressed: () => setState(() => _saved = !_saved), child: Text(_saved ? 'SAVED' : 'SAVE FOR LATER'))),
+            Center(child: TextButton(onPressed: widget.onToggleSave, child: Text(widget.saved ? 'SAVED' : 'SAVE FOR LATER'))),
           ]),
   );
 
