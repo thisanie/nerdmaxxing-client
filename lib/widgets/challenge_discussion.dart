@@ -568,7 +568,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
                       ),
                     ],
                   ),
-                ],
+                ),
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     switch (value) {
