@@ -144,7 +144,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             ),
           ),
           if (_discussionOpen) Positioned.fill(child: _discussionOverlay(context)),
-        ),
+        ],
       ),
     );
   }
