@@ -5,6 +5,8 @@ import '../../models/challenge_detail.dart';
 import '../../models/participation.dart';
 import '../../theme/app_theme.dart';
 
+enum _ChallengeMenuAction { save, invite, drop }
+
 class ChallengeJourney extends StatefulWidget {
   final Challenge challenge;
   final ChallengeDetail detail;
@@ -13,6 +15,8 @@ class ChallengeJourney extends StatefulWidget {
   final VoidCallback onTrain;
   final VoidCallback onProve;
   final VoidCallback? onDecline;
+  final VoidCallback? onInvite;
+  final VoidCallback? onDrop;
   final ValueChanged<int> onOpenMilestone;
   final bool accepting;
   final bool invited;
@@ -27,6 +31,8 @@ class ChallengeJourney extends StatefulWidget {
     required this.onTrain,
     required this.onProve,
     this.onDecline,
+    this.onInvite,
+    this.onDrop,
     required this.onOpenMilestone,
     required this.accepting,
     this.invited = false,
@@ -69,11 +75,44 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
               style: const TextStyle(fontSize: 11, letterSpacing: 2, fontWeight: FontWeight.w700),
             ),
             actions: [
-              IconButton(
-                tooltip: _saved ? 'Saved' : 'Save challenge',
-                onPressed: () => setState(() => _saved = !_saved),
-                icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border, size: 21),
-              ),
+              if (active)
+                PopupMenuButton<_ChallengeMenuAction>(
+                  tooltip: 'Challenge options',
+                  onSelected: _handleMenuAction,
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: _ChallengeMenuAction.save,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(_saved ? Icons.bookmark : Icons.bookmark_border),
+                        title: Text(_saved ? 'Remove saved challenge' : 'Save challenge'),
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: _ChallengeMenuAction.invite,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.person_add_outlined),
+                        title: Text('Invite friend'),
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: _ChallengeMenuAction.drop,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.exit_to_app),
+                        title: Text('Drop challenge'),
+                      ),
+                    ),
+                  ],
+                  icon: const Icon(Icons.more_vert, size: 21),
+                )
+              else
+                IconButton(
+                  tooltip: _saved ? 'Saved' : 'Save challenge',
+                  onPressed: () => setState(() => _saved = !_saved),
+                  icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border, size: 21),
+                ),
             ],
           ),
           SliverToBoxAdapter(child: _hero(context, challenge)),
@@ -84,12 +123,23 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           if (active) SliverToBoxAdapter(child: _section(context, 'RECENT ATTEMPTS', _attempts(context))),
           SliverToBoxAdapter(child: _section(context, 'PEOPLE ON THIS TRIAL', _people(context))),
           if (!active) SliverToBoxAdapter(child: _section(context, 'HOW YOU PROVE IT', _verification(context))),
-          if (active) SliverToBoxAdapter(child: _section(context, 'PROVE IT', _verification(context))),
+          // if (active) SliverToBoxAdapter(child: _section(context, 'PROVE IT', _verification(context))),
           SliverToBoxAdapter(child: _finalCta(context)),
           ],
         ),
       ),
     );
+  }
+
+  void _handleMenuAction(_ChallengeMenuAction action) {
+    switch (action) {
+      case _ChallengeMenuAction.save:
+        setState(() => _saved = !_saved);
+      case _ChallengeMenuAction.invite:
+        widget.onInvite?.call();
+      case _ChallengeMenuAction.drop:
+        widget.onDrop?.call();
+    }
   }
 
   Widget _hero(BuildContext context, Challenge challenge) {

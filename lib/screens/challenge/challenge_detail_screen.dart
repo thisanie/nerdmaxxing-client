@@ -173,6 +173,8 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           onDecline: widget.invitation?.invitationId != null
             ? _declineInvitation
             : null,
+          onInvite: participation == null ? null : _inviteFriend,
+          onDrop: participation == null ? null : _dropChallenge,
       onTrain: () => _openPath(detail),
           onOpenMilestone: (index) => participation == null
             ? _promptToAccept()
@@ -186,6 +188,51 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       ),
           invited: widget.invitation?.invitationId != null,
     );
+  }
+
+  Future<void> _inviteFriend() async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _InviteFriendsDialog(challenge: widget.slug),
+    );
+  }
+
+  Future<void> _dropChallenge() async {
+    final shouldDrop = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Drop this challenge?'),
+        content: const Text('Your progress will remain recorded, but this challenge will no longer be active.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('DROP CHALLENGE'),
+          ),
+        ],
+      ),
+    );
+    if (shouldDrop != true || !mounted) return;
+    final participation = ref.read(participationControllerProvider.notifier);
+    final current = ref.read(participationControllerProvider).valueOrNull
+      ?.where((item) => item.challengeId == _challenge?.id)
+        .firstOrNull;
+    if (current == null) return;
+    try {
+      await participation.updateStatus(current.id, 'DROPPED');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Challenge dropped.')),
+      );
+      Navigator.of(context).pop();
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
   }
 
   void _showPrototypeSheet(String title, String message) {
