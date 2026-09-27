@@ -108,7 +108,7 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     required String metricKey,
     required double value,
     required String unit,
-    String? note,
+    String? note,}
   ) async {
     final result = await _service.logMetricAttempt(
       participantId,

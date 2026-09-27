@@ -273,14 +273,14 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               title: const Text('Update profile'),
               onTap: () => Navigator.pop(sheetContext, 'update'),
             ),
-            Consumer<ThemeProvider>(
-              builder: (context, themeProvider, _) => SwitchListTile.adaptive(
-                secondary: const Icon(Icons.brightness_6_outlined),
-                title: const Text('Dark theme'),
-                value: themeProvider.isDark,
-                onChanged: themeProvider.setDark,
-              ),
-            ),
+            // Consumer<ThemeProvider>(
+            //   builder: (context, themeProvider, _) => SwitchListTile.adaptive(
+            //     secondary: const Icon(Icons.brightness_6_outlined),
+            //     title: const Text('Dark theme'),
+            //     value: themeProvider.isDark,
+            //     onChanged: themeProvider.setDark,
+            //   ),
+            // ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Log out'),
