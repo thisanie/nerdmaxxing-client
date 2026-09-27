@@ -284,19 +284,40 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     crossAxisAlignment: CrossAxisAlignment.end,
     children: [
       Expanded(
-        child: TextField(
-          controller: _composer,
-          maxLength: 2200,
-          maxLines: 4,
-          minLines: 1,
-          decoration: const InputDecoration(hintText: 'Add a comment...', counterText: ''),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.background.withValues(alpha: .55),
+            border: Border.all(color: AppColors.borderStrong),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TextField(
+            controller: _composer,
+            maxLength: 2200,
+            maxLines: 4,
+            minLines: 1,
+            decoration: const InputDecoration(
+              hintText: 'Share a question or idea...',
+              counterText: '',
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
         ),
       ),
-      const SizedBox(width: 8),
-      IconButton(
+      const SizedBox(width: 10),
+      Container(
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: IconButton(
         tooltip: 'Post comment',
         onPressed: _posting ? null : _post,
-        icon: _posting ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send_outlined),
+        color: AppColors.dark,
+        icon: _posting
+            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.dark))
+            : const Icon(Icons.arrow_upward_rounded),
+        ),
       ),
     ],
   );
@@ -305,7 +326,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     final replies = _replies[comment.id];
     final displayName = comment.author.name ?? comment.author.username ?? 'NerdMaxxer';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 22),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -354,9 +375,18 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
             ),
           if (replies != null)
             Padding(
-              padding: const EdgeInsets.only(left: 44, top: 4),
-              child: Column(children: [for (final reply in replies) _replyView(comment.id, reply)]),
+              padding: const EdgeInsets.only(left: 44, top: 6),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(left: BorderSide(color: AppColors.primary.withValues(alpha: .45), width: 2)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 4),
+                  child: Column(children: [for (final reply in replies) _replyView(comment.id, reply)]),
+                ),
+              ),
             ),
+          const Divider(height: 1, color: AppColors.border),
         ],
       ),
     );

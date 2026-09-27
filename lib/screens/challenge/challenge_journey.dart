@@ -134,18 +134,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           SliverToBoxAdapter(child: _section(context, active ? 'THE GRIND' : 'THE PATH', _path(context))),
           if (active) SliverToBoxAdapter(child: _section(context, 'RECENT ATTEMPTS', _attempts(context))),
           SliverToBoxAdapter(child: _section(context, 'PEOPLE ON THIS TRIAL', _people(context))),
-          SliverToBoxAdapter(
-            child: _section(
-              context,
-              'DISCUSSION',
-              ChallengeDiscussion(
-                challengeSlug: widget.challengeSlug,
-                service: widget.discussionsService,
-                canPost: widget.discussionCanPost,
-                currentUsername: widget.currentUsername,
-              ),
-            ),
-          ),
+          SliverToBoxAdapter(child: _discussionSection(context)),
           if (!active) SliverToBoxAdapter(child: _section(context, 'HOW YOU PROVE IT', _verification(context))),
           // if (active) SliverToBoxAdapter(child: _section(context, 'PROVE IT', _verification(context))),
           SliverToBoxAdapter(child: _finalCta(context)),
@@ -165,6 +154,46 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         widget.onDrop?.call();
     }
   }
+
+  Widget _discussionSection(BuildContext context) => Container(
+    width: double.infinity,
+    color: AppColors.surfaceAlt.withValues(alpha: .72),
+    padding: const EdgeInsets.fromLTRB(22, 34, 22, 38),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Expanded(
+              child: Text(
+                'DISCUSSION',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Icon(Icons.forum_outlined, color: AppColors.primary.withValues(alpha: .7), size: 19),
+          ],
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Questions, ideas, and useful breakthroughs.',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+        const SizedBox(height: 24),
+        ChallengeDiscussion(
+          challengeSlug: widget.challengeSlug,
+          service: widget.discussionsService,
+          canPost: widget.discussionCanPost,
+          currentUsername: widget.currentUsername,
+        ),
+      ],
+    ),
+  );
 
   Widget _hero(BuildContext context, Challenge challenge) {
     final primary = widget.detail.primaryMetric;
