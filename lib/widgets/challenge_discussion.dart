@@ -283,12 +283,14 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   Widget _composerView() => Row(
     crossAxisAlignment: CrossAxisAlignment.end,
     children: [
+      _avatar(widget.currentUsername),
+      const SizedBox(width: 10),
       Expanded(
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.background.withValues(alpha: .55),
-            border: Border.all(color: AppColors.borderStrong),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.surface,
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(24),
           ),
           child: TextField(
             controller: _composer,
@@ -299,25 +301,18 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
               hintText: 'Share a question or idea...',
               counterText: '',
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
           ),
         ),
       ),
-      const SizedBox(width: 10),
-      Container(
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: IconButton(
+      IconButton(
         tooltip: 'Post comment',
         onPressed: _posting ? null : _post,
-        color: AppColors.dark,
+        color: _composer.text.trim().isEmpty ? AppColors.textDim : AppColors.primary,
         icon: _posting
-            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.dark))
-            : const Icon(Icons.arrow_upward_rounded),
-        ),
+            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.send_outlined, size: 20),
       ),
     ],
   );
@@ -326,21 +321,43 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     final replies = _replies[comment.id];
     final displayName = comment.author.name ?? comment.author.username ?? 'NerdMaxxer';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            CircleAvatar(
-              radius: 17,
-              backgroundImage: comment.author.avatarUrl == null ? null : NetworkImage(comment.author.avatarUrl!),
-              child: comment.author.avatarUrl == null ? Text(displayName.substring(0, 1).toUpperCase()) : null,
-            ),
+            _avatar(displayName, imageUrl: comment.author.avatarUrl),
             const SizedBox(width: 10),
-            Expanded(child: Text.rich(TextSpan(children: [
-              TextSpan(text: '$displayName  ', style: const TextStyle(fontWeight: FontWeight.w700)),
-              TextSpan(text: comment.deleted ? 'Comment deleted' : comment.body),
-            ]))),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          displayName,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      if (comment.createdAt != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          _timeLabel(comment.createdAt!),
+                          style: const TextStyle(color: AppColors.textDim, fontSize: 12),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    comment.deleted ? 'Comment deleted' : comment.body,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, height: 1.4),
+                  ),
+                ],
+              ),
+            ),
             PopupMenuButton<String>(
               onSelected: (value) {
                 switch (value) {
@@ -368,7 +385,15 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
               child: Row(children: [
                 if (comment.type == 'QUESTION' && !comment.resolved)
                   const Text('QUESTION  ', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.w700)),
-                TextButton(onPressed: () => _reply(comment), child: const Text('Reply')),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 28),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: () => _reply(comment),
+                  child: const Text('Reply', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                ),
                 if (comment.replyCount > 0 || replies != null)
                   TextButton(onPressed: () => _loadReplies(comment), child: Text(replies == null ? '${comment.replyCount} replies' : 'Hide replies')),
               ]),
@@ -403,11 +428,11 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
             child: Text.rich(
               TextSpan(
                 children: [
+                  TextSpan(text: '$name  ', style: const TextStyle(fontWeight: FontWeight.w700)),
                   TextSpan(
-                    text: '$name  ',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    text: reply.deleted ? 'Reply deleted' : reply.body,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
-                  TextSpan(text: reply.deleted ? 'Reply deleted' : reply.body),
                 ],
               ),
             ),
@@ -437,6 +462,26 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
         ],
       ),
     );
+  }
+
+  Widget _avatar(String? label, {String? imageUrl}) {
+    final initial = (label == null || label.isEmpty) ? '?' : label.substring(0, 1).toUpperCase();
+    return CircleAvatar(
+      radius: 19,
+      backgroundColor: AppColors.surfaceAlt,
+      backgroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
+      child: imageUrl == null
+          ? Text(initial, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))
+          : null,
+    );
+  }
+
+  String _timeLabel(DateTime createdAt) {
+    final age = DateTime.now().difference(createdAt.toLocal());
+    if (age.inMinutes < 1) return 'now';
+    if (age.inMinutes < 60) return '${age.inMinutes}m';
+    if (age.inHours < 24) return '${age.inHours}h';
+    return '${age.inDays}d';
   }
 
   Widget _errorView() => Row(children: [

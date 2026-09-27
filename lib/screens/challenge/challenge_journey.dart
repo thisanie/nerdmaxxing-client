@@ -157,8 +157,11 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _discussionSection(BuildContext context) => Container(
     width: double.infinity,
-    color: AppColors.surfaceAlt.withValues(alpha: .72),
-    padding: const EdgeInsets.fromLTRB(22, 34, 22, 38),
+    decoration: const BoxDecoration(
+      color: AppColors.background,
+      border: Border(top: BorderSide(color: AppColors.border)),
+    ),
+    padding: const EdgeInsets.fromLTRB(22, 28, 22, 34),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -166,17 +169,32 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             const Expanded(
-              child: Text(
-                'DISCUSSION',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  fontWeight: FontWeight.w700,
-                ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 6,
+                    height: 6,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 9),
+                  Text(
+                    'DISCUSSION',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      letterSpacing: 2,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Icon(Icons.forum_outlined, color: AppColors.primary.withValues(alpha: .7), size: 19),
+            Icon(Icons.forum_outlined, color: AppColors.primary.withValues(alpha: .9), size: 19),
           ],
         ),
         const SizedBox(height: 8),
