@@ -49,6 +49,12 @@ class AppNotification {
       if (json['challenge_slug'] != null) 'challenge_slug': json['challenge_slug'],
       if (json['challenge_title'] != null) 'challenge_title': json['challenge_title'],
       if (json['challenge_id'] != null) 'challenge_id': json['challenge_id'],
+      if (json['discussion_id'] != null) 'discussion_id': json['discussion_id'],
+      if (json['comment_id'] != null) 'comment_id': json['comment_id'],
+      if (json['parent_id'] != null) 'parent_id': json['parent_id'],
+      if (json['reply_id'] != null) 'reply_id': json['reply_id'],
+      if (json['comment_reply_id'] != null)
+        'comment_reply_id': json['comment_reply_id'],
       if (json['related_id'] != null) 'related_id': json['related_id'],
       if (json['entity_id'] != null) 'entity_id': json['entity_id'],
       if (json['resource_id'] != null) 'resource_id': json['resource_id'],
@@ -89,9 +95,9 @@ class AppNotification {
   String? get challengeTitle => _value('challenge_title') ?? _value('title');
   String? get actorId => _value('actor_id');
   String? get actorUsername => _value('actor_username');
-    String? get discussionId =>
+  String? get discussionId =>
       _value('discussion_id') ?? _value('comment_id') ?? _value('parent_id');
-    String? get replyId => _value('reply_id') ?? _value('comment_reply_id');
+  String? get replyId => _value('reply_id') ?? _value('comment_reply_id');
   String? get actorName =>
       _value('actor_name') ?? _value('name') ?? _value('actor_username');
 

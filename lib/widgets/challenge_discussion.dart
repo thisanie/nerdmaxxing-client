@@ -525,45 +525,74 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(text: '$name  ', style: const TextStyle(fontWeight: FontWeight.w700)),
-                  TextSpan(
-                    text: reply.deleted ? 'Reply deleted' : reply.body,
-                    style: const TextStyle(color: AppColors.textSecondary),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _avatar(name, imageUrl: reply.author.avatarUrl, radius: 17),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          if (reply.createdAt != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              _timeLabel(reply.createdAt!),
+                              style: const TextStyle(
+                                color: AppColors.textDim,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        reply.deleted ? 'Reply deleted' : reply.body,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'edit':
+                        _editReply(discussionId, reply);
+                      case 'delete':
+                        _deleteReply(discussionId, reply);
+                      case 'report':
+                        _reportReply(discussionId, reply);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    if (reply.author.username != null &&
+                        reply.author.username == widget.currentUsername)
+                      const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    if (reply.author.username != null &&
+                        reply.author.username == widget.currentUsername)
+                      const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                    const PopupMenuItem(value: 'report', child: Text('Report')),
+                  ],
+                  icon: const Icon(Icons.more_horiz, size: 18),
+                ),
+              ],
             ),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'edit':
-                  _editReply(discussionId, reply);
-                case 'delete':
-                  _deleteReply(discussionId, reply);
-                case 'report':
-                  _reportReply(discussionId, reply);
-              }
-            },
-            itemBuilder: (_) => [
-              if (reply.author.username != null &&
-                  reply.author.username == widget.currentUsername)
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
-              if (reply.author.username != null &&
-                  reply.author.username == widget.currentUsername)
-                const PopupMenuItem(value: 'delete', child: Text('Delete')),
-              const PopupMenuItem(value: 'report', child: Text('Report')),
-            ],
-            icon: const Icon(Icons.more_horiz, size: 16),
-          ),
-        ],
-      ),
           ),
         );
       },
