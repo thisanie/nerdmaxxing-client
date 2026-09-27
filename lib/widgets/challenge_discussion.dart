@@ -259,7 +259,6 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.canPost) _composerView(),
         if (_loading)
           const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: CircularProgressIndicator()))
         else if (_error != null)
@@ -275,6 +274,10 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
                 child: Text(_loadingMore ? 'LOADING...' : 'LOAD MORE'),
               ),
             ),
+        ],
+        if (widget.canPost) ...[
+          const SizedBox(height: 8),
+          _composerView(),
         ],
       ],
     );

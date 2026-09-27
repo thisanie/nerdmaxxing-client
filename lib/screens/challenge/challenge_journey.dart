@@ -58,6 +58,8 @@ class ChallengeJourney extends StatefulWidget {
 }
 
 class _ChallengeJourneyState extends State<ChallengeJourney> {
+  bool _discussionOpen = false;
+
   bool get active => widget.participation != null;
 
   @override
@@ -165,50 +167,62 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Expanded(
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 6,
-                    height: 6,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
+        InkWell(
+          onTap: () => setState(() => _discussionOpen = !_discussionOpen),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Expanded(
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 6,
+                        height: 6,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(width: 9),
+                      Text(
+                        'DISCUSSION',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 9),
-                  Text(
-                    'DISCUSSION',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                Icon(
+                  _discussionOpen ? Icons.keyboard_arrow_up : Icons.forum_outlined,
+                  color: AppColors.primary.withValues(alpha: .9),
+                  size: 20,
+                ),
+              ],
             ),
-            Icon(Icons.forum_outlined, color: AppColors.primary.withValues(alpha: .9), size: 19),
-          ],
+          ),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Questions, ideas, and useful breakthroughs.',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-        ),
-        const SizedBox(height: 24),
-        ChallengeDiscussion(
-          challengeSlug: widget.challengeSlug,
-          service: widget.discussionsService,
-          canPost: widget.discussionCanPost,
-          currentUsername: widget.currentUsername,
-        ),
+        if (_discussionOpen) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'Questions, ideas, and useful breakthroughs.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+          const SizedBox(height: 18),
+          ChallengeDiscussion(
+            challengeSlug: widget.challengeSlug,
+            service: widget.discussionsService,
+            canPost: widget.discussionCanPost,
+            currentUsername: widget.currentUsername,
+          ),
+        ],
       ],
     ),
   );
