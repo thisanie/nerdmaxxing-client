@@ -63,25 +63,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ? challenge
                 : popular,
           );
-      final active =
-            (ref.read(participationControllerProvider).valueOrNull ?? [])
-              .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
-              .toList()
-            ..sort(_newestParticipationFirst);
+      final active = (ref.read(participationControllerProvider).valueOrNull ?? [])
+          .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
+          .toList();
+      final resumeParticipation = _selectResumeParticipation(active);
       setState(() {
         _profile = profile ?? _profile;
         _challengesById = challengeMap;
         _mostPopularChallenge = mostPopular;
-        _resumeParticipation = active.isEmpty ? null : active.first;
+        _resumeParticipation = resumeParticipation;
       });
     } catch (_) {
       // The discovery feed remains usable if the home summary is unavailable.
     }
   }
 
-  static int _newestParticipationFirst(Participation a, Participation b) {
-    final aDate = a.startedAt ?? a.lastActivityAt;
-    final bDate = b.startedAt ?? b.lastActivityAt;
+  static Participation? _selectResumeParticipation(
+    List<Participation> participations,
+  ) {
+    if (participations.isEmpty) return null;
+
+    final attempted = participations
+        .where((participation) => participation.lastActivityAt != null)
+        .toList()
+      ..sort(_newestActivityFirst);
+    if (attempted.isNotEmpty) return attempted.first;
+
+    final joined = [...participations]..sort(_newestJoinedFirst);
+    return joined.first;
+  }
+
+  static int _newestActivityFirst(Participation a, Participation b) {
+    final aDate = a.lastActivityAt;
+    final bDate = b.lastActivityAt;
+    if (aDate == null && bDate == null) return 0;
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+    return bDate.compareTo(aDate);
+  }
+
+  static int _newestJoinedFirst(Participation a, Participation b) {
+    final aDate = a.startedAt;
+    final bDate = b.startedAt;
     if (aDate == null && bDate == null) return 0;
     if (aDate == null) return 1;
     if (bDate == null) return -1;
