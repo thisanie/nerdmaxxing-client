@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../models/challenge.dart';
 import '../../models/challenge_detail.dart';
 import '../../models/participation.dart';
+import '../../services/discussions_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/challenge_discussion.dart';
 
 enum _ChallengeMenuAction { save, invite, drop }
 
@@ -19,6 +21,10 @@ class ChallengeJourney extends StatefulWidget {
   final VoidCallback? onDrop;
   final Future<void> Function()? onToggleSave;
   final bool saved;
+  final String challengeSlug;
+  final DiscussionsService discussionsService;
+  final bool discussionCanPost;
+  final String? currentUsername;
   final ValueChanged<int> onOpenMilestone;
   final bool accepting;
   final bool invited;
@@ -37,6 +43,10 @@ class ChallengeJourney extends StatefulWidget {
     this.onDrop,
     this.onToggleSave,
     this.saved = false,
+    required this.challengeSlug,
+    required this.discussionsService,
+    this.discussionCanPost = false,
+    this.currentUsername,
     required this.onOpenMilestone,
     required this.accepting,
     this.invited = false,
@@ -124,6 +134,18 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           SliverToBoxAdapter(child: _section(context, active ? 'THE GRIND' : 'THE PATH', _path(context))),
           if (active) SliverToBoxAdapter(child: _section(context, 'RECENT ATTEMPTS', _attempts(context))),
           SliverToBoxAdapter(child: _section(context, 'PEOPLE ON THIS TRIAL', _people(context))),
+          SliverToBoxAdapter(
+            child: _section(
+              context,
+              'DISCUSSION',
+              ChallengeDiscussion(
+                challengeSlug: widget.challengeSlug,
+                service: widget.discussionsService,
+                canPost: widget.discussionCanPost,
+                currentUsername: widget.currentUsername,
+              ),
+            ),
+          ),
           if (!active) SliverToBoxAdapter(child: _section(context, 'HOW YOU PROVE IT', _verification(context))),
           // if (active) SliverToBoxAdapter(child: _section(context, 'PROVE IT', _verification(context))),
           SliverToBoxAdapter(child: _finalCta(context)),

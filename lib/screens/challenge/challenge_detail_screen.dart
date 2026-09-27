@@ -13,6 +13,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
+import '../../services/discussions_service.dart';
 import '../../services/invitations_service.dart';
 import '../../services/notifications_service.dart';
 import '../../services/profile_service.dart';
@@ -201,6 +202,11 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           onDrop: participation == null ? null : _dropChallenge,
           saved: _saved,
           onToggleSave: _saving ? null : _toggleSave,
+          discussionsService: context.read<DiscussionsService>(),
+          challengeSlug: widget.slug,
+          currentUsername: context.read<AuthProvider>().username,
+            discussionCanPost: participation?.status == 'ACCEPTED' ||
+              participation?.status == 'IN_PROGRESS',
       onTrain: () => _openPath(detail),
           onOpenMilestone: (index) => participation == null
             ? _promptToAccept()
