@@ -111,7 +111,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 )
               else
                 IconButton(
-                  tooltip: _saved ? 'Saved' : 'Save challenge',
+                  tooltip: widget.saved ? 'Saved' : 'Save challenge',
                   onPressed: widget.onToggleSave,
                   icon: Icon(widget.saved ? Icons.bookmark : Icons.bookmark_border, size: 21),
                 ),
