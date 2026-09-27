@@ -29,6 +29,7 @@ class ChallengeDiscussion extends StatefulWidget {
 
 class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   final _composer = TextEditingController();
+  final _composerFocusNode = FocusNode();
   final _scrollController = ScrollController();
   final _comments = <DiscussionComment>[];
   final _replies = <String, List<DiscussionComment>>{};
@@ -38,6 +39,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   bool _posting = false;
   String? _error;
   BuildContext? _targetReplyContext;
+  DiscussionComment? _replyingTo;
 
   @override
   void initState() {
@@ -50,11 +52,14 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   void dispose() {
     _composer.removeListener(_composerChanged);
     _composer.dispose();
+    _composerFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _composerChanged() => setState(() {});
+  void _composerChanged() {
+    if (mounted) setState(() {});
+  }
 
   Future<void> _load({bool more = false}) async {
     if (more && (_loadingMore || _cursor == null)) return;
@@ -110,13 +115,21 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   Future<void> _post() async {
     final body = _composer.text.trim();
     if (!widget.canPost || body.isEmpty || body.length > 2200 || _posting) return;
+    final parentComment = _replyingTo;
     setState(() => _posting = true);
     try {
-      final comment = await widget.service.create(widget.challengeSlug, body: body);
+      final comment = parentComment == null
+          ? await widget.service.create(widget.challengeSlug, body: body)
+          : await widget.service.reply(parentComment.id, body);
       if (!mounted) return;
+      _composer.clear();
       setState(() {
-        _comments.insert(0, comment);
-        _composer.clear();
+        if (parentComment == null) {
+          _comments.insert(0, comment);
+        } else {
+          (_replies[parentComment.id] ??= []).add(comment);
+        }
+        _replyingTo = null;
       });
     } on ApiException catch (e) {
       if (mounted) _showError(e.message);
@@ -139,33 +152,12 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   }
 
   Future<void> _reply(DiscussionComment comment) async {
-    final controller = TextEditingController();
-    final body = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Reply'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 2200,
-          maxLines: 5,
-          decoration: const InputDecoration(hintText: 'Write a reply...'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('POST')),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (body == null || body.isEmpty) return;
-    try {
-      final reply = await widget.service.reply(comment.id, body);
-      if (!mounted) return;
-      setState(() => (_replies[comment.id] ??= []).add(reply));
-    } on ApiException catch (e) {
-      if (mounted) _showError(e.message);
+    setState(() => _replyingTo = comment);
+    if (!_replies.containsKey(comment.id)) {
+      await _loadReplies(comment);
     }
+    if (!mounted) return;
+    _composerFocusNode.requestFocus();
   }
 
   Future<void> _report(DiscussionComment comment) async {
@@ -178,19 +170,23 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   }
 
   Future<void> _edit(DiscussionComment comment) async {
-    final controller = TextEditingController(text: comment.body);
+    var draft = comment.body;
     final body = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Edit comment'),
-        content: TextField(controller: controller, maxLength: 2200, maxLines: 5),
+        content: TextFormField(
+          maxLength: 2200,
+          maxLines: 5,
+          initialValue: comment.body,
+          onChanged: (value) => draft = value,
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('SAVE')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, draft.trim()), child: const Text('SAVE')),
         ],
       ),
     );
-    controller.dispose();
     if (body == null || body.isEmpty || body == comment.body) return;
     try {
       final updated = await widget.service.update(comment.id, body);
@@ -230,19 +226,23 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   }
 
   Future<void> _editReply(String discussionId, DiscussionComment reply) async {
-    final controller = TextEditingController(text: reply.body);
+    var draft = reply.body;
     final body = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Edit reply'),
-        content: TextField(controller: controller, maxLength: 2200, maxLines: 5),
+        content: TextFormField(
+          maxLength: 2200,
+          maxLines: 5,
+          initialValue: reply.body,
+          onChanged: (value) => draft = value,
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('SAVE')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, draft.trim()), child: const Text('SAVE')),
         ],
       ),
     );
-    controller.dispose();
     if (body == null || body.isEmpty || body == reply.body) return;
     try {
       final updated = await widget.service.updateReply(discussionId, reply.id, body);
@@ -341,41 +341,69 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     ),
   );
 
-  Widget _composerView() => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
+  Widget _composerView() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      _avatar(widget.currentUsername, radius: 16),
-      const SizedBox(width: 8),
-      Expanded(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: .92),
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: TextField(
-            controller: _composer,
-            maxLength: 2200,
-            maxLines: 1,
-            minLines: 1,
-            decoration: const InputDecoration(
-              hintText: 'Share a question or idea...',
-              counterText: '',
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.fromLTRB(16, 9, 8, 9),
-            ),
+      if (_replyingTo != null)
+        Padding(
+          padding: const EdgeInsets.only(left: 8, bottom: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Replying to ${_replyingTo!.author.name ?? _replyingTo!.author.username ?? 'comment'}',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Cancel reply',
+                onPressed: () => setState(() => _replyingTo = null),
+                icon: const Icon(Icons.close, size: 18),
+                constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+                padding: EdgeInsets.zero,
+              ),
+            ],
           ),
         ),
-      ),
-      IconButton(
-        tooltip: 'Post comment',
-        onPressed: _posting ? null : _post,
-        color: _composer.text.trim().isEmpty ? AppColors.textDim : AppColors.primary,
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(width: 34, height: 34),
-        icon: _posting
-            ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(Icons.send_rounded, size: 20),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _avatar(widget.currentUsername, radius: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: .92),
+                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: TextField(
+                controller: _composer,
+                focusNode: _composerFocusNode,
+                maxLength: 2200,
+                maxLines: 1,
+                minLines: 1,
+                decoration: InputDecoration(
+                  hintText: _replyingTo == null ? 'Share a question or idea...' : 'Write a reply...',
+                  counterText: '',
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.fromLTRB(16, 9, 8, 9),
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: _replyingTo == null ? 'Post comment' : 'Post reply',
+            onPressed: _posting ? null : _post,
+            color: _composer.text.trim().isEmpty ? AppColors.textDim : AppColors.primary,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+            icon: _posting
+                ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.send_rounded, size: 20),
+          ),
+        ],
       ),
     ],
   );
