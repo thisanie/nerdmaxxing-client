@@ -36,14 +36,18 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   @override
   void initState() {
     super.initState();
+    _composer.addListener(_composerChanged);
     _load();
   }
 
   @override
   void dispose() {
+    _composer.removeListener(_composerChanged);
     _composer.dispose();
     super.dispose();
   }
+
+  void _composerChanged() => setState(() {});
 
   Future<void> _load({bool more = false}) async {
     if (more && (_loadingMore || _cursor == null)) return;
@@ -263,9 +267,15 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
         if (widget.canPost) ...[
           SafeArea(
             top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 8, 14, 8),
-              child: _composerView(),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.background.withValues(alpha: .94),
+                border: const Border(top: BorderSide(color: AppColors.border)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 9, 14, 9),
+                child: _composerView(),
+              ),
             ),
           ),
         ],
@@ -301,25 +311,25 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   Widget _composerView() => Row(
     crossAxisAlignment: CrossAxisAlignment.end,
     children: [
-      _avatar(widget.currentUsername),
-      const SizedBox(width: 10),
+      _avatar(widget.currentUsername, radius: 16),
+      const SizedBox(width: 8),
       Expanded(
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.surface.withValues(alpha: .92),
             border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(24),
           ),
           child: TextField(
             controller: _composer,
             maxLength: 2200,
-            maxLines: 4,
+            maxLines: 1,
             minLines: 1,
             decoration: const InputDecoration(
               hintText: 'Share a question or idea...',
               counterText: '',
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              contentPadding: EdgeInsets.fromLTRB(16, 9, 8, 9),
             ),
           ),
         ),
@@ -328,9 +338,11 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
         tooltip: 'Post comment',
         onPressed: _posting ? null : _post,
         color: _composer.text.trim().isEmpty ? AppColors.textDim : AppColors.primary,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 34, height: 34),
         icon: _posting
-            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(Icons.send_outlined, size: 20),
+            ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.send_rounded, size: 20),
       ),
     ],
   );
@@ -339,7 +351,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     final replies = _replies[comment.id];
     final displayName = comment.author.name ?? comment.author.username ?? 'NerdMaxxer';
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -363,7 +375,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
                         const SizedBox(width: 8),
                         Text(
                           _timeLabel(comment.createdAt!),
-                          style: const TextStyle(color: AppColors.textDim, fontSize: 12),
+                          style: const TextStyle(color: AppColors.textDim, fontSize: 12.5),
                         ),
                       ],
                     ],
@@ -371,7 +383,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
                   const SizedBox(height: 3),
                   Text(
                     comment.deleted ? 'Comment deleted' : comment.body,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, height: 1.4),
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, height: 1.45),
                   ),
                 ],
               ),
@@ -482,10 +494,10 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     );
   }
 
-  Widget _avatar(String? label, {String? imageUrl}) {
+  Widget _avatar(String? label, {String? imageUrl, double radius = 19}) {
     final initial = (label == null || label.isEmpty) ? '?' : label.substring(0, 1).toUpperCase();
     return CircleAvatar(
-      radius: 19,
+      radius: radius,
       backgroundColor: AppColors.surfaceAlt,
       backgroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
       child: imageUrl == null
