@@ -366,28 +366,45 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     final name = reply.author.name ?? reply.author.username ?? 'NerdMaxxer';
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(child: Text.rich(TextSpan(children: [
-          TextSpan(text: '$name  ', style: const TextStyle(fontWeight: FontWeight.w700)),
-          TextSpan(text: reply.deleted ? 'Reply deleted' : reply.body),
-        ]))),
-        PopupMenuButton<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'edit': _editReply(discussionId, reply);
-              case 'delete': _deleteReply(discussionId, reply);
-              case 'report': _reportReply(discussionId, reply);
-            }
-          },
-          itemBuilder: (_) => [
-            if (reply.author.username != null && reply.author.username == widget.currentUsername)
-              const PopupMenuItem(value: 'edit', child: Text('Edit')),
-            if (reply.author.username != null && reply.author.username == widget.currentUsername)
-              const PopupMenuItem(value: 'delete', child: Text('Delete')),
-            const PopupMenuItem(value: 'report', child: Text('Report')),
-          ],
-          icon: const Icon(Icons.more_horiz, size: 16),
-        ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$name  ',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(text: reply.deleted ? 'Reply deleted' : reply.body),
+                ],
+              ),
+            ),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'edit':
+                  _editReply(discussionId, reply);
+                case 'delete':
+                  _deleteReply(discussionId, reply);
+                case 'report':
+                  _reportReply(discussionId, reply);
+              }
+            },
+            itemBuilder: (_) => [
+              if (reply.author.username != null &&
+                  reply.author.username == widget.currentUsername)
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+              if (reply.author.username != null &&
+                  reply.author.username == widget.currentUsername)
+                const PopupMenuItem(value: 'delete', child: Text('Delete')),
+              const PopupMenuItem(value: 'report', child: Text('Report')),
+            ],
+            icon: const Icon(Icons.more_horiz, size: 16),
+          ),
+        ],
       ),
     );
   }
