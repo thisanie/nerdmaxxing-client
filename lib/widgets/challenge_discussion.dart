@@ -259,6 +259,25 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Expanded(child: SingleChildScrollView(child: _messageView())),
+        if (widget.canPost) ...[
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 14, 8),
+              child: _composerView(),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _messageView() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 22),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         if (_loading)
           const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: CircularProgressIndicator()))
         else if (_error != null)
@@ -275,13 +294,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
               ),
             ),
         ],
-        if (widget.canPost) ...[
-          const SizedBox(height: 8),
-          _composerView(),
-        ],
       ],
-    );
-  }
+    ),
+  );
 
   Widget _composerView() => Row(
     crossAxisAlignment: CrossAxisAlignment.end,

@@ -67,28 +67,20 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     final challenge = widget.challenge;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await widget.onRefresh?.call();
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: AppColors.background.withValues(alpha: .92),
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              tooltip: 'Back',
-              icon: const Icon(Icons.arrow_back, size: 20),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: Text(
-              active ? 'ON THE TRIAL' : 'DISCOVER',
-              style: const TextStyle(fontSize: 11, letterSpacing: 2, fontWeight: FontWeight.w700),
-            ),
-            actions: [
+      appBar: AppBar(
+        backgroundColor: AppColors.background.withValues(alpha: .92),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          active ? 'ON THE TRIAL' : 'DISCOVER',
+          style: const TextStyle(fontSize: 11, letterSpacing: 2, fontWeight: FontWeight.w700),
+        ),
+        actions: [
               if (active)
                 PopupMenuButton<_ChallengeMenuAction>(
                   tooltip: 'Challenge options',
@@ -127,20 +119,31 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   onPressed: widget.onToggleSave,
                   icon: Icon(widget.saved ? Icons.bookmark : Icons.bookmark_border, size: 21),
                 ),
-            ],
+        ],
+      ),
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: () async {
+              await widget.onRefresh?.call();
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(child: _hero(context, challenge)),
+                if (active) SliverToBoxAdapter(child: _section(context, 'NEXT MILESTONE', _nextMilestone(context))),
+                if (active) SliverToBoxAdapter(child: _section(context, 'CHALLENGE PROGRESS', _challengeProgress(context))),
+                if (!active) SliverToBoxAdapter(child: _section(context, 'WHY TAKE THIS ON?', _why(context))),
+                SliverToBoxAdapter(child: _section(context, active ? 'THE GRIND' : 'THE PATH', _path(context))),
+                if (active) SliverToBoxAdapter(child: _section(context, 'RECENT ATTEMPTS', _attempts(context))),
+                SliverToBoxAdapter(child: _section(context, 'PEOPLE ON THIS TRIAL', _people(context))),
+                SliverToBoxAdapter(child: _discussionSection(context)),
+                if (!active) SliverToBoxAdapter(child: _section(context, 'HOW YOU PROVE IT', _verification(context))),
+                SliverToBoxAdapter(child: _finalCta(context)),
+              ],
+            ),
           ),
-          SliverToBoxAdapter(child: _hero(context, challenge)),
-          if (active) SliverToBoxAdapter(child: _section(context, 'NEXT MILESTONE', _nextMilestone(context))),
-          if (active) SliverToBoxAdapter(child: _section(context, 'CHALLENGE PROGRESS', _challengeProgress(context))),
-          if (!active) SliverToBoxAdapter(child: _section(context, 'WHY TAKE THIS ON?', _why(context))),
-          SliverToBoxAdapter(child: _section(context, active ? 'THE GRIND' : 'THE PATH', _path(context))),
-          if (active) SliverToBoxAdapter(child: _section(context, 'RECENT ATTEMPTS', _attempts(context))),
-          SliverToBoxAdapter(child: _section(context, 'PEOPLE ON THIS TRIAL', _people(context))),
-          SliverToBoxAdapter(child: _discussionSection(context)),
-          if (!active) SliverToBoxAdapter(child: _section(context, 'HOW YOU PROVE IT', _verification(context))),
-          // if (active) SliverToBoxAdapter(child: _section(context, 'PROVE IT', _verification(context))),
-          SliverToBoxAdapter(child: _finalCta(context)),
-          ],
+          if (_discussionOpen) Positioned.fill(child: _discussionOverlay(context)),
         ),
       ),
     );
@@ -168,7 +171,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
-          onTap: () => setState(() => _discussionOpen = !_discussionOpen),
+          onTap: () => setState(() => _discussionOpen = true),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
@@ -201,7 +204,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   ),
                 ),
                 Icon(
-                  _discussionOpen ? Icons.keyboard_arrow_up : Icons.forum_outlined,
+                  Icons.forum_outlined,
                   color: AppColors.primary.withValues(alpha: .9),
                   size: 20,
                 ),
@@ -209,20 +212,64 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             ),
           ),
         ),
-        if (_discussionOpen) ...[
-          const SizedBox(height: 8),
-          const Text(
-            'Questions, ideas, and useful breakthroughs.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+      ],
+    ),
+  );
+
+  Widget _discussionOverlay(BuildContext context) => ColoredBox(
+    color: AppColors.background,
+    child: Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(22, 18, 16, 14),
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            border: Border(bottom: BorderSide(color: AppColors.border)),
           ),
-          const SizedBox(height: 18),
-          ChallengeDiscussion(
+          child: Row(
+            children: [
+              const Expanded(
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 6,
+                      height: 6,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                      ),
+                    ),
+                    SizedBox(width: 9),
+                    Text(
+                      'DISCUSSION',
+                      style: TextStyle(color: AppColors.primary, fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Close discussion',
+                onPressed: () => setState(() => _discussionOpen = false),
+                icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
+              ),
+            ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(22, 14, 22, 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Questions, ideas, and useful breakthroughs.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          ),
+        ),
+        Expanded(
+          child: ChallengeDiscussion(
             challengeSlug: widget.challengeSlug,
             service: widget.discussionsService,
             canPost: widget.discussionCanPost,
             currentUsername: widget.currentUsername,
           ),
-        ],
+        ),
       ],
     ),
   );
