@@ -11,6 +11,7 @@ import '../../services/challenges_service.dart';
 import '../../services/notifications_service.dart';
 import '../../theme/app_theme.dart';
 import '../challenge/challenge_detail_screen.dart';
+import '../profile/profile_screen.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -185,10 +186,23 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Future<void> _openNotification(AppNotification notification) async {
-    if (notification.isChallengeInvitation) {
-      await _viewChallenge(notification);
-    } else {
+    if (notification.isFollow) {
       await _markRead(notification);
+      if (!mounted) return;
+      final username = notification.actorUsername;
+      if (username == null || username.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Follower profile is unavailable.')),
+        );
+        return;
+      }
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProfileScreen(username: username),
+        ),
+      );
+    } else if (notification.isChallengeInvitation || notification.isReply) {
+      await _viewChallenge(notification);
     }
   }
 

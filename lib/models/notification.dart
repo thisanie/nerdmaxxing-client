@@ -101,6 +101,20 @@ class AppNotification {
     return values.any((value) => value?.toUpperCase() == 'FOLLOW');
   }
 
+  bool get isReply {
+    final values = [
+      type,
+      data['notification_type']?.toString(),
+      data['event_type']?.toString(),
+    ];
+    return values.any((value) {
+      final normalized = value?.toUpperCase() ?? '';
+      return normalized.contains('REPLY') ||
+          normalized.contains('COMMENT') ||
+          normalized.contains('DISCUSSION');
+    });
+  }
+
   bool get isChallengeInvitation => _isInvitationType || invitationId != null;
 
   bool get _isInvitationType =>
