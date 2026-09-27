@@ -511,6 +511,36 @@ Notification response example:
 }
 ```
 
+Follow notifications must include the follower identity used for profile
+navigation. Either provide `actor_username` directly or provide an `actor`
+object containing `username`:
+
+```json
+{
+  "notification_type": "FOLLOW",
+  "actor_id": "user-id",
+  "actor_username": "ada_lovelace",
+  "body": "ada_lovelace started following you."
+}
+```
+
+Reply and comment notifications must include the challenge and discussion
+target. `discussion_id` identifies the parent comment and `reply_id`
+identifies the reply to open:
+
+```json
+{
+  "notification_type": "COMMENT_REPLY",
+  "actor_id": "user-id",
+  "actor_username": "ada_lovelace",
+  "challenge_id": "challenge-id",
+  "challenge_slug": "build-a-habit",
+  "discussion_id": "comment-id",
+  "reply_id": "reply-id",
+  "body": "ada_lovelace replied to your comment."
+}
+```
+
 ### `PATCH /api/v1/notifications/{notification_id}/read`
 
 Requires authentication. Marks an owned notification as read.

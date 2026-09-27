@@ -89,6 +89,9 @@ class AppNotification {
   String? get challengeTitle => _value('challenge_title') ?? _value('title');
   String? get actorId => _value('actor_id');
   String? get actorUsername => _value('actor_username');
+    String? get discussionId =>
+      _value('discussion_id') ?? _value('comment_id') ?? _value('parent_id');
+    String? get replyId => _value('reply_id') ?? _value('comment_reply_id');
   String? get actorName =>
       _value('actor_name') ?? _value('name') ?? _value('actor_username');
 

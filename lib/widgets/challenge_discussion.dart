@@ -10,6 +10,8 @@ class ChallengeDiscussion extends StatefulWidget {
   final DiscussionsService service;
   final bool canPost;
   final String? currentUsername;
+  final String? initialDiscussionId;
+  final String? initialReplyId;
 
   const ChallengeDiscussion({
     super.key,
@@ -17,6 +19,8 @@ class ChallengeDiscussion extends StatefulWidget {
     required this.service,
     required this.canPost,
     this.currentUsername,
+    this.initialDiscussionId,
+    this.initialReplyId,
   });
 
   @override
@@ -25,6 +29,7 @@ class ChallengeDiscussion extends StatefulWidget {
 
 class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   final _composer = TextEditingController();
+  final _scrollController = ScrollController();
   final _comments = <DiscussionComment>[];
   final _replies = <String, List<DiscussionComment>>{};
   String? _cursor;
@@ -32,6 +37,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   bool _loadingMore = false;
   bool _posting = false;
   String? _error;
+  final _replyKeys = <String, GlobalKey>{};
 
   @override
   void initState() {
@@ -44,6 +50,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   void dispose() {
     _composer.removeListener(_composerChanged);
     _composer.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -72,11 +79,32 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
         }
         _cursor = page.nextCursor;
       });
+      await _openInitialReply();
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() { _loading = false; _loadingMore = false; });
     }
+  }
+
+  Future<void> _openInitialReply() async {
+    final discussionId = widget.initialDiscussionId;
+    final replyId = widget.initialReplyId;
+    if (discussionId == null || replyId == null) return;
+    final comment = _comments.where((item) => item.id == discussionId).firstOrNull;
+    if (comment == null) return;
+    await _loadReplies(comment);
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _replyKeys[replyId]?.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          alignment: .35,
+          duration: const Duration(milliseconds: 350),
+        );
+      }
+    });
   }
 
   Future<void> _post() async {
@@ -263,7 +291,12 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: SingleChildScrollView(child: _messageView())),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: _messageView(),
+          ),
+        ),
         if (widget.canPost) ...[
           SafeArea(
             top: false,
@@ -449,7 +482,18 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
 
   Widget _replyView(String discussionId, DiscussionComment reply) {
     final name = reply.author.name ?? reply.author.username ?? 'NerdMaxxer';
-    return Padding(
+    final isTarget = reply.id == widget.initialReplyId;
+    final replyKey = _replyKeys.putIfAbsent(reply.id, GlobalKey.new);
+    return Container(
+      key: replyKey,
+      padding: const EdgeInsets.all(8),
+      decoration: isTarget
+          ? BoxDecoration(
+              color: AppColors.primary.withValues(alpha: .12),
+              borderRadius: BorderRadius.circular(8),
+            )
+          : null,
+      child: Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,6 +534,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
             icon: const Icon(Icons.more_horiz, size: 16),
           ),
         ],
+      ),
       ),
     );
   }

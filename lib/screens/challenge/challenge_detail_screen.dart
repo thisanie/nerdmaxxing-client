@@ -25,12 +25,16 @@ class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final String slug;
   final Challenge? initialChallenge;
   final AppNotification? invitation;
+  final String? initialDiscussionId;
+  final String? initialReplyId;
 
   const ChallengeDetailScreen({
     super.key,
     required this.slug,
     this.initialChallenge,
     this.invitation,
+    this.initialDiscussionId,
+    this.initialReplyId,
   });
 
   @override
@@ -204,6 +208,8 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           onToggleSave: _saving ? null : _toggleSave,
           discussionsService: context.read<DiscussionsService>(),
           challengeSlug: widget.slug,
+          initialDiscussionId: widget.initialDiscussionId,
+          initialReplyId: widget.initialReplyId,
           currentUsername: context.read<AuthProvider>().username,
             discussionCanPost: participation?.status == 'ACCEPTED' ||
               participation?.status == 'IN_PROGRESS',

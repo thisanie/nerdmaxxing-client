@@ -180,6 +180,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           slug: challenge!.slug,
           initialChallenge: challenge,
           invitation: notification,
+          initialDiscussionId: notification.discussionId,
+          initialReplyId: notification.replyId,
         ),
       ),
     );

@@ -25,6 +25,8 @@ class ChallengeJourney extends StatefulWidget {
   final DiscussionsService discussionsService;
   final bool discussionCanPost;
   final String? currentUsername;
+  final String? initialDiscussionId;
+  final String? initialReplyId;
   final ValueChanged<int> onOpenMilestone;
   final bool accepting;
   final bool invited;
@@ -47,6 +49,8 @@ class ChallengeJourney extends StatefulWidget {
     required this.discussionsService,
     this.discussionCanPost = false,
     this.currentUsername,
+    this.initialDiscussionId,
+    this.initialReplyId,
     required this.onOpenMilestone,
     required this.accepting,
     this.invited = false,
@@ -58,7 +62,14 @@ class ChallengeJourney extends StatefulWidget {
 }
 
 class _ChallengeJourneyState extends State<ChallengeJourney> {
-  bool _discussionOpen = false;
+  late bool _discussionOpen;
+
+  @override
+  void initState() {
+    super.initState();
+    _discussionOpen =
+        widget.initialDiscussionId != null || widget.initialReplyId != null;
+  }
 
   bool get active => widget.participation != null;
 
@@ -268,6 +279,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             service: widget.discussionsService,
             canPost: widget.discussionCanPost,
             currentUsername: widget.currentUsername,
+            initialDiscussionId: widget.initialDiscussionId,
+            initialReplyId: widget.initialReplyId,
           ),
         ),
       ],
