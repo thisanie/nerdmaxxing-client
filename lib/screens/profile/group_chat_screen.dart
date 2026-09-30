@@ -6,6 +6,7 @@ import '../../models/group_member.dart';
 import '../../models/group_message.dart';
 import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
+import '../../services/invitations_service.dart';
 import '../../services/token_storage.dart';
 
 class GroupChatScreen extends StatefulWidget {
