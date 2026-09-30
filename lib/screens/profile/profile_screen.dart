@@ -10,6 +10,7 @@ import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/app_state_providers.dart';
 import '../../providers/profile_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/groups_service.dart';
@@ -279,14 +280,14 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               title: const Text('Update profile'),
               onTap: () => Navigator.pop(sheetContext, 'update'),
             ),
-            // Consumer<ThemeProvider>(
-            //   builder: (context, themeProvider, _) => SwitchListTile.adaptive(
-            //     secondary: const Icon(Icons.brightness_6_outlined),
-            //     title: const Text('Dark theme'),
-            //     value: themeProvider.isDark,
-            //     onChanged: themeProvider.setDark,
-            //   ),
-            // ),
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, _) => SwitchListTile.adaptive(
+                secondary: const Icon(Icons.brightness_6_outlined),
+                title: const Text('Dark theme'),
+                value: themeProvider.isDark,
+                onChanged: themeProvider.setDark,
+              ),
+            ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Log out'),
@@ -1063,11 +1064,11 @@ class _ProfileHeader extends StatelessWidget {
                 right: -2,
                 bottom: 0,
                 child: Container(
-                  width: 28,
-                  height: 28,
+                  width: 24,
+                  height: 24,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.ink,
+                    color: AppColors.borderStrong,
                     shape: BoxShape.circle,
                     border: Border.all(color: scheme.surface, width: 2),
                   ),
@@ -1075,7 +1076,7 @@ class _ProfileHeader extends StatelessWidget {
                     profile.rank,
                     style: AppFonts.body(
                       color: AppColors.primary,
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
