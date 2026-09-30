@@ -31,6 +31,11 @@ class GroupsService {
   Future<List<GroupMember>> listMembers(String groupId) async {
     final encodedId = _groupPathId(groupId);
     final path = '/groups/$encodedId/members';
+    final accessToken = await api.tokenStorage.accessToken;
+    debugPrint(
+      '[Groups] members auth: bearerPresent=${accessToken != null} '
+      'tokenLength=${accessToken?.length ?? 0}',
+    );
     debugPrint(
       '[Groups] members request: GET ${ApiClient.baseUrl}$path '
       'payload={group_id: $groupId}',
