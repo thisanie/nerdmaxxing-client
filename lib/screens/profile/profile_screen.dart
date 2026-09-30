@@ -17,6 +17,7 @@ import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
 import '../challenge/challenge_detail_screen.dart';
+import 'group_chat_screen.dart';
 import 'relationship_list_screen.dart';
 import 'update_profile_screen.dart';
 
@@ -184,6 +185,12 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
+  }
+
+  void _openGroup(Group group) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => GroupChatScreen(group: group)),
+    );
   }
 
   bool _isOwnProfile(AuthProvider auth) =>
@@ -595,6 +602,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   onCreate: isOwnProfile ? _createGroup : null,
                   onJoin: isOwnProfile ? _joinGroup : null,
                   onLeave: isOwnProfile ? _leaveGroup : null,
+                  onOpenGroup: _openGroup,
                 ),
               )
             else if (_selectedTab != 0)
@@ -777,6 +785,7 @@ class _GroupsPanel extends StatelessWidget {
   final VoidCallback? onCreate;
   final Future<void> Function(Group group)? onJoin;
   final Future<void> Function(Group group)? onLeave;
+  final ValueChanged<Group> onOpenGroup;
 
   const _GroupsPanel({
     required this.isOwnProfile,
@@ -787,6 +796,7 @@ class _GroupsPanel extends StatelessWidget {
     this.onCreate,
     this.onJoin,
     this.onLeave,
+    required this.onOpenGroup,
   });
 
   @override
@@ -834,7 +844,13 @@ class _GroupsPanel extends StatelessWidget {
           ),
         )
       else
-        ...groups.map((group) => _GroupTile(group: group, onLeave: onLeave)),
+        ...groups.map(
+          (group) => _GroupTile(
+            group: group,
+            onLeave: onLeave,
+            onTap: () => onOpenGroup(group),
+          ),
+        ),
     ];
 
     return Column(
@@ -868,8 +884,9 @@ class _GroupTile extends StatelessWidget {
   final Group group;
   final Future<void> Function(Group group)? onJoin;
   final Future<void> Function(Group group)? onLeave;
+  final VoidCallback? onTap;
 
-  const _GroupTile({required this.group, this.onJoin, this.onLeave});
+  const _GroupTile({required this.group, this.onJoin, this.onLeave, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -878,6 +895,7 @@ class _GroupTile extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
       child: Card(
         child: ListTile(
+          onTap: onTap,
           leading: Icon(
             group.visibility == 'PRIVATE'
                 ? Icons.lock_outline
