@@ -3,12 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
 import '../../models/discover.dart';
-import '../../models/user_profile.dart';
 import '../../providers/discover_provider.dart';
 import '../../services/api_client.dart';
-import '../../services/challenges_service.dart';
-import '../../services/profile_service.dart';
+import '../../services/discover_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/challenge_section.dart';
 import '../challenge/challenge_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import 'category_challenges_screen.dart';
@@ -22,7 +21,7 @@ class PeopleDiscoverScreen extends StatefulWidget {
 
 class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
   final _searchController = TextEditingController();
-  UserProfile? _profileResult;
+  List<DiscoverUser> _userResults = [];
   List<Challenge> _challengeResults = [];
   String? _searchError;
   bool _isSearching = false;
@@ -47,48 +46,27 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
     setState(() {
       _isSearching = true;
       _searchError = null;
-      _profileResult = null;
+      _userResults = [];
       _challengeResults = [];
     });
-    UserProfile? profile;
-    var challenges = <Challenge>[];
-    String? error;
-    await Future.wait([
-      () async {
-        try {
-          profile = await context.read<ProfileService>().getProfile(query);
-        } on ApiException catch (e) {
-          error = e.message;
-        }
-      }(),
-      () async {
-        try {
-          final results = await context.read<ChallengesService>().list(
-            limit: 100,
-          );
-          final normalized = query.toLowerCase();
-          challenges = results.where((challenge) {
-            final searchable = [
-              challenge.title,
-              challenge.shortDescription,
-              challenge.fullDescription,
-            ].join(' ').toLowerCase();
-            return searchable.contains(normalized);
-          }).toList();
-        } on ApiException catch (e) {
-          error ??= e.message;
-        }
-      }(),
-    ]);
-    if (!mounted) return;
-    setState(() {
-      _profileResult = profile;
-      _challengeResults = challenges;
-      _searchError = profile == null && challenges.isEmpty
-          ? error ?? 'No matching results found.'
-          : null;
-      _isSearching = false;
-    });
+    try {
+      final result = await context.read<DiscoverService>().search(query);
+      if (!mounted) return;
+      setState(() {
+        _userResults = result.users;
+        _challengeResults = result.challenges;
+        _searchError = result.users.isEmpty && result.challenges.isEmpty
+            ? 'No matching results found.'
+            : null;
+        _isSearching = false;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _searchError = e.message;
+        _isSearching = false;
+      });
+    }
   }
 
   void _openChallenge(Challenge challenge) {
@@ -176,16 +154,15 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                         style: const TextStyle(color: AppColors.danger),
                       ),
                     ],
-                    if (_profileResult != null ||
+                    if (_userResults.isNotEmpty ||
                         _challengeResults.isNotEmpty) ...[
                       const SizedBox(height: 14),
                       _SearchResults(
-                        profile: _profileResult,
+                        users: _userResults,
                         challenges: _challengeResults,
-                        onProfileTap: (profile) => Navigator.of(context).push(
+                        onProfileTap: (username) => Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) =>
-                                ProfileScreen(username: profile.username),
+                            builder: (_) => ProfileScreen(username: username),
                           ),
                         ),
                         onChallengeTap: _openChallenge,
@@ -198,9 +175,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                 ),
               ),
             ),
-            if (feed.categories.isEmpty)
-              const SliverToBoxAdapter(child: _TopicFallback())
-            else
+            if (feed.categories.isNotEmpty)
               SliverToBoxAdapter(
                 child: _TopicRow(
                   categories: feed.categories,
@@ -222,8 +197,45 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: _TopNerdsSection()),
-            const SliverToBoxAdapter(child: _RecentActivitySection()),
+            if (feed.recommended.isNotEmpty)
+              SliverToBoxAdapter(
+                child: ChallengeSection(
+                  title: 'Picked for you',
+                  challenges: feed.recommended,
+                  onChallengeTap: _openChallenge,
+                ),
+              ),
+            if (feed.newChallenges.isNotEmpty)
+              SliverToBoxAdapter(
+                child: ChallengeSection(
+                  title: 'New this week',
+                  challenges: feed.newChallenges,
+                  onChallengeTap: _openChallenge,
+                ),
+              ),
+            if (feed.legendary.isNotEmpty)
+              SliverToBoxAdapter(
+                child: ChallengeSection(
+                  title: 'Legendary challenges',
+                  challenges: feed.legendary,
+                  legendary: true,
+                  onChallengeTap: _openChallenge,
+                ),
+              ),
+            if (feed.unexpected.isNotEmpty)
+              SliverToBoxAdapter(
+                child: ChallengeSection(
+                  title: 'Try something unexpected',
+                  challenges: feed.unexpected,
+                  onChallengeTap: _openChallenge,
+                ),
+              ),
+            if (feed.topNerds.isNotEmpty)
+              SliverToBoxAdapter(child: _TopNerdsSection(nerds: feed.topNerds)),
+            if (feed.recentActivity.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _RecentActivitySection(activity: feed.recentActivity),
+              ),
             if (provider.isLoading)
               const SliverToBoxAdapter(
                 child: Padding(
@@ -555,46 +567,14 @@ class _PlaceholderCard extends StatelessWidget {
   );
 }
 
-class _TopicFallback extends StatelessWidget {
-  const _TopicFallback();
-  @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.symmetric(horizontal: 20),
-    child: Wrap(
-      spacing: 9,
-      children: [
-        _FallbackChip(icon: '🧠', label: 'Science'),
-        _FallbackChip(icon: '🔧', label: 'Practical'),
-        _FallbackChip(icon: '♟️', label: 'Strategy'),
-        _FallbackChip(icon: '🎨', label: 'Creative'),
-      ],
-    ),
-  );
-}
-
-class _FallbackChip extends StatelessWidget {
-  final String icon;
-  final String label;
-  const _FallbackChip({required this.icon, required this.label});
-  @override
-  Widget build(BuildContext context) => Chip(
-    avatar: Text(icon),
-    label: Text(label),
-    side: BorderSide(color: Theme.of(context).colorScheme.outline),
-    backgroundColor: Theme.of(context).colorScheme.surface,
-  );
-}
-
 class _TopNerdsSection extends StatelessWidget {
-  const _TopNerdsSection();
+  final List<DiscoverNerd> nerds;
+
+  const _TopNerdsSection({required this.nerds});
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    const nerds = [
-      ('JM', 'Jamie M.', '12', 'on a 6-day streak'),
-      ('AK', 'Amir K.', '9', 'on a 3-day streak'),
-      ('RT', 'Rae T.', '8', 'on a 2-day streak'),
-    ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 38, 20, 0),
       child: Column(
@@ -613,11 +593,7 @@ class _TopNerdsSection extends StatelessWidget {
                 for (var i = 0; i < nerds.length; i++) ...[
                   if (i > 0) Divider(height: 1, color: colorScheme.outline),
                   _LeaderboardRow(
-                    rank: i + 1,
-                    initials: nerds[i].$1,
-                    name: nerds[i].$2,
-                    completed: nerds[i].$3,
-                    detail: nerds[i].$4,
+                    nerd: nerds[i],
                   ),
                 ],
               ],
@@ -630,32 +606,24 @@ class _TopNerdsSection extends StatelessWidget {
 }
 
 class _LeaderboardRow extends StatelessWidget {
-  final int rank;
-  final String initials;
-  final String name;
-  final String completed;
-  final String detail;
+  final DiscoverNerd nerd;
 
-  const _LeaderboardRow({
-    required this.rank,
-    required this.initials,
-    required this.name,
-    required this.completed,
-    required this.detail,
-  });
+  const _LeaderboardRow({required this.nerd});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final highlight = rank == 1;
-    return Padding(
+    final highlight = nerd.rank == 1;
+    final name = nerd.displayName ?? nerd.username ?? 'NerdMaxxer';
+    final initials = _initials(name);
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
         children: [
           SizedBox(
             width: 30,
             child: Text(
-              rank.toString().padLeft(2, '0'),
+              nerd.rank.toString().padLeft(2, '0'),
               style: TextStyle(
                 color: highlight ? AppColors.primary : colorScheme.onSurfaceVariant,
                 fontSize: 18,
@@ -690,7 +658,7 @@ class _LeaderboardRow extends StatelessWidget {
                 Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 3),
                 Text(
-                  detail,
+                  '${nerd.dayStreak}-day streak',
                   style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
                 ),
               ],
@@ -700,7 +668,7 @@ class _LeaderboardRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                completed,
+                '${nerd.completedCount}',
                 style: TextStyle(
                   color: highlight ? AppColors.primary : colorScheme.onSurface,
                   fontSize: 19,
@@ -716,18 +684,31 @@ class _LeaderboardRow extends StatelessWidget {
         ],
       ),
     );
+    if (nerd.username == null || nerd.username!.isEmpty) return row;
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProfileScreen(username: nerd.username!),
+        ),
+      ),
+      child: row,
+    );
+  }
+
+  String _initials(String value) {
+    final parts = value.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 }
 
 class _RecentActivitySection extends StatelessWidget {
-  const _RecentActivitySection();
+  final List<DiscoverActivity> activity;
+
+  const _RecentActivitySection({required this.activity});
 
   @override
   Widget build(BuildContext context) {
-    const activity = [
-      ('SL', 'Sam L.', 'finished', 'Handstand Hold'),
-      ('JM', 'Jamie M.', 'joined', '500 Chess Openings'),
-    ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 38, 20, 0),
       child: Column(
@@ -743,13 +724,10 @@ class _RecentActivitySection extends StatelessWidget {
             ),
             child: Column(
               children: [
-                for (final item in activity)
+                for (var i = 0; i < activity.length; i++)
                   _ActivityRow(
-                    initials: item.$1,
-                    name: item.$2,
-                    action: item.$3,
-                    subject: item.$4,
-                    isLast: item == activity.last,
+                    activity: activity[i],
+                    isLast: i == activity.length - 1,
                   ),
               ],
             ),
@@ -761,23 +739,21 @@ class _RecentActivitySection extends StatelessWidget {
 }
 
 class _ActivityRow extends StatelessWidget {
-  final String initials;
-  final String name;
-  final String action;
-  final String subject;
+  final DiscoverActivity activity;
   final bool isLast;
 
   const _ActivityRow({
-    required this.initials,
-    required this.name,
-    required this.action,
-    required this.subject,
+    required this.activity,
     required this.isLast,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final name = activity.displayName ?? activity.username ?? 'A nerd';
+    final subject = activity.challengeTitle ?? 'a challenge';
+    final action = _actionLabel(activity.action);
+    final initials = _initials(name);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
@@ -809,20 +785,55 @@ class _ActivityRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text('now', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 10)),
+          Text(
+            _relativeTime(activity.createdAt),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 10),
+          ),
         ],
       ),
     );
   }
+
+  String _actionLabel(String action) {
+    switch (action) {
+      case 'JOINED_CHALLENGE':
+        return 'joined';
+      case 'COMPLETED_CHALLENGE':
+        return 'finished';
+      case 'STARTED_CHALLENGE':
+        return 'started';
+      case 'EARNED_AURA':
+        return 'earned aura from';
+      case 'REACHED_STREAK':
+        return 'reached a streak with';
+      default:
+        return 'updated';
+    }
+  }
+
+  String _relativeTime(DateTime? value) {
+    if (value == null) return '';
+    final difference = DateTime.now().toUtc().difference(value.toUtc());
+    if (difference.inMinutes < 1) return 'now';
+    if (difference.inHours < 1) return '${difference.inMinutes}m';
+    if (difference.inDays < 1) return '${difference.inHours}h';
+    return '${difference.inDays}d';
+  }
+
+  String _initials(String value) {
+    final parts = value.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
 }
 
 class _SearchResults extends StatelessWidget {
-  final UserProfile? profile;
+  final List<DiscoverUser> users;
   final List<Challenge> challenges;
-  final ValueChanged<UserProfile> onProfileTap;
+  final ValueChanged<String> onProfileTap;
   final ValueChanged<Challenge> onChallengeTap;
   const _SearchResults({
-    required this.profile,
+    required this.users,
     required this.challenges,
     required this.onProfileTap,
     required this.onChallengeTap,
@@ -831,21 +842,23 @@ class _SearchResults extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      if (profile != null)
+      for (final user in users.take(3))
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: CircleAvatar(
-            backgroundImage: profile!.avatarUrl != null
-                ? NetworkImage(profile!.avatarUrl!)
+            backgroundImage: user.avatarUrl != null
+                ? NetworkImage(user.avatarUrl!)
                 : null,
-            child: profile!.avatarUrl == null
+            child: user.avatarUrl == null
                 ? const Icon(Icons.person_outline)
                 : null,
           ),
-          title: Text(profile!.name ?? profile!.username ?? 'NerdMaxxer'),
-          subtitle: Text('@${profile!.username ?? 'profile'}'),
+          title: Text(user.displayName ?? user.username ?? 'NerdMaxxer'),
+          subtitle: Text('@${user.username ?? 'profile'}'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => onProfileTap(profile!),
+          onTap: user.username == null
+              ? null
+              : () => onProfileTap(user.username!),
         ),
       for (final challenge in challenges.take(3))
         ListTile(
