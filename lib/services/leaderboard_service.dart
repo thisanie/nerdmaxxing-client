@@ -15,7 +15,7 @@ class LeaderboardService {
   }) async {
     final data = await api.get(
       '/leaderboard',
-      queryParameters: {
+      query: {
         'period': period,
         'metric': metric,
         if (playerRank != null) 'player_rank': playerRank,
