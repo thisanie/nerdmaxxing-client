@@ -18,7 +18,8 @@ class TokenStorage {
   final _secureStorage = const FlutterSecureStorage();
   SharedPreferences? _prefs;
 
-  Future<SharedPreferences> get _webPrefs async => _prefs ??= await SharedPreferences.getInstance();
+  Future<SharedPreferences> get _webPrefs async =>
+      _prefs ??= await SharedPreferences.getInstance();
 
   Future<void> _write(String key, String value) async {
     if (kIsWeb) {

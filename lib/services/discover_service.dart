@@ -18,12 +18,7 @@ class DiscoverService {
   }) async {
     final data = await api.get(
       '/discover/search',
-      query: {
-        'q': query,
-        'type': type,
-        'limit': limit,
-        'offset': offset,
-      },
+      query: {'q': query, 'type': type, 'limit': limit, 'offset': offset},
     );
     return DiscoverSearchResult.fromJson(
       Map<String, dynamic>.from(data as Map),

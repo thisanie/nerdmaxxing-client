@@ -63,10 +63,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         bio: _bioController.text.trim(),
         avatar: _avatarBytes == null
             ? null
-            : MultipartFile.fromBytes(
-                _avatarBytes!,
-                filename: _avatar!.name,
-              ),
+            : MultipartFile.fromBytes(_avatarBytes!, filename: _avatar!.name),
       );
       if (username != (widget.profile.username ?? '')) {
         await profileService.updateUsername(username);
@@ -116,9 +113,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                       : widget.profile.avatarUrl != null
                       ? NetworkImage(widget.profile.avatarUrl!)
                       : null,
-                  child: _avatarBytes == null && widget.profile.avatarUrl == null
+                  child:
+                      _avatarBytes == null && widget.profile.avatarUrl == null
                       ? const Icon(
-                          Icons.person_outline,
+                          Icons.person_rounded,
                           size: 48,
                           color: AppColors.textSecondary,
                         )
@@ -127,7 +125,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                 IconButton.filled(
                   onPressed: _isSaving ? null : _pickAvatar,
                   tooltip: 'Change profile photo',
-                  icon: const Icon(Icons.camera_alt_outlined),
+                  icon: const Icon(Icons.camera_alt_rounded),
                 ),
               ],
             ),
@@ -180,7 +178,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                       color: AppColors.textPrimary,
                     ),
                   )
-                : const Icon(Icons.save_outlined),
+                : const Icon(Icons.save_rounded),
             label: const Text('Save changes'),
           ),
         ],

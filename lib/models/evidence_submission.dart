@@ -27,8 +27,12 @@ class EvidenceSubmission {
       userId: json['user_id']?.toString() ?? '',
       status: json['status'] ?? 'PENDING',
       explanation: json['explanation'],
-      submittedAt: json['submitted_at'] != null ? DateTime.tryParse(json['submitted_at']) : null,
-      reviewedAt: json['reviewed_at'] != null ? DateTime.tryParse(json['reviewed_at']) : null,
+      submittedAt: json['submitted_at'] != null
+          ? DateTime.tryParse(json['submitted_at'])
+          : null,
+      reviewedAt: json['reviewed_at'] != null
+          ? DateTime.tryParse(json['reviewed_at'])
+          : null,
     );
   }
 }

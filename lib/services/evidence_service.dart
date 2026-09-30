@@ -11,11 +11,16 @@ class EvidenceService {
     String? textContent,
     String? externalUrl,
   }) async {
-    final data = await api.post('/evidence/participation/$participantId', data: {
-      'explanation': explanation,
-      if (textContent != null && textContent.isNotEmpty) 'text_content': textContent,
-      if (externalUrl != null && externalUrl.isNotEmpty) 'external_url': externalUrl,
-    });
+    final data = await api.post(
+      '/evidence/participation/$participantId',
+      data: {
+        'explanation': explanation,
+        if (textContent != null && textContent.isNotEmpty)
+          'text_content': textContent,
+        if (externalUrl != null && externalUrl.isNotEmpty)
+          'external_url': externalUrl,
+      },
+    );
     return EvidenceSubmission.fromJson(data);
   }
 

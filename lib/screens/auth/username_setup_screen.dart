@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -91,7 +92,10 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
-              Text('Pick a username', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'Pick a username',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 8),
               Text(
                 'This is how other curious people will find you.',
@@ -114,18 +118,32 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                           ),
                         )
                       : _available == true
-                          ? const Icon(Icons.check_circle, color: AppColors.success)
-                          : (_available == false ? const Icon(Icons.cancel, color: AppColors.danger) : null),
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.success,
+                        )
+                      : (_available == false
+                            ? const Icon(
+                                Icons.cancel_rounded,
+                                color: AppColors.danger,
+                              )
+                            : null),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 '3-24 characters: letters, numbers, underscores.',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
               ),
               if (_available == false) ...[
                 const SizedBox(height: 8),
-                const Text('That username is taken.', style: TextStyle(color: AppColors.danger)),
+                const Text(
+                  'That username is taken.',
+                  style: TextStyle(color: AppColors.danger),
+                ),
               ],
               if (_error != null) ...[
                 const SizedBox(height: 8),
@@ -140,7 +158,10 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : const Text('Continue'),
                 ),

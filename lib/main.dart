@@ -53,9 +53,10 @@ class NerdMaxxingApp extends StatelessWidget {
     final notificationsService = NotificationsService(apiClient);
     final notificationBadge = NotificationBadgeController(notificationsService);
     final notificationNavigation = NotificationNavigationController();
-    pushNotificationService.onNotificationReceived = notificationBadge.increment;
+    pushNotificationService.onNotificationReceived =
+        notificationBadge.increment;
     pushNotificationService.onNotificationTap =
-      notificationNavigation.requestNotifications;
+        notificationNavigation.requestNotifications;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       pushNotificationService.initialize();
     });
@@ -66,48 +67,50 @@ class NerdMaxxingApp extends StatelessWidget {
           ParticipationService(apiClient),
         ),
         profileServiceProvider.overrideWithValue(ProfileService(apiClient)),
-        leaderboardServiceProvider.overrideWithValue(LeaderboardService(apiClient)),
+        leaderboardServiceProvider.overrideWithValue(
+          LeaderboardService(apiClient),
+        ),
       ],
       child: MultiProvider(
         providers: [
-        Provider.value(value: apiClient),
-        Provider.value(value: authService),
-        Provider.value(value: pushNotificationService),
-        Provider(create: (_) => ChallengesService(apiClient)),
-        Provider(create: (_) => ParticipationService(apiClient)),
-        Provider(create: (_) => ProfileService(apiClient)),
-        Provider(create: (_) => EvidenceService(apiClient)),
-        Provider(create: (_) => GroupsService(apiClient)),
-        Provider(create: (_) => InvitationsService(apiClient)),
-        Provider(create: (_) => DiscussionsService(apiClient)),
-        Provider.value(value: notificationsService),
-        ChangeNotifierProvider.value(value: notificationBadge),
-        ChangeNotifierProvider.value(value: notificationNavigation),
-        Provider(create: (_) => DiscoverService(apiClient)),
-        Provider(create: (_) => SkillsService(apiClient)),
-        ChangeNotifierProvider(
-          create: (context) {
-            final auth = AuthProvider(
-              authService: authService,
-              pushNotificationService: pushNotificationService,
-              tokenStorage: tokenStorage,
-            );
-            apiClient.onSessionExpired = auth.forceSignOut;
-            return auth;
-          },
-        ),
-        ChangeNotifierProvider(
-          create: (context) =>
-              ChallengesProvider(context.read<ChallengesService>()),
-        ),
-        ChangeNotifierProvider(
-          create: (context) =>
-              DiscoverProvider(context.read<DiscoverService>()),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => SkillsProvider(context.read<SkillsService>()),
-        ),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          Provider.value(value: apiClient),
+          Provider.value(value: authService),
+          Provider.value(value: pushNotificationService),
+          Provider(create: (_) => ChallengesService(apiClient)),
+          Provider(create: (_) => ParticipationService(apiClient)),
+          Provider(create: (_) => ProfileService(apiClient)),
+          Provider(create: (_) => EvidenceService(apiClient)),
+          Provider(create: (_) => GroupsService(apiClient)),
+          Provider(create: (_) => InvitationsService(apiClient)),
+          Provider(create: (_) => DiscussionsService(apiClient)),
+          Provider.value(value: notificationsService),
+          ChangeNotifierProvider.value(value: notificationBadge),
+          ChangeNotifierProvider.value(value: notificationNavigation),
+          Provider(create: (_) => DiscoverService(apiClient)),
+          Provider(create: (_) => SkillsService(apiClient)),
+          ChangeNotifierProvider(
+            create: (context) {
+              final auth = AuthProvider(
+                authService: authService,
+                pushNotificationService: pushNotificationService,
+                tokenStorage: tokenStorage,
+              );
+              apiClient.onSessionExpired = auth.forceSignOut;
+              return auth;
+            },
+          ),
+          ChangeNotifierProvider(
+            create: (context) =>
+                ChallengesProvider(context.read<ChallengesService>()),
+          ),
+          ChangeNotifierProvider(
+            create: (context) =>
+                DiscoverProvider(context.read<DiscoverService>()),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => SkillsProvider(context.read<SkillsService>()),
+          ),
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ],
         child: Builder(
           builder: (context) {

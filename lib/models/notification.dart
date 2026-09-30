@@ -21,25 +21,28 @@ class AppNotification {
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     final rawDataValue =
-      json['data'] ?? json['metadata'] ?? json['payload'] ?? json['extra_data'];
+        json['data'] ??
+        json['metadata'] ??
+        json['payload'] ??
+        json['extra_data'];
     final rawData = rawDataValue is String
-      ? _decodeMap(rawDataValue)
-      : rawDataValue;
+        ? _decodeMap(rawDataValue)
+        : rawDataValue;
     final rawChallenge =
-      json['challenge'] ?? (rawData is Map ? rawData['challenge'] : null);
+        json['challenge'] ?? (rawData is Map ? rawData['challenge'] : null);
     final rawActor =
-      json['actor'] ?? (rawData is Map ? rawData['actor'] : null);
+        json['actor'] ?? (rawData is Map ? rawData['actor'] : null);
     final rawGroup =
-      json['group'] ?? (rawData is Map ? rawData['group'] : null);
+        json['group'] ?? (rawData is Map ? rawData['group'] : null);
     final actorData = rawActor is Map
-      ? rawActor.cast<String, dynamic>()
-      : const <String, dynamic>{};
+        ? rawActor.cast<String, dynamic>()
+        : const <String, dynamic>{};
     final challengeData = rawChallenge is Map
         ? rawChallenge.cast<String, dynamic>()
         : const <String, dynamic>{};
     final groupData = rawGroup is Map
-      ? rawGroup.cast<String, dynamic>()
-      : const <String, dynamic>{};
+        ? rawGroup.cast<String, dynamic>()
+        : const <String, dynamic>{};
     final mergedData = <String, dynamic>{
       if (rawData is Map) ...rawData.cast<String, dynamic>(),
       ...challengeData,
@@ -52,8 +55,10 @@ class AppNotification {
       if (actorData['name'] != null && json['actor_name'] == null)
         'actor_name': actorData['name'],
       if (json['invitation_id'] != null) 'invitation_id': json['invitation_id'],
-      if (json['challenge_slug'] != null) 'challenge_slug': json['challenge_slug'],
-      if (json['challenge_title'] != null) 'challenge_title': json['challenge_title'],
+      if (json['challenge_slug'] != null)
+        'challenge_slug': json['challenge_slug'],
+      if (json['challenge_title'] != null)
+        'challenge_title': json['challenge_title'],
       if (json['challenge_id'] != null) 'challenge_id': json['challenge_id'],
       if (json['discussion_id'] != null) 'discussion_id': json['discussion_id'],
       if (json['comment_id'] != null) 'comment_id': json['comment_id'],
@@ -80,14 +85,17 @@ class AppNotification {
     };
     return AppNotification(
       id: json['id']?.toString() ?? '',
-      type: json['type']?.toString() ?? json['notification_type']?.toString() ?? '',
+      type:
+          json['type']?.toString() ??
+          json['notification_type']?.toString() ??
+          '',
       body: json['body']?.toString() ?? json['message']?.toString() ?? '',
       isRead: json['is_read'] == true || json['read_at'] != null,
       createdAt: json['created_at'] == null
           ? null
           : DateTime.tryParse(json['created_at'].toString()),
       data: mergedData,
-        invitationStatus:
+      invitationStatus:
           mergedData['invitation_status']?.toString() ??
           (mergedData['status']?.toString()),
     );
@@ -97,13 +105,9 @@ class AppNotification {
       _value('invitation_id') ??
       (_isInvitationType ? _value('related_id') : null);
   String? get challengeId =>
-      _value('challenge_id') ??
-      _value('resource_id') ??
-      _value('target_id');
-    String? get challengeSlug =>
-      _value('challenge_slug') ??
-      _value('challengeSlug') ??
-      _value('slug');
+      _value('challenge_id') ?? _value('resource_id') ?? _value('target_id');
+  String? get challengeSlug =>
+      _value('challenge_slug') ?? _value('challengeSlug') ?? _value('slug');
   String? get challengeTitle => _value('challenge_title') ?? _value('title');
   String? get actorId => _value('actor_id');
   String? get actorUsername => _value('actor_username');
@@ -112,11 +116,11 @@ class AppNotification {
   String? get replyId => _value('reply_id') ?? _value('comment_reply_id');
   String? get actorName =>
       _value('actor_name') ?? _value('name') ?? _value('actor_username');
-    String? get groupId =>
+  String? get groupId =>
       _value('group_id') ??
       _value('groupId') ??
       (isGroupMessage ? _value('related_id') ?? _value('entity_id') : null);
-    String? get groupName => _value('group_name') ?? _value('groupName');
+  String? get groupName => _value('group_name') ?? _value('groupName');
 
   bool get isFollow {
     final values = [
@@ -148,11 +152,11 @@ class AppNotification {
       data['event_type']?.toString(),
     ];
     return values.any((value) {
-      final normalized = value?.toUpperCase() ?? '';
-        return normalized.contains('GROUP_MESSAGE') ||
-            normalized.contains('GROUPMESSAGE') ||
-            (normalized.contains('GROUP') && normalized.contains('MESSAGE'));
-    }) ||
+          final normalized = value?.toUpperCase() ?? '';
+          return normalized.contains('GROUP_MESSAGE') ||
+              normalized.contains('GROUPMESSAGE') ||
+              (normalized.contains('GROUP') && normalized.contains('MESSAGE'));
+        }) ||
         data['group_id'] != null ||
         data['groupId'] != null;
   }
@@ -161,7 +165,8 @@ class AppNotification {
 
   bool get _isInvitationType =>
       type.toUpperCase().contains('INVITATION') ||
-      _value('notification_type')?.toUpperCase().contains('INVITATION') == true ||
+      _value('notification_type')?.toUpperCase().contains('INVITATION') ==
+          true ||
       _value('event_type')?.toUpperCase().contains('INVITATION') == true ||
       _value('invitation_status') != null;
 

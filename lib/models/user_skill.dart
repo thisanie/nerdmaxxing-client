@@ -22,7 +22,9 @@ class UserSkill {
       sourceChallengeId: json['source_challenge_id']?.toString() ?? '',
       skillName: json['skill_name'] ?? '',
       verificationStatus: json['verification_status'] ?? 'VERIFIED',
-      earnedAt: json['earned_at'] != null ? DateTime.tryParse(json['earned_at']) : null,
+      earnedAt: json['earned_at'] != null
+          ? DateTime.tryParse(json['earned_at'])
+          : null,
     );
   }
 }

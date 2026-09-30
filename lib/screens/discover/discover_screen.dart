@@ -63,9 +63,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ? challenge
                 : popular,
           );
-      final active = (ref.read(participationControllerProvider).valueOrNull ?? [])
-          .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
-          .toList();
+      final active =
+          (ref.read(participationControllerProvider).valueOrNull ?? [])
+              .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
+              .toList();
       final resumeParticipation = _selectResumeParticipation(active);
       setState(() {
         _profile = profile ?? _profile;
@@ -83,10 +84,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ) {
     if (participations.isEmpty) return null;
 
-    final attempted = participations
-        .where((participation) => participation.lastActivityAt != null)
-        .toList()
-      ..sort(_newestActivityFirst);
+    final attempted =
+        participations
+            .where((participation) => participation.lastActivityAt != null)
+            .toList()
+          ..sort(_newestActivityFirst);
     if (attempted.isNotEmpty) return attempted.first;
 
     final joined = [...participations]..sort(_newestJoinedFirst);
@@ -123,16 +125,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .toList();
     final stats = ref.watch(myStatsProvider).valueOrNull;
     final resumeProgressState = _resumeParticipation == null
-      ? null
-      : ref.watch(progressLogsProvider(_resumeParticipation!.id));
+        ? null
+        : ref.watch(progressLogsProvider(_resumeParticipation!.id));
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor.withValues(
-          alpha: _isScrolled ? 0.88 : 1,
-        ),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor
+            .withValues(alpha: _isScrolled ? 0.88 : 1),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         titleSpacing: 20,
@@ -140,11 +141,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onNotificationsTap: () {
             final badge = context.read<NotificationBadgeController>();
             badge.markAllRead();
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const NotificationsScreen(),
-              ),
-            ).then((_) => context.read<NotificationBadgeController>().refresh());
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationsScreen(),
+                  ),
+                )
+                .then(
+                  (_) => context.read<NotificationBadgeController>().refresh(),
+                );
           },
         ),
       ),
@@ -165,60 +170,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _Greeting(
-                      name: name,
-                      streak: stats?.dayStreak ?? 0,
-                    ),
-                    const SizedBox(height: 22),
-                    _StatsRow(
-                      active: stats?.activeChallengeCount ?? 0,
-                      aura: stats?.auraPoints ?? 0,
-                      completed: stats?.completedChallengeCount ?? 0,
-                    ),
-                    const SizedBox(height: 16),
-                    _ResumeCard(
-                      challenge: _resumeParticipation == null
-                          ? null
-                          : _challengesById[_resumeParticipation!.challengeId],
-                      progress: resumeProgressState?.valueOrNull ?? const [],
-                      isLoading: resumeProgressState?.isLoading ?? false,
-                      onTap: _resumeParticipation == null
-                          ? null
-                          : () => _openParticipation(_resumeParticipation!),
-                    ),
-                    const SizedBox(height: 36),
-                    const _SectionHeader(title: 'Your challenges', action: 'View all'),
-                    const SizedBox(height: 14),
-                    if (active.isEmpty)
-                      const _EmptyChallengeRow()
-                    else
-                      ...active.map(
-                        (item) => _ChallengeRow(
-                          participation: item,
-                          challenge: _challengesById[item.challengeId],
-                          onTap: () => _openParticipation(item),
-                        ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Greeting(name: name, streak: stats?.dayStreak ?? 0),
+                      const SizedBox(height: 22),
+                      _StatsRow(
+                        active: stats?.activeChallengeCount ?? 0,
+                        aura: stats?.auraPoints ?? 0,
+                        completed: stats?.completedChallengeCount ?? 0,
                       ),
-                    const SizedBox(height: 28),
-                    const _SectionHeader(title: 'Maybe try next', action: 'Discover'),
-                    const SizedBox(height: 14),
-                    _NudgeCard(
-                      challenge: _mostPopularChallenge,
-                      onTap: _mostPopularChallenge == null
-                          ? null
-                          : () => _openChallenge(_mostPopularChallenge!),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
+                      const SizedBox(height: 16),
+                      _ResumeCard(
+                        challenge: _resumeParticipation == null
+                            ? null
+                            : _challengesById[_resumeParticipation!
+                                  .challengeId],
+                        progress: resumeProgressState?.valueOrNull ?? const [],
+                        isLoading: resumeProgressState?.isLoading ?? false,
+                        onTap: _resumeParticipation == null
+                            ? null
+                            : () => _openParticipation(_resumeParticipation!),
+                      ),
+                      const SizedBox(height: 36),
+                      const _SectionHeader(
+                        title: 'Your challenges',
+                        action: 'View all',
+                      ),
+                      const SizedBox(height: 14),
+                      if (active.isEmpty)
+                        const _EmptyChallengeRow()
+                      else
+                        ...active.map(
+                          (item) => _ChallengeRow(
+                            participation: item,
+                            challenge: _challengesById[item.challengeId],
+                            onTap: () => _openParticipation(item),
+                          ),
+                        ),
+                      const SizedBox(height: 28),
+                      const _SectionHeader(
+                        title: 'Maybe try next',
+                        action: 'Discover',
+                      ),
+                      const SizedBox(height: 14),
+                      _NudgeCard(
+                        challenge: _mostPopularChallenge,
+                        onTap: _mostPopularChallenge == null
+                            ? null
+                            : () => _openChallenge(_mostPopularChallenge!),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ],
           ),
         ),
@@ -369,7 +378,9 @@ class _Greeting extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: ShapeDecoration(
                 color: colorScheme.surface,
-                shape: StadiumBorder(side: BorderSide(color: colorScheme.outline)),
+                shape: StadiumBorder(
+                  side: BorderSide(color: colorScheme.outline),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -421,11 +432,17 @@ class _StatsRow extends StatelessWidget {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            Expanded(child: _Stat(value: '$active', label: 'Active')),
+            Expanded(
+              child: _Stat(value: '$active', label: 'Active'),
+            ),
             VerticalDivider(width: 1, color: scheme.outline),
-            Expanded(child: _Stat(value: '$aura', label: 'Aura')),
+            Expanded(
+              child: _Stat(value: '$aura', label: 'Aura'),
+            ),
             VerticalDivider(width: 1, color: scheme.outline),
-            Expanded(child: _Stat(value: '$completed', label: 'Completed')),
+            Expanded(
+              child: _Stat(value: '$completed', label: 'Completed'),
+            ),
           ],
         ),
       ),
@@ -596,7 +613,10 @@ class _ResumeCard extends StatelessWidget {
               const SizedBox(height: 18),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 18,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFF3A3A36)),
@@ -605,14 +625,20 @@ class _ResumeCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      challenge == null ? 'Discover a challenge' : 'Resume challenge',
+                      challenge == null
+                          ? 'Discover a challenge'
+                          : 'Resume challenge',
                       style: AppFonts.body(
                         color: onDark,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const Icon(Icons.arrow_forward, color: onDark, size: 20),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: onDark,
+                      size: 20,
+                    ),
                   ],
                 ),
               ),
@@ -672,7 +698,7 @@ class _ChallengeRow extends StatelessWidget {
                   ),
                   child: Icon(
                     challenge?.title.toLowerCase().contains('chess') == true
-                        ? Icons.extension_outlined
+                        ? Icons.extension_rounded
                         : Icons.grid_view_rounded,
                     color: colorScheme.onSurface,
                     size: 22,
@@ -703,7 +729,7 @@ class _ChallengeRow extends StatelessWidget {
                             paused: isPaused,
                           ),
                           _InfoChip(
-                            icon: Icons.bolt,
+                            icon: Icons.bolt_rounded,
                             label: '${challenge?.auraPoints ?? 0} aura',
                           ),
                         ],
@@ -712,7 +738,10 @@ class _ChallengeRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ],
             ),
           ),
@@ -777,7 +806,11 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppFonts.body(color: fg, fontSize: 13, fontWeight: FontWeight.w500),
+        style: AppFonts.body(
+          color: fg,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -835,7 +868,7 @@ class _NudgeCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
-                  Icons.local_fire_department_outlined,
+                  Icons.local_fire_department_rounded,
                   color: AppColors.lightTextPrimary,
                   size: 24,
                 ),
@@ -846,7 +879,9 @@ class _NudgeCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      challenge == null ? 'NO CHALLENGES YET' : '#1 MOST JOINED',
+                      challenge == null
+                          ? 'NO CHALLENGES YET'
+                          : '#1 MOST JOINED',
                       style: AppFonts.label(
                         color: colorScheme.onSurfaceVariant,
                         fontSize: 11.5,
@@ -873,7 +908,7 @@ class _NudgeCard extends StatelessWidget {
                         children: [
                           if (challenge?.auraPoints != null)
                             _InfoChip(
-                              icon: Icons.bolt,
+                              icon: Icons.bolt_rounded,
                               label: '${challenge!.auraPoints} aura',
                             ),
                           if (challenge?.enrollmentCount != null)
@@ -890,7 +925,10 @@ class _NudgeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

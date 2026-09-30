@@ -43,7 +43,10 @@ class DiscussionsService {
     await api.delete('/discussions/$discussionId');
   }
 
-  Future<DiscussionPage> listReplies(String discussionId, {String? cursor}) async {
+  Future<DiscussionPage> listReplies(
+    String discussionId, {
+    String? cursor,
+  }) async {
     final data = await api.get(
       '/discussions/$discussionId/replies',
       query: {'cursor': ?cursor},
@@ -80,7 +83,11 @@ class DiscussionsService {
     await api.patch('/discussions/$discussionId/resolve');
   }
 
-  Future<void> report(String discussionId, {String? replyId, String reason = 'OTHER'}) async {
+  Future<void> report(
+    String discussionId, {
+    String? replyId,
+    String reason = 'OTHER',
+  }) async {
     final path = replyId == null
         ? '/discussions/$discussionId/report'
         : '/discussions/$discussionId/replies/$replyId/report';
@@ -90,8 +97,15 @@ class DiscussionsService {
   DiscussionPage _page(dynamic data) {
     final map = Map<String, dynamic>.from(data as Map);
     final items = (map['items'] as List? ?? const [])
-        .map((item) => DiscussionComment.fromJson(Map<String, dynamic>.from(item as Map)))
+        .map(
+          (item) => DiscussionComment.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
         .toList();
-    return DiscussionPage(items: items, nextCursor: map['next_cursor']?.toString());
+    return DiscussionPage(
+      items: items,
+      nextCursor: map['next_cursor']?.toString(),
+    );
   }
 }

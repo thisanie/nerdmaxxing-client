@@ -33,10 +33,13 @@ class ChallengeProgressSnapshot {
       targetValue: json['target_value'],
       baselineValue: json['baseline_value'],
       unit: json['unit']?.toString() ?? '',
-      completedResourceCount: (json['completed_resource_count'] as num?)?.toInt() ?? 0,
+      completedResourceCount:
+          (json['completed_resource_count'] as num?)?.toInt() ?? 0,
       totalResourceCount: (json['total_resource_count'] as num?)?.toInt() ?? 0,
-      completedMilestoneCount: (json['completed_milestone_count'] as num?)?.toInt() ?? 0,
-      totalMilestoneCount: (json['total_milestone_count'] as num?)?.toInt() ?? 0,
+      completedMilestoneCount:
+          (json['completed_milestone_count'] as num?)?.toInt() ?? 0,
+      totalMilestoneCount:
+          (json['total_milestone_count'] as num?)?.toInt() ?? 0,
       loggedMinutes: (json['logged_minutes'] as num?)?.toInt() ?? 0,
       challengeStatus: json['challenge_status']?.toString() ?? 'ACTIVE',
       readyForProof: json['ready_for_proof'] == true,
@@ -98,7 +101,9 @@ class ChallengeMilestone {
           }
           return ChallengeResource.fromJson(item);
         })
-        .where((resource) => resource.title.isNotEmpty || resource.url.isNotEmpty)
+        .where(
+          (resource) => resource.title.isNotEmpty || resource.url.isNotEmpty,
+        )
         .toList();
 
     return ChallengeMilestone(
@@ -109,8 +114,10 @@ class ChallengeMilestone {
       status: json['status']?.toString() ?? 'LOCKED',
       currentValue: readOptional('current_value'),
       targetValue: readOptional('target_value'),
-      completedResourceCount: (json['completed_resource_count'] as num?)?.toInt() ?? 0,
-      totalResourceCount: (json['total_resource_count'] as num?)?.toInt() ?? resources.length,
+      completedResourceCount:
+          (json['completed_resource_count'] as num?)?.toInt() ?? 0,
+      totalResourceCount:
+          (json['total_resource_count'] as num?)?.toInt() ?? resources.length,
       loggedMinutes: (json['logged_minutes'] as num?)?.toInt() ?? 0,
       resources: resources,
     );
@@ -149,14 +156,18 @@ class ChallengeAttempt {
     final metricKey = json['metric_key']?.toString();
     final rawValue = json['value'];
     if (metricKey != null && metricKey.isNotEmpty) {
-      final value = rawValue is num ? rawValue.toDouble() : double.tryParse('$rawValue');
+      final value = rawValue is num
+          ? rawValue.toDouble()
+          : double.tryParse('$rawValue');
       if (value != null) metrics[metricKey] = value;
     }
     return ChallengeAttempt(
       id: json['id']?.toString() ?? '',
       metrics: metrics,
       note: json['note']?.toString(),
-      meetsTarget: json['meets_target'] is bool ? json['meets_target'] as bool : null,
+      meetsTarget: json['meets_target'] is bool
+          ? json['meets_target'] as bool
+          : null,
       createdAt: json['created_at'] == null
           ? null
           : DateTime.tryParse(json['created_at'].toString()),
@@ -214,9 +225,13 @@ class ChallengeVerification {
       type: json['type']?.toString() ?? 'SELF_REPORTED',
       requirements: rawRequirements is List
           ? rawRequirements
-              .whereType<Map>()
-              .map((item) => ChallengeRequirement.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) => ChallengeRequirement.fromJson(
+                    Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList()
           : const [],
       requiredRuns: (json['required_runs'] as num?)?.toInt() ?? 1,
       instructions: json['instructions']?.toString() ?? '',
@@ -262,13 +277,16 @@ class ChallengeDetail {
     List<Map<String, dynamic>> listOfMaps(String key) {
       final value = json[key];
       return value is List
-          ? value.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList()
+          ? value
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList()
           : const [];
     }
 
     final stats = json['stats'] is Map
-      ? Map<String, dynamic>.from(json['stats'] as Map)
-      : const <String, dynamic>{};
+        ? Map<String, dynamic>.from(json['stats'] as Map)
+        : const <String, dynamic>{};
 
     final progress = json['progress'] is Map
         ? ChallengeProgressSnapshot.fromJson(
@@ -286,7 +304,7 @@ class ChallengeDetail {
 
     return ChallengeDetail(
       challenge: challenge,
-        metrics: listOfMaps('metrics')
+      metrics: listOfMaps('metrics')
           .map(ChallengeMetric.fromJson)
           .where((metric) => metric.key.isNotEmpty)
           .toList(),
@@ -301,26 +319,24 @@ class ChallengeDetail {
             ),
           )
           .toList(),
-      attempts: listOfMaps('attempts')
-          .map(ChallengeAttempt.fromJson)
-          .toList(),
+      attempts: listOfMaps('attempts').map(ChallengeAttempt.fromJson).toList(),
       participants: listOfMaps('participants')
           .map(ChallengeParticipant.fromJson)
           .toList(),
       participantCount: (stats['participant_count'] as num?)?.toInt() ?? 0,
       completedParticipantCount:
           (stats['completed_participant_count'] as num?)?.toInt() ?? 0,
-        progress: progress,
+      progress: progress,
       verification: verification,
     );
   }
 
   factory ChallengeDetail.fromChallenge(Challenge challenge) => ChallengeDetail(
-        challenge: challenge,
-        metrics: challenge.metrics,
-        requirements: challenge.requirements,
-        participantCount: challenge.enrollmentCount ?? 0,
-      );
+    challenge: challenge,
+    metrics: challenge.metrics,
+    requirements: challenge.requirements,
+    participantCount: challenge.enrollmentCount ?? 0,
+  );
 
   ChallengeMetric? get primaryMetric {
     for (final metric in metricDefinitions) {

@@ -62,7 +62,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   Future<void> _load() async {
     try {
       await _refreshDetail();
-      final saved = await context.read<ChallengesService>().getSaveStatus(widget.slug);
+      final saved = await context.read<ChallengesService>().getSaveStatus(
+        widget.slug,
+      );
       if (mounted) setState(() => _saved = saved);
     } on ApiException {
       // Initial-load errors are represented by _error when no fallback exists.
@@ -82,7 +84,8 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       if (mounted) setState(() => _saved = !_saved);
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -113,7 +116,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   Future<void> _accept() async {
     setState(() => _accepting = true);
     try {
-      await ref.read(participationControllerProvider.notifier).accept(widget.slug);
+      await ref
+          .read(participationControllerProvider.notifier)
+          .accept(widget.slug);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -139,14 +144,12 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       participations.add(participation);
       await notifications.markRead(widget.invitation!.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invitation accepted.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Invitation accepted.')));
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -159,15 +162,13 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       await notifications.declineInvitation(invitationId);
       await notifications.markRead(widget.invitation!.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invitation declined.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Invitation declined.')));
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -198,35 +199,36 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       detail: detail,
       participation: participation,
       accepting: _accepting,
-        onAccept: widget.invitation?.invitationId != null
+      onAccept: widget.invitation?.invitationId != null
           ? _acceptInvitation
           : _accept,
-          onDecline: widget.invitation?.invitationId != null
-            ? _declineInvitation
-            : null,
-          onInvite: participation == null ? null : _inviteFriend,
-          onDrop: participation == null ? null : _dropChallenge,
-          saved: _saved,
-          onToggleSave: _saving ? null : _toggleSave,
-          discussionsService: context.read<DiscussionsService>(),
-          challengeSlug: widget.slug,
-          initialDiscussionId: widget.initialDiscussionId,
-          initialReplyId: widget.initialReplyId,
-          currentUsername: context.read<AuthProvider>().username,
-            discussionCanPost: participation?.status == 'ACCEPTED' ||
-              participation?.status == 'IN_PROGRESS',
+      onDecline: widget.invitation?.invitationId != null
+          ? _declineInvitation
+          : null,
+      onInvite: participation == null ? null : _inviteFriend,
+      onDrop: participation == null ? null : _dropChallenge,
+      saved: _saved,
+      onToggleSave: _saving ? null : _toggleSave,
+      discussionsService: context.read<DiscussionsService>(),
+      challengeSlug: widget.slug,
+      initialDiscussionId: widget.initialDiscussionId,
+      initialReplyId: widget.initialReplyId,
+      currentUsername: context.read<AuthProvider>().username,
+      discussionCanPost:
+          participation?.status == 'ACCEPTED' ||
+          participation?.status == 'IN_PROGRESS',
       onTrain: () => _openPath(detail),
-          onOpenMilestone: (index) => participation == null
-            ? _promptToAccept()
-            : _openPath(detail, milestoneIndex: index),
-          onRefresh: _refreshDetail,
+      onOpenMilestone: (index) => participation == null
+          ? _promptToAccept()
+          : _openPath(detail, milestoneIndex: index),
+      onRefresh: _refreshDetail,
       onProve: () => _showPrototypeSheet(
         'Prove it',
         detail.verification.instructions.isEmpty
             ? 'Submit evidence for the requirements shown on this challenge.'
             : detail.verification.instructions,
       ),
-          invited: widget.invitation?.invitationId != null,
+      invited: widget.invitation?.invitationId != null,
     );
   }
 
@@ -242,7 +244,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Drop this challenge?'),
-        content: const Text('Your progress will remain recorded, but this challenge will no longer be active.'),
+        content: const Text(
+          'Your progress will remain recorded, but this challenge will no longer be active.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -257,20 +261,22 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     );
     if (shouldDrop != true || !mounted) return;
     final participation = ref.read(participationControllerProvider.notifier);
-    final current = ref.read(participationControllerProvider).valueOrNull
-      ?.where((item) => item.challengeId == _challenge?.id)
+    final current = ref
+        .read(participationControllerProvider)
+        .valueOrNull
+        ?.where((item) => item.challengeId == _challenge?.id)
         .firstOrNull;
     if (current == null) return;
     try {
       await participation.updateStatus(current.id, 'DROPPED');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Challenge dropped.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Challenge dropped.')));
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -282,13 +288,35 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       showDragHandle: true,
       builder: (context) => Padding(
         padding: const EdgeInsets.fromLTRB(22, 8, 22, 34),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title.toUpperCase(), style: const TextStyle(color: AppColors.primary, fontSize: 11, letterSpacing: 2, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 18),
-          Text(message, style: const TextStyle(fontSize: 24, height: 1.1, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 24),
-          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('GOT IT')),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title.toUpperCase(),
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 11,
+                letterSpacing: 2,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              message,
+              style: const TextStyle(
+                fontSize: 24,
+                height: 1.1,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('GOT IT'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -334,21 +362,25 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
 
   void _openPath(ChallengeDetail detail, {int? milestoneIndex}) {
     final currentIndex = milestoneIndex ?? _currentMilestoneIndex(detail);
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PathScreen(
-          challenge: _challenge!,
-          detail: detail,
-          initialMilestoneIndex: currentIndex,
-          participation: ref.read(participationControllerProvider).valueOrNull
-              ?.where((item) => item.challengeId == _challenge!.id)
-              .firstOrNull,
-            onRefresh: _refreshDetail,
-        ),
-      ),
-    ).then((_) async {
-      if (mounted) await _refreshDetail();
-    });
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => PathScreen(
+              challenge: _challenge!,
+              detail: detail,
+              initialMilestoneIndex: currentIndex,
+              participation: ref
+                  .read(participationControllerProvider)
+                  .valueOrNull
+                  ?.where((item) => item.challengeId == _challenge!.id)
+                  .firstOrNull,
+              onRefresh: _refreshDetail,
+            ),
+          ),
+        )
+        .then((_) async {
+          if (mounted) await _refreshDetail();
+        });
   }
 
   int _currentMilestoneIndex(ChallengeDetail detail) {
@@ -357,7 +389,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     );
     return index < 0 ? 0 : index;
   }
-
 }
 
 class _InviteFriendsDialog extends StatefulWidget {
@@ -435,7 +466,9 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${user.name ?? user.username ?? 'Friend'} was invited.'),
+          content: Text(
+            '${user.name ?? user.username ?? 'Friend'} was invited.',
+          ),
         ),
       );
     } on ApiException catch (e) {
@@ -477,9 +510,8 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
         groupId: group.id,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${group.name} was invited.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('${group.name} was invited.')));
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
@@ -513,7 +545,7 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
                       controller: _searchController,
                       decoration: const InputDecoration(
                         hintText: 'Search your followers',
-                        prefixIcon: Icon(Icons.search),
+                        prefixIcon: Icon(Icons.search_rounded),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -537,7 +569,7 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
                                 ? null
                                 : NetworkImage(user.avatarUrl!),
                             child: user.avatarUrl == null
-                                ? const Icon(Icons.person_outline)
+                                ? const Icon(Icons.person_rounded)
                                 : null,
                           ),
                           title: Text(
@@ -550,14 +582,16 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : IconButton(
                                   tooltip: 'Challenge',
                                   onPressed: _invitingId == null
                                       ? () => _invite(user)
                                       : null,
-                                  icon: const Icon(Icons.send_outlined),
+                                  icon: const Icon(Icons.send_rounded),
                                 ),
                         ),
                       ),
@@ -571,7 +605,7 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
                         (group) => ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: const CircleAvatar(
-                            child: Icon(Icons.groups_outlined),
+                            child: Icon(Icons.groups_rounded),
                           ),
                           title: Text(group.name),
                           subtitle: Text('${group.memberCount} members'),
@@ -579,15 +613,18 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : IconButton(
                                   tooltip: 'Invite group',
-                                  onPressed: _invitingId == null &&
+                                  onPressed:
+                                      _invitingId == null &&
                                           _invitingGroupId == null
                                       ? () => _inviteGroup(group)
                                       : null,
-                                  icon: const Icon(Icons.send_outlined),
+                                  icon: const Icon(Icons.send_rounded),
                                 ),
                         ),
                       ),
@@ -595,7 +632,7 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
                     const Divider(height: 24),
                     OutlinedButton.icon(
                       onPressed: _linkLoading ? null : _copyInviteLink,
-                      icon: const Icon(Icons.link),
+                      icon: const Icon(Icons.link_rounded),
                       label: Text(
                         _linkLoading ? 'Creating link...' : 'Copy invite link',
                       ),
@@ -652,13 +689,15 @@ class _ProgressDialogState extends ConsumerState<_ProgressDialog> {
       _error = null;
     });
     try {
-      await ref.read(participationControllerProvider.notifier).logProgress(
-        widget.participation.id,
-        hoursSpent: hours,
-        note: _noteController.text.trim().isEmpty
-            ? null
-            : _noteController.text.trim(),
-      );
+      await ref
+          .read(participationControllerProvider.notifier)
+          .logProgress(
+            widget.participation.id,
+            hoursSpent: hours,
+            note: _noteController.text.trim().isEmpty
+                ? null
+                : _noteController.text.trim(),
+          );
       _hoursController.clear();
       _noteController.clear();
     } on ApiException catch (e) {
@@ -728,7 +767,7 @@ class _ProgressDialogState extends ConsumerState<_ProgressDialog> {
                 ...logs.map(
                   (log) => ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.schedule_outlined),
+                    leading: const Icon(Icons.schedule_rounded),
                     title: Text(_durationLabel(log.minutesSpent)),
                     subtitle: Text(
                       [

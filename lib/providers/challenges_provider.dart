@@ -34,7 +34,10 @@ class ChallengesProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      final next = await service.list(limit: _pageSize, offset: challenges.length);
+      final next = await service.list(
+        limit: _pageSize,
+        offset: challenges.length,
+      );
       challenges = [...challenges, ...next];
       hasMore = next.length == _pageSize;
     } catch (e) {

@@ -20,10 +20,10 @@ final leaderboardServiceProvider = Provider<LeaderboardService>(
   (ref) => throw UnimplementedError('LeaderboardService is not configured.'),
 );
 
-final participationControllerProvider = AsyncNotifierProvider<
-  ParticipationController,
-  List<Participation>
->(ParticipationController.new);
+final participationControllerProvider =
+    AsyncNotifierProvider<ParticipationController, List<Participation>>(
+      ParticipationController.new,
+    );
 
 final progressLogsProvider = FutureProvider.autoDispose
     .family<List<ProgressLog>, String>((ref, participantId) async {
@@ -35,14 +35,19 @@ final myStatsProvider = FutureProvider.autoDispose<UserStats>((ref) {
   return ref.watch(profileServiceProvider).getMyStats();
 });
 
-final leaderboardProvider = FutureProvider.autoDispose.family<Leaderboard,
-    ({String period, String metric, String? playerRank})>((ref, filters) {
-  return ref.watch(leaderboardServiceProvider).getLeaderboard(
-        period: filters.period,
-        metric: filters.metric,
-        playerRank: filters.playerRank,
-      );
-});
+final leaderboardProvider = FutureProvider.autoDispose
+    .family<Leaderboard, ({String period, String metric, String? playerRank})>((
+      ref,
+      filters,
+    ) {
+      return ref
+          .watch(leaderboardServiceProvider)
+          .getLeaderboard(
+            period: filters.period,
+            metric: filters.metric,
+            playerRank: filters.playerRank,
+          );
+    });
 
 final myCompletedChallengesProvider = FutureProvider.autoDispose((ref) {
   return ref.watch(profileServiceProvider).listMyCompletedChallenges();
@@ -123,8 +128,8 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     required String metricKey,
     required double value,
     required String unit,
-    String? note,}
-  ) async {
+    String? note,
+  }) async {
     final result = await _service.logMetricAttempt(
       participantId,
       metricKey: metricKey,

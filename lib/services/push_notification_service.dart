@@ -16,7 +16,9 @@ const _notificationChannelName = 'App notifications';
 final FlutterLocalNotificationsPlugin _localNotifications =
     FlutterLocalNotificationsPlugin();
 
-Future<void> _initializeLocalNotifications({ValueChanged<String?>? onTap}) async {
+Future<void> _initializeLocalNotifications({
+  ValueChanged<String?>? onTap,
+}) async {
   const settings = InitializationSettings(
     android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     iOS: DarwinInitializationSettings(),
@@ -24,8 +26,8 @@ Future<void> _initializeLocalNotifications({ValueChanged<String?>? onTap}) async
   await _localNotifications.initialize(
     settings,
     onDidReceiveNotificationResponse: onTap == null
-      ? null
-      : (response) => onTap(response.payload),
+        ? null
+        : (response) => onTap(response.payload),
   );
   await _localNotifications
       .resolvePlatformSpecificImplementation<
@@ -126,9 +128,7 @@ class PushNotificationService {
     }
     if (payload is Map) {
       onNotificationTap?.call(
-        payload.map(
-          (key, value) => MapEntry(key.toString(), value.toString()),
-        ),
+        payload.map((key, value) => MapEntry(key.toString(), value.toString())),
       );
       return;
     }
@@ -140,7 +140,9 @@ class PushNotificationService {
       final decoded = jsonDecode(payload);
       if (decoded is Map) {
         onNotificationTap?.call(
-          decoded.map((key, value) => MapEntry(key.toString(), value.toString())),
+          decoded.map(
+            (key, value) => MapEntry(key.toString(), value.toString()),
+          ),
         );
         return;
       }
@@ -186,9 +188,7 @@ class PushNotificationService {
     if (token == null) return;
 
     try {
-      await api.delete(
-        '/users/me/push-tokens/${Uri.encodeComponent(token)}',
-      );
+      await api.delete('/users/me/push-tokens/${Uri.encodeComponent(token)}');
     } catch (error) {
       debugPrint('FCM token removal skipped: $error');
     } finally {

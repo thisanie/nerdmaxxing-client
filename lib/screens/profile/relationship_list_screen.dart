@@ -94,13 +94,13 @@ class _RelationshipListScreenState extends State<RelationshipListScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search $_title'.toLowerCase(),
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchController.text.isEmpty
                     ? null
                     : IconButton(
                         tooltip: 'Clear search',
                         onPressed: _searchController.clear,
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.clear_rounded),
                       ),
               ),
             ),
@@ -149,7 +149,7 @@ class _UserSummaryTile extends StatelessWidget {
             ? null
             : NetworkImage(user.avatarUrl!),
         child: user.avatarUrl == null
-            ? const Icon(Icons.person_outline, color: AppColors.textSecondary)
+            ? const Icon(Icons.person_rounded, color: AppColors.textSecondary)
             : null,
       ),
       title: Text(user.name ?? user.username ?? 'NerdMaxxer'),

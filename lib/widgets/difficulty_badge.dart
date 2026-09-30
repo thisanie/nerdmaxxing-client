@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 
 class DifficultyBadge extends StatelessWidget {
@@ -28,7 +29,10 @@ class DifficultyBadge extends StatelessWidget {
           )
         : switch (level) {
             'BEGINNER' => (const Color(0xFF2E6B3A), const Color(0xFFE3EFE0)),
-            'INTERMEDIATE' => (const Color(0xFF8A5A00), const Color(0xFFFFEBC2)),
+            'INTERMEDIATE' => (
+              const Color(0xFF8A5A00),
+              const Color(0xFFFFEBC2),
+            ),
             'ADVANCED' => (const Color(0xFFB3321E), const Color(0xFFFFE0D9)),
             _ => (AppColors.lightTextSecondary, AppColors.lightSurfaceAlt),
           };
@@ -47,7 +51,14 @@ class DifficultyBadge extends StatelessWidget {
             decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(_label, style: TextStyle(color: fg, fontWeight: FontWeight.w500, fontSize: 13)),
+          Text(
+            _label,
+            style: TextStyle(
+              color: fg,
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );

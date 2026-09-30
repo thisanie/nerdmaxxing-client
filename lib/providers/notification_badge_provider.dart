@@ -12,7 +12,9 @@ class NotificationBadgeController extends ChangeNotifier {
   Future<void> refresh() async {
     try {
       final notifications = await service.list(unreadOnly: true, limit: 100);
-      unreadCount = notifications.where((notification) => !notification.isRead).length;
+      unreadCount = notifications
+          .where((notification) => !notification.isRead)
+          .length;
       notifyListeners();
     } catch (_) {
       // The badge is non-critical and should not affect the rest of the app.
@@ -35,8 +37,12 @@ class NotificationBadgeController extends ChangeNotifier {
     notifyListeners();
     try {
       final notifications = await service.list(unreadOnly: true, limit: 100);
-      final unread = notifications.where((notification) => !notification.isRead);
-      await Future.wait(unread.map((notification) => service.markRead(notification.id)));
+      final unread = notifications.where(
+        (notification) => !notification.isRead,
+      );
+      await Future.wait(
+        unread.map((notification) => service.markRead(notification.id)),
+      );
     } catch (_) {
       // The screen can still display notifications if marking them fails.
     }

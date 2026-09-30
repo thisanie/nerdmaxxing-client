@@ -81,7 +81,9 @@ class MetricAttempt {
     return MetricAttempt(
       id: json['id']?.toString() ?? '',
       metricKey: json['metric_key']?.toString() ?? '',
-      value: rawValue is num ? rawValue.toDouble() : double.tryParse('$rawValue') ?? 0,
+      value: rawValue is num
+          ? rawValue.toDouble()
+          : double.tryParse('$rawValue') ?? 0,
       unit: json['unit']?.toString() ?? '',
       meetsTarget: json['meets_target'] == true,
     );

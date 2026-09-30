@@ -138,7 +138,11 @@ class _RankSummary extends StatelessWidget {
                       color: scheme.onSurface,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.bolt, color: AppColors.primary, size: 26),
+                    child: Icon(
+                      Icons.favorite_rounded,
+                      color: AppColors.primary,
+                      size: 26,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -193,7 +197,7 @@ class _RankSummary extends StatelessWidget {
             _StatTile(
               label: 'RANK',
               value: stats.rank,
-              icon: Icons.military_tech_outlined,
+              icon: Icons.emoji_events_rounded,
               dark: true,
             ),
           ],

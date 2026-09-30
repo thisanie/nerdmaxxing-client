@@ -53,7 +53,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       _error = null;
     });
     try {
-      final messages = await context.read<GroupsService>().listMessages(widget.group.id);
+      final messages = await context.read<GroupsService>().listMessages(
+        widget.group.id,
+      );
       if (!mounted) return;
       setState(() => _messages = messages);
       _scrollToEnd();
@@ -119,7 +121,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   void _showGroupDetails() {
-    final membersFuture = context.read<GroupsService>().listMembers(widget.group.id);
+    final membersFuture = context.read<GroupsService>().listMembers(
+      widget.group.id,
+    );
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -131,83 +135,87 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(group.name, style: theme.textTheme.headlineSmall),
-                if (group.description?.isNotEmpty == true) ...[
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(group.name, style: theme.textTheme.headlineSmall),
+                  if (group.description?.isNotEmpty == true) ...[
+                    const SizedBox(height: 8),
+                    Text(group.description!),
+                  ],
+                  const SizedBox(height: 20),
+                  _GroupDetailRow(
+                    icon: Icons.people_rounded,
+                    label: 'Members',
+                    value:
+                        '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
+                  ),
+                  _GroupDetailRow(
+                    icon: group.visibility == 'PRIVATE'
+                        ? Icons.lock_rounded
+                        : Icons.public,
+                    label: 'Visibility',
+                    value: group.visibility == 'PRIVATE' ? 'Private' : 'Public',
+                  ),
+                  _GroupDetailRow(
+                    icon: Icons.calendar_today_rounded,
+                    label: 'Created',
+                    value: group.createdAt == null
+                        ? 'Unknown'
+                        : _formatDate(group.createdAt!),
+                  ),
+                  const SizedBox(height: 6),
+                  Text('Members', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
-                  Text(group.description!),
+                  FutureBuilder<List<GroupMember>>(
+                    future: membersFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState != ConnectionState.done) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Text(
+                          'Could not load group members: ${snapshot.error}',
+                        );
+                      }
+                      final members = snapshot.data ?? const <GroupMember>[];
+                      if (members.isEmpty) {
+                        return Text(
+                          'No member data returned from '
+                          '/groups/${group.id}/members.',
+                        );
+                      }
+                      return ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 220),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: members.length,
+                          itemBuilder: (context, index) {
+                            final member = members[index];
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                child: Text(
+                                  member.displayName[0].toUpperCase(),
+                                ),
+                              ),
+                              title: Text(member.displayName),
+                              subtitle: member.username == null
+                                  ? null
+                                  : Text('@${member.username}'),
+                              trailing: member.status == null
+                                  ? null
+                                  : Text(member.status!),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ],
-                const SizedBox(height: 20),
-                _GroupDetailRow(
-                  icon: Icons.people_outline,
-                  label: 'Members',
-                  value:
-                      '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
-                ),
-                _GroupDetailRow(
-                  icon: group.visibility == 'PRIVATE'
-                      ? Icons.lock_outline
-                      : Icons.public,
-                  label: 'Visibility',
-                  value: group.visibility == 'PRIVATE' ? 'Private' : 'Public',
-                ),
-                _GroupDetailRow(
-                  icon: Icons.calendar_today_outlined,
-                  label: 'Created',
-                  value: group.createdAt == null
-                      ? 'Unknown'
-                      : _formatDate(group.createdAt!),
-                ),
-                const SizedBox(height: 6),
-                Text('Members', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 8),
-                FutureBuilder<List<GroupMember>>(
-                  future: membersFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState != ConnectionState.done) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Text('Could not load group members: ${snapshot.error}');
-                    }
-                    final members = snapshot.data ?? const <GroupMember>[];
-                    if (members.isEmpty) {
-                      return Text(
-                        'No member data returned from '
-                        '/groups/${group.id}/members.',
-                      );
-                    }
-                    return ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 220),
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: members.length,
-                        itemBuilder: (context, index) {
-                          final member = members[index];
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: CircleAvatar(
-                              child: Text(member.displayName[0].toUpperCase()),
-                            ),
-                            title: Text(member.displayName),
-                            subtitle: member.username == null
-                                ? null
-                                : Text('@${member.username}'),
-                            trailing: member.status == null
-                                ? null
-                                : Text(member.status!),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ],
               ),
             ),
           ),
@@ -225,12 +233,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           IconButton(
             tooltip: 'Refresh messages',
             onPressed: _loading ? null : _loadMessages,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
           ),
           IconButton(
             tooltip: 'Group details',
             onPressed: _showGroupDetails,
-            icon: const Icon(Icons.info_outline),
+            icon: const Icon(Icons.info_rounded),
           ),
         ],
       ),
@@ -239,7 +247,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           if (_error != null)
             MaterialBanner(
               content: Text(_error!),
-              actions: [TextButton(onPressed: _loadMessages, child: const Text('Retry'))],
+              actions: [
+                TextButton(
+                  onPressed: _loadMessages,
+                  child: const Text('Retry'),
+                ),
+              ],
             ),
           Expanded(child: _buildMessages()),
           _buildComposer(),
@@ -251,7 +264,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   Widget _buildMessages() {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_messages.isEmpty) {
-      return const Center(child: Text('No messages yet. Start the conversation.'));
+      return const Center(
+        child: Text('No messages yet. Start the conversation.'),
+      );
     }
     return RefreshIndicator(
       onRefresh: _loadMessages,
@@ -263,9 +278,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           final message = _messages[index];
           return _MessageBubble(
             message: message,
-            isMine: _currentUserId != null &&
-                message.author.id == _currentUserId,
-            responding: message.challengeInvitation?.id == _respondingInvitationId,
+            isMine:
+                _currentUserId != null && message.author.id == _currentUserId,
+            responding:
+                message.challengeInvitation?.id == _respondingInvitationId,
             onInvitationResponse: message.challengeInvitation == null
                 ? null
                 : (response) => _respondToInvitation(
@@ -303,8 +319,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               tooltip: 'Send message',
               onPressed: _sending ? null : _sendMessage,
               icon: _sending
-                  ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.send_outlined),
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send_rounded),
             ),
           ],
         ),
@@ -314,7 +333,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   String _formatTime(DateTime date) {
     final local = date.toLocal();
-    final hour = local.hour == 0 ? 12 : local.hour > 12 ? local.hour - 12 : local.hour;
+    final hour = local.hour == 0
+        ? 12
+        : local.hour > 12
+        ? local.hour - 12
+        : local.hour;
     final minute = local.minute.toString().padLeft(2, '0');
     return '$hour:$minute ${local.hour >= 12 ? 'PM' : 'AM'}';
   }
@@ -441,7 +464,11 @@ class _MessageBubble extends StatelessWidget {
 
   static String _timeLabel(DateTime date) {
     final local = date.toLocal();
-    final hour = local.hour == 0 ? 12 : local.hour > 12 ? local.hour - 12 : local.hour;
+    final hour = local.hour == 0
+        ? 12
+        : local.hour > 12
+        ? local.hour - 12
+        : local.hour;
     final minute = local.minute.toString().padLeft(2, '0');
     return '$hour:$minute ${local.hour >= 12 ? 'PM' : 'AM'}';
   }
@@ -469,8 +496,8 @@ class _InvitationActions extends StatelessWidget {
           invitation.myResponse == 'ACCEPTED'
               ? 'You accepted this invitation'
               : invitation.myResponse == 'DECLINED'
-                  ? 'You declined this invitation'
-                  : 'Invitation is ${invitation.status.toLowerCase()}',
+              ? 'You declined this invitation'
+              : 'Invitation is ${invitation.status.toLowerCase()}',
           style: TextStyle(
             color: textColor.withValues(alpha: 0.8),
             fontSize: 12,

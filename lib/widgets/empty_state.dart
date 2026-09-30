@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 
 class EmptyState extends StatelessWidget {
@@ -27,11 +28,17 @@ class EmptyState extends StatelessWidget {
           children: [
             Icon(icon, size: 48, color: AppColors.primaryMuted),
             const SizedBox(height: 20),
-            Text(title,
-                textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 8),
-            Text(message,
-                textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             if (actionLabel != null) ...[
               const SizedBox(height: 24),
               ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),

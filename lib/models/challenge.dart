@@ -31,7 +31,8 @@ class ChallengeResource {
       resourceType: json['resource_type']?.toString() ?? 'LINK',
       rationale: json['rationale']?.toString() ?? '',
       orderIndex: (json['order_index'] as num?)?.toInt() ?? 0,
-      completed: json['completed'] == true ||
+      completed:
+          json['completed'] == true ||
           json['is_completed'] == true ||
           json['completed_at'] != null,
       completedAt: json['completed_at'] == null
@@ -104,9 +105,7 @@ class ChallengeMetric {
     }
 
     final rawUnit = json['unit']?.toString().trim() ?? '';
-    final unit = rawUnit.toLowerCase() == 'sseconds'
-      ? 'seconds'
-      : rawUnit;
+    final unit = rawUnit.toLowerCase() == 'sseconds' ? 'seconds' : rawUnit;
 
     return ChallengeMetric(
       key: json['key']?.toString() ?? '',
@@ -188,7 +187,9 @@ class ChallengeRequirement {
     return ChallengeRequirement(
       metricKey: json['metric_key']?.toString() ?? '',
       operator: json['operator']?.toString() ?? 'AT_LEAST',
-      value: rawValue is num ? rawValue.toDouble() : double.tryParse('$rawValue'),
+      value: rawValue is num
+          ? rawValue.toDouble()
+          : double.tryParse('$rawValue'),
       unit: json['unit']?.toString() ?? '',
       label: json['label']?.toString() ?? '',
     );
@@ -292,18 +293,18 @@ class Challenge {
         'joined_count',
         'participants_count',
       ]),
-        completionCount: _readInt(json, const ['completion_count']),
-        featured: json['featured'] == true,
-        legendary: json['legendary'] == true,
-        categories: (json['categories'] as List? ?? [])
+      completionCount: _readInt(json, const ['completion_count']),
+      featured: json['featured'] == true,
+      legendary: json['legendary'] == true,
+      categories: (json['categories'] as List? ?? [])
           .whereType<Map>()
           .map((item) => Map<String, dynamic>.from(item))
           .toList(),
-        metrics: _readList(json['metrics'])
+      metrics: _readList(json['metrics'])
           .map(ChallengeMetric.fromJson)
-            .where((metric) => metric.key.isNotEmpty)
+          .where((metric) => metric.key.isNotEmpty)
           .toList(),
-        requirements: _readList(json['requirements'])
+      requirements: _readList(json['requirements'])
           .map(ChallengeRequirement.fromJson)
           .toList(),
     );

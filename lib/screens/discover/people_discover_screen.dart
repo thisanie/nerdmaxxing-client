@@ -199,7 +199,8 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
               ),
             SliverToBoxAdapter(
               child: _TrendingSection(
-                challenge: feed.featured ??
+                challenge:
+                    feed.featured ??
                     (feed.trending.isEmpty ? null : feed.trending.first),
                 onTap: (challenge) => _openChallenge(challenge),
                 onViewAll: () => Navigator.of(context).push(
@@ -300,7 +301,11 @@ class _SearchField extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 4, 6, 4),
       child: Row(
         children: [
-          Icon(Icons.search, color: colorScheme.onSurfaceVariant, size: 22),
+          Icon(
+            Icons.search_rounded,
+            color: colorScheme.onSurfaceVariant,
+            size: 22,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
@@ -331,7 +336,11 @@ class _SearchField extends StatelessWidget {
                     height: 17,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Icon(Icons.arrow_forward, color: colorScheme.onSurfaceVariant, size: 20),
+                : Icon(
+                    Icons.arrow_forward_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 20,
+                  ),
           ),
         ],
       ),
@@ -370,7 +379,9 @@ class _TopicRow extends StatelessWidget {
             if (i > 0) const SizedBox(width: 9),
             Material(
               color: colorScheme.surface,
-              shape: StadiumBorder(side: BorderSide(color: colorScheme.outline)),
+              shape: StadiumBorder(
+                side: BorderSide(color: colorScheme.outline),
+              ),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () => onTap(categories[i]),
@@ -433,16 +444,15 @@ class _TrendingSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              const Expanded(
-                child: _SectionHeading('Trending this week'),
-              ),
+              const Expanded(child: _SectionHeading('Trending this week')),
               TextButton(
                 onPressed: onViewAll,
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  foregroundColor: Theme.of(context).brightness == Brightness.dark
+                  foregroundColor:
+                      Theme.of(context).brightness == Brightness.dark
                       ? AppColors.primary
                       : const Color(0xFF4F6A0A),
                 ),
@@ -476,7 +486,8 @@ class _TrendingSection extends StatelessWidget {
                             Image.network(
                               challenge!.imageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => const _ChallengeArtwork(),
+                              errorBuilder: (_, _, _) =>
+                                  const _ChallengeArtwork(),
                             )
                           else
                             const _ChallengeArtwork(),
@@ -542,7 +553,7 @@ class _TrendingSection extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    Icons.bolt,
+                                    Icons.bolt_rounded,
                                     size: 16,
                                     color: colorScheme.onSurface,
                                   ),
@@ -581,7 +592,7 @@ class _ChallengeArtwork extends StatelessWidget {
       color: isDark ? AppColors.surfaceAlt : AppColors.limeWash,
       child: Center(
         child: Icon(
-          Icons.auto_awesome,
+          Icons.auto_awesome_rounded,
           color: isDark ? AppColors.primary : AppColors.lightTextPrimary,
           size: 38,
         ),
@@ -635,9 +646,7 @@ class _TopNerdsSection extends StatelessWidget {
               children: [
                 for (var i = 0; i < nerds.length; i++) ...[
                   if (i > 0) Divider(height: 1, color: colorScheme.outline),
-                  _LeaderboardRow(
-                    nerd: nerds[i],
-                  ),
+                  _LeaderboardRow(nerd: nerds[i]),
                 ],
               ],
             ),
@@ -701,11 +710,20 @@ class _LeaderboardRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 3),
                 Text(
                   '${nerd.dayStreak}-day streak',
-                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -723,7 +741,11 @@ class _LeaderboardRow extends StatelessWidget {
               ),
               Text(
                 'DONE',
-                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 9, letterSpacing: 1),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 9,
+                  letterSpacing: 1,
+                ),
               ),
             ],
           ),
@@ -789,10 +811,7 @@ class _ActivityRow extends StatelessWidget {
   final DiscoverActivity activity;
   final bool isLast;
 
-  const _ActivityRow({
-    required this.activity,
-    required this.isLast,
-  });
+  const _ActivityRow({required this.activity, required this.isLast});
 
   @override
   Widget build(BuildContext context) {
@@ -804,7 +823,9 @@ class _ActivityRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        border: isLast ? null : Border(bottom: BorderSide(color: colorScheme.outline)),
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: colorScheme.outline)),
       ),
       child: Row(
         children: [
@@ -816,19 +837,31 @@ class _ActivityRow extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: colorScheme.outline),
             ),
-            child: Text(initials, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+            child: Text(
+              initials,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(width: 13),
           Expanded(
             child: Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  TextSpan(
+                    text: name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   TextSpan(text: ' just $action '),
-                  TextSpan(text: subject, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  TextSpan(
+                    text: subject,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ],
               ),
-              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -897,12 +930,12 @@ class _SearchResults extends StatelessWidget {
                 ? NetworkImage(user.avatarUrl!)
                 : null,
             child: user.avatarUrl == null
-                ? const Icon(Icons.person_outline)
+                ? const Icon(Icons.person_rounded)
                 : null,
           ),
           title: Text(user.displayName ?? user.username ?? 'NerdMaxxer'),
           subtitle: Text('@${user.username ?? 'profile'}'),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(Icons.chevron_right_rounded),
           onTap: user.username == null
               ? null
               : () => onProfileTap(user.username!),
@@ -910,13 +943,13 @@ class _SearchResults extends StatelessWidget {
       for (final challenge in challenges.take(3))
         ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.auto_awesome),
+          leading: const Icon(Icons.auto_awesome_rounded),
           title: Text(
             challenge.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(Icons.chevron_right_rounded),
           onTap: () => onChallengeTap(challenge),
         ),
     ],

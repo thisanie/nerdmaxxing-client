@@ -1,6 +1,7 @@
 import '../models/challenge.dart';
 import '../models/user_stats.dart';
 import '../models/user_profile.dart';
+
 import 'package:dio/dio.dart';
 
 import 'api_client.dart';
@@ -30,11 +31,7 @@ class ProfileService {
   }) async {
     final data = await api.patch(
       '/users/me/profile',
-      data: FormData.fromMap({
-        'name': name,
-        'bio': bio,
-        'avatar': ?avatar,
-      }),
+      data: FormData.fromMap({'name': name, 'bio': bio, 'avatar': ?avatar}),
     );
     return UserProfile.fromJson(data as Map<String, dynamic>);
   }

@@ -72,7 +72,10 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
       }
     });
     try {
-      final page = await widget.service.list(widget.challengeSlug, cursor: more ? _cursor : null);
+      final page = await widget.service.list(
+        widget.challengeSlug,
+        cursor: more ? _cursor : null,
+      );
       if (!mounted) return;
       setState(() {
         if (more) {
@@ -88,7 +91,11 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
-      if (mounted) setState(() { _loading = false; _loadingMore = false; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _loadingMore = false;
+        });
     }
   }
 
@@ -96,7 +103,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     final discussionId = widget.initialDiscussionId;
     final replyId = widget.initialReplyId;
     if (discussionId == null || replyId == null) return;
-    final comment = _comments.where((item) => item.id == discussionId).firstOrNull;
+    final comment = _comments
+        .where((item) => item.id == discussionId)
+        .firstOrNull;
     if (comment == null) return;
     await _loadReplies(comment);
     if (!mounted) return;
@@ -114,7 +123,8 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
 
   Future<void> _post() async {
     final body = _composer.text.trim();
-    if (!widget.canPost || body.isEmpty || body.length > 2200 || _posting) return;
+    if (!widget.canPost || body.isEmpty || body.length > 2200 || _posting)
+      return;
     final parentComment = _replyingTo;
     setState(() => _posting = true);
     try {
@@ -182,8 +192,14 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
           onChanged: (value) => draft = value,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, draft.trim()), child: const Text('SAVE')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, draft.trim()),
+            child: const Text('SAVE'),
+          ),
         ],
       ),
     );
@@ -202,15 +218,22 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete comment?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('CANCEL')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('DELETE')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('DELETE'),
+          ),
         ],
       ),
     );
     if (confirmed != true) return;
     try {
       await widget.service.delete(comment.id);
-      if (mounted) setState(() => _replaceComment(comment.copyWith(deleted: true)));
+      if (mounted)
+        setState(() => _replaceComment(comment.copyWith(deleted: true)));
     } on ApiException catch (e) {
       if (mounted) _showError(e.message);
     }
@@ -219,7 +242,8 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   Future<void> _resolve(DiscussionComment comment) async {
     try {
       await widget.service.resolve(comment.id);
-      if (mounted) setState(() => _replaceComment(comment.copyWith(resolved: true)));
+      if (mounted)
+        setState(() => _replaceComment(comment.copyWith(resolved: true)));
     } on ApiException catch (e) {
       if (mounted) _showError(e.message);
     }
@@ -238,30 +262,49 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
           onChanged: (value) => draft = value,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, draft.trim()), child: const Text('SAVE')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, draft.trim()),
+            child: const Text('SAVE'),
+          ),
         ],
       ),
     );
     if (body == null || body.isEmpty || body == reply.body) return;
     try {
-      final updated = await widget.service.updateReply(discussionId, reply.id, body);
+      final updated = await widget.service.updateReply(
+        discussionId,
+        reply.id,
+        body,
+      );
       if (mounted) setState(() => _replaceReply(discussionId, updated));
     } on ApiException catch (e) {
       if (mounted) _showError(e.message);
     }
   }
 
-  Future<void> _deleteReply(String discussionId, DiscussionComment reply) async {
+  Future<void> _deleteReply(
+    String discussionId,
+    DiscussionComment reply,
+  ) async {
     try {
       await widget.service.deleteReply(discussionId, reply.id);
-      if (mounted) setState(() => _replaceReply(discussionId, reply.copyWith(deleted: true)));
+      if (mounted)
+        setState(
+          () => _replaceReply(discussionId, reply.copyWith(deleted: true)),
+        );
     } on ApiException catch (e) {
       if (mounted) _showError(e.message);
     }
   }
 
-  Future<void> _reportReply(String discussionId, DiscussionComment reply) async {
+  Future<void> _reportReply(
+    String discussionId,
+    DiscussionComment reply,
+  ) async {
     try {
       await widget.service.report(discussionId, replyId: reply.id);
       if (mounted) _showError('Report submitted.');
@@ -283,7 +326,8 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -322,11 +366,17 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_loading)
-          const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: CircularProgressIndicator()))
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          )
         else if (_error != null)
           _errorView()
         else if (_comments.isEmpty)
-          const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Text('No comments yet. Start the conversation.'))
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Text('No comments yet. Start the conversation.'),
+          )
         else ...[
           for (final comment in _comments) _commentView(comment),
           if (_cursor != null)
@@ -352,15 +402,21 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
               Expanded(
                 child: Text(
                   'Replying to ${_replyingTo!.author.name ?? _replyingTo!.author.username ?? 'comment'}',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               IconButton(
                 tooltip: 'Cancel reply',
                 onPressed: () => setState(() => _replyingTo = null),
-                icon: const Icon(Icons.close, size: 18),
-                constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+                icon: const Icon(Icons.close_rounded, size: 18),
+                constraints: const BoxConstraints.tightFor(
+                  width: 28,
+                  height: 28,
+                ),
                 padding: EdgeInsets.zero,
               ),
             ],
@@ -385,7 +441,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
                 maxLines: 1,
                 minLines: 1,
                 decoration: InputDecoration(
-                  hintText: _replyingTo == null ? 'Share a question or idea...' : 'Write a reply...',
+                  hintText: _replyingTo == null
+                      ? 'Share a question or idea...'
+                      : 'Write a reply...',
                   counterText: '',
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.fromLTRB(16, 9, 8, 9),
@@ -396,11 +454,17 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
           IconButton(
             tooltip: _replyingTo == null ? 'Post comment' : 'Post reply',
             onPressed: _posting ? null : _post,
-            color: _composer.text.trim().isEmpty ? AppColors.textDim : AppColors.primary,
+            color: _composer.text.trim().isEmpty
+                ? AppColors.textDim
+                : AppColors.primary,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints.tightFor(width: 34, height: 34),
             icon: _posting
-                ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    width: 17,
+                    height: 17,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.send_rounded, size: 20),
           ),
         ],
@@ -410,95 +474,152 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
 
   Widget _commentView(DiscussionComment comment) {
     final replies = _replies[comment.id];
-    final displayName = comment.author.name ?? comment.author.username ?? 'NerdMaxxer';
+    final displayName =
+        comment.author.name ?? comment.author.username ?? 'NerdMaxxer';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _avatar(displayName, imageUrl: comment.author.avatarUrl),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          displayName,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _avatar(displayName, imageUrl: comment.author.avatarUrl),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            displayName,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
-                      ),
-                      if (comment.createdAt != null) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          _timeLabel(comment.createdAt!),
-                          style: const TextStyle(color: AppColors.textDim, fontSize: 12.5),
-                        ),
+                        if (comment.createdAt != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            _timeLabel(comment.createdAt!),
+                            style: const TextStyle(
+                              color: AppColors.textDim,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    comment.deleted ? 'Comment deleted' : comment.body,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, height: 1.45),
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      comment.deleted ? 'Comment deleted' : comment.body,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 15,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'edit': _edit(comment);
-                  case 'delete': _delete(comment);
-                  case 'resolve': _resolve(comment);
-                  case 'report': _report(comment);
-                }
-              },
-              itemBuilder: (_) => [
-                if (comment.author.username != null && comment.author.username == widget.currentUsername)
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                if (comment.author.username != null && comment.author.username == widget.currentUsername)
-                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                if (comment.type == 'QUESTION' && !comment.resolved && widget.canPost)
-                  const PopupMenuItem(value: 'resolve', child: Text('Mark resolved')),
-                const PopupMenuItem(value: 'report', child: Text('Report')),
-              ],
-              icon: const Icon(Icons.more_horiz, size: 18),
-            ),
-          ]),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'edit':
+                      _edit(comment);
+                    case 'delete':
+                      _delete(comment);
+                    case 'resolve':
+                      _resolve(comment);
+                    case 'report':
+                      _report(comment);
+                  }
+                },
+                itemBuilder: (_) => [
+                  if (comment.author.username != null &&
+                      comment.author.username == widget.currentUsername)
+                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  if (comment.author.username != null &&
+                      comment.author.username == widget.currentUsername)
+                    const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  if (comment.type == 'QUESTION' &&
+                      !comment.resolved &&
+                      widget.canPost)
+                    const PopupMenuItem(
+                      value: 'resolve',
+                      child: Text('Mark resolved'),
+                    ),
+                  const PopupMenuItem(value: 'report', child: Text('Report')),
+                ],
+                icon: const Icon(Icons.more_horiz_rounded, size: 18),
+              ),
+            ],
+          ),
           if (!comment.deleted && widget.canPost)
             Padding(
               padding: const EdgeInsets.only(left: 44, top: 5),
-              child: Row(children: [
-                if (comment.type == 'QUESTION' && !comment.resolved)
-                  const Text('QUESTION  ', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.w700)),
-                TextButton(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 28),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              child: Row(
+                children: [
+                  if (comment.type == 'QUESTION' && !comment.resolved)
+                    const Text(
+                      'QUESTION  ',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 28),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () => _reply(comment),
+                    child: const Text(
+                      'Reply',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                  onPressed: () => _reply(comment),
-                  child: const Text('Reply', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                ),
-                if (comment.replyCount > 0 || replies != null)
-                  TextButton(onPressed: () => _loadReplies(comment), child: Text(replies == null ? '${comment.replyCount} replies' : 'Hide replies')),
-              ]),
+                  if (comment.replyCount > 0 || replies != null)
+                    TextButton(
+                      onPressed: () => _loadReplies(comment),
+                      child: Text(
+                        replies == null
+                            ? '${comment.replyCount} replies'
+                            : 'Hide replies',
+                      ),
+                    ),
+                ],
+              ),
             ),
           if (replies != null)
             Padding(
               padding: const EdgeInsets.only(left: 44, top: 6),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  border: Border(left: BorderSide(color: AppColors.primary.withValues(alpha: .45), width: 2)),
+                  border: Border(
+                    left: BorderSide(
+                      color: AppColors.primary.withValues(alpha: .45),
+                      width: 2,
+                    ),
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 12, top: 4),
-                  child: Column(children: [for (final reply in replies) _replyView(comment.id, reply)]),
+                  child: Column(
+                    children: [
+                      for (final reply in replies)
+                        _replyView(comment.id, reply),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -586,10 +707,13 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
                       const PopupMenuItem(value: 'edit', child: Text('Edit')),
                     if (reply.author.username != null &&
                         reply.author.username == widget.currentUsername)
-                      const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete'),
+                      ),
                     const PopupMenuItem(value: 'report', child: Text('Report')),
                   ],
-                  icon: const Icon(Icons.more_horiz, size: 18),
+                  icon: const Icon(Icons.more_horiz_rounded, size: 18),
                 ),
               ],
             ),
@@ -600,13 +724,18 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   }
 
   Widget _avatar(String? label, {String? imageUrl, double radius = 19}) {
-    final initial = (label == null || label.isEmpty) ? '?' : label.substring(0, 1).toUpperCase();
+    final initial = (label == null || label.isEmpty)
+        ? '?'
+        : label.substring(0, 1).toUpperCase();
     return CircleAvatar(
       radius: radius,
       backgroundColor: AppColors.surfaceAlt,
       backgroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
       child: imageUrl == null
-          ? Text(initial, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))
+          ? Text(
+              initial,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            )
           : null,
     );
   }
@@ -619,8 +748,12 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     return '${age.inDays}d';
   }
 
-  Widget _errorView() => Row(children: [
-    Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.danger))),
-    TextButton(onPressed: _load, child: const Text('RETRY')),
-  ]);
+  Widget _errorView() => Row(
+    children: [
+      Expanded(
+        child: Text(_error!, style: const TextStyle(color: AppColors.danger)),
+      ),
+      TextButton(onPressed: _load, child: const Text('RETRY')),
+    ],
+  );
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-  hide Provider, ChangeNotifierProvider, Consumer;
+    hide Provider, ChangeNotifierProvider, Consumer;
 
 import '../../models/challenge.dart';
 import '../../models/group.dart';
@@ -189,9 +189,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   }
 
   void _openGroup(Group group) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => GroupChatScreen(group: group)),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => GroupChatScreen(group: group)));
   }
 
   bool _isOwnProfile(AuthProvider auth) =>
@@ -242,10 +241,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
 
   Future<void> _changeStatus(Participation participation, String status) async {
     try {
-      await ref.read(participationControllerProvider.notifier).updateStatus(
-        participation.id,
-        status,
-      );
+      await ref
+          .read(participationControllerProvider.notifier)
+          .updateStatus(participation.id, status);
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -276,20 +274,20 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit_outlined),
+              leading: const Icon(Icons.edit_rounded),
               title: const Text('Update profile'),
               onTap: () => Navigator.pop(sheetContext, 'update'),
             ),
             Consumer<ThemeProvider>(
               builder: (context, themeProvider, _) => SwitchListTile.adaptive(
-                secondary: const Icon(Icons.brightness_6_outlined),
+                secondary: const Icon(Icons.brightness_6_rounded),
                 title: const Text('Dark theme'),
                 value: themeProvider.isDark,
                 onChanged: themeProvider.setDark,
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.logout),
+              leading: const Icon(Icons.logout_rounded),
               title: const Text('Log out'),
               onTap: () => Navigator.pop(sheetContext, 'logout'),
             ),
@@ -328,11 +326,11 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     final profile = provider.profile;
     final isOwnProfile = _isOwnProfile(auth);
     final completedChallenges = isOwnProfile
-      ? ref.watch(myCompletedChallengesProvider).valueOrNull ?? const []
-      : provider.completedChallenges;
+        ? ref.watch(myCompletedChallengesProvider).valueOrNull ?? const []
+        : provider.completedChallenges;
     final createdChallenges = isOwnProfile
-      ? ref.watch(myCreatedChallengesProvider).valueOrNull ?? const []
-      : provider.createdChallenges;
+        ? ref.watch(myCreatedChallengesProvider).valueOrNull ?? const []
+        : provider.createdChallenges;
 
     if (provider.isLoading && profile == null) {
       return Scaffold(
@@ -431,9 +429,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             ),
             if (_selectedTab == 0) ...[
               if (isOwnProfile) ...[
-                const SliverToBoxAdapter(
-                  child: _SectionLabel('In progress'),
-                ),
+                const SliverToBoxAdapter(child: _SectionLabel('In progress')),
                 if (participationState.isLoading && participations.isEmpty)
                   const SliverToBoxAdapter(
                     child: Padding(
@@ -444,7 +440,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 else if (participations.isEmpty)
                   const SliverToBoxAdapter(
                     child: EmptyState(
-                      icon: Icons.flag_outlined,
+                      icon: Icons.flag_rounded,
                       title: 'Your next interesting thing is waiting.',
                       message:
                           'Discover a challenge and accept it to get started.',
@@ -457,9 +453,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                         participation: participations[index],
                         challenge:
                             _challengesById[participations[index].challengeId],
-                        statusLabel: _statusLabel(
-                          participations[index].status,
-                        ),
+                        statusLabel: _statusLabel(participations[index].status),
                         onChangeStatus: _changeStatus,
                       ),
                       childCount: participations.length,
@@ -503,9 +497,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _ChallengeTile(
-                        challenge: completedChallenges[index],
-                      ),
+                      (context, index) =>
+                          _ChallengeTile(challenge: completedChallenges[index]),
                       childCount: completedChallenges.length,
                     ),
                     gridDelegate:
@@ -557,9 +550,9 @@ class _ProfileTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final tabs = [
-      (Icons.flag_outlined, 'Challenges'),
-      (Icons.groups_outlined, 'Groups'),
-      if (showRewards) (Icons.emoji_events_outlined, 'Rewards'),
+      (Icons.flag_rounded, 'Challenges'),
+      (Icons.groups_rounded, 'Groups'),
+      if (showRewards) (Icons.emoji_events_rounded, 'Rewards'),
     ];
     return Padding(
       padding: const EdgeInsets.only(top: 20),
@@ -858,7 +851,7 @@ class _GroupsPanel extends StatelessWidget {
               IconButton(
                 tooltip: 'Create group',
                 onPressed: onCreate,
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.add_rounded),
               ),
           ],
         ),
@@ -915,7 +908,12 @@ class _GroupTile extends StatelessWidget {
   final Future<void> Function(Group group)? onLeave;
   final VoidCallback? onTap;
 
-  const _GroupTile({required this.group, this.onJoin, this.onLeave, this.onTap});
+  const _GroupTile({
+    required this.group,
+    this.onJoin,
+    this.onLeave,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -923,8 +921,8 @@ class _GroupTile extends StatelessWidget {
     return _RowCard(
       onTap: onTap,
       leadingIcon: group.visibility == 'PRIVATE'
-          ? Icons.lock_outline
-          : Icons.groups_outlined,
+          ? Icons.lock_rounded
+          : Icons.groups_rounded,
       leadingColor: AppColors.limeWash,
       leadingIconColor: AppColors.lightTextPrimary,
       title: group.name,
@@ -1208,7 +1206,7 @@ class _ParticipationTile extends StatelessWidget {
                 ),
               ),
             ),
-      leadingIcon: Icons.flag_outlined,
+      leadingIcon: Icons.flag_rounded,
       leadingColor: scheme.surfaceContainerHighest,
       title:
           challenge?.title ??
@@ -1241,7 +1239,7 @@ class _CreatedChallengeTile extends StatelessWidget {
           ),
         ),
       ),
-      leadingIcon: isPrivate ? Icons.lock_outline : Icons.edit_note,
+      leadingIcon: isPrivate ? Icons.lock_rounded : Icons.edit_note_rounded,
       leadingColor: AppColors.limeWash,
       leadingIconColor: AppColors.lightTextPrimary,
       title: challenge.title,
@@ -1255,7 +1253,11 @@ class _CreatedChallengeTile extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.bolt, size: 14, color: AppColors.lightTextPrimary),
+            const Icon(
+              Icons.bolt_rounded,
+              size: 14,
+              color: AppColors.lightTextPrimary,
+            ),
             const SizedBox(width: 3),
             Text(
               '${challenge.auraPoints}',
@@ -1362,69 +1364,76 @@ class _ChallengeTile extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ChallengeDetailScreen(slug: challenge.slug),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ChallengeDetailScreen(slug: challenge.slug),
+          ),
         ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (challenge.imageUrl != null)
-            Image.network(
-              challenge.imageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _fallback(),
-            )
-          else
-            _fallback(),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(7),
-              color: Colors.black.withValues(alpha: 0.68),
-              child: Text(
-                challenge.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (challenge.imageUrl != null)
+              Image.network(
+                challenge.imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _fallback(),
+              )
+            else
+              _fallback(),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(7),
+                color: Colors.black.withValues(alpha: 0.68),
+                child: Text(
+                  challenge.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            top: 7,
-            right: 7,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.bolt, size: 13, color: AppColors.primary),
-                    const SizedBox(width: 2),
-                    Text(
-                      '${challenge.auraPoints}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
+            Positioned(
+              top: 7,
+              right: 7,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.bolt_rounded,
+                        size: 13,
+                        color: AppColors.primary,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 2),
+                      Text(
+                        '${challenge.auraPoints}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -1433,7 +1442,7 @@ class _ChallengeTile extends StatelessWidget {
     color: AppColors.limeWash,
     alignment: Alignment.center,
     child: const Icon(
-      Icons.flag_outlined,
+      Icons.flag_rounded,
       color: AppColors.lightTextPrimary,
       size: 28,
     ),

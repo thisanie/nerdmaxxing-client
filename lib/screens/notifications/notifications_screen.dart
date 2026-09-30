@@ -20,7 +20,8 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
@@ -85,16 +86,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       if (!mounted) return;
       setState(() {
         _notifications = _notifications
-        .map(
-          (item) => item.id == notification.id
-          ? item.copyWith(isRead: true, invitationStatus: 'ACCEPTED')
-          : item,
-        )
+            .map(
+              (item) => item.id == notification.id
+                  ? item.copyWith(isRead: true, invitationStatus: 'ACCEPTED')
+                  : item,
+            )
             .toList();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invitation accepted.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Invitation accepted.')));
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
@@ -136,7 +136,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     try {
       final embeddedChallenge = notification.data['challenge'];
       if (embeddedChallenge is Map) {
-        challenge = Challenge.fromJson(embeddedChallenge.cast<String, dynamic>());
+        challenge = Challenge.fromJson(
+          embeddedChallenge.cast<String, dynamic>(),
+        );
       }
       final slug = notification.challengeSlug;
       if (challenge != null) {
@@ -204,9 +206,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         return;
       }
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ProfileScreen(username: username),
-        ),
+        MaterialPageRoute(builder: (_) => ProfileScreen(username: username)),
       );
     } else if (notification.isChallengeInvitation || notification.isReply) {
       await _viewChallenge(notification);
@@ -227,9 +227,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     try {
       final group = await context.read<GroupsService>().get(groupId);
       if (!mounted) return;
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => GroupChatScreen(group: group)),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => GroupChatScreen(group: group)));
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     }
@@ -302,9 +302,7 @@ class _NotificationTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       margin: EdgeInsets.zero,
-      color: notification.isRead
-          ? null
-          : colorScheme.surfaceContainerHighest,
+      color: notification.isRead ? null : colorScheme.surfaceContainerHighest,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -318,12 +316,12 @@ class _NotificationTile extends StatelessWidget {
                 children: [
                   Icon(
                     isGroupMessage
-                      ? Icons.groups_outlined
-                      : isInvitation
-                        ? Icons.mail_outline
+                        ? Icons.groups_rounded
+                        : isInvitation
+                        ? Icons.mail_rounded
                         : notification.isFollow
-                        ? Icons.person_add_alt_1_outlined
-                        : Icons.notifications_none,
+                        ? Icons.person_add_alt_1_rounded
+                        : Icons.notifications_none_rounded,
                     color: AppColors.primary,
                   ),
                   const SizedBox(width: 12),
@@ -331,10 +329,10 @@ class _NotificationTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                          Text(
+                        Text(
                           isGroupMessage
-                            ? notification.groupName ?? 'Group message'
-                            : notification.isFollow
+                              ? notification.groupName ?? 'Group message'
+                              : notification.isFollow
                               ? notification.actorName ?? 'New follower'
                               : notification.challengeTitle ?? 'Notification',
                           style: const TextStyle(fontWeight: FontWeight.w700),
@@ -357,10 +355,14 @@ class _NotificationTile extends StatelessWidget {
                   if (!notification.isRead)
                     const Padding(
                       padding: EdgeInsets.only(left: 8, top: 4),
-                      child: Icon(Icons.circle, size: 8, color: AppColors.primary),
+                      child: Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: AppColors.primary,
+                      ),
                     ),
                 ],
-                ),
+              ),
               if (isInvitation && notification.invitationStatus != null) ...[
                 const SizedBox(height: 10),
                 Text(

@@ -65,9 +65,9 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   void dispose() {
-    context
-        .read<NotificationNavigationController>()
-        .removeListener(_handleNotificationRequest);
+    context.read<NotificationNavigationController>().removeListener(
+      _handleNotificationRequest,
+    );
     super.dispose();
   }
 
@@ -85,10 +85,11 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Future<void> _openNotificationRoute(Map<String, String> data) async {
-    final groupId = data['group_id'] ??
-      data['groupId'] ??
-      data['related_id'] ??
-      data['entity_id'];
+    final groupId =
+        data['group_id'] ??
+        data['groupId'] ??
+        data['related_id'] ??
+        data['entity_id'];
     if (groupId != null && groupId.isNotEmpty) {
       try {
         final group = await context.read<GroupsService>().get(groupId);
@@ -152,16 +153,13 @@ class _BottomNavigationBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  const _BottomNavigationBar({
-    required this.currentIndex,
-    required this.onTap,
-  });
+  const _BottomNavigationBar({required this.currentIndex, required this.onTap});
 
   static const _items = [
-    (Icons.home_outlined, 'Home'),
-    (Icons.explore_outlined, 'Discover'),
-    (Icons.leaderboard_outlined, 'Rank'),
-    (Icons.person_outline, 'Profile'),
+    (Icons.home_rounded, 'Home'),
+    (Icons.explore_rounded, 'Discover'),
+    (Icons.leaderboard_rounded, 'Rank'),
+    (Icons.person_rounded, 'Profile'),
   ];
 
   @override
@@ -221,8 +219,8 @@ class _NavigationItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: selected
                   ? (Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.primaryMuted
-                      : AppColors.limeWash)
+                        ? AppColors.primaryMuted
+                        : AppColors.limeWash)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(999),
             ),

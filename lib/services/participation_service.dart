@@ -57,11 +57,12 @@ class ParticipationService {
     );
     final response = _responseMap(data);
     return ResourceCompletion.fromJson(
-      response ?? {
-        'resource_id': resourceId,
-        'milestone_id': milestoneId,
-        'completed': true,
-      },
+      response ??
+          {
+            'resource_id': resourceId,
+            'milestone_id': milestoneId,
+            'completed': true,
+          },
     );
   }
 
@@ -83,11 +84,7 @@ class ParticipationService {
     );
     final response = _responseMap(data);
     return MetricAttempt.fromJson(
-      response ?? {
-        'metric_key': metricKey,
-        'value': value,
-        'unit': unit,
-      },
+      response ?? {'metric_key': metricKey, 'value': value, 'unit': unit},
     );
   }
 

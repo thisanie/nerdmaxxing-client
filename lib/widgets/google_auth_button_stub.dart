@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 /// Non-web fallback: a normal button that triggers the imperative sign-in flow.
-Widget buildGoogleAuthButton({required bool isBusy, required VoidCallback onPressed}) {
+Widget buildGoogleAuthButton({
+  required bool isBusy,
+  required VoidCallback onPressed,
+}) {
   return SizedBox(
     width: double.infinity,
     child: ElevatedButton.icon(
@@ -10,9 +13,12 @@ Widget buildGoogleAuthButton({required bool isBusy, required VoidCallback onPres
           ? const SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
             )
-          : const Icon(Icons.login),
+          : const Icon(Icons.login_rounded),
       label: Text(isBusy ? 'Signing in...' : 'Continue with Google'),
     ),
   );

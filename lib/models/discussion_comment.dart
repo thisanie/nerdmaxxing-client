@@ -30,10 +30,19 @@ class DiscussionComment {
     final author = rawAuthor is Map
         ? UserSummary.fromJson(Map<String, dynamic>.from(rawAuthor))
         : UserSummary(
-            id: json['author_id']?.toString() ?? json['user_id']?.toString() ?? '',
-            username: json['author_username']?.toString() ?? json['username']?.toString(),
-            name: json['author_name']?.toString() ?? json['display_name']?.toString(),
-            avatarUrl: json['author_avatar_url']?.toString() ?? json['avatar_url']?.toString(),
+            id:
+                json['author_id']?.toString() ??
+                json['user_id']?.toString() ??
+                '',
+            username:
+                json['author_username']?.toString() ??
+                json['username']?.toString(),
+            name:
+                json['author_name']?.toString() ??
+                json['display_name']?.toString(),
+            avatarUrl:
+                json['author_avatar_url']?.toString() ??
+                json['avatar_url']?.toString(),
           );
     return DiscussionComment(
       id: json['id']?.toString() ?? '',
@@ -64,7 +73,8 @@ class DiscussionComment {
     );
   }
 
-  static DateTime? _date(dynamic value) => value == null ? null : DateTime.tryParse(value.toString());
+  static DateTime? _date(dynamic value) =>
+      value == null ? null : DateTime.tryParse(value.toString());
 }
 
 class DiscussionPage {

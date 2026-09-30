@@ -92,7 +92,9 @@ class AuthProvider extends ChangeNotifier {
     displayName = session.displayName;
     avatarUrl = session.avatarUrl;
     username = session.username;
-    status = session.needsUsername ? AuthStatus.needsUsername : AuthStatus.authenticated;
+    status = session.needsUsername
+        ? AuthStatus.needsUsername
+        : AuthStatus.authenticated;
   }
 
   Future<void> signInWithGoogle() async {
@@ -120,7 +122,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
 
   void onUsernameSet(String value) {
     username = value;

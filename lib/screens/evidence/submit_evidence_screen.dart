@@ -144,7 +144,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Icon(
-          Icons.check_circle_outline,
+          Icons.check_circle_rounded,
           size: 48,
           color: AppColors.success,
         ),

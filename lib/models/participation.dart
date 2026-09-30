@@ -29,10 +29,15 @@ class Participation {
       status: json['status'] ?? 'ACCEPTED',
       completionStatus: json['completion_status'] ?? 'NOT_COMPLETED',
       verificationStatus: json['verification_status'] ?? 'NOT_REQUIRED',
-      startedAt: json['started_at'] != null ? DateTime.tryParse(json['started_at']) : null,
-      lastActivityAt:
-          json['last_activity_at'] != null ? DateTime.tryParse(json['last_activity_at']) : null,
-      completedAt: json['completed_at'] != null ? DateTime.tryParse(json['completed_at']) : null,
+      startedAt: json['started_at'] != null
+          ? DateTime.tryParse(json['started_at'])
+          : null,
+      lastActivityAt: json['last_activity_at'] != null
+          ? DateTime.tryParse(json['last_activity_at'])
+          : null,
+      completedAt: json['completed_at'] != null
+          ? DateTime.tryParse(json['completed_at'])
+          : null,
     );
   }
 }

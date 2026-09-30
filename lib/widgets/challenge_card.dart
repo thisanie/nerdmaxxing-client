@@ -68,7 +68,7 @@ class ChallengeCard extends StatelessWidget {
                     children: [
                       if (legendary) ...[
                         const Icon(
-                          Icons.workspace_premium,
+                          Icons.workspace_premium_rounded,
                           size: 14,
                           color: AppColors.warning,
                         ),
@@ -108,7 +108,7 @@ class ChallengeCard extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        Icons.schedule,
+                        Icons.schedule_rounded,
                         size: 15,
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -122,7 +122,7 @@ class ChallengeCard extends StatelessWidget {
                       ),
                       const Spacer(),
                       Icon(
-                        Icons.bolt,
+                        Icons.bolt_rounded,
                         size: 16,
                         color: colorScheme.onSurface,
                       ),
@@ -157,7 +157,7 @@ class ChallengeCard extends StatelessWidget {
       color: isDark ? AppColors.surfaceAlt : tint,
       alignment: Alignment.center,
       child: Icon(
-        Icons.auto_awesome,
+        Icons.auto_awesome_rounded,
         size: 34,
         color: isDark ? AppColors.primary : AppColors.lightTextSecondary,
       ),

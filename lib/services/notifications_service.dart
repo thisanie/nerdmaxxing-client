@@ -13,11 +13,7 @@ class NotificationsService {
   }) async {
     final data = await api.get(
       '/users/me/notifications',
-      query: {
-        'unread_only': unreadOnly,
-        'limit': limit,
-        'offset': offset,
-      },
+      query: {'unread_only': unreadOnly, 'limit': limit, 'offset': offset},
     );
     return (data as List)
         .map((item) => AppNotification.fromJson(item))

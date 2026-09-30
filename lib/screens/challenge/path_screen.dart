@@ -158,7 +158,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               scrolledUnderElevation: 0,
               leading: IconButton(
                 tooltip: 'Back',
-                icon: Icon(Icons.arrow_back, size: 22, color: _ink),
+                icon: Icon(Icons.arrow_back_rounded, size: 22, color: _ink),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               title: Text.rich(
@@ -186,7 +186,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                 IconButton(
                   tooltip: 'More options',
                   onPressed: () {},
-                  icon: Icon(Icons.more_vert, size: 22, color: _ink),
+                  icon: Icon(Icons.more_vert_rounded, size: 22, color: _ink),
                 ),
               ],
             ),
@@ -323,7 +323,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                       _detail.metricDefinitions.isNotEmpty
                   ? _logResult
                   : null,
-              icon: Icon(Icons.bar_chart, color: _buttonForeground),
+              icon: Icon(Icons.bar_chart_rounded, color: _buttonForeground),
               label: const Text('Log a result'),
               style: FilledButton.styleFrom(
                 backgroundColor: _ink,
@@ -513,7 +513,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                         ),
                       )
                     : resource.completed
-                    ? Icon(Icons.check, size: 16, color: _ink)
+                    ? Icon(Icons.check_rounded, size: 16, color: _ink)
                     : null,
               ),
             ),
@@ -558,8 +558,8 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               onPressed: () => _openResource(resource),
               icon: Icon(
                 resource.type.toUpperCase() == 'VIDEO'
-                    ? Icons.play_arrow
-                    : Icons.open_in_new,
+                    ? Icons.play_arrow_rounded
+                    : Icons.open_in_new_rounded,
                 size: 19,
               ),
               color: _accent,
@@ -615,7 +615,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(color: _card, shape: BoxShape.circle),
-              child: Icon(Icons.play_arrow, size: 28, color: _ink),
+              child: Icon(Icons.play_arrow_rounded, size: 28, color: _ink),
             ),
           ),
         ],
@@ -815,7 +815,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                 ],
               ),
             ),
-            Icon(Icons.lock_outline, color: _muted, size: 22),
+            Icon(Icons.lock_rounded, color: _muted, size: 22),
           ],
         ),
       ),

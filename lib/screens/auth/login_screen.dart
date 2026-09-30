@@ -19,7 +19,11 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.auto_awesome, size: 56, color: AppColors.primary),
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 56,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(height: 24),
                 RichText(
                   text: TextSpan(
@@ -55,7 +59,8 @@ class LoginScreen extends StatelessWidget {
                   width: double.infinity,
                   child: buildGoogleAuthButton(
                     isBusy: auth.isBusy,
-                    onPressed: () => context.read<AuthProvider>().signInWithGoogle(),
+                    onPressed: () =>
+                        context.read<AuthProvider>().signInWithGoogle(),
                   ),
                 ),
               ],

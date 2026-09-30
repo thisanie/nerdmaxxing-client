@@ -172,7 +172,7 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: _submitting ? null : _pickImage,
-              icon: const Icon(Icons.photo_library_outlined),
+              icon: const Icon(Icons.photo_library_rounded),
               label: Text(_image == null ? 'Choose image' : 'Change image'),
             ),
             if (_imageBytes != null) ...[
@@ -273,7 +273,7 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
                             onPressed: _submitting
                                 ? null
                                 : () => _removeResource(index),
-                            icon: const Icon(Icons.delete_outline),
+                            icon: const Icon(Icons.delete_rounded),
                             tooltip: 'Remove resource',
                           ),
                       ],
@@ -316,7 +316,7 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
               onPressed: _submitting || _resources.length >= 20
                   ? null
                   : _addResource,
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add_rounded),
               label: const Text('Add resource'),
             ),
             if (_error != null) ...[
