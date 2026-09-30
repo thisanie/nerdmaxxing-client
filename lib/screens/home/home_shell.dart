@@ -168,6 +168,7 @@ class _BottomNavigationBar extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Material(
       color: colorScheme.surface,
+      shape: Border(top: BorderSide(color: colorScheme.outline)),
       child: SafeArea(
         top: false,
         child: SizedBox(

@@ -22,12 +22,13 @@ class AppColors {
   static const danger = Color(0xFFE8556B);
 
   // ---- Light theme ----
-  static const lightBackground = Color(0xFFF6F6F1);
+  static const lightBackground = Color(0xFFFAFAF6);
   static const lightSurface = Color(0xFFFFFFFF);
-  static const lightSurfaceAlt = Color(0xFFECEBE2);
-  static const lightTextPrimary = Color(0xFF141410);
-  static const lightTextSecondary = Color(0xFF5E5E55);
-  static const lightBorder = Color(0xFFDDDCD1);
+  static const lightSurfaceAlt = Color(0xFFF0EFE9);
+  static const lightTextPrimary = Color(0xFF111110);
+  static const lightTextSecondary = Color(0xFF77776E);
+  static const lightBorder = Color(0xFFE6E5DC);
+  static const limeWash = Color(0xFFEEF8C4);          // pale lime chip/tile fill on light
 
   // Rank/difficulty scale — keep it inside the same restrained palette
   // rather than a generic green/orange/red traffic light.
@@ -134,7 +135,7 @@ class AppTheme {
         background: AppColors.lightBackground,
         surface: AppColors.lightSurface,
         surfaceAlt: AppColors.lightSurfaceAlt,
-        primary: AppColors.primaryLight,
+        primary: AppColors.lightTextPrimary,
         textPrimary: AppColors.lightTextPrimary,
         textSecondary: AppColors.lightTextSecondary,
         border: AppColors.lightBorder,
@@ -248,7 +249,7 @@ class AppTheme {
         color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: subtleBorder),
         ),
         margin: EdgeInsets.zero,
@@ -258,7 +259,7 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 22),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           // Buttons use body font, uppercase + tracked, per the prototype's
           // ".btn" style — not the display font.
           textStyle: AppFonts.body(
@@ -273,7 +274,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: onPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: AppFonts.body(
             color: onPrimary,
             fontSize: 14,
@@ -287,7 +288,7 @@ class AppTheme {
           foregroundColor: textPrimary,
           side: BorderSide(color: border),
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 22),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: AppFonts.body(
             color: textPrimary,
             fontSize: 14,
@@ -301,15 +302,15 @@ class AppTheme {
         fillColor: surfaceAlt,
         contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: primary, width: 1.5),
         ),
         hintStyle: AppFonts.body(color: textSecondary),

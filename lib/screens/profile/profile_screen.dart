@@ -300,18 +300,22 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
 
     if (!mounted) return;
     if (action == 'update') {
-      Navigator.of(context)
-          .push(
-            MaterialPageRoute(
-              builder: (_) => UpdateProfileScreen(profile: profile),
-            ),
-          )
-          .then((updated) {
-            if (updated == true && mounted) _load();
-          });
+      _openUpdateProfile(profile);
     } else if (action == 'logout') {
       _confirmLogout();
     }
+  }
+
+  void _openUpdateProfile(UserProfile profile) {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => UpdateProfileScreen(profile: profile),
+          ),
+        )
+        .then((updated) {
+          if (updated == true && mounted) _load();
+        });
   }
 
   @override
@@ -358,20 +362,28 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async => _load(),
-        color: AppColors.primary,
+        color: Theme.of(context).colorScheme.onSurface,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar(
-              title: Text('@${profile.username ?? 'profile'}'),
+              title: Text(
+                profile.name ?? profile.username ?? 'Profile',
+                style: AppFonts.body(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              centerTitle: true,
               floating: true,
-              backgroundColor: Theme.of(context).colorScheme.surface,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               surfaceTintColor: Colors.transparent,
               elevation: 0,
               actions: [
                 if (_isOwnProfile(auth))
                   IconButton(
-                    icon: const Icon(Icons.menu),
+                    icon: const Icon(Icons.menu_rounded),
                     tooltip: 'Account options',
                     onPressed: _isSigningOut
                         ? null
@@ -400,72 +412,15 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 ),
               ),
             ),
-            if (!isOwnProfile)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: profile.isFollowing
-                        ? OutlinedButton.icon(
-                            onPressed: _isFollowBusy ? null : _toggleFollow,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant
-                                  : AppColors.lightTextPrimary,
-                              side: BorderSide(
-                                color:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Theme.of(context).colorScheme.outline
-                                    : AppColors.lightTextPrimary.withValues(
-                                        alpha: 0.65,
-                                      ),
-                              ),
-                            ),
-                            icon: _isFollowBusy
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.person_remove_outlined),
-                            label: const Text('Following'),
-                          )
-                        : FilledButton.icon(
-                            onPressed: _isFollowBusy ? null : _toggleFollow,
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.primary
-                                  : AppColors.lightTextPrimary,
-                              foregroundColor:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.dark
-                                  : Colors.white,
-                            ),
-                            icon: _isFollowBusy
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.person_add_outlined),
-                            label: const Text('Follow'),
-                          ),
-                  ),
-                ),
+            SliverToBoxAdapter(
+              child: _ProfileActions(
+                profile: profile,
+                isOwnProfile: isOwnProfile,
+                isFollowBusy: _isFollowBusy,
+                onEdit: () => _openUpdateProfile(profile),
+                onToggleFollow: _toggleFollow,
               ),
+            ),
             SliverToBoxAdapter(
               child: _ProfileTabs(
                 selectedIndex: _selectedTab,
@@ -475,39 +430,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             ),
             if (_selectedTab == 0) ...[
               if (isOwnProfile) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-                    child: Text(
-                      'Created challenges',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                ),
-                if (createdChallenges.isEmpty)
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-                      child: Text('No challenges created yet.'),
-                    ),
-                  )
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => _CreatedChallengeTile(
-                        challenge: createdChallenges[index],
-                      ),
-                      childCount: createdChallenges.length,
-                    ),
-                  ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-                    child: Text(
-                      'My challenges',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
+                const SliverToBoxAdapter(
+                  child: _SectionLabel('In progress'),
                 ),
                 if (participationState.isLoading && participations.isEmpty)
                   const SliverToBoxAdapter(
@@ -540,25 +464,27 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                       childCount: participations.length,
                     ),
                   ),
-              ],
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle_outline,
-                        color: AppColors.accent,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Completed challenges',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ],
-                  ),
+                const SliverToBoxAdapter(
+                  child: _SectionLabel('Created by you'),
                 ),
-              ),
+                if (createdChallenges.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      child: Text('No challenges created yet.'),
+                    ),
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _CreatedChallengeTile(
+                        challenge: createdChallenges[index],
+                      ),
+                      childCount: createdChallenges.length,
+                    ),
+                  ),
+              ],
+              const SliverToBoxAdapter(child: _SectionLabel('Completed')),
               if (completedChallenges.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -573,7 +499,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _ChallengeTile(
@@ -584,8 +510,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
-                          crossAxisSpacing: 3,
-                          mainAxisSpacing: 3,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
                           childAspectRatio: 0.78,
                         ),
                   ),
@@ -635,7 +561,7 @@ class _ProfileTabs extends StatelessWidget {
       if (showRewards) (Icons.emoji_events_outlined, 'Rewards'),
     ];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+      padding: const EdgeInsets.only(top: 20),
       child: Row(
         children: [
           for (var index = 0; index < tabs.length; index++)
@@ -643,12 +569,12 @@ class _ProfileTabs extends StatelessWidget {
               child: InkWell(
                 onTap: () => onSelected(index),
                 child: Container(
-                  padding: const EdgeInsets.only(bottom: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
                         color: selectedIndex == index
-                            ? AppColors.primary
+                            ? colorScheme.onSurface
                             : colorScheme.outline,
                         width: selectedIndex == index ? 2 : 1,
                       ),
@@ -659,7 +585,7 @@ class _ProfileTabs extends StatelessWidget {
                     children: [
                       Icon(
                         tabs[index].$1,
-                        size: 16,
+                        size: 18,
                         color: selectedIndex == index
                             ? colorScheme.onSurface
                             : colorScheme.onSurfaceVariant,
@@ -671,7 +597,7 @@ class _ProfileTabs extends StatelessWidget {
                           color: selectedIndex == index
                               ? colorScheme.onSurface
                               : colorScheme.onSurfaceVariant,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -680,6 +606,108 @@ class _ProfileTabs extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+      child: Text(
+        text.toUpperCase(),
+        style: AppFonts.label(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileActions extends StatelessWidget {
+  final UserProfile profile;
+  final bool isOwnProfile;
+  final bool isFollowBusy;
+  final VoidCallback onEdit;
+  final VoidCallback onToggleFollow;
+
+  const _ProfileActions({
+    required this.profile,
+    required this.isOwnProfile,
+    required this.isFollowBusy,
+    required this.onEdit,
+    required this.onToggleFollow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    const shape = StadiumBorder();
+    final spinner = SizedBox(
+      width: 16,
+      height: 16,
+      child: CircularProgressIndicator(strokeWidth: 2, color: scheme.onSurface),
+    );
+
+    final Widget primary = isOwnProfile
+        ? OutlinedButton(
+            onPressed: onEdit,
+            style: OutlinedButton.styleFrom(
+              shape: shape,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              side: BorderSide(color: scheme.outline),
+            ),
+            child: const Text('Edit profile'),
+          )
+        : profile.isFollowing
+        ? OutlinedButton(
+            onPressed: isFollowBusy ? null : onToggleFollow,
+            style: OutlinedButton.styleFrom(
+              shape: shape,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            child: isFollowBusy ? spinner : const Text('Following'),
+          )
+        : FilledButton(
+            onPressed: isFollowBusy ? null : onToggleFollow,
+            style: FilledButton.styleFrom(
+              shape: shape,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            child: isFollowBusy ? spinner : const Text('Follow'),
+          );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      child: Row(
+        children: [
+          Expanded(flex: 3, child: primary),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: ShapeDecoration(
+                shape: StadiumBorder(side: BorderSide(color: scheme.outline)),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'Rank ${profile.rank}',
+                style: AppFonts.body(
+                  color: scheme.onSurface,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -891,36 +919,27 @@ class _GroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMember = group.membershipStatus == 'ACTIVE';
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: Card(
-        child: ListTile(
-          onTap: onTap,
-          leading: Icon(
-            group.visibility == 'PRIVATE'
-                ? Icons.lock_outline
-                : Icons.groups_outlined,
-          ),
-          title: Text(group.name),
-          subtitle: Text(
-            '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}'
-            '${group.description == null ? '' : '\n${group.description}'}',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: onJoin != null && !isMember
-              ? TextButton(
-                  onPressed: () => onJoin!(group),
-                  child: const Text('Join'),
-                )
-              : onLeave != null && isMember
-              ? TextButton(
-                  onPressed: () => onLeave!(group),
-                  child: const Text('Leave'),
-                )
-              : null,
-        ),
-      ),
+    return _RowCard(
+      onTap: onTap,
+      leadingIcon: group.visibility == 'PRIVATE'
+          ? Icons.lock_outline
+          : Icons.groups_outlined,
+      leadingColor: AppColors.limeWash,
+      leadingIconColor: AppColors.lightTextPrimary,
+      title: group.name,
+      subtitle:
+          '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
+      trailing: onJoin != null && !isMember
+          ? TextButton(
+              onPressed: () => onJoin!(group),
+              child: const Text('Join'),
+            )
+          : onLeave != null && isMember
+          ? TextButton(
+              onPressed: () => onLeave!(group),
+              child: const Text('Leave'),
+            )
+          : null,
     );
   }
 }
@@ -946,7 +965,7 @@ class _ComingSoonPanel extends StatelessWidget {
             Icon(
               Icons.hourglass_empty_rounded,
               size: 34,
-              color: AppColors.primaryMuted,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 14),
             const Text(
@@ -1001,97 +1020,60 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final initial = (profile.name ?? profile.username ?? '?')
+        .trim()
+        .characters
+        .firstOrNull
+        ?.toUpperCase();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
             children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 84,
-                    height: 84,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: .55),
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                  CircleAvatar(
-                    radius: 38,
-                    backgroundColor: AppColors.surfaceAlt,
-                    backgroundImage: profile.avatarUrl != null
-                        ? NetworkImage(profile.avatarUrl!)
-                        : null,
-                    child: profile.avatarUrl == null
-                        ? const Icon(
-                            Icons.person_outline,
-                            size: 38,
-                            color: AppColors.textSecondary,
-                          )
-                        : null,
-                  ),
-                ],
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _Stat(
-                      value: profile.rank,
-                      label: 'rank',
-                    ),
-                    _Stat(
-                      value: '${profile.followerCount}',
-                      label: 'followers',
-                      onTap: onFollowersTap,
-                    ),
-                    _Stat(
-                      value: '${profile.followingCount}',
-                      label: 'following',
-                      onTap: onFollowingTap,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  profile.name ?? profile.username ?? 'NerdMaxxer',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 24,
-                    letterSpacing: -.3,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              DecoratedBox(
+              Container(
+                width: 96,
+                height: 96,
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  borderRadius: BorderRadius.circular(3),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.primary, width: 1.5),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                child: CircleAvatar(
+                  backgroundColor: const Color(0xFFA23BBF),
+                  backgroundImage: profile.avatarUrl != null
+                      ? NetworkImage(profile.avatarUrl!)
+                      : null,
+                  child: profile.avatarUrl == null
+                      ? Text(
+                          initial ?? '?',
+                          style: AppFonts.body(
+                            color: Colors.white,
+                            fontSize: 40,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+              Positioned(
+                right: -2,
+                bottom: 0,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.ink,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.surface, width: 2),
+                  ),
                   child: Text(
-                    '⚡ ${profile.auraPoints} aura',
-                    style: TextStyle(
+                    profile.rank,
+                    style: AppFonts.body(
                       color: AppColors.primary,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -1101,10 +1083,45 @@ class _ProfileHeader extends StatelessWidget {
               ),
             ],
           ),
-          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-            const SizedBox(height: 5),
-            Text(profile.bio!),
+          if (profile.username != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              '@${profile.username}',
+              style: AppFonts.body(
+                color: scheme.onSurfaceVariant,
+                fontSize: 15,
+              ),
+            ),
           ],
+          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              profile.bio!,
+              textAlign: TextAlign.center,
+              style: AppFonts.body(color: scheme.onSurface, fontSize: 14),
+            ),
+          ],
+          const SizedBox(height: 20),
+          IntrinsicHeight(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _Stat(value: '${profile.auraPoints}', label: 'Aura'),
+                VerticalDivider(width: 1, color: scheme.outline),
+                _Stat(
+                  value: '${profile.followerCount}',
+                  label: 'Followers',
+                  onTap: onFollowersTap,
+                ),
+                VerticalDivider(width: 1, color: scheme.outline),
+                _Stat(
+                  value: '${profile.followingCount}',
+                  label: 'Following',
+                  onTap: onFollowingTap,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1120,29 +1137,29 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.all(6),
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 96),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         child: Column(
           children: [
             Text(
               value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 30,
-                height: 1,
+              style: AppFonts.body(
+                color: scheme.onSurface,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
-              label.toUpperCase(),
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 10,
-                letterSpacing: 1,
-                fontWeight: FontWeight.w500,
+              label,
+              style: AppFonts.body(
+                color: scheme.onSurfaceVariant,
+                fontSize: 13,
               ),
             ),
           ],
@@ -1172,70 +1189,36 @@ class _ParticipationTile extends StatelessWidget {
     final shortId = challengeId.length > 6
         ? challengeId.substring(0, 6)
         : challengeId;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: Card(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: challenge == null
-              ? null
-              : () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ChallengeDetailScreen(
-                      slug: challenge!.slug,
-                      initialChallenge: challenge,
-                    ),
-                  ),
+    final scheme = Theme.of(context).colorScheme;
+    final actionLabel = switch (participation.status) {
+      'ACCEPTED' => ('Start', 'IN_PROGRESS'),
+      'IN_PROGRESS' => ('Pause', 'PAUSED'),
+      'PAUSED' => ('Resume', 'IN_PROGRESS'),
+      _ => null,
+    };
+    return _RowCard(
+      onTap: challenge == null
+          ? null
+          : () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ChallengeDetailScreen(
+                  slug: challenge!.slug,
+                  initialChallenge: challenge,
                 ),
-          borderRadius: BorderRadius.circular(3),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        challenge?.title ??
-                            'Challenge $shortId${challengeId.length > 6 ? '...' : ''}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        statusLabel,
-                        style: const TextStyle(color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                if (challenge != null)
-                  const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textSecondary,
-                  ),
-                if (participation.status == 'ACCEPTED')
-                  TextButton(
-                    onPressed: () =>
-                        onChangeStatus(participation, 'IN_PROGRESS'),
-                    child: const Text('Start'),
-                  ),
-                if (participation.status == 'IN_PROGRESS')
-                  TextButton(
-                    onPressed: () => onChangeStatus(participation, 'PAUSED'),
-                    child: const Text('Pause'),
-                  ),
-                if (participation.status == 'PAUSED')
-                  TextButton(
-                    onPressed: () =>
-                        onChangeStatus(participation, 'IN_PROGRESS'),
-                    child: const Text('Resume'),
-                  ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
+      leadingIcon: Icons.flag_outlined,
+      leadingColor: scheme.surfaceContainerHighest,
+      title:
+          challenge?.title ??
+          'Challenge $shortId${challengeId.length > 6 ? '...' : ''}',
+      subtitle: statusLabel,
+      trailing: actionLabel == null
+          ? null
+          : TextButton(
+              onPressed: () => onChangeStatus(participation, actionLabel.$2),
+              child: Text(actionLabel.$1),
+            ),
     );
   }
 }
@@ -1247,37 +1230,121 @@ class _CreatedChallengeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: Card(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ChallengeDetailScreen(
-                slug: challenge.slug,
-                initialChallenge: challenge,
+    final isPrivate = challenge.visibility.toUpperCase() == 'PRIVATE';
+    return _RowCard(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChallengeDetailScreen(
+            slug: challenge.slug,
+            initialChallenge: challenge,
+          ),
+        ),
+      ),
+      leadingIcon: isPrivate ? Icons.lock_outline : Icons.edit_note,
+      leadingColor: AppColors.limeWash,
+      leadingIconColor: AppColors.lightTextPrimary,
+      title: challenge.title,
+      subtitle: isPrivate ? 'Private' : 'Public',
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.limeWash,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.bolt, size: 14, color: AppColors.lightTextPrimary),
+            const SizedBox(width: 3),
+            Text(
+              '${challenge.auraPoints}',
+              style: AppFonts.body(
+                color: AppColors.lightTextPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-          borderRadius: BorderRadius.circular(3),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-            leading: Icon(
-              challenge.visibility.toUpperCase() == 'PRIVATE'
-                  ? Icons.lock_outline
-                  : Icons.edit_note,
-              color: AppColors.primary,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RowCard extends StatelessWidget {
+  final VoidCallback? onTap;
+  final IconData leadingIcon;
+  final Color leadingColor;
+  final Color? leadingIconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  const _RowCard({
+    required this.onTap,
+    required this.leadingIcon,
+    required this.leadingColor,
+    this.leadingIconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: leadingColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    leadingIcon,
+                    size: 22,
+                    color: leadingIconColor ?? scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.body(
+                          color: scheme.onSurface,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: AppFonts.body(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+              ],
             ),
-            title: Text(
-              challenge.title,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              '${challenge.status} · ${challenge.visibility} · ${challenge.auraPoints} aura',
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-            trailing: const Icon(Icons.chevron_right),
           ),
         ),
       ),
@@ -1291,7 +1358,9 @@ class _ChallengeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => ChallengeDetailScreen(slug: challenge.slug),
@@ -1355,15 +1424,16 @@ class _ChallengeTile extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
   Widget _fallback() => Container(
-    color: AppColors.surfaceAlt,
+    color: AppColors.limeWash,
     alignment: Alignment.center,
     child: const Icon(
       Icons.flag_outlined,
-      color: AppColors.primaryMuted,
+      color: AppColors.lightTextPrimary,
       size: 28,
     ),
   );
