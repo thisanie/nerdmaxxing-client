@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/group.dart';
 import '../models/group_member.dart';
 import '../models/group_message.dart';
@@ -29,13 +31,13 @@ class GroupsService {
   Future<List<GroupMember>> listMembers(String groupId) async {
     final encodedId = _groupPathId(groupId);
     final data = await api.get('/groups/$encodedId/members');
-    dynamic rawItems = data;
-    while (rawItems is Map) {
-      final next = rawItems['members'] ?? rawItems['items'] ?? rawItems['data'];
-      if (next == null || identical(next, rawItems)) break;
-      rawItems = next;
-    }
-    if (rawItems is! List) return const [];
+    debugPrint(
+      '[Groups] members response groupId=$groupId '
+      'type=${data.runtimeType} '
+      'keys=${data is Map ? data.keys.join(',') : 'list'}',
+    );
+    final rawItems = _findList(data);
+    if (rawItems == null) return const [];
     return rawItems
         .whereType<Map>()
         .map((item) => GroupMember.fromJson(Map<String, dynamic>.from(item)))
@@ -102,5 +104,15 @@ class GroupsService {
       throw ApiException(null, 'Group ID is missing.');
     }
     return Uri.encodeComponent(value);
+  }
+
+  List<dynamic>? _findList(dynamic value) {
+    if (value is List) return value;
+    if (value is! Map) return null;
+    for (final nested in value.values) {
+      final result = _findList(nested);
+      if (result != null) return result;
+    }
+    return null;
   }
 }
