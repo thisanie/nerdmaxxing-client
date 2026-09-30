@@ -42,6 +42,7 @@ class UserProfile {
   final String? name;
   final String? bio;
   final String? avatarUrl;
+  final String rank;
   final int auraPoints;
   final int followerCount;
   final int followingCount;
@@ -58,6 +59,7 @@ class UserProfile {
     this.name,
     this.bio,
     this.avatarUrl,
+    required this.rank,
     required this.auraPoints,
     required this.followerCount,
     required this.followingCount,
@@ -78,6 +80,7 @@ class UserProfile {
       name: json['name'],
       bio: json['bio'],
       avatarUrl: json['avatar_url'],
+      rank: json['rank'] as String? ?? 'E',
       auraPoints: readInt('aura_points'),
       followerCount: readInt('follower_count'),
       followingCount: readInt('following_count'),
@@ -101,6 +104,7 @@ class UserProfile {
       name: name,
       bio: bio,
       avatarUrl: avatarUrl,
+      rank: rank,
       auraPoints: auraPoints,
       followerCount: followerCount ?? this.followerCount,
       followingCount: followingCount,

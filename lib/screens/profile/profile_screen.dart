@@ -1045,16 +1045,16 @@ class _ProfileHeader extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _Stat(
-                      value: profile.completedChallengesCount,
-                      label: 'skills',
+                      value: profile.rank,
+                      label: 'rank',
                     ),
                     _Stat(
-                      value: profile.followerCount,
+                      value: '${profile.followerCount}',
                       label: 'followers',
                       onTap: onFollowersTap,
                     ),
                     _Stat(
-                      value: profile.followingCount,
+                      value: '${profile.followingCount}',
                       label: 'following',
                       onTap: onFollowingTap,
                     ),
@@ -1112,7 +1112,7 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  final int value;
+  final String value;
   final String label;
   final VoidCallback? onTap;
 
@@ -1128,7 +1128,7 @@ class _Stat extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              '$value',
+              value,
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 30,
