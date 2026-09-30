@@ -264,8 +264,7 @@ class _LeaderboardTabState extends State<_LeaderboardTab> {
         ),
         const SizedBox(height: 10),
         Text(
-          'See who is
-          putting in the work.',
+          'See who is\nputting in the work.',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 height: .98,
