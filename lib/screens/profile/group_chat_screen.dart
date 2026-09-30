@@ -8,6 +8,7 @@ import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
 import '../../services/invitations_service.dart';
 import '../../services/token_storage.dart';
+import '../challenge/challenge_detail_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final Group group;
@@ -433,6 +434,52 @@ class _MessageBubble extends StatelessWidget {
                   message.body,
                   style: TextStyle(color: textColor, fontSize: 15),
                 ),
+                if (message.challengeInvitation != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: InkWell(
+                      onTap: message.challengeInvitation!.challengeSlug.isEmpty
+                          ? null
+                          : () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ChallengeDetailScreen(
+                                  slug: message
+                                      .challengeInvitation!
+                                      .challengeSlug,
+                                ),
+                              ),
+                            ),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 3,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.flag_rounded,
+                              size: 17,
+                              color: textColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                message.challengeInvitation!.challengeTitle,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 if (message.challengeInvitation != null)
                   _InvitationActions(
                     invitation: message.challengeInvitation!,
