@@ -279,12 +279,22 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               onTap: () => Navigator.pop(sheetContext, 'update'),
             ),
             Consumer<ThemeProvider>(
-              builder: (context, themeProvider, _) => SwitchListTile.adaptive(
-                secondary: const Icon(Icons.brightness_6_rounded),
-                title: const Text('Dark theme'),
-                value: themeProvider.isDark,
-                onChanged: themeProvider.setDark,
-              ),
+              builder: (context, themeProvider, _) {
+                final colorScheme = Theme.of(context).colorScheme;
+                return SwitchListTile.adaptive(
+                  secondary: Icon(
+                    Icons.brightness_6_rounded,
+                    color: colorScheme.onSurface,
+                  ),
+                  title: const Text('Dark theme'),
+                  value: themeProvider.isDark,
+                  onChanged: themeProvider.setDark,
+                  activeThumbColor: AppColors.dark,
+                  activeTrackColor: AppColors.primary,
+                  inactiveThumbColor: colorScheme.onSurfaceVariant,
+                  inactiveTrackColor: colorScheme.surfaceContainerHighest,
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.logout_rounded),
