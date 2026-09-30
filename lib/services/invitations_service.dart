@@ -1,5 +1,7 @@
 import 'api_client.dart';
 
+import '../models/group_message.dart';
+
 class InviteLink {
   final String url;
   final String inviterId;
@@ -39,6 +41,30 @@ class InvitationsService {
     await api.post(
       '/challenges/$challengeSlug/invitations',
       data: {'invitee_id': inviteeId},
+    );
+  }
+
+  Future<GroupMessage> inviteGroup(
+    String challengeSlug, {
+    required String groupId,
+  }) async {
+    final data = await api.post(
+      '/challenges/$challengeSlug/group-invitations',
+      data: {'group_id': groupId},
+    );
+    final response = Map<String, dynamic>.from(data as Map);
+    return GroupMessage.fromJson(
+      Map<String, dynamic>.from(response['message'] as Map),
+    );
+  }
+
+  Future<void> respondToGroupInvitation(
+    String invitationId, {
+    required String response,
+  }) async {
+    await api.post(
+      '/group-invitations/${Uri.encodeComponent(invitationId)}/respond',
+      data: {'response': response},
     );
   }
 

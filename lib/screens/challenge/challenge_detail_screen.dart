@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 
 import '../../models/challenge.dart';
 import '../../models/challenge_detail.dart';
+import '../../models/group.dart';
 import '../../models/notification.dart';
 import '../../models/participation.dart';
 import '../../models/progress_log.dart';
@@ -15,6 +16,7 @@ import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/discussions_service.dart';
 import '../../services/invitations_service.dart';
+import '../../services/groups_service.dart';
 import '../../services/notifications_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
@@ -370,10 +372,12 @@ class _InviteFriendsDialog extends StatefulWidget {
 class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
   final _searchController = TextEditingController();
   List<UserSummary> _followers = [];
+  List<Group> _groups = [];
   bool _loading = true;
   bool _linkLoading = false;
   String? _error;
   String? _invitingId;
+  String? _invitingGroupId;
 
   @override
   void initState() {
@@ -400,9 +404,17 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
       }
       final profileService = context.read<ProfileService>();
       final profile = await profileService.getProfile(username);
-      final followers = await profileService.listFollowers(profile.id);
+      final results = await Future.wait([
+        profileService.listFollowers(profile.id),
+        context.read<GroupsService>().listMine(),
+      ]);
+      final followers = results[0] as List<UserSummary>;
+      final groups = results[1] as List<Group>;
       if (!mounted) return;
-      setState(() => _followers = followers);
+      setState(() {
+        _followers = followers;
+        _groups = groups;
+      });
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
@@ -451,6 +463,27 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
       if (mounted) setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() => _linkLoading = false);
+    }
+  }
+
+  Future<void> _inviteGroup(Group group) async {
+    setState(() {
+      _invitingGroupId = group.id;
+      _error = null;
+    });
+    try {
+      await context.read<InvitationsService>().inviteGroup(
+        widget.challenge,
+        groupId: group.id,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${group.name} was invited.')),
+      );
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _invitingGroupId = null);
     }
   }
 
@@ -528,6 +561,37 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
                                 ),
                         ),
                       ),
+                    if (_groups.isNotEmpty) ...[
+                      const Divider(height: 24),
+                      const Text(
+                        'Groups',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      ..._groups.map(
+                        (group) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const CircleAvatar(
+                            child: Icon(Icons.groups_outlined),
+                          ),
+                          title: Text(group.name),
+                          subtitle: Text('${group.memberCount} members'),
+                          trailing: _invitingGroupId == group.id
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : IconButton(
+                                  tooltip: 'Invite group',
+                                  onPressed: _invitingId == null &&
+                                          _invitingGroupId == null
+                                      ? () => _inviteGroup(group)
+                                      : null,
+                                  icon: const Icon(Icons.send_outlined),
+                                ),
+                        ),
+                      ),
+                    ],
                     const Divider(height: 24),
                     OutlinedButton.icon(
                       onPressed: _linkLoading ? null : _copyInviteLink,

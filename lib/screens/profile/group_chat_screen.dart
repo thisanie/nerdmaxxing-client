@@ -25,6 +25,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   bool _sending = false;
   String? _error;
   String? _currentUserId;
+  String? _respondingInvitationId;
 
   @override
   void initState() {
@@ -82,6 +83,25 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       if (mounted) setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _respondToInvitation(
+    GroupChallengeInvitationPayload invitation,
+    String response,
+  ) async {
+    if (_respondingInvitationId != null) return;
+    setState(() => _respondingInvitationId = invitation.id);
+    try {
+      await context.read<InvitationsService>().respondToGroupInvitation(
+        invitation.id,
+        response: response,
+      );
+      await _loadMessages();
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _respondingInvitationId = null);
     }
   }
 
@@ -244,6 +264,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             message: message,
             isMine: _currentUserId != null &&
                 message.author.id == _currentUserId,
+            responding: message.challengeInvitation?.id == _respondingInvitationId,
+            onInvitationResponse: message.challengeInvitation == null
+                ? null
+                : (response) => _respondToInvitation(
+                    message.challengeInvitation!,
+                    response,
+                  ),
           );
         },
       ),
@@ -327,8 +354,15 @@ class _GroupDetailRow extends StatelessWidget {
 class _MessageBubble extends StatelessWidget {
   final GroupMessage message;
   final bool isMine;
+  final bool responding;
+  final ValueChanged<String>? onInvitationResponse;
 
-  const _MessageBubble({required this.message, required this.isMine});
+  const _MessageBubble({
+    required this.message,
+    required this.isMine,
+    this.responding = false,
+    this.onInvitationResponse,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -375,6 +409,13 @@ class _MessageBubble extends StatelessWidget {
                   message.body,
                   style: TextStyle(color: textColor, fontSize: 15),
                 ),
+                if (message.challengeInvitation != null)
+                  _InvitationActions(
+                    invitation: message.challengeInvitation!,
+                    responding: responding,
+                    onResponse: onInvitationResponse,
+                    textColor: textColor,
+                  ),
                 if (message.createdAt != null)
                   Align(
                     alignment: Alignment.centerRight,
@@ -402,5 +443,61 @@ class _MessageBubble extends StatelessWidget {
     final hour = local.hour == 0 ? 12 : local.hour > 12 ? local.hour - 12 : local.hour;
     final minute = local.minute.toString().padLeft(2, '0');
     return '$hour:$minute ${local.hour >= 12 ? 'PM' : 'AM'}';
+  }
+}
+
+class _InvitationActions extends StatelessWidget {
+  final GroupChallengeInvitationPayload invitation;
+  final bool responding;
+  final ValueChanged<String>? onResponse;
+  final Color textColor;
+
+  const _InvitationActions({
+    required this.invitation,
+    required this.responding,
+    required this.onResponse,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!invitation.isPendingForCurrentUser) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(
+          invitation.myResponse == 'ACCEPTED'
+              ? 'You accepted this invitation'
+              : invitation.myResponse == 'DECLINED'
+                  ? 'You declined this invitation'
+                  : 'Invitation is ${invitation.status.toLowerCase()}',
+          style: TextStyle(
+            color: textColor.withValues(alpha: 0.8),
+            fontSize: 12,
+          ),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          OutlinedButton(
+            onPressed: responding ? null : () => onResponse?.call('DECLINED'),
+            child: const Text('Reject'),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: responding ? null : () => onResponse?.call('ACCEPTED'),
+            child: responding
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Accept'),
+          ),
+        ],
+      ),
+    );
   }
 }
