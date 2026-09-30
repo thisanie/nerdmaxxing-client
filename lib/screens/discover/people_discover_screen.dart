@@ -398,7 +398,11 @@ class _TopicRow extends StatelessWidget {
                           shape: BoxShape.circle,
                           color: AppColors.limeWash,
                         ),
-                        child: Text(categories[i].icon),
+                        child: const Icon(
+                          Icons.category_rounded,
+                          color: AppColors.dark,
+                          size: 21,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Text(

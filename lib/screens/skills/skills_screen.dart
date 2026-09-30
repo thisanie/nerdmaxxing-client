@@ -53,9 +53,9 @@ class _RankTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final selectedForeground = Theme.of(context).brightness == Brightness.dark
-        ? scheme.primary
-        : scheme.surface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedForeground = isDark ? AppColors.dark : scheme.surface;
+    final selectedBackground = isDark ? AppColors.primary : scheme.onSurface;
     return Container(
       height: 54,
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
@@ -73,7 +73,7 @@ class _RankTabs extends StatelessWidget {
         labelColor: selectedForeground,
         unselectedLabelColor: scheme.onSurfaceVariant,
         indicator: BoxDecoration(
-          color: scheme.onSurface,
+          color: selectedBackground,
           borderRadius: BorderRadius.circular(999),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
@@ -212,23 +212,31 @@ class _RankHeader extends StatelessWidget {
   const _RankHeader({required this.rank});
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Text('Rank', style: Theme.of(context).textTheme.headlineMedium),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface,
-          borderRadius: BorderRadius.circular(999),
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text('Rank', style: Theme.of(context).textTheme.headlineMedium),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.primary
+                : Theme.of(context).colorScheme.onSurface,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            'Rank $rank',
+            style: AppFonts.body(
+              color: isDark ? AppColors.dark : AppColors.primary,
+              fontSize: 14,
+            ),
+          ),
         ),
-        child: Text(
-          'Rank $rank',
-          style: AppFonts.body(color: AppColors.primary, fontSize: 14),
-        ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 class _RankLadder extends StatelessWidget {
@@ -575,18 +583,18 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final accent = Theme.of(context).brightness == Brightness.dark
-        ? scheme.primary
-        : AppColors.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedBackground = isDark ? AppColors.primary : scheme.onSurface;
+    final selectedForeground = isDark ? AppColors.dark : scheme.surface;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? scheme.onSurface : scheme.surface,
+          color: selected ? selectedBackground : scheme.surface,
           border: Border.all(
-            color: selected ? scheme.onSurface : scheme.outline,
+            color: selected ? selectedBackground : scheme.outline,
             width: 1.5,
           ),
           borderRadius: BorderRadius.circular(999),
@@ -594,11 +602,7 @@ class _FilterChip extends StatelessWidget {
         child: Text(
           label,
           style: AppFonts.body(
-            color: selected
-                ? (Theme.of(context).brightness == Brightness.dark
-                      ? accent
-                      : scheme.surface)
-                : scheme.onSurfaceVariant,
+            color: selected ? selectedForeground : scheme.onSurfaceVariant,
             fontSize: 14,
           ),
         ),
@@ -654,9 +658,10 @@ class _LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final accent = Theme.of(context).brightness == Brightness.dark
-        ? scheme.primary
-        : AppColors.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isDark ? scheme.primary : AppColors.primary;
+    final currentUserBackground = isDark ? AppColors.primary : scheme.onSurface;
+    final currentUserForeground = isDark ? AppColors.dark : scheme.surface;
     final displayName = entry.displayName ?? entry.username ?? 'Unknown player';
     final handle = entry.username == null ? '' : '@${entry.username}';
     final initials = displayName
@@ -674,9 +679,9 @@ class _LeaderboardRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: entry.isCurrentUser ? scheme.onSurface : scheme.surface,
+        color: entry.isCurrentUser ? currentUserBackground : scheme.surface,
         border: Border.all(
-          color: entry.isCurrentUser ? scheme.onSurface : scheme.outline,
+          color: entry.isCurrentUser ? currentUserBackground : scheme.outline,
           width: 1.5,
         ),
         borderRadius: BorderRadius.circular(26),
@@ -688,7 +693,9 @@ class _LeaderboardRow extends StatelessWidget {
             child: Text(
               entry.rank.toString().padLeft(2, '0'),
               style: TextStyle(
-                color: entry.isCurrentUser ? accent : scheme.onSurfaceVariant,
+                color: entry.isCurrentUser
+                    ? currentUserForeground
+                    : scheme.onSurfaceVariant,
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
               ),
@@ -707,7 +714,9 @@ class _LeaderboardRow extends StatelessWidget {
             child: Text(
               initials,
               style: AppFonts.body(
-                color: entry.isCurrentUser ? scheme.surface : scheme.onSurface,
+                color: entry.isCurrentUser
+                    ? currentUserForeground
+                    : scheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -722,7 +731,7 @@ class _LeaderboardRow extends StatelessWidget {
                   displayName,
                   style: AppFonts.body(
                     color: entry.isCurrentUser
-                        ? scheme.surface
+                        ? currentUserForeground
                         : scheme.onSurface,
                     fontSize: 19,
                     fontWeight: FontWeight.w500,
@@ -733,7 +742,7 @@ class _LeaderboardRow extends StatelessWidget {
                   '$handle  ·  ${entry.playerRank} RANK',
                   style: AppFonts.body(
                     color: entry.isCurrentUser
-                        ? scheme.onSurfaceVariant
+                        ? currentUserForeground.withValues(alpha: .7)
                         : scheme.onSurfaceVariant,
                     fontSize: 13,
                   ),
@@ -744,7 +753,9 @@ class _LeaderboardRow extends StatelessWidget {
           Text(
             '${entry.metricValue}$suffix',
             style: AppFonts.body(
-              color: entry.isCurrentUser ? accent : scheme.onSurface,
+              color: entry.isCurrentUser
+                  ? currentUserForeground
+                  : scheme.onSurface,
               fontSize: 20,
               fontWeight: FontWeight.w500,
             ),
