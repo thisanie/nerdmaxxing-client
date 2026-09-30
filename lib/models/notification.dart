@@ -29,16 +29,22 @@ class AppNotification {
       json['challenge'] ?? (rawData is Map ? rawData['challenge'] : null);
     final rawActor =
       json['actor'] ?? (rawData is Map ? rawData['actor'] : null);
+    final rawGroup =
+      json['group'] ?? (rawData is Map ? rawData['group'] : null);
     final actorData = rawActor is Map
       ? rawActor.cast<String, dynamic>()
       : const <String, dynamic>{};
     final challengeData = rawChallenge is Map
         ? rawChallenge.cast<String, dynamic>()
         : const <String, dynamic>{};
+    final groupData = rawGroup is Map
+      ? rawGroup.cast<String, dynamic>()
+      : const <String, dynamic>{};
     final mergedData = <String, dynamic>{
       if (rawData is Map) ...rawData.cast<String, dynamic>(),
       ...challengeData,
       ...actorData,
+      ...groupData,
       if (actorData['id'] != null && json['actor_id'] == null)
         'actor_id': actorData['id'],
       if (actorData['username'] != null && json['actor_username'] == null)
@@ -61,6 +67,10 @@ class AppNotification {
       if (json['target_id'] != null) 'target_id': json['target_id'],
       if (json['group_id'] != null) 'group_id': json['group_id'],
       if (json['group_name'] != null) 'group_name': json['group_name'],
+      if (groupData['id'] != null && json['group_id'] == null)
+        'group_id': groupData['id'],
+      if (groupData['name'] != null && json['group_name'] == null)
+        'group_name': groupData['name'],
       if (json['actor_id'] != null) 'actor_id': json['actor_id'],
       if (json['actor_username'] != null)
         'actor_username': json['actor_username'],
@@ -140,7 +150,8 @@ class AppNotification {
     return values.any((value) {
       final normalized = value?.toUpperCase() ?? '';
         return normalized.contains('GROUP_MESSAGE') ||
-          normalized.contains('GROUPMESSAGE');
+            normalized.contains('GROUPMESSAGE') ||
+            (normalized.contains('GROUP') && normalized.contains('MESSAGE'));
     }) ||
         data['group_id'] != null ||
         data['groupId'] != null;
