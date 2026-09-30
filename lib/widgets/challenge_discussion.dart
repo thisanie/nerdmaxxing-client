@@ -332,6 +332,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -346,12 +347,12 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
             top: false,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.background.withValues(alpha: .94),
-                border: const Border(top: BorderSide(color: AppColors.border)),
+                color: scheme.surface,
+                border: Border(top: BorderSide(color: scheme.outline)),
               ),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 9, 14, 9),
-                child: _composerView(),
+                child: _composerView(context),
               ),
             ),
           ),
@@ -391,86 +392,95 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     ),
   );
 
-  Widget _composerView() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      if (_replyingTo != null)
-        Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 6),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Replying to ${_replyingTo!.author.name ?? _replyingTo!.author.username ?? 'comment'}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+  Widget _composerView(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final composerFill = isDark ? AppColors.primaryMuted : AppColors.limeWash;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_replyingTo != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 8, bottom: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Replying to ${_replyingTo!.author.name ?? _replyingTo!.author.username ?? 'comment'}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              IconButton(
-                tooltip: 'Cancel reply',
-                onPressed: () => setState(() => _replyingTo = null),
-                icon: const Icon(Icons.close_rounded, size: 18),
-                constraints: const BoxConstraints.tightFor(
-                  width: 28,
-                  height: 28,
+                IconButton(
+                  tooltip: 'Cancel reply',
+                  onPressed: () => setState(() => _replyingTo = null),
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  constraints: const BoxConstraints.tightFor(
+                    width: 28,
+                    height: 28,
+                  ),
+                  padding: EdgeInsets.zero,
                 ),
-                padding: EdgeInsets.zero,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          _avatar(widget.currentUsername, radius: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: .92),
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: TextField(
-                controller: _composer,
-                focusNode: _composerFocusNode,
-                maxLength: 2200,
-                maxLines: 1,
-                minLines: 1,
-                decoration: InputDecoration(
-                  hintText: _replyingTo == null
-                      ? 'Share a question or idea...'
-                      : 'Write a reply...',
-                  counterText: '',
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.fromLTRB(16, 9, 8, 9),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _avatar(widget.currentUsername, radius: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: composerFill,
+                  border: Border.all(
+                    color: AppColors.primary.withValues(
+                      alpha: isDark ? .5 : .35,
+                    ),
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: TextField(
+                  controller: _composer,
+                  focusNode: _composerFocusNode,
+                  maxLength: 2200,
+                  maxLines: 1,
+                  minLines: 1,
+                  decoration: InputDecoration(
+                    hintText: _replyingTo == null
+                        ? 'Share a question or idea...'
+                        : 'Write a reply...',
+                    counterText: '',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.fromLTRB(16, 9, 8, 9),
+                  ),
                 ),
               ),
             ),
-          ),
-          IconButton(
-            tooltip: _replyingTo == null ? 'Post comment' : 'Post reply',
-            onPressed: _posting ? null : _post,
-            color: _composer.text.trim().isEmpty
-                ? AppColors.textDim
-                : AppColors.primary,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 34, height: 34),
-            icon: _posting
-                ? const SizedBox(
-                    width: 17,
-                    height: 17,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send_rounded, size: 20),
-          ),
-        ],
-      ),
-    ],
-  );
+            IconButton(
+              tooltip: _replyingTo == null ? 'Post comment' : 'Post reply',
+              onPressed: _posting ? null : _post,
+              color: _composer.text.trim().isEmpty
+                  ? AppColors.textDim
+                  : AppColors.primary,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+              icon: _posting
+                  ? const SizedBox(
+                      width: 17,
+                      height: 17,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send_rounded, size: 20),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 
   Widget _commentView(DiscussionComment comment) {
     final replies = _replies[comment.id];

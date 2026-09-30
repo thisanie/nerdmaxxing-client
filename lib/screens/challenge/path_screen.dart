@@ -44,6 +44,8 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   Color get _hero => _light ? AppColors.limeWash : AppColors.primaryMuted;
   Color get _accent => _light ? AppColors.primaryLight : AppColors.primaryLight;
   Color get _buttonForeground => Theme.of(context).colorScheme.onPrimary;
+  Color get _actionBackground => _light ? _ink : AppColors.primary;
+  Color get _actionForeground => _light ? _buttonForeground : AppColors.dark;
 
   @override
   void initState() {
@@ -323,16 +325,20 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                       _detail.metricDefinitions.isNotEmpty
                   ? _logResult
                   : null,
-              icon: Icon(Icons.bar_chart_rounded, color: _buttonForeground),
+              icon: Icon(Icons.bar_chart_rounded, color: _actionForeground),
               label: const Text('Log a result'),
               style: FilledButton.styleFrom(
-                backgroundColor: _ink,
-                foregroundColor: _buttonForeground,
-                disabledBackgroundColor: _ink.withValues(alpha: .4),
-                disabledForegroundColor: _hero,
+                backgroundColor: _actionBackground,
+                foregroundColor: _actionForeground,
+                disabledBackgroundColor: _actionBackground.withValues(
+                  alpha: .4,
+                ),
+                disabledForegroundColor: _actionForeground.withValues(
+                  alpha: .7,
+                ),
                 shape: const StadiumBorder(),
                 textStyle: AppFonts.body(
-                  color: _buttonForeground,
+                  color: _actionForeground,
                   fontSize: 17,
                 ),
               ),
@@ -392,7 +398,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       width: 190,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: index == _selectedMilestone ? _ink : _card,
+        color: index == _selectedMilestone ? _actionBackground : _card,
         border: index == _selectedMilestone
             ? null
             : Border.all(color: _border, width: 1.5),
@@ -426,7 +432,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppFonts.body(
-                color: index == _selectedMilestone ? _hero : _ink,
+                color: index == _selectedMilestone ? _actionForeground : _ink,
                 fontSize: 15,
                 height: 1.15,
               ),

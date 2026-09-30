@@ -96,6 +96,7 @@ class _RankSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
@@ -105,9 +106,7 @@ class _RankSummary extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.light
-                ? AppColors.limeWash
-                : AppColors.primaryMuted,
+            color: isDark ? AppColors.primaryMuted : AppColors.limeWash,
             borderRadius: BorderRadius.circular(32),
           ),
           child: Column(
@@ -135,7 +134,7 @@ class _RankSummary extends StatelessWidget {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: scheme.onSurface,
+                      color: isDark ? AppColors.surfaceAlt : scheme.onSurface,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -774,11 +773,12 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final accentColor = Theme.of(context).brightness == Brightness.dark
         ? scheme.primary
         : AppColors.primary;
     final background = dark
-        ? scheme.onSurface
+        ? (isDarkTheme ? AppColors.surfaceAlt : scheme.onSurface)
         : accent
         ? accentColor
         : scheme.surface;
