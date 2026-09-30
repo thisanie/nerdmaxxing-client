@@ -225,6 +225,7 @@ class AppTheme {
         primary: primary,
         onPrimary: onPrimary,
         surface: surface,
+        surfaceContainerHighest: surfaceAlt,
         onSurface: textPrimary,
         onSurfaceVariant: textSecondary,
         outline: subtleBorder,

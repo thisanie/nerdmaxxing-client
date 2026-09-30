@@ -130,7 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
-        backgroundColor: Theme.of(context).colorScheme.surface.withValues(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor.withValues(
           alpha: _isScrolled ? 0.88 : 1,
         ),
         surfaceTintColor: Colors.transparent,
@@ -160,8 +160,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onRefresh: () async {
             await _loadHomeData();
           },
-          color: AppColors.primary,
-          backgroundColor: AppColors.surface,
+          color: Theme.of(context).colorScheme.onSurface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -175,15 +175,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       name: name,
                       streak: stats?.dayStreak ?? 0,
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 22),
                     _StatsRow(
                       active: stats?.activeChallengeCount ?? 0,
                       aura: stats?.auraPoints ?? 0,
                       completed: stats?.completedChallengeCount ?? 0,
                     ),
-                    const SizedBox(height: 42),
-                    const _SectionTitle('Continue where you left off'),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 16),
                     _ResumeCard(
                       challenge: _resumeParticipation == null
                           ? null
@@ -194,9 +192,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ? null
                           : () => _openParticipation(_resumeParticipation!),
                     ),
-                    const SizedBox(height: 44),
+                    const SizedBox(height: 36),
                     const _SectionHeader(title: 'Your challenges', action: 'View all'),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 14),
                     if (active.isEmpty)
                       const _EmptyChallengeRow()
                     else
@@ -207,9 +205,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onTap: () => _openParticipation(item),
                         ),
                       ),
-                    const SizedBox(height: 44),
+                    const SizedBox(height: 28),
                     const _SectionHeader(title: 'Maybe try next', action: 'Discover'),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 14),
                     _NudgeCard(
                       challenge: _mostPopularChallenge,
                       onTap: _mostPopularChallenge == null
@@ -264,22 +262,36 @@ class _HomeBrandHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        RichText(
-          text: TextSpan(
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.7,
-            ),
-            children: [
-              TextSpan(text: 'NERD'),
-              TextSpan(
-                text: 'MAXXING',
-                style: TextStyle(color: AppColors.primary),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'NERD',
+              style: AppFonts.body(
+                color: colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                letterSpacingEm: 0.05,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'MAXXING',
+                style: AppFonts.body(
+                  color: AppColors.dark,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacingEm: 0.05,
+                ),
+              ),
+            ),
+          ],
         ),
         Consumer<NotificationBadgeController>(
           builder: (context, badge, _) => Stack(
@@ -300,7 +312,7 @@ class _HomeBrandHeader extends StatelessWidget {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      color: AppColors.danger,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: colorScheme.surface,
@@ -330,30 +342,56 @@ class _Greeting extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Hey $name 👋',
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.05),
+          'Hey $name',
+          style: AppFonts.body(
+            color: colorScheme.onSurface,
+            fontSize: 34,
+            fontWeight: FontWeight.w500,
+            height: 1.1,
+            letterSpacingEm: -0.02,
+          ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Keep learning. Keep levelling up.',
-          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 15),
-        ),
-        const SizedBox(height: 20),
-        Container(height: 1, color: colorScheme.outline),
-        Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '$streak DAY STREAK',
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 11,
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w500,
+        const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                'Keep learning. Keep levelling up.',
+                style: AppFonts.body(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 15,
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: ShapeDecoration(
+                color: colorScheme.surface,
+                shape: StadiumBorder(side: BorderSide(color: colorScheme.outline)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.local_fire_department_rounded,
+                    size: 16,
+                    color: AppColors.puzzle,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '$streak day streak',
+                    style: AppFonts.body(
+                      color: colorScheme.onSurface,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -373,33 +411,24 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _Stat(
-            value: '$active',
-            label: 'ACTIVE',
-            centered: true,
-          ),
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: scheme.outline),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(child: _Stat(value: '$active', label: 'Active')),
+            VerticalDivider(width: 1, color: scheme.outline),
+            Expanded(child: _Stat(value: '$aura', label: 'Aura')),
+            VerticalDivider(width: 1, color: scheme.outline),
+            Expanded(child: _Stat(value: '$completed', label: 'Completed')),
+          ],
         ),
-        Expanded(
-          child: _Stat(
-            value: '$aura',
-            label: 'AURA',
-            color: AppColors.primary,
-            bordered: true,
-            centered: true,
-          ),
-        ),
-        Expanded(
-          child: _Stat(
-            value: '$completed',
-            label: 'COMPLETED',
-            bordered: true,
-            centered: true,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -407,48 +436,31 @@ class _StatsRow extends StatelessWidget {
 class _Stat extends StatelessWidget {
   final String value;
   final String label;
-  final Color? color;
-  final bool bordered;
-  final bool centered;
 
-  const _Stat({
-    required this.value,
-    required this.label,
-    this.color,
-    this.bordered = false,
-    this.centered = false,
-  });
+  const _Stat({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
-        border: bordered
-            ? Border(left: BorderSide(color: colorScheme.outline))
-            : null,
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
       child: Column(
-        crossAxisAlignment: centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
           Text(
             value,
-            style: TextStyle(
-              color: color,
-              fontSize: 44,
-              fontWeight: FontWeight.w800,
-              height: 1,
+            style: AppFonts.body(
+              color: colorScheme.onSurface,
+              fontSize: 30,
+              fontWeight: FontWeight.w500,
+              height: 1.1,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
+            style: AppFonts.body(
               color: colorScheme.onSurfaceVariant,
-              fontSize: 10,
-              letterSpacing: 1.4,
-              fontWeight: FontWeight.w500,
+              fontSize: 13,
             ),
           ),
         ],
@@ -472,11 +484,9 @@ class _SectionHeader extends StatelessWidget {
       Expanded(child: _SectionTitle(title)),
       Text(
         action,
-        style: TextStyle(
+        style: AppFonts.body(
           color: Theme.of(context).colorScheme.onSurfaceVariant,
-          fontSize: 12,
-          letterSpacing: .7,
-          fontWeight: FontWeight.w500,
+          fontSize: 14,
         ),
       ),
     ],
@@ -491,7 +501,12 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     title,
-    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+    style: AppFonts.body(
+      color: Theme.of(context).colorScheme.onSurface,
+      fontSize: 22,
+      fontWeight: FontWeight.w500,
+      letterSpacingEm: -0.01,
+    ),
   );
 }
 
@@ -522,48 +537,45 @@ class _ResumeCard extends StatelessWidget {
     final progressValue = targetMinutes == null || targetMinutes <= 0
         ? 0.0
         : (loggedMinutes / targetMinutes).clamp(0.0, 1.0).toDouble();
-    final colorScheme = Theme.of(context).colorScheme;
-    final cardColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.transparent
-        : Colors.transparent;
+    const onDark = Color(0xFFF6F6F1);
+    const mutedOnDark = Color(0xFF9A9A92);
     return Material(
-      color: Colors.transparent,
+      color: AppColors.ink,
+      borderRadius: BorderRadius.circular(28),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'CONTINUE CHALLENGE',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
-                ),
+              Text(
+                'CONTINUE WHERE YOU LEFT OFF',
+                style: AppFonts.label(color: AppColors.primary, fontSize: 12),
               ),
               const SizedBox(height: 8),
               Text(
                 title,
-                style: TextStyle(
-                  color: colorScheme.onSurface,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  height: 1.1,
+                style: AppFonts.body(
+                  color: onDark,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w500,
+                  height: 1.15,
+                  letterSpacingEm: -0.01,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
               ClipRRect(
+                borderRadius: BorderRadius.circular(99),
                 child: LinearProgressIndicator(
                   value: isLoading ? null : progressValue,
                   minHeight: 6,
-                  backgroundColor: AppColors.borderStrong,
+                  backgroundColor: const Color(0xFF2E2E2B),
                   color: AppColors.primary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -571,45 +583,36 @@ class _ResumeCard extends StatelessWidget {
                     targetMinutes == null
                         ? '${_formatMinutes(loggedMinutes)} logged'
                         : '${(progressValue * 100).round()}% to goal',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppFonts.body(color: mutedOnDark, fontSize: 14),
                   ),
                   Text(
                     isLoading
                         ? 'Loading progress...'
                         : '${_formatMinutes(loggedMinutes)} logged',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppFonts.body(color: mutedOnDark, fontSize: 14),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 22),
+                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF3A3A36)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      challenge == null ? 'Discover a challenge' : 'RESUME CHALLENGE',
-                      style: TextStyle(
-                        color: colorScheme.onPrimary,
-                        fontSize: 14,
-                        letterSpacing: .8,
-                        fontWeight: FontWeight.w700,
+                      challenge == null ? 'Discover a challenge' : 'Resume challenge',
+                      style: AppFonts.body(
+                        color: onDark,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Icon(Icons.arrow_forward, color: colorScheme.onPrimary, size: 18),
+                    const Icon(Icons.arrow_forward, color: onDark, size: 20),
                   ],
                 ),
               ),
@@ -645,110 +648,107 @@ class _ChallengeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isPaused = participation.status == 'PAUSED';
     final colorScheme = Theme.of(context).colorScheme;
-    final inkColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.dark
-        : AppColors.lightTextPrimary;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: colorScheme.outline),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(color: colorScheme.outline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    challenge?.title.toLowerCase().contains('chess') == true
+                        ? Icons.extension_outlined
+                        : Icons.grid_view_rounded,
+                    color: colorScheme.onSurface,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        challenge?.title ?? 'Your challenge',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.body(
+                          color: colorScheme.onSurface,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          _StatusPill(
+                            label: isPaused ? 'Paused' : 'Active',
+                            paused: isPaused,
+                          ),
+                          _InfoChip(
+                            icon: Icons.bolt,
+                            label: '${challenge?.auraPoints ?? 0} aura',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(color: colorScheme.outline),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: Icon(
-                  challenge?.title.toLowerCase().contains('chess') == true
-                      ? Icons.extension
-                      : Icons.grid_view_rounded,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      challenge?.title ?? 'Your challenge',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _StatusPill(
-                          label: isPaused ? 'PAUSED' : 'ACTIVE',
-                          paused: isPaused,
-                        ),
-                        const SizedBox(width: 8),
-                        if (isPaused)
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(99),
-                              child: LinearProgressIndicator(
-                                value: .32,
-                                minHeight: 5,
-                                backgroundColor: colorScheme.outline,
-                                color: AppColors.primaryMuted,
-                              ),
-                            ),
-                          ),
-                        if (isPaused) const SizedBox(width: 8),
-                        Text(
-                          isPaused ? '32%' : 'In progress',
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.bolt,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${challenge?.auraPoints ?? 0} aura',
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-            ],
-          ),
         ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData? icon;
+  final String label;
+
+  const _InfoChip({this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            label,
+            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 13),
+          ),
+        ],
       ),
     );
   }
@@ -763,25 +763,21 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return DecoratedBox(
+    final bg = paused
+        ? (isDark ? const Color(0xFF4A3B12) : const Color(0xFFFFE7A3))
+        : (isDark ? AppColors.primaryMuted : AppColors.limeWash);
+    final fg = paused
+        ? (isDark ? const Color(0xFFFFD98A) : const Color(0xFF7A5A00))
+        : (isDark ? AppColors.primary : const Color(0xFF55700F));
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: paused
-            ? (isDark ? const Color(0xFF4A3B12) : const Color(0xFFFFE7A3))
-            : (isDark ? const Color(0xFF203A15) : const Color(0xFFD7F0C2)),
-        borderRadius: BorderRadius.circular(999),
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: paused
-                ? (isDark ? const Color(0xFFFFD98A) : const Color(0xFF7A5A00))
-                : (isDark ? const Color(0xFF9CE87A) : const Color(0xFF2E5B12)),
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
+      child: Text(
+        label,
+        style: AppFonts.body(color: fg, fontSize: 13, fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -819,84 +815,76 @@ class _NudgeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: Colors.transparent,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: colorScheme.outline),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: colorScheme.outline)),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(color: colorScheme.outline),
-                  borderRadius: BorderRadius.circular(3),
+                  color: AppColors.limeWash,
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
                   Icons.local_fire_department_outlined,
-                  color: AppColors.primary,
-                  size: 26,
+                  color: AppColors.lightTextPrimary,
+                  size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      challenge == null
-                          ? 'NO CHALLENGES YET'
-                          : '#1 MOST JOINED',
-                      style: TextStyle(
+                      challenge == null ? 'NO CHALLENGES YET' : '#1 MOST JOINED',
+                      style: AppFonts.label(
                         color: colorScheme.onSurfaceVariant,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 11.5,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       challenge?.title ?? 'Discover a challenge',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
+                      style: AppFonts.body(
+                        color: colorScheme.onSurface,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    if (challenge?.auraPoints != null) ...[
-                      const SizedBox(height: 3),
-                      Row(
+                    if (challenge?.auraPoints != null ||
+                        challenge?.enrollmentCount != null) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          const Icon(
-                            Icons.bolt,
-                            size: 14,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${challenge?.auraPoints ?? 0} aura',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
+                          if (challenge?.auraPoints != null)
+                            _InfoChip(
+                              icon: Icons.bolt,
+                              label: '${challenge!.auraPoints} aura',
                             ),
-                          ),
+                          if (challenge?.enrollmentCount != null)
+                            Text(
+                              '${challenge!.enrollmentCount} joined',
+                              style: AppFonts.body(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 13,
+                              ),
+                            ),
                         ],
-                      ),
-                    ],
-                    if (challenge?.enrollmentCount != null) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        '${challenge!.enrollmentCount} joined',
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
                       ),
                     ],
                   ],
