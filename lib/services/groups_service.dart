@@ -21,12 +21,14 @@ class GroupsService {
   }
 
   Future<Group> get(String groupId) async {
-    final data = await api.get('/groups/$groupId');
+    final encodedId = _groupPathId(groupId);
+    final data = await api.get('/groups/$encodedId');
     return Group.fromJson(Map<String, dynamic>.from(data as Map));
   }
 
   Future<List<GroupMember>> listMembers(String groupId) async {
-    final data = await api.get('/groups/$groupId/members');
+    final encodedId = _groupPathId(groupId);
+    final data = await api.get('/groups/$encodedId/members');
     dynamic rawItems = data;
     while (rawItems is Map) {
       final next = rawItems['members'] ?? rawItems['items'] ?? rawItems['data'];
@@ -70,7 +72,7 @@ class GroupsService {
     int offset = 0,
   }) async {
     final data = await api.get(
-      '/groups/$groupId/messages',
+      '/groups/${_groupPathId(groupId)}/messages',
       query: {'limit': limit, 'offset': offset},
     );
     final rawItems = data is Map
@@ -88,9 +90,17 @@ class GroupsService {
     required String body,
   }) async {
     final data = await api.post(
-      '/groups/$groupId/messages',
+      '/groups/${_groupPathId(groupId)}/messages',
       data: {'body': body},
     );
     return GroupMessage.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  String _groupPathId(String groupId) {
+    final value = groupId.trim();
+    if (value.isEmpty) {
+      throw ApiException(null, 'Group ID is missing.');
+    }
+    return Uri.encodeComponent(value);
   }
 }

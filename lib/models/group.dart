@@ -21,7 +21,7 @@ class Group {
 
   factory Group.fromJson(Map<String, dynamic> json) {
     return Group(
-      id: json['id']?.toString() ?? '',
+      id: (json['id'] ?? json['group_id'])?.toString() ?? '',
       name: json['name']?.toString() ?? 'Unnamed group',
       description: json['description']?.toString(),
       visibility: json['visibility']?.toString() ?? 'PUBLIC',
