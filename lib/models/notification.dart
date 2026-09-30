@@ -59,6 +59,8 @@ class AppNotification {
       if (json['entity_id'] != null) 'entity_id': json['entity_id'],
       if (json['resource_id'] != null) 'resource_id': json['resource_id'],
       if (json['target_id'] != null) 'target_id': json['target_id'],
+      if (json['group_id'] != null) 'group_id': json['group_id'],
+      if (json['group_name'] != null) 'group_name': json['group_name'],
       if (json['actor_id'] != null) 'actor_id': json['actor_id'],
       if (json['actor_username'] != null)
         'actor_username': json['actor_username'],
@@ -100,6 +102,11 @@ class AppNotification {
   String? get replyId => _value('reply_id') ?? _value('comment_reply_id');
   String? get actorName =>
       _value('actor_name') ?? _value('name') ?? _value('actor_username');
+    String? get groupId =>
+      _value('group_id') ??
+      _value('groupId') ??
+      (isGroupMessage ? _value('related_id') ?? _value('entity_id') : null);
+    String? get groupName => _value('group_name') ?? _value('groupName');
 
   bool get isFollow {
     final values = [
@@ -122,6 +129,21 @@ class AppNotification {
           normalized.contains('COMMENT') ||
           normalized.contains('DISCUSSION');
     });
+  }
+
+  bool get isGroupMessage {
+    final values = [
+      type,
+      data['notification_type']?.toString(),
+      data['event_type']?.toString(),
+    ];
+    return values.any((value) {
+      final normalized = value?.toUpperCase() ?? '';
+        return normalized.contains('GROUP_MESSAGE') ||
+          normalized.contains('GROUPMESSAGE');
+    }) ||
+        data['group_id'] != null ||
+        data['groupId'] != null;
   }
 
   bool get isChallengeInvitation => _isInvitationType || invitationId != null;

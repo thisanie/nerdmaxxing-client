@@ -4,14 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 
 import '../../models/challenge.dart';
 import '../../models/notification.dart';
+import '../../models/group.dart';
 import '../../providers/app_state_providers.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/notifications_service.dart';
+import '../../services/groups_service.dart';
 import '../../theme/app_theme.dart';
 import '../challenge/challenge_detail_screen.dart';
 import '../profile/profile_screen.dart';
+import '../profile/group_chat_screen.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -188,7 +191,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Future<void> _openNotification(AppNotification notification) async {
-    if (notification.isFollow) {
+    if (notification.isGroupMessage) {
+      await _viewGroup(notification);
+    } else if (notification.isFollow) {
       await _markRead(notification);
       if (!mounted) return;
       final username = notification.actorUsername;
@@ -205,6 +210,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       );
     } else if (notification.isChallengeInvitation || notification.isReply) {
       await _viewChallenge(notification);
+    }
+  }
+
+  Future<void> _viewGroup(AppNotification notification) async {
+    await _markRead(notification);
+    final groupId = notification.groupId;
+    if (groupId == null || groupId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Group details are unavailable.')),
+        );
+      }
+      return;
+    }
+    try {
+      final group = await context.read<GroupsService>().get(groupId);
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => GroupChatScreen(group: group)),
+      );
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
     }
   }
 
@@ -270,6 +297,7 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isInvitation = notification.isChallengeInvitation;
+    final isGroupMessage = notification.isGroupMessage;
     final isPendingInvitation = notification.isPendingInvitation;
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
@@ -289,7 +317,9 @@ class _NotificationTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    isInvitation
+                    isGroupMessage
+                      ? Icons.groups_outlined
+                      : isInvitation
                         ? Icons.mail_outline
                         : notification.isFollow
                         ? Icons.person_add_alt_1_outlined
@@ -301,8 +331,10 @@ class _NotificationTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          notification.isFollow
+                          Text(
+                          isGroupMessage
+                            ? notification.groupName ?? 'Group message'
+                            : notification.isFollow
                               ? notification.actorName ?? 'New follower'
                               : notification.challengeTitle ?? 'Notification',
                           style: const TextStyle(fontWeight: FontWeight.w700),

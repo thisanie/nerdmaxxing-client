@@ -9,8 +9,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'api_client.dart';
 import 'token_storage.dart';
 
-const _notificationChannelId = 'challenge_notifications';
-const _notificationChannelName = 'Challenge notifications';
+const _notificationChannelId = 'app_notifications';
+const _notificationChannelName = 'App notifications';
 
 final FlutterLocalNotificationsPlugin _localNotifications =
     FlutterLocalNotificationsPlugin();
@@ -34,7 +34,7 @@ Future<void> _initializeLocalNotifications({VoidCallback? onTap}) async {
         const AndroidNotificationChannel(
           _notificationChannelId,
           _notificationChannelName,
-          description: 'Notifications about challenge invitations.',
+          description: 'Notifications about activity in NerdMaxxing.',
           importance: Importance.high,
         ),
       );
@@ -51,7 +51,7 @@ Future<void> _showLocalNotification(RemoteMessage message) async {
       android: AndroidNotificationDetails(
         _notificationChannelId,
         _notificationChannelName,
-        channelDescription: 'Notifications about challenge invitations.',
+        channelDescription: 'Notifications about activity in NerdMaxxing.',
         importance: Importance.high,
         priority: Priority.high,
       ),

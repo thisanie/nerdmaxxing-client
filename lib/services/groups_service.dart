@@ -1,4 +1,5 @@
 import '../models/group.dart';
+import '../models/group_member.dart';
 import '../models/group_message.dart';
 import 'api_client.dart';
 
@@ -17,6 +18,23 @@ class GroupsService {
   Future<List<Group>> listMine() async {
     final data = await api.get('/groups/me');
     return (data as List).map((e) => Group.fromJson(e)).toList();
+  }
+
+  Future<Group> get(String groupId) async {
+    final data = await api.get('/groups/$groupId');
+    return Group.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  Future<List<GroupMember>> listMembers(String groupId) async {
+    final data = await api.get('/groups/$groupId/members');
+    final rawItems = data is Map
+        ? (data['members'] ?? data['items'] ?? data['data'] ?? const [])
+        : data;
+    if (rawItems is! List) return const [];
+    return rawItems
+        .whereType<Map>()
+        .map((item) => GroupMember.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
   }
 
   Future<Group> create({

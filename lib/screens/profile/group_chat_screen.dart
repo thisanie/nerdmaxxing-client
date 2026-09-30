@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/group.dart';
+import '../../models/group_member.dart';
 import '../../models/group_message.dart';
 import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
@@ -88,6 +89,97 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     });
   }
 
+  void _showGroupDetails() {
+    final membersFuture = context.read<GroupsService>().listMembers(widget.group.id);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final group = widget.group;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(group.name, style: theme.textTheme.headlineSmall),
+                if (group.description?.isNotEmpty == true) ...[
+                  const SizedBox(height: 8),
+                  Text(group.description!),
+                ],
+                const SizedBox(height: 20),
+                _GroupDetailRow(
+                  icon: Icons.people_outline,
+                  label: 'Members',
+                  value:
+                      '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
+                ),
+                _GroupDetailRow(
+                  icon: group.visibility == 'PRIVATE'
+                      ? Icons.lock_outline
+                      : Icons.public,
+                  label: 'Visibility',
+                  value: group.visibility == 'PRIVATE' ? 'Private' : 'Public',
+                ),
+                _GroupDetailRow(
+                  icon: Icons.calendar_today_outlined,
+                  label: 'Created',
+                  value: group.createdAt == null
+                      ? 'Unknown'
+                      : _formatDate(group.createdAt!),
+                ),
+                const SizedBox(height: 6),
+                Text('Members', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                FutureBuilder<List<GroupMember>>(
+                  future: membersFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return const Text('Could not load group members.');
+                    }
+                    final members = snapshot.data ?? const <GroupMember>[];
+                    if (members.isEmpty) return const Text('No members found.');
+                    return ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 220),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: members.length,
+                        itemBuilder: (context, index) {
+                          final member = members[index];
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              child: Text(member.displayName[0].toUpperCase()),
+                            ),
+                            title: Text(member.displayName),
+                            subtitle: member.username == null
+                                ? null
+                                : Text('@${member.username}'),
+                            trailing: member.status == null
+                                ? null
+                                : Text(member.status!),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,6 +190,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             tooltip: 'Refresh messages',
             onPressed: _loading ? null : _loadMessages,
             icon: const Icon(Icons.refresh),
+          ),
+          IconButton(
+            tooltip: 'Group details',
+            onPressed: _showGroupDetails,
+            icon: const Icon(Icons.info_outline),
           ),
         ],
       ),
@@ -191,5 +288,37 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     final hour = local.hour == 0 ? 12 : local.hour > 12 ? local.hour - 12 : local.hour;
     final minute = local.minute.toString().padLeft(2, '0');
     return '$hour:$minute ${local.hour >= 12 ? 'PM' : 'AM'}';
+  }
+
+  String _formatDate(DateTime date) {
+    final local = date.toLocal();
+    return '${local.month}/${local.day}/${local.year}';
+  }
+}
+
+class _GroupDetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _GroupDetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label)),
+          Text(value, style: Theme.of(context).textTheme.labelLarge),
+        ],
+      ),
+    );
   }
 }
