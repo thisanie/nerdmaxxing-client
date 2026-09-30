@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +23,7 @@ class PeopleDiscoverScreen extends StatefulWidget {
 
 class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
   final _searchController = TextEditingController();
+  Timer? _searchDebounce;
   List<DiscoverUser> _userResults = [];
   List<Challenge> _challengeResults = [];
   String? _searchError;
@@ -36,13 +39,29 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _search() async {
-    final query = _searchController.text.trim();
-    if (query.isEmpty) return;
+  void _scheduleSearch(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      _search(value);
+    });
+  }
+
+  Future<void> _search([String? value]) async {
+    final query = (value ?? _searchController.text).trim();
+    if (query.isEmpty) {
+      setState(() {
+        _userResults = [];
+        _challengeResults = [];
+        _searchError = null;
+        _isSearching = false;
+      });
+      return;
+    }
     setState(() {
       _isSearching = true;
       _searchError = null;
@@ -52,6 +71,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
     try {
       final result = await context.read<DiscoverService>().search(query);
       if (!mounted) return;
+      if (_searchController.text.trim() != query) return;
       setState(() {
         _userResults = result.users;
         _challengeResults = result.challenges;
@@ -62,6 +82,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
+      if (_searchController.text.trim() != query) return;
       setState(() {
         _searchError = e.message;
         _isSearching = false;
@@ -159,6 +180,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                     _SearchField(
                       controller: _searchController,
                       isLoading: _isSearching,
+                      onChanged: _scheduleSearch,
                       onSubmitted: (_) => _search(),
                       onSearch: _search,
                     ),
@@ -280,11 +302,13 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
 class _SearchField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
+  final ValueChanged<String> onChanged;
   final ValueChanged<String> onSubmitted;
   final VoidCallback onSearch;
   const _SearchField({
     required this.controller,
     required this.isLoading,
+    required this.onChanged,
     required this.onSubmitted,
     required this.onSearch,
   });
@@ -311,6 +335,7 @@ class _SearchField extends StatelessWidget {
             child: TextField(
               controller: controller,
               textInputAction: TextInputAction.search,
+              onChanged: onChanged,
               onSubmitted: onSubmitted,
               style: const TextStyle(fontSize: 16),
               decoration: const InputDecoration(
