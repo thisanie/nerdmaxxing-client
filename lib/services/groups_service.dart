@@ -27,9 +27,12 @@ class GroupsService {
 
   Future<List<GroupMember>> listMembers(String groupId) async {
     final data = await api.get('/groups/$groupId/members');
-    final rawItems = data is Map
-        ? (data['members'] ?? data['items'] ?? data['data'] ?? const [])
-        : data;
+    dynamic rawItems = data;
+    while (rawItems is Map) {
+      final next = rawItems['members'] ?? rawItems['items'] ?? rawItems['data'];
+      if (next == null || identical(next, rawItems)) break;
+      rawItems = next;
+    }
     if (rawItems is! List) return const [];
     return rawItems
         .whereType<Map>()

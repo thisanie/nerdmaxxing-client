@@ -6,6 +6,7 @@ import '../../models/group_member.dart';
 import '../../models/group_message.dart';
 import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
+import '../../services/token_storage.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final Group group;
@@ -23,11 +24,18 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   bool _loading = true;
   bool _sending = false;
   String? _error;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUserId();
     _loadMessages();
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    final userId = await TokenStorage().userId;
+    if (mounted) setState(() => _currentUserId = userId);
   }
 
   @override
@@ -143,7 +151,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       );
                     }
                     if (snapshot.hasError) {
-                      return const Text('Could not load group members.');
+                      return Text('Could not load group members: ${snapshot.error}');
                     }
                     final members = snapshot.data ?? const <GroupMember>[];
                     if (members.isEmpty) return const Text('No members found.');
@@ -225,24 +233,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         itemCount: _messages.length,
         itemBuilder: (context, index) {
           final message = _messages[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  message.author.displayName,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 3),
-                Text(message.body),
-                if (message.createdAt != null)
-                  Text(
-                    _formatTime(message.createdAt!),
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-              ],
-            ),
+          return _MessageBubble(
+            message: message,
+            isMine: _currentUserId != null &&
+                message.author.id == _currentUserId,
           );
         },
       ),
@@ -320,5 +314,77 @@ class _GroupDetailRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _MessageBubble extends StatelessWidget {
+  final GroupMessage message;
+  final bool isMine;
+
+  const _MessageBubble({required this.message, required this.isMine});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final bubbleColor = isMine
+        ? colors.primary
+        : colors.surfaceContainerHighest;
+    final textColor = isMine ? colors.onPrimary : colors.onSurface;
+    return Align(
+      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 320),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.fromLTRB(14, 9, 12, 7),
+        decoration: BoxDecoration(
+          color: bubbleColor,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isMine ? 18 : 4),
+            bottomRight: Radius.circular(isMine ? 4 : 18),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isMine)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: Text(
+                  message.author.displayName,
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            Text(message.body, style: TextStyle(color: textColor, fontSize: 15)),
+            if (message.createdAt != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    _timeLabel(message.createdAt!),
+                    style: TextStyle(
+                      color: textColor.withValues(alpha: 0.7),
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _timeLabel(DateTime date) {
+    final local = date.toLocal();
+    final hour = local.hour == 0 ? 12 : local.hour > 12 ? local.hour - 12 : local.hour;
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$hour:$minute ${local.hour >= 12 ? 'PM' : 'AM'}';
   }
 }
