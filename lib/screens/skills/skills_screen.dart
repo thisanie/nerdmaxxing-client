@@ -13,13 +13,11 @@ class SkillsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(myStatsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Rank')),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(myStatsProvider.future),
         child: stats.when(
-          loading: () => const _RefreshableState(
-            child: CircularProgressIndicator(),
-          ),
+          loading: () =>
+              const _RefreshableState(child: CircularProgressIndicator()),
           error: (error, _) => _RefreshableState(
             child: Text(
               'Could not load your rank.\n$error',
@@ -36,7 +34,7 @@ class SkillsScreen extends ConsumerWidget {
                   child: TabBarView(
                     children: [
                       _RankSummary(stats: value),
-                      const _LeaderboardTab(),
+                      _LeaderboardTab(rank: value.rank),
                     ],
                   ),
                 ),
@@ -54,16 +52,38 @@ class _RankTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TabBar(
-      tabs: const [
-        Tab(text: 'SUMMARY'),
-        Tab(text: 'LEADERBOARD'),
-      ],
-      labelColor: Theme.of(context).colorScheme.onSurface,
-      unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-      indicatorColor: AppColors.primary,
-      indicatorSize: TabBarIndicatorSize.label,
-      dividerColor: Theme.of(context).colorScheme.outline,
+    final scheme = Theme.of(context).colorScheme;
+    final selectedForeground = Theme.of(context).brightness == Brightness.dark
+        ? scheme.primary
+        : scheme.surface;
+    return Container(
+      height: 54,
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border.all(color: scheme.outline),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: TabBar(
+        tabs: const [
+          Tab(text: 'Summary'),
+          Tab(text: 'Leaderboard'),
+        ],
+        labelColor: selectedForeground,
+        unselectedLabelColor: scheme.onSurfaceVariant,
+        indicator: BoxDecoration(
+          color: scheme.onSurface,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+        labelStyle: AppFonts.body(color: selectedForeground, fontSize: 16),
+        unselectedLabelStyle: AppFonts.body(
+          color: scheme.onSurfaceVariant,
+          fontSize: 16,
+        ),
+      ),
     );
   }
 }
@@ -75,108 +95,247 @@ class _RankSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
-        const Text(
-          'YOUR PROGRESS',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 11,
-            letterSpacing: 2,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Build your rank\none challenge at a time.',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                height: .98,
-              ),
-        ),
-        const SizedBox(height: 28),
+        _RankHeader(rank: stats.rank),
+        const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: AppColors.primaryMuted,
-            border: Border.all(color: AppColors.primary.withValues(alpha: .35)),
+            color: Theme.of(context).brightness == Brightness.light
+                ? AppColors.limeWash
+                : AppColors.primaryMuted,
+            borderRadius: BorderRadius.circular(32),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.bolt, color: AppColors.primary, size: 28),
-              const SizedBox(width: 12),
               Text(
-                '${stats.auraPoints}',
-                style: const TextStyle(
-                  fontSize: 58,
-                  height: .8,
-                  fontWeight: FontWeight.w800,
+                'YOUR PROGRESS',
+                style: AppFonts.label(color: scheme.onSurface, fontSize: 13),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Build your rank one challenge at a time.',
+                style: AppFonts.display(
+                  color: scheme.onSurface,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 2),
-                child: Text(
-                  'AURA POINTS',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                    letterSpacing: 1.3,
-                    fontWeight: FontWeight.w700,
+              const SizedBox(height: 18),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.onSurface,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.bolt, color: AppColors.primary, size: 26),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${stats.auraPoints}',
+                    style: AppFonts.poster(
+                      fontSize: 88,
+                      color: scheme.onSurface,
+                      wdth: 100,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'AURA\nPOINTS',
+                    style: AppFonts.label(
+                      color: scheme.onSurface.withValues(alpha: .7),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          stats.nextRank == null
-              ? 'S RANK // MAXIMUM AURA'
-              : '${stats.rank} RANK // ${stats.rankProgress}% TO ${stats.nextRank}',
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 11,
-            letterSpacing: 1.1,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        if (stats.nextRank != null) ...[
-          const SizedBox(height: 5),
-          Text(
-            '${stats.auraToNextRank} aura to ${stats.nextRank} rank',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-          ),
-        ],
-        const SizedBox(height: 24),
+        _RankLadder(stats: stats),
+        const SizedBox(height: 12),
         Row(
           children: [
-            _StatTile(label: 'DAY STREAK', value: '${stats.dayStreak}', icon: Icons.local_fire_department_outlined),
+            _StatTile(
+              label: 'DAY STREAK',
+              value: '${stats.dayStreak}',
+              icon: Icons.local_fire_department_rounded,
+            ),
             const SizedBox(width: 12),
-            _StatTile(label: 'COMPLETED', value: '${stats.completedChallengeCount}', icon: Icons.check_circle_outline),
+            _StatTile(
+              label: 'COMPLETED',
+              value: '${stats.completedChallengeCount}',
+              icon: Icons.task_alt_rounded,
+            ),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            _StatTile(label: 'ACTIVE', value: '${stats.activeChallengeCount}', icon: Icons.track_changes),
+            _StatTile(
+              label: 'ACTIVE',
+              value: '${stats.activeChallengeCount}',
+              icon: Icons.radio_button_checked_rounded,
+              accent: true,
+            ),
             const SizedBox(width: 12),
-            _StatTile(label: 'RANK', value: stats.rank, icon: Icons.workspace_premium_outlined),
+            _StatTile(
+              label: 'RANK',
+              value: stats.rank,
+              icon: Icons.military_tech_outlined,
+              dark: true,
+            ),
           ],
         ),
       ],
     );
   }
+}
 
+class _RankHeader extends StatelessWidget {
+  final String rank;
+
+  const _RankHeader({required this.rank});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text('Rank', style: Theme.of(context).textTheme.headlineMedium),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.onSurface,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          'Rank $rank',
+          style: AppFonts.body(color: AppColors.primary, fontSize: 14),
+        ),
+      ),
+    ],
+  );
+}
+
+class _RankLadder extends StatelessWidget {
+  final UserStats stats;
+
+  const _RankLadder({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = Theme.of(context).brightness == Brightness.dark
+        ? scheme.primary
+        : AppColors.primary;
+    const ranks = ['E', 'D', 'C', 'B', 'A', 'S'];
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border.all(color: scheme.outline),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Rank ladder',
+                style: AppFonts.body(
+                  color: scheme.onSurface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                stats.nextRank == null
+                    ? 'MAX RANK'
+                    : '${stats.rankProgress}% to ${stats.nextRank}',
+                style: AppFonts.body(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 42,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  child: Container(height: 3, color: scheme.outline),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (final rank in ranks)
+                      Container(
+                        width: 38,
+                        height: 38,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: rank == stats.rank ? accent : scheme.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: rank == stats.rank
+                                ? scheme.onSurface
+                                : scheme.outline,
+                            width: rank == stats.rank ? 2 : 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          rank,
+                          style: AppFonts.body(
+                            color: rank == stats.rank
+                                ? AppColors.dark
+                                : scheme.onSurfaceVariant,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            stats.nextRank == null
+                ? 'Maximum aura reached'
+                : '${stats.auraToNextRank} aura to ${stats.nextRank} rank',
+            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 enum _LeaderboardMetric { aura, completed, streak }
 
 class _LeaderboardTab extends ConsumerStatefulWidget {
-  const _LeaderboardTab();
+  final String rank;
+
+  const _LeaderboardTab({required this.rank});
 
   @override
   ConsumerState<_LeaderboardTab> createState() => _LeaderboardTabState();
@@ -190,35 +349,35 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
   @override
   Widget build(BuildContext context) {
     final leaderboard = ref.watch(
-      leaderboardProvider(
-        (
-          period: _apiPeriod,
-          metric: _metric.name,
-          playerRank: _playerRank,
-        ),
-      ),
+      leaderboardProvider((
+        period: _apiPeriod,
+        metric: _metric.name,
+        playerRank: _playerRank,
+      )),
     );
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
-        const Text(
+        _RankHeader(rank: widget.rank),
+        const SizedBox(height: 20),
+        Text(
           'THE RANKS',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 11,
-            letterSpacing: 2,
-            fontWeight: FontWeight.w700,
+          style: AppFonts.label(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 13,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text(
-          'See who is\nputting in the work.',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                height: .98,
-              ),
+          'See who is putting in the work.',
+          style: AppFonts.display(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 30,
+            fontWeight: FontWeight.w700,
+            height: 1.05,
+          ),
         ),
         const SizedBox(height: 24),
         _FilterStrip(
@@ -248,7 +407,9 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
           data: (data) => data.entries.isEmpty
               ? const Padding(
                   padding: EdgeInsets.only(top: 32),
-                  child: Center(child: Text('No players found for these filters.')),
+                  child: Center(
+                    child: Text('No players found for these filters.'),
+                  ),
                 )
               : Column(
                   children: [
@@ -262,10 +423,10 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
   }
 
   String get _apiPeriod => switch (_period) {
-        'THIS MONTH' => 'month',
-        'ALL TIME' => 'all_time',
-        _ => 'week',
-      };
+    'THIS MONTH' => 'month',
+    'ALL TIME' => 'all_time',
+    _ => 'week',
+  };
 }
 
 class _FilterStrip extends StatelessWidget {
@@ -290,70 +451,89 @@ class _FilterStrip extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FilterLabel('TIME PERIOD'),
-        const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final option in ['THIS WEEK', 'THIS MONTH', 'ALL TIME']) ...[
-                if (option != 'THIS WEEK') const SizedBox(width: 8),
-                _FilterChip(
-                  label: option,
-                  selected: period == option,
-                  onTap: () => onPeriodChanged(option),
-                ),
-              ],
-            ],
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.light
+                ? AppColors.limeWash
+                : AppColors.primaryMuted,
+            borderRadius: BorderRadius.circular(28),
           ),
-        ),
-        const SizedBox(height: 18),
-        _FilterLabel('RANK BY'),
-        const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FilterChip(
-                label: 'AURA',
-                selected: metric == _LeaderboardMetric.aura,
-                onTap: () => onMetricChanged(_LeaderboardMetric.aura),
-              ),
-              const SizedBox(width: 8),
-              _FilterChip(
-                label: 'COMPLETED',
-                selected: metric == _LeaderboardMetric.completed,
-                onTap: () => onMetricChanged(_LeaderboardMetric.completed),
-              ),
-              const SizedBox(width: 8),
-              _FilterChip(
-                label: 'STREAK',
-                selected: metric == _LeaderboardMetric.streak,
-                onTap: () => onMetricChanged(_LeaderboardMetric.streak),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        _FilterLabel('PLAYER RANK'),
-        const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _FilterChip(
-                label: 'ALL',
-                selected: playerRank == null,
-                onTap: () => onPlayerRankChanged(null),
-              ),
-              for (final rank in ['E', 'D', 'C', 'B', 'A', 'S']) ...[
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: rank,
-                  selected: playerRank == rank,
-                  onTap: () => onPlayerRankChanged(rank),
+              _FilterLabel('TIME PERIOD'),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final option in [
+                      'THIS WEEK',
+                      'THIS MONTH',
+                      'ALL TIME',
+                    ]) ...[
+                      if (option != 'THIS WEEK') const SizedBox(width: 8),
+                      _FilterChip(
+                        label: option,
+                        selected: period == option,
+                        onTap: () => onPeriodChanged(option),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
+              const SizedBox(height: 18),
+              _FilterLabel('RANK BY'),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _FilterChip(
+                      label: 'AURA',
+                      selected: metric == _LeaderboardMetric.aura,
+                      onTap: () => onMetricChanged(_LeaderboardMetric.aura),
+                    ),
+                    const SizedBox(width: 8),
+                    _FilterChip(
+                      label: 'COMPLETED',
+                      selected: metric == _LeaderboardMetric.completed,
+                      onTap: () =>
+                          onMetricChanged(_LeaderboardMetric.completed),
+                    ),
+                    const SizedBox(width: 8),
+                    _FilterChip(
+                      label: 'STREAK',
+                      selected: metric == _LeaderboardMetric.streak,
+                      onTap: () => onMetricChanged(_LeaderboardMetric.streak),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              _FilterLabel('PLAYER RANK'),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _FilterChip(
+                      label: 'ALL',
+                      selected: playerRank == null,
+                      onTap: () => onPlayerRankChanged(null),
+                    ),
+                    for (final rank in ['E', 'D', 'C', 'B', 'A', 'S']) ...[
+                      const SizedBox(width: 8),
+                      _FilterChip(
+                        label: rank,
+                        selected: playerRank == rank,
+                        onTap: () => onPlayerRankChanged(rank),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -369,14 +549,13 @@ class _FilterLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 10,
-          letterSpacing: 1.2,
-          fontWeight: FontWeight.w700,
-        ),
-      );
+    text,
+    style: AppFonts.label(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      fontSize: 10,
+      fontWeight: FontWeight.w700,
+    ),
+  );
 }
 
 class _FilterChip extends StatelessWidget {
@@ -392,25 +571,32 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = Theme.of(context).brightness == Brightness.dark
+        ? scheme.primary
+        : AppColors.primary;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(3),
+      borderRadius: BorderRadius.circular(999),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.transparent,
+          color: selected ? scheme.onSurface : scheme.surface,
           border: Border.all(
-            color: selected ? AppColors.primary : AppColors.borderStrong,
+            color: selected ? scheme.onSurface : scheme.outline,
+            width: 1.5,
           ),
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: selected ? AppColors.dark : AppColors.textSecondary,
-            fontSize: 10,
-            letterSpacing: .8,
-            fontWeight: FontWeight.w800,
+          style: AppFonts.body(
+            color: selected
+                ? (Theme.of(context).brightness == Brightness.dark
+                      ? accent
+                      : scheme.surface)
+                : scheme.onSurfaceVariant,
+            fontSize: 14,
           ),
         ),
       ),
@@ -426,6 +612,7 @@ class _LeaderboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     final label = switch (metric) {
       _LeaderboardMetric.aura => 'AURA',
       _LeaderboardMetric.completed => 'DONE',
@@ -436,19 +623,17 @@ class _LeaderboardHeader extends StatelessWidget {
       children: [
         Text(
           period,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 11,
-            letterSpacing: 1,
+          style: AppFonts.label(
+            color: muted,
+            fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 10,
-            letterSpacing: 1,
+          style: AppFonts.label(
+            color: muted,
+            fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -461,13 +646,14 @@ class _LeaderboardRow extends StatelessWidget {
   final LeaderboardEntry entry;
   final _LeaderboardMetric metric;
 
-  const _LeaderboardRow({
-    required this.entry,
-    required this.metric,
-  });
+  const _LeaderboardRow({required this.entry, required this.metric});
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = Theme.of(context).brightness == Brightness.dark
+        ? scheme.primary
+        : AppColors.primary;
     final displayName = entry.displayName ?? entry.username ?? 'Unknown player';
     final handle = entry.username == null ? '' : '@${entry.username}';
     final initials = displayName
@@ -485,10 +671,12 @@ class _LeaderboardRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: entry.isCurrentUser ? AppColors.primaryMuted : AppColors.surface,
+        color: entry.isCurrentUser ? scheme.onSurface : scheme.surface,
         border: Border.all(
-          color: entry.isCurrentUser ? AppColors.primary : AppColors.border,
+          color: entry.isCurrentUser ? scheme.onSurface : scheme.outline,
+          width: 1.5,
         ),
+        borderRadius: BorderRadius.circular(26),
       ),
       child: Row(
         children: [
@@ -497,7 +685,7 @@ class _LeaderboardRow extends StatelessWidget {
             child: Text(
               entry.rank.toString().padLeft(2, '0'),
               style: TextStyle(
-                color: entry.rank == 1 ? AppColors.primary : AppColors.textSecondary,
+                color: entry.isCurrentUser ? accent : scheme.onSurfaceVariant,
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
               ),
@@ -510,12 +698,16 @@ class _LeaderboardRow extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: entry.rank == 1 ? AppColors.primary : AppColors.borderStrong,
+                color: entry.rank == 1 ? accent : scheme.outline,
               ),
             ),
             child: Text(
               initials,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+              style: AppFonts.body(
+                color: entry.isCurrentUser ? scheme.surface : scheme.onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -525,22 +717,33 @@ class _LeaderboardRow extends StatelessWidget {
               children: [
                 Text(
                   displayName,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  style: AppFonts.body(
+                    color: entry.isCurrentUser
+                        ? scheme.surface
+                        : scheme.onSurface,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   '$handle  ·  ${entry.playerRank} RANK',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                  style: AppFonts.body(
+                    color: entry.isCurrentUser
+                        ? scheme.onSurfaceVariant
+                        : scheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
           ),
           Text(
             '${entry.metricValue}$suffix',
-            style: TextStyle(
-              color: entry.isCurrentUser ? AppColors.primary : AppColors.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
+            style: AppFonts.body(
+              color: entry.isCurrentUser ? accent : scheme.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -553,26 +756,67 @@ class _StatTile extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
+  final bool accent;
+  final bool dark;
 
-  const _StatTile({required this.label, required this.value, required this.icon});
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.accent = false,
+    this.dark = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accentColor = Theme.of(context).brightness == Brightness.dark
+        ? scheme.primary
+        : AppColors.primary;
+    final background = dark
+        ? scheme.onSurface
+        : accent
+        ? accentColor
+        : scheme.surface;
+    final foreground = dark
+        ? accentColor
+        : accent
+        ? AppColors.dark
+        : scheme.onSurface;
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        height: 150,
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.border),
+          color: background,
+          border: dark || accent
+              ? null
+              : Border.all(color: scheme.outline, width: 1.5),
+          borderRadius: BorderRadius.circular(28),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: AppColors.primary, size: 20),
-            const SizedBox(height: 14),
-            Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+            Icon(icon, color: foreground, size: 30),
+            const Spacer(),
+            Text(
+              value,
+              style: AppFonts.display(
+                color: foreground,
+                fontSize: 56,
+                fontWeight: FontWeight.w500,
+                height: 1,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, letterSpacing: 1.1, fontWeight: FontWeight.w700)),
+            Text(
+              label,
+              style: AppFonts.label(
+                color: foreground.withValues(alpha: .7),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
       ),
