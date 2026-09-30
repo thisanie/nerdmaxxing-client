@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 import '../discover/discover_screen.dart';
 import '../discover/people_discover_screen.dart';
 import '../profile/profile_screen.dart';
+import '../profile/group_chat_screen.dart';
 import '../skills/skills_screen.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../notifications/notifications_screen.dart';
+import '../../services/api_client.dart';
+import '../../services/groups_service.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -70,15 +73,37 @@ class _HomeShellState extends State<HomeShell> {
   void _handleNotificationRequest() {
     final navigation = context.read<NotificationNavigationController>();
     if (!navigation.openNotificationsRequested || !mounted) return;
+    final data = navigation.pendingData;
     navigation.consumeNotificationsRequest();
     _index = 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _navigatorKeys[0].currentState?.push(
-        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-      );
+      _openNotificationRoute(data);
     });
     setState(() {});
+  }
+
+  Future<void> _openNotificationRoute(Map<String, String> data) async {
+    final groupId = data['group_id'] ??
+      data['groupId'] ??
+      data['related_id'] ??
+      data['entity_id'];
+    if (groupId != null && groupId.isNotEmpty) {
+      try {
+        final group = await context.read<GroupsService>().get(groupId);
+        if (!mounted) return;
+        _navigatorKeys[0].currentState?.push(
+          MaterialPageRoute(builder: (_) => GroupChatScreen(group: group)),
+        );
+        return;
+      } on ApiException catch (_) {
+        // Fall back to the notifications list when the group is unavailable.
+      }
+    }
+    if (!mounted) return;
+    _navigatorKeys[0].currentState?.push(
+      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+    );
   }
 
   @override

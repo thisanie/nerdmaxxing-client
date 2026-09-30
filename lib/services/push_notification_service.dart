@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -15,7 +16,7 @@ const _notificationChannelName = 'App notifications';
 final FlutterLocalNotificationsPlugin _localNotifications =
     FlutterLocalNotificationsPlugin();
 
-Future<void> _initializeLocalNotifications({VoidCallback? onTap}) async {
+Future<void> _initializeLocalNotifications({ValueChanged<String?>? onTap}) async {
   const settings = InitializationSettings(
     android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     iOS: DarwinInitializationSettings(),
@@ -23,8 +24,8 @@ Future<void> _initializeLocalNotifications({VoidCallback? onTap}) async {
   await _localNotifications.initialize(
     settings,
     onDidReceiveNotificationResponse: onTap == null
-        ? null
-        : (response) => onTap(),
+      ? null
+      : (response) => onTap(response.payload),
   );
   await _localNotifications
       .resolvePlatformSpecificImplementation<
@@ -57,6 +58,7 @@ Future<void> _showLocalNotification(RemoteMessage message) async {
       ),
       iOS: DarwinNotificationDetails(),
     ),
+    payload: jsonEncode(data),
   );
 }
 
@@ -77,7 +79,7 @@ class PushNotificationService {
   Future<void>? _initialization;
   StreamSubscription<String>? _tokenRefreshSubscription;
   VoidCallback? onNotificationReceived;
-  VoidCallback? onNotificationTap;
+  ValueChanged<Map<String, String>>? onNotificationTap;
 
   PushNotificationService({required this.api, required this.tokenStorage});
 
@@ -103,9 +105,11 @@ class PushNotificationService {
         await _showLocalNotification(message);
         onNotificationReceived?.call();
       });
-      FirebaseMessaging.onMessageOpenedApp.listen((_) => _handleNotificationTap());
+      FirebaseMessaging.onMessageOpenedApp.listen(
+        (message) => _handleNotificationTap(message.data),
+      );
       final initialMessage = await messaging.getInitialMessage();
-      if (initialMessage != null) _handleNotificationTap();
+      if (initialMessage != null) _handleNotificationTap(initialMessage.data);
       _tokenRefreshSubscription = messaging.onTokenRefresh.listen(
         registerToken,
       );
@@ -115,8 +119,23 @@ class PushNotificationService {
     }
   }
 
-  void _handleNotificationTap() {
-    onNotificationTap?.call();
+  void _handleNotificationTap([String? payload]) {
+    if (payload == null || payload.isEmpty) {
+      onNotificationTap?.call(const {});
+      return;
+    }
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is Map) {
+        onNotificationTap?.call(
+          decoded.map((key, value) => MapEntry(key.toString(), value.toString())),
+        );
+        return;
+      }
+    } catch (_) {
+      debugPrint('Notification payload could not be decoded.');
+    }
+    onNotificationTap?.call(const {});
   }
 
   Future<void> registerCurrentToken() async {

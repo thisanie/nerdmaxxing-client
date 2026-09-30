@@ -45,15 +45,20 @@ class NotificationBadgeController extends ChangeNotifier {
 
 class NotificationNavigationController extends ChangeNotifier {
   bool _openNotificationsRequested = false;
+  Map<String, String> _pendingData = const {};
 
   bool get openNotificationsRequested => _openNotificationsRequested;
 
-  void requestNotifications() {
+  Map<String, String> get pendingData => _pendingData;
+
+  void requestNotifications([Map<String, String> data = const {}]) {
     _openNotificationsRequested = true;
+    _pendingData = data;
     notifyListeners();
   }
 
   void consumeNotificationsRequest() {
     _openNotificationsRequested = false;
+    _pendingData = const {};
   }
 }
