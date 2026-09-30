@@ -98,49 +98,64 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
         titleSpacing: 20,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: RichText(
-          text: TextSpan(
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              letterSpacing: .7,
-            ),
-            children: const [
-              TextSpan(text: 'NERD'),
-              TextSpan(
-                text: 'MAXXING',
-                style: TextStyle(color: AppColors.primary),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'NERD',
+              style: AppFonts.body(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                letterSpacingEm: 0.05,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'MAXXING',
+                style: AppFonts.body(
+                  color: AppColors.dark,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacingEm: 0.05,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       body: RefreshIndicator(
         onRefresh: provider.load,
-        color: AppColors.primary,
+        color: Theme.of(context).colorScheme.onSurface,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Discover',
-                      style: const TextStyle(
-                        fontSize: 44,
-                        height: .98,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -.8,
+                      style: AppFonts.body(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 38,
+                        height: 1.1,
+                        fontWeight: FontWeight.w500,
+                        letterSpacingEm: -0.02,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 22),
                     _SearchField(
                       controller: _searchController,
                       isLoading: _isSearching,
@@ -168,9 +183,9 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                         onChallengeTap: _openChallenge,
                       ),
                     ],
-                    const SizedBox(height: 38),
+                    const SizedBox(height: 32),
                     const _SectionHeading('Browse by topic'),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
                   ],
                 ),
               ),
@@ -278,19 +293,21 @@ class _SearchField extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colorScheme.outline)),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colorScheme.outline),
       ),
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(18, 4, 6, 4),
       child: Row(
         children: [
-          Icon(Icons.search, color: colorScheme.onSurfaceVariant, size: 20),
+          Icon(Icons.search, color: colorScheme.onSurfaceVariant, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: controller,
               textInputAction: TextInputAction.search,
               onSubmitted: onSubmitted,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontSize: 16),
               decoration: const InputDecoration(
                 hintText: 'Search people or challenges',
                 border: InputBorder.none,
@@ -298,7 +315,7 @@ class _SearchField extends StatelessWidget {
                 focusedBorder: InputBorder.none,
                 filled: false,
                 isDense: true,
-                contentPadding: EdgeInsets.zero,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
@@ -307,14 +324,14 @@ class _SearchField extends StatelessWidget {
             tooltip: 'Search',
             onPressed: isLoading ? null : onSearch,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+            constraints: const BoxConstraints.tightFor(width: 40, height: 40),
             icon: isLoading
                 ? const SizedBox(
                     width: 17,
                     height: 17,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Icon(Icons.arrow_forward, color: colorScheme.onSurfaceVariant, size: 18),
+                : Icon(Icons.arrow_forward, color: colorScheme.onSurfaceVariant, size: 20),
           ),
         ],
       ),
@@ -328,7 +345,12 @@ class _SectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     title,
-    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+    style: AppFonts.body(
+      color: Theme.of(context).colorScheme.onSurface,
+      fontSize: 22,
+      fontWeight: FontWeight.w500,
+      letterSpacingEm: -0.01,
+    ),
   );
 }
 
@@ -347,36 +369,32 @@ class _TopicRow extends StatelessWidget {
           for (var i = 0; i < categories.length; i++) ...[
             if (i > 0) const SizedBox(width: 9),
             Material(
-              color: Colors.transparent,
+              color: colorScheme.surface,
+              shape: StadiumBorder(side: BorderSide(color: colorScheme.outline)),
+              clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () => onTap(categories[i]),
-                borderRadius: BorderRadius.circular(3),
                 child: Container(
-                  constraints: const BoxConstraints(minWidth: 168),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: colorScheme.outline),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
+                  padding: const EdgeInsets.fromLTRB(6, 6, 18, 6),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 30,
-                        height: 30,
+                        width: 40,
+                        height: 40,
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: colorScheme.outline),
+                          color: AppColors.limeWash,
                         ),
                         child: Text(categories[i].icon),
                       ),
                       const SizedBox(width: 10),
                       Text(
                         categories[i].name,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                        style: AppFonts.body(
+                          color: colorScheme.onSurface,
+                          fontSize: 16,
                         ),
                       ),
                     ],
@@ -424,110 +442,127 @@ class _TrendingSection extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.primary
+                      : const Color(0xFF4F6A0A),
                 ),
                 child: const Text('View all'),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           if (challenge == null)
             const _PlaceholderCard(label: 'Challenges are loading up')
           else
             Material(
-              color: Colors.transparent,
+              color: colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+                side: BorderSide(color: colorScheme.outline),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () => onTap(challenge!),
-                borderRadius: BorderRadius.circular(3),
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: colorScheme.outline),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        height: 190,
-                        width: double.infinity,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            if (challenge!.imageUrl != null)
-                              Image.network(
-                                challenge!.imageUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => const _ChallengeArtwork(),
-                              )
-                            else
-                              const _ChallengeArtwork(),
-                            Positioned(
-                              top: 16,
-                              left: 16,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 190,
+                      width: double.infinity,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (challenge!.imageUrl != null)
+                            Image.network(
+                              challenge!.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => const _ChallengeArtwork(),
+                            )
+                          else
+                            const _ChallengeArtwork(),
+                          Positioned(
+                            top: 16,
+                            left: 16,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
                                 ),
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                                  child: Text(
-                                    '#1 TRENDING',
+                                child: Text(
+                                  '#1 TRENDING',
+                                  style: AppFonts.body(
+                                    color: AppColors.dark,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacingEm: 0.03,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            challenge!.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.body(
+                              color: colorScheme.onSurface,
+                              fontSize: 24,
+                              height: 1.15,
+                              fontWeight: FontWeight.w500,
+                              letterSpacingEm: -0.01,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(height: 1, color: colorScheme.outline),
+                          const SizedBox(height: 14),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${challenge!.enrollmentCount ?? 0} nerds joined',
+                                style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.bolt,
+                                    size: 16,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${challenge!.auraPoints} aura',
                                     style: TextStyle(
-                                      color: AppColors.dark,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
+                                      color: colorScheme.onSurface,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              challenge!.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 25,
-                                height: 1.06,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Container(height: 1, color: colorScheme.outline),
-                            const SizedBox(height: 13),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '${challenge!.enrollmentCount ?? 0} nerds joined',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  '${challenge!.auraPoints} aura',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -540,12 +575,19 @@ class _TrendingSection extends StatelessWidget {
 class _ChallengeArtwork extends StatelessWidget {
   const _ChallengeArtwork();
   @override
-  Widget build(BuildContext context) => Container(
-    color: Theme.of(context).colorScheme.surface,
-    child: const Center(
-      child: Icon(Icons.auto_awesome, color: AppColors.primary, size: 38),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      color: isDark ? AppColors.surfaceAlt : AppColors.limeWash,
+      child: Center(
+        child: Icon(
+          Icons.auto_awesome,
+          color: isDark ? AppColors.primary : AppColors.lightTextPrimary,
+          size: 38,
+        ),
+      ),
+    );
+  }
 }
 
 class _PlaceholderCard extends StatelessWidget {
@@ -581,12 +623,13 @@ class _TopNerdsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SectionHeading('Top nerds this week'),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18),
             decoration: BoxDecoration(
+              color: colorScheme.surface,
               border: Border.all(color: colorScheme.outline),
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Column(
               children: [
@@ -614,6 +657,9 @@ class _LeaderboardRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final highlight = nerd.rank == 1;
+    final accent = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.primary
+        : const Color(0xFF4F6A0A);
     final name = nerd.displayName ?? nerd.username ?? 'NerdMaxxer';
     final initials = _initials(name);
     final row = Padding(
@@ -625,7 +671,7 @@ class _LeaderboardRow extends StatelessWidget {
             child: Text(
               nerd.rank.toString().padLeft(2, '0'),
               style: TextStyle(
-                color: highlight ? AppColors.primary : colorScheme.onSurfaceVariant,
+                color: highlight ? accent : colorScheme.onSurfaceVariant,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -638,13 +684,13 @@ class _LeaderboardRow extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: highlight ? AppColors.primary : colorScheme.outline,
+                color: highlight ? accent : colorScheme.outline,
               ),
             ),
             child: Text(
               initials,
               style: TextStyle(
-                color: highlight ? AppColors.primary : colorScheme.onSurface,
+                color: highlight ? accent : colorScheme.onSurface,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -670,7 +716,7 @@ class _LeaderboardRow extends StatelessWidget {
               Text(
                 '${nerd.completedCount}',
                 style: TextStyle(
-                  color: highlight ? AppColors.primary : colorScheme.onSurface,
+                  color: highlight ? accent : colorScheme.onSurface,
                   fontSize: 19,
                   fontWeight: FontWeight.w700,
                 ),
@@ -715,12 +761,13 @@ class _RecentActivitySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SectionHeading('Recent activity'),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18),
             decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
               border: Border.all(color: Theme.of(context).colorScheme.outline),
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Column(
               children: [

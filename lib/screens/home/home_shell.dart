@@ -10,6 +10,7 @@ import '../../providers/notification_badge_provider.dart';
 import '../notifications/notifications_screen.dart';
 import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
+import '../../theme/app_theme.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -172,7 +173,7 @@ class _BottomNavigationBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 62,
+          height: 70,
           child: Row(
             children: [
               for (var index = 0; index < _items.length; index++)
@@ -215,8 +216,19 @@ class _NavigationItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+            decoration: BoxDecoration(
+              color: selected
+                  ? (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.primaryMuted
+                      : AppColors.limeWash)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Icon(icon, size: 22, color: color),
+          ),
+          const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(

@@ -33,7 +33,7 @@ class ChallengeCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AspectRatio(
-              aspectRatio: 16 / 9,
+              aspectRatio: 16 / 8,
               child: challenge.imageUrl != null
                   ? Image.network(
                       challenge.imageUrl!,
@@ -73,13 +73,12 @@ class ChallengeCard extends StatelessWidget {
                           color: AppColors.warning,
                         ),
                         const SizedBox(width: 5),
-                        const Text(
-                          'LEGENDARY',
+                        Text(
+                          'Legendary',
                           style: TextStyle(
                             color: AppColors.warning,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ] else
@@ -89,9 +88,11 @@ class ChallengeCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     challenge.title,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
+                    style: AppFonts.body(
+                      color: colorScheme.onSurface,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -108,41 +109,32 @@ class ChallengeCard extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.schedule,
-                        size: 14,
+                        size: 15,
                         color: colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       Text(
                         challenge.effortLabel,
                         style: TextStyle(
                           color: colorScheme.onSurfaceVariant,
-                          fontSize: 12,
+                          fontSize: 13,
                         ),
                       ),
                       const Spacer(),
-                      const Icon(
+                      Icon(
                         Icons.bolt,
                         size: 16,
-                        color: AppColors.primary,
+                        color: colorScheme.onSurface,
                       ),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 2),
                       Text(
-                        '${challenge.auraPoints} aura',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                        '${challenge.auraPoints}',
+                        style: TextStyle(
+                          color: colorScheme.onSurface,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (challenge.enrollmentCount != null) ...[
-                        const SizedBox(width: 10),
-                        Text(
-                          '${challenge.enrollmentCount} joined',
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ],
@@ -155,11 +147,20 @@ class ChallengeCard extends StatelessWidget {
   }
 
   Widget _fallbackImage(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tint = switch (challenge.difficultyLevel) {
+      'BEGINNER' => const Color(0xFFE3EFE3),
+      'ADVANCED' => const Color(0xFFFBE3DC),
+      _ => const Color(0xFFF2E8DA),
+    };
     return Container(
-      color: colorScheme.surfaceContainerHighest,
+      color: isDark ? AppColors.surfaceAlt : tint,
       alignment: Alignment.center,
-      child: Icon(Icons.auto_awesome, size: 36, color: colorScheme.primary),
+      child: Icon(
+        Icons.auto_awesome,
+        size: 34,
+        color: isDark ? AppColors.primary : AppColors.lightTextSecondary,
+      ),
     );
   }
 }

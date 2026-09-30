@@ -37,7 +37,12 @@ class ChallengeSection extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: AppFonts.body(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                      letterSpacingEm: -0.01,
+                    ),
                   ),
                 ),
                 if (onSeeAll != null)

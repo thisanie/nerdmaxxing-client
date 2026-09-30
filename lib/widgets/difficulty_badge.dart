@@ -20,23 +20,34 @@ class DifficultyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = AppTheme.difficultyColor(level);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final (fg, bg) = isDark
+        ? (
+            AppTheme.difficultyColor(level),
+            AppTheme.difficultyColor(level).withValues(alpha: 0.15),
+          )
+        : switch (level) {
+            'BEGINNER' => (const Color(0xFF2E6B3A), const Color(0xFFE3EFE0)),
+            'INTERMEDIATE' => (const Color(0xFF8A5A00), const Color(0xFFFFEBC2)),
+            'ADVANCED' => (const Color(0xFFB3321E), const Color(0xFFFFE0D9)),
+            _ => (AppColors.lightTextSecondary, AppColors.lightSurfaceAlt),
+          };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: bg,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(_label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
+          Text(_label, style: TextStyle(color: fg, fontWeight: FontWeight.w500, fontSize: 13)),
         ],
       ),
     );
