@@ -5,6 +5,7 @@ import '../../models/leaderboard.dart';
 import '../../models/user_stats.dart';
 import '../../providers/app_state_providers.dart';
 import '../../theme/app_theme.dart';
+import '../profile/profile_screen.dart';
 
 class SkillsScreen extends ConsumerWidget {
   const SkillsScreen({super.key});
@@ -663,6 +664,7 @@ class _LeaderboardRow extends StatelessWidget {
     final currentUserBackground = isDark ? AppColors.primary : scheme.onSurface;
     final currentUserForeground = isDark ? AppColors.dark : scheme.surface;
     final displayName = entry.displayName ?? entry.username ?? 'Unknown player';
+    final username = entry.username;
     final handle = entry.username == null ? '' : '@${entry.username}';
     final initials = displayName
         .split(RegExp(r'\s+'))
@@ -686,81 +688,91 @@ class _LeaderboardRow extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(26),
       ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 30,
-            child: Text(
-              entry.rank.toString().padLeft(2, '0'),
-              style: TextStyle(
-                color: entry.isCurrentUser
-                    ? currentUserForeground
-                    : scheme.onSurfaceVariant,
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
+      child: InkWell(
+        onTap: username == null || username.isEmpty
+            ? null
+            : () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ProfileScreen(username: username),
+                ),
+              ),
+        borderRadius: BorderRadius.circular(26),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 30,
+              child: Text(
+                entry.rank.toString().padLeft(2, '0'),
+                style: TextStyle(
+                  color: entry.isCurrentUser
+                      ? currentUserForeground
+                      : scheme.onSurfaceVariant,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-          ),
-          Container(
-            width: 42,
-            height: 42,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: entry.rank == 1 ? accent : scheme.outline,
+            Container(
+              width: 42,
+              height: 42,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: entry.rank == 1 ? accent : scheme.outline,
+                ),
+              ),
+              child: Text(
+                initials,
+                style: AppFonts.body(
+                  color: entry.isCurrentUser
+                      ? currentUserForeground
+                      : scheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-            child: Text(
-              initials,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: AppFonts.body(
+                      color: entry.isCurrentUser
+                          ? currentUserForeground
+                          : scheme.onSurface,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '$handle  ·  ${entry.playerRank} RANK',
+                    style: AppFonts.body(
+                      color: entry.isCurrentUser
+                          ? currentUserForeground.withValues(alpha: .7)
+                          : scheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '${entry.metricValue}$suffix',
               style: AppFonts.body(
                 color: entry.isCurrentUser
                     ? currentUserForeground
                     : scheme.onSurface,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayName,
-                  style: AppFonts.body(
-                    color: entry.isCurrentUser
-                        ? currentUserForeground
-                        : scheme.onSurface,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '$handle  ·  ${entry.playerRank} RANK',
-                  style: AppFonts.body(
-                    color: entry.isCurrentUser
-                        ? currentUserForeground.withValues(alpha: .7)
-                        : scheme.onSurfaceVariant,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '${entry.metricValue}$suffix',
-            style: AppFonts.body(
-              color: entry.isCurrentUser
-                  ? currentUserForeground
-                  : scheme.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
