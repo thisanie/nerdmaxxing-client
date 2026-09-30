@@ -106,9 +106,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         final theme = Theme.of(context);
         final group = widget.group;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -181,6 +182,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   },
                 ),
               ],
+              ),
             ),
           ),
         );

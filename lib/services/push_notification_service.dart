@@ -119,8 +119,20 @@ class PushNotificationService {
     }
   }
 
-  void _handleNotificationTap([String? payload]) {
-    if (payload == null || payload.isEmpty) {
+  void _handleNotificationTap([Object? payload]) {
+    if (payload == null) {
+      onNotificationTap?.call(const {});
+      return;
+    }
+    if (payload is Map) {
+      onNotificationTap?.call(
+        payload.map(
+          (key, value) => MapEntry(key.toString(), value.toString()),
+        ),
+      );
+      return;
+    }
+    if (payload is! String || payload.isEmpty) {
       onNotificationTap?.call(const {});
       return;
     }
