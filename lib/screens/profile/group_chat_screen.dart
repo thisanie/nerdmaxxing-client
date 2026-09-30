@@ -155,7 +155,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       return Text('Could not load group members: ${snapshot.error}');
                     }
                     final members = snapshot.data ?? const <GroupMember>[];
-                    if (members.isEmpty) return const Text('No members found.');
+                    if (members.isEmpty) {
+                      return Text(
+                        'No member data returned from '
+                        '/groups/${group.id}/members.',
+                      );
+                    }
                     return ConstrainedBox(
                       constraints: const BoxConstraints(maxHeight: 220),
                       child: ListView.builder(
