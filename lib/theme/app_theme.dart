@@ -20,6 +20,7 @@ class AppColors {
   static const dark = Color(0xFF0B0C05);              // text-on-lime
   static const warning = Color(0xFFFFAB3D);
   static const danger = Color(0xFFE8556B);
+  static const ink = Color(0xFF0B0C05); 
 
   // ---- Light theme ----
   static const lightBackground = Color(0xFFFAFAF6);

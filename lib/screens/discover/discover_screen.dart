@@ -540,7 +540,7 @@ class _ResumeCard extends StatelessWidget {
     const onDark = Color(0xFFF6F6F1);
     const mutedOnDark = Color(0xFF9A9A92);
     return Material(
-      color: AppColors.ink,
+      color: AppColors.dark,
       borderRadius: BorderRadius.circular(28),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
