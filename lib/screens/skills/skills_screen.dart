@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../models/leaderboard.dart';
 import '../../models/user_stats.dart';
 import '../../providers/app_state_providers.dart';
 import '../../theme/app_theme.dart';
@@ -131,6 +132,25 @@ class _RankSummary extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        Text(
+          stats.nextRank == null
+              ? 'S RANK // MAXIMUM AURA'
+              : '${stats.rank} RANK // ${stats.rankProgress}% TO ${stats.nextRank}',
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 11,
+            letterSpacing: 1.1,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        if (stats.nextRank != null) ...[
+          const SizedBox(height: 5),
+          Text(
+            '${stats.auraToNextRank} aura to ${stats.nextRank} rank',
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+          ),
+        ],
         const SizedBox(height: 24),
         Row(
           children: [
@@ -144,110 +164,40 @@ class _RankSummary extends StatelessWidget {
           children: [
             _StatTile(label: 'ACTIVE', value: '${stats.activeChallengeCount}', icon: Icons.track_changes),
             const SizedBox(width: 12),
-            _StatTile(label: 'LEVEL', value: _levelFor(stats.auraPoints), icon: Icons.workspace_premium_outlined),
+            _StatTile(label: 'RANK', value: stats.rank, icon: Icons.workspace_premium_outlined),
           ],
         ),
       ],
     );
   }
 
-  String _levelFor(int aura) {
-    if (aura >= 1000) return 'LEGEND';
-    if (aura >= 500) return 'ELITE';
-    if (aura >= 100) return 'RISING';
-    return 'ROOKIE';
-  }
-}
-
-class _LeaderboardEntry {
-  final String name;
-  final String handle;
-  final String initials;
-  final int aura;
-  final int completed;
-  final int streak;
-  final bool isCurrentUser;
-
-  const _LeaderboardEntry({
-    required this.name,
-    required this.handle,
-    required this.initials,
-    required this.aura,
-    required this.completed,
-    required this.streak,
-    this.isCurrentUser = false,
-  });
 }
 
 enum _LeaderboardMetric { aura, completed, streak }
 
-class _LeaderboardTab extends StatefulWidget {
+class _LeaderboardTab extends ConsumerStatefulWidget {
   const _LeaderboardTab();
 
   @override
-  State<_LeaderboardTab> createState() => _LeaderboardTabState();
+  ConsumerState<_LeaderboardTab> createState() => _LeaderboardTabState();
 }
 
-class _LeaderboardTabState extends State<_LeaderboardTab> {
-  static const _entries = [
-    _LeaderboardEntry(
-      name: 'Maya Chen',
-      handle: '@mayac',
-      initials: 'MC',
-      aura: 1280,
-      completed: 24,
-      streak: 18,
-    ),
-    _LeaderboardEntry(
-      name: 'Jordan Bell',
-      handle: '@jordanb',
-      initials: 'JB',
-      aura: 1120,
-      completed: 21,
-      streak: 14,
-    ),
-    _LeaderboardEntry(
-      name: 'You',
-      handle: '@pablo',
-      initials: 'P',
-      aura: 860,
-      completed: 16,
-      streak: 9,
-      isCurrentUser: true,
-    ),
-    _LeaderboardEntry(
-      name: 'Riley Stone',
-      handle: '@rileys',
-      initials: 'RS',
-      aura: 740,
-      completed: 14,
-      streak: 11,
-    ),
-    _LeaderboardEntry(
-      name: 'Noah Williams',
-      handle: '@noahw',
-      initials: 'NW',
-      aura: 590,
-      completed: 12,
-      streak: 7,
-    ),
-    _LeaderboardEntry(
-      name: 'Ari Patel',
-      handle: '@arip',
-      initials: 'AP',
-      aura: 470,
-      completed: 10,
-      streak: 5,
-    ),
-  ];
-
+class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
   _LeaderboardMetric _metric = _LeaderboardMetric.aura;
   String _period = 'THIS WEEK';
+  String? _playerRank;
 
   @override
   Widget build(BuildContext context) {
-    final entries = [..._entries]
-      ..sort((a, b) => _score(b).compareTo(_score(a)));
+    final leaderboard = ref.watch(
+      leaderboardProvider(
+        (
+          period: _apiPeriod,
+          metric: _metric.name,
+          playerRank: _playerRank,
+        ),
+      ),
+    );
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -276,44 +226,46 @@ class _LeaderboardTabState extends State<_LeaderboardTab> {
           metric: _metric,
           onPeriodChanged: (period) => setState(() => _period = period),
           onMetricChanged: (metric) => setState(() => _metric = metric),
+          playerRank: _playerRank,
+          onPlayerRankChanged: (rank) => setState(() => _playerRank = rank),
         ),
         const SizedBox(height: 24),
         _LeaderboardHeader(metric: _metric, period: _period),
         const SizedBox(height: 10),
-        for (var index = 0; index < entries.length; index++)
-          _LeaderboardRow(
-            entry: entries[index],
-            rank: index + 1,
-            metric: _metric,
-            period: _period,
+        leaderboard.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.only(top: 32),
+            child: Center(child: CircularProgressIndicator()),
           ),
+          error: (error, _) => Padding(
+            padding: const EdgeInsets.only(top: 32),
+            child: Text(
+              'Could not load the leaderboard.\n$error',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.danger),
+            ),
+          ),
+          data: (data) => data.entries.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.only(top: 32),
+                  child: Center(child: Text('No players found for these filters.')),
+                )
+              : Column(
+                  children: [
+                    for (final entry in data.entries)
+                      _LeaderboardRow(entry: entry, metric: _metric),
+                  ],
+                ),
+        ),
       ],
     );
   }
 
-  int _score(_LeaderboardEntry entry) {
-    return _leaderboardValue(entry, _metric, _period);
-  }
-}
-
-int _leaderboardValue(
-  _LeaderboardEntry entry,
-  _LeaderboardMetric metric,
-  String period,
-) {
-  final periodFactor = switch (period) {
-    'THIS WEEK' => .35,
-    'THIS MONTH' => .7,
-    _ => 1.0,
-  };
-  switch (metric) {
-    case _LeaderboardMetric.aura:
-      return (entry.aura * periodFactor).round();
-    case _LeaderboardMetric.completed:
-      return (entry.completed * periodFactor).round();
-    case _LeaderboardMetric.streak:
-      return entry.streak;
-  }
+  String get _apiPeriod => switch (_period) {
+        'THIS MONTH' => 'month',
+        'ALL TIME' => 'all_time',
+        _ => 'week',
+      };
 }
 
 class _FilterStrip extends StatelessWidget {
@@ -321,12 +273,16 @@ class _FilterStrip extends StatelessWidget {
   final _LeaderboardMetric metric;
   final ValueChanged<String> onPeriodChanged;
   final ValueChanged<_LeaderboardMetric> onMetricChanged;
+  final String? playerRank;
+  final ValueChanged<String?> onPlayerRankChanged;
 
   const _FilterStrip({
     required this.period,
     required this.metric,
     required this.onPeriodChanged,
     required this.onMetricChanged,
+    required this.playerRank,
+    required this.onPlayerRankChanged,
   });
 
   @override
@@ -375,6 +331,29 @@ class _FilterStrip extends StatelessWidget {
                 selected: metric == _LeaderboardMetric.streak,
                 onTap: () => onMetricChanged(_LeaderboardMetric.streak),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        _FilterLabel('PLAYER RANK'),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _FilterChip(
+                label: 'ALL',
+                selected: playerRank == null,
+                onTap: () => onPlayerRankChanged(null),
+              ),
+              for (final rank in ['E', 'D', 'C', 'B', 'A', 'S']) ...[
+                const SizedBox(width: 8),
+                _FilterChip(
+                  label: rank,
+                  selected: playerRank == rank,
+                  onTap: () => onPlayerRankChanged(rank),
+                ),
+              ],
             ],
           ),
         ),
@@ -479,21 +458,24 @@ class _LeaderboardHeader extends StatelessWidget {
 }
 
 class _LeaderboardRow extends StatelessWidget {
-  final _LeaderboardEntry entry;
-  final int rank;
+  final LeaderboardEntry entry;
   final _LeaderboardMetric metric;
-  final String period;
 
   const _LeaderboardRow({
     required this.entry,
-    required this.rank,
     required this.metric,
-    required this.period,
   });
 
   @override
   Widget build(BuildContext context) {
-    final value = _leaderboardValue(entry, metric, period);
+    final displayName = entry.displayName ?? entry.username ?? 'Unknown player';
+    final handle = entry.username == null ? '' : '@${entry.username}';
+    final initials = displayName
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
     final suffix = switch (metric) {
       _LeaderboardMetric.aura => ' AP',
       _LeaderboardMetric.completed => '',
@@ -513,9 +495,9 @@ class _LeaderboardRow extends StatelessWidget {
           SizedBox(
             width: 30,
             child: Text(
-              rank.toString().padLeft(2, '0'),
+              entry.rank.toString().padLeft(2, '0'),
               style: TextStyle(
-                color: rank == 1 ? AppColors.primary : AppColors.textSecondary,
+                color: entry.rank == 1 ? AppColors.primary : AppColors.textSecondary,
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
               ),
@@ -528,11 +510,11 @@ class _LeaderboardRow extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: rank == 1 ? AppColors.primary : AppColors.borderStrong,
+                color: entry.rank == 1 ? AppColors.primary : AppColors.borderStrong,
               ),
             ),
             child: Text(
-              entry.initials,
+              initials,
               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
             ),
           ),
@@ -542,19 +524,19 @@ class _LeaderboardRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  entry.name,
+                  displayName,
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  entry.handle,
+                  '$handle  ·  ${entry.playerRank} RANK',
                   style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                 ),
               ],
             ),
           ),
           Text(
-            '$value$suffix',
+            '${entry.metricValue}$suffix',
             style: TextStyle(
               color: entry.isCurrentUser ? AppColors.primary : AppColors.textPrimary,
               fontSize: 16,

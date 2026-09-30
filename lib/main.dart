@@ -21,6 +21,7 @@ import 'services/evidence_service.dart';
 import 'services/groups_service.dart';
 import 'services/invitations_service.dart';
 import 'services/notifications_service.dart';
+import 'services/leaderboard_service.dart';
 import 'services/discussions_service.dart';
 import 'services/participation_service.dart';
 import 'services/profile_service.dart';
@@ -65,6 +66,7 @@ class NerdMaxxingApp extends StatelessWidget {
           ParticipationService(apiClient),
         ),
         profileServiceProvider.overrideWithValue(ProfileService(apiClient)),
+        leaderboardServiceProvider.overrideWithValue(LeaderboardService(apiClient)),
       ],
       child: MultiProvider(
         providers: [

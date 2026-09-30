@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/participation.dart';
 import '../models/progress_log.dart';
 import '../models/user_stats.dart';
+import '../models/leaderboard.dart';
+import '../services/leaderboard_service.dart';
 import '../services/participation_service.dart';
 import '../services/profile_service.dart';
 
@@ -12,6 +14,10 @@ final participationServiceProvider = Provider<ParticipationService>(
 
 final profileServiceProvider = Provider<ProfileService>(
   (ref) => throw UnimplementedError('ProfileService is not configured.'),
+);
+
+final leaderboardServiceProvider = Provider<LeaderboardService>(
+  (ref) => throw UnimplementedError('LeaderboardService is not configured.'),
 );
 
 final participationControllerProvider = AsyncNotifierProvider<
@@ -27,6 +33,15 @@ final progressLogsProvider = FutureProvider.autoDispose
 
 final myStatsProvider = FutureProvider.autoDispose<UserStats>((ref) {
   return ref.watch(profileServiceProvider).getMyStats();
+});
+
+final leaderboardProvider = FutureProvider.autoDispose.family<Leaderboard,
+    ({String period, String metric, String? playerRank})>((ref, filters) {
+  return ref.watch(leaderboardServiceProvider).getLeaderboard(
+        period: filters.period,
+        metric: filters.metric,
+        playerRank: filters.playerRank,
+      );
 });
 
 final myCompletedChallengesProvider = FutureProvider.autoDispose((ref) {
