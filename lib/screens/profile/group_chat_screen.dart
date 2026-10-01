@@ -483,6 +483,7 @@ class _MessageBubble extends StatelessWidget {
                 if (message.challengeInvitation != null)
                   _InvitationActions(
                     invitation: message.challengeInvitation!,
+                    isMine: isMine,
                     responding: responding,
                     onResponse: onInvitationResponse,
                     textColor: textColor,
@@ -523,12 +524,14 @@ class _MessageBubble extends StatelessWidget {
 
 class _InvitationActions extends StatelessWidget {
   final GroupChallengeInvitationPayload invitation;
+  final bool isMine;
   final bool responding;
   final ValueChanged<String>? onResponse;
   final Color textColor;
 
   const _InvitationActions({
     required this.invitation,
+    required this.isMine,
     required this.responding,
     required this.onResponse,
     required this.textColor,
@@ -536,6 +539,22 @@ class _InvitationActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isMine) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Theme.of(context).brightness == Brightness.light
+                ? Colors.white
+                : Colors.black,
+          ),
+          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Rollback will be available soon.')),
+          ),
+          child: const Text('Rollback'),
+        ),
+      );
+    }
     if (!invitation.isPendingForCurrentUser) {
       return Padding(
         padding: const EdgeInsets.only(top: 8),

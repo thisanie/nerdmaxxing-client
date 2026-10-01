@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer, Provider;
 
 import '../../models/challenge.dart';
-import '../../models/progress_log.dart';
+import '../../models/challenge_detail.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_provider.dart';
@@ -27,6 +27,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Map<String, Challenge> _challengesById = {};
   Challenge? _mostPopularChallenge;
   Participation? _resumeParticipation;
+  ChallengeDetail? _resumeDetail;
   bool _isScrolled = false;
 
   @override
@@ -68,11 +69,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
               .toList();
       final resumeParticipation = _selectResumeParticipation(active);
+      ChallengeDetail? resumeDetail;
+      final resumeChallenge = resumeParticipation == null
+          ? null
+          : challengeMap[resumeParticipation.challengeId];
+      if (resumeChallenge != null) {
+        try {
+          resumeDetail = await context
+              .read<ChallengesService>()
+              .getDetailBySlug(resumeChallenge.slug);
+        } catch (_) {
+          // The resume card can still render without personal progress.
+        }
+      }
       setState(() {
         _profile = profile ?? _profile;
         _challengesById = challengeMap;
         _mostPopularChallenge = mostPopular;
         _resumeParticipation = resumeParticipation;
+        _resumeDetail = resumeDetail;
       });
     } catch (_) {
       // The discovery feed remains usable if the home summary is unavailable.
@@ -124,10 +139,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .take(2)
         .toList();
     final stats = ref.watch(myStatsProvider).valueOrNull;
-    final resumeProgressState = _resumeParticipation == null
-        ? null
-        : ref.watch(progressLogsProvider(_resumeParticipation!.id));
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -189,8 +200,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ? null
                             : _challengesById[_resumeParticipation!
                                   .challengeId],
-                        progress: resumeProgressState?.valueOrNull ?? const [],
-                        isLoading: resumeProgressState?.isLoading ?? false,
+                        detail: _resumeDetail,
                         onTap: _resumeParticipation == null
                             ? null
                             : () => _openParticipation(_resumeParticipation!),
@@ -529,31 +539,35 @@ class _SectionTitle extends StatelessWidget {
 
 class _ResumeCard extends StatelessWidget {
   final Challenge? challenge;
-  final List<ProgressLog> progress;
-  final bool isLoading;
+  final ChallengeDetail? detail;
   final VoidCallback? onTap;
 
   const _ResumeCard({
     required this.challenge,
-    required this.progress,
-    required this.isLoading,
+    required this.detail,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final title = challenge?.title ?? 'No active challenge yet';
-    final loggedMinutes = progress.fold(
-      0,
-      (total, log) => total + log.minutesSpent,
+    final metric = detail?.primaryMetric;
+    final baseline = _number(
+      detail?.progress.baselineValue,
+      fallback: metric?.baseline ?? 0,
     );
-    final targetMinutes =
-        challenge?.estimatedDurationMinutes ??
-        challenge?.estimatedEffortMaxMinutes ??
-        challenge?.estimatedEffortMinMinutes;
-    final progressValue = targetMinutes == null || targetMinutes <= 0
+    final current = _number(
+      detail?.progress.currentValue,
+      fallback: metric?.current ?? baseline,
+    );
+    final target = _number(
+      detail?.progress.targetValue,
+      fallback: metric?.target ?? current,
+    );
+    final span = target - baseline;
+    final progressValue = span <= 0
         ? 0.0
-        : (loggedMinutes / targetMinutes).clamp(0.0, 1.0).toDouble();
+        : ((current - baseline) / span).clamp(0.0, 1.0).toDouble();
     const onDark = Color(0xFFF6F6F1);
     const mutedOnDark = Color(0xFF9A9A92);
     return Material(
@@ -586,7 +600,7 @@ class _ResumeCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(99),
                 child: LinearProgressIndicator(
-                  value: isLoading ? null : progressValue,
+                  value: detail == null ? null : progressValue,
                   minHeight: 6,
                   backgroundColor: const Color(0xFF2E2E2B),
                   color: AppColors.primary,
@@ -597,15 +611,16 @@ class _ResumeCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    targetMinutes == null
-                        ? '${_formatMinutes(loggedMinutes)} logged'
+                    detail == null
+                        ? 'Loading progress...'
                         : '${(progressValue * 100).round()}% to goal',
                     style: AppFonts.body(color: mutedOnDark, fontSize: 14),
                   ),
                   Text(
-                    isLoading
-                        ? 'Loading progress...'
-                        : '${_formatMinutes(loggedMinutes)} logged',
+                    detail == null
+                        ? ''
+                        : '${_formatValue(current)} / ${_formatValue(target)} ${metric?.unit ?? ''}'
+                              .trim(),
                     style: AppFonts.body(color: mutedOnDark, fontSize: 14),
                   ),
                 ],
@@ -649,13 +664,15 @@ class _ResumeCard extends StatelessWidget {
     );
   }
 
-  String _formatMinutes(int minutes) {
-    if (minutes < 60) return '$minutes min';
-    final hours = minutes ~/ 60;
-    final remainingMinutes = minutes % 60;
-    return remainingMinutes == 0
-        ? '${hours}h'
-        : '${hours}h ${remainingMinutes}m';
+  static double _number(Object? value, {required double fallback}) {
+    if (value is num) return value.toDouble();
+    return double.tryParse('$value') ?? fallback;
+  }
+
+  static String _formatValue(double value) {
+    return value == value.roundToDouble()
+        ? value.toInt().toString()
+        : value.toStringAsFixed(1);
   }
 }
 
@@ -749,6 +766,7 @@ class _ChallengeRow extends StatelessWidget {
       ),
     );
   }
+
 }
 
 class _InfoChip extends StatelessWidget {

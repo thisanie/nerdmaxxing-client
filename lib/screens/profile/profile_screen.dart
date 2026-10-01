@@ -204,6 +204,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
         content: const Text(
           'You will need to sign in again to access your account.',
         ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

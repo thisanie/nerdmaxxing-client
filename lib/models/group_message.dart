@@ -105,7 +105,7 @@ class GroupChallengeInvitationPayload {
   }
 
   bool get isPendingForCurrentUser =>
-      myResponse.toUpperCase() == 'PENDING' && status.toUpperCase() == 'OPEN';
+      myResponse.toUpperCase() == 'PENDING';
 }
 
 class GroupInvitationResponseCounts {

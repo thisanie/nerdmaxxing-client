@@ -247,6 +247,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         content: const Text(
           'Your progress will remain recorded, but this challenge will no longer be active.',
         ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -268,7 +269,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         .firstOrNull;
     if (current == null) return;
     try {
-      await participation.updateStatus(current.id, 'DROPPED');
+      await participation.updateStatus(current.id, 'REMOVED');
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Challenge dropped.')));
