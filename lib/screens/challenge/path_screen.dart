@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/challenge.dart';
@@ -8,6 +11,7 @@ import '../../models/challenge_detail.dart';
 import '../../models/participation.dart';
 import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
+import '../../services/token_storage.dart';
 import '../../theme/app_theme.dart';
 
 class PathScreen extends ConsumerStatefulWidget {
@@ -34,6 +38,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   late final List<_PathMilestone> _milestones;
   late ChallengeDetail _detail;
   var _selectedMilestone = 0;
+  var _claimingStreakCelebration = false;
 
   bool get _light => Theme.of(context).brightness == Brightness.light;
   Color get _ink => _light ? AppColors.lightTextPrimary : AppColors.textPrimary;
@@ -752,6 +757,8 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       builder: (_) => _MetricDialog(metrics: _detail.metricDefinitions),
     );
     if (input == null || widget.participation == null) return;
+    final previousStreak =
+      ref.read(myStatsProvider).valueOrNull?.dayStreak ?? 0;
 
     try {
       await ref
@@ -767,11 +774,45 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Result logged.')));
+      if (await _claimStreakCelebrationForToday()) {
+        if (!mounted) return;
+        await _showStreakCelebration(previousStreak + 1);
+        if (!mounted) return;
+      }
     } on ApiException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error.message)));
     }
+  }
+
+  Future<bool> _claimStreakCelebrationForToday() async {
+    if (_claimingStreakCelebration) return false;
+    _claimingStreakCelebration = true;
+    try {
+      final userId = await TokenStorage().userId ?? 'anonymous';
+      final preferences = await SharedPreferences.getInstance();
+      final today = DateTime.now();
+      final date = '${today.year}-${today.month}-${today.day}';
+      final key = 'nm_streak_celebration_${Uri.encodeComponent(userId)}';
+      if (preferences.getString(key) == date) return false;
+      await preferences.setString(key, date);
+      return true;
+    } finally {
+      _claimingStreakCelebration = false;
+    }
+  }
+
+  Future<void> _showStreakCelebration(int streak) {
+    return showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss streak celebration',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          _StreakCelebration(streak: streak),
+    );
   }
 
   Widget _lockedNextMilestone() {
@@ -827,6 +868,265 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       ),
     );
   }
+}
+
+class _StreakCelebration extends StatefulWidget {
+  final int streak;
+
+  const _StreakCelebration({required this.streak});
+
+  @override
+  State<_StreakCelebration> createState() => _StreakCelebrationState();
+}
+
+class _StreakCelebrationState extends State<_StreakCelebration>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2800),
+    )..forward();
+    Future<void>.delayed(const Duration(milliseconds: 3400), () {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _dismiss() {
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xED0A0A09),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _dismiss,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final progress = _controller.value;
+            final flameIn = Curves.elasticOut.transform(
+              (progress / .34).clamp(0.0, 1.0),
+            );
+            final glow = .82 + math.sin(progress * math.pi * 6) * .12;
+            final roll = Curves.easeInOut.transform(
+              ((progress - .28) / .22).clamp(0.0, 1.0),
+            );
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  top: MediaQuery.sizeOf(context).height / 2 - 130,
+                  child: Transform.scale(
+                    scale: glow,
+                    child: Container(
+                      width: 260,
+                      height: 260,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Color(0x8CC8F23C),
+                            Color(0x00C8F23C),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 220,
+                  height: 260,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      for (var index = 0; index < 16; index++)
+                        _ember(index, progress),
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Transform.scale(
+                          scale: flameIn,
+                          alignment: Alignment.bottomCenter,
+                          child: const SizedBox(
+                            width: 150,
+                            height: 195,
+                            child: CustomPaint(painter: _FlamePainter()),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: MediaQuery.sizeOf(context).height / 2 + 130,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: 120,
+                        height: 100,
+                        child: ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.topCenter,
+                            minWidth: 120,
+                            maxWidth: 120,
+                            minHeight: 200,
+                            maxHeight: 200,
+                            child: Transform.translate(
+                              offset: Offset(0, -100 * roll),
+                              child: Column(
+                                children: [
+                                  _streakNumber(widget.streak - 1),
+                                  _streakNumber(widget.streak),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Text(
+                        'DAY STREAK',
+                        style: TextStyle(
+                          color: Color(0xFFB9BCAB),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Opacity(
+                        opacity: ((progress - .45) / .2).clamp(0.0, 1.0),
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.all(Radius.circular(99)),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 8,
+                            ),
+                            child: Text(
+                              '+1 day',
+                              style: TextStyle(
+                                color: AppColors.ink,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 26),
+                      const Text(
+                        'Tap anywhere to continue',
+                        style: TextStyle(color: Color(0xFF8D9082), fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _streakNumber(int value) => SizedBox(
+    height: 100,
+    child: Center(
+      child: Text(
+        '$value',
+        style: AppFonts.display(
+          color: Colors.white,
+          fontSize: 88,
+          fontWeight: FontWeight.w700,
+          height: 1,
+          letterSpacingEm: -.03,
+        ),
+      ),
+    ),
+  );
+
+  Widget _ember(int index, double progress) {
+    final travel = ((progress * 1.7 + index * .13) % 1).toDouble();
+    final opacity = travel < .15 ? travel / .15 : 1 - travel;
+    final left = 110 + math.sin(index * 2.1 + progress * 8) * 70;
+    return Positioned(
+      left: left,
+      bottom: 54 + travel * 190,
+      child: Opacity(
+        opacity: opacity.clamp(0.0, 1.0),
+        child: Container(
+          width: index.isEven ? 8 : 5,
+          height: index.isEven ? 8 : 5,
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FlamePainter extends CustomPainter {
+  const _FlamePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 100;
+    canvas.save();
+    canvas.scale(scale);
+    final flame = Path()
+      ..moveTo(50, 4)
+      ..cubicTo(54, 28, 82, 44, 82, 80)
+      ..cubicTo(82, 106, 68, 124, 50, 124)
+      ..cubicTo(32, 124, 18, 106, 18, 80)
+      ..cubicTo(18, 64, 26, 54, 34, 46)
+      ..cubicTo(36, 56, 40, 60, 44, 62)
+      ..cubicTo(42, 40, 42, 20, 50, 4)
+      ..close();
+    final fill = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFF2FF9A), AppColors.primary],
+      ).createShader(const Rect.fromLTWH(0, 0, 100, 130));
+    final outline = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(flame, fill);
+    canvas.drawPath(flame, outline);
+
+    final core = Path()
+      ..moveTo(50, 62)
+      ..cubicTo(53, 76, 68, 84, 68, 102)
+      ..cubicTo(68, 114, 60, 122, 50, 122)
+      ..cubicTo(40, 122, 32, 114, 32, 102)
+      ..cubicTo(32, 92, 38, 86, 42, 78)
+      ..cubicTo(44, 84, 46, 86, 50, 86)
+      ..cubicTo(48, 76, 48, 70, 50, 62)
+      ..close();
+    canvas.drawPath(core, Paint()..color = const Color(0xFFFFFBE0));
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _PathMilestone {
