@@ -5,6 +5,7 @@ import '../models/user_profile.dart';
 import 'package:dio/dio.dart';
 
 import 'api_client.dart';
+import 'app_cache.dart';
 
 class ProfileService {
   final ApiClient api;
@@ -12,12 +13,28 @@ class ProfileService {
 
   Future<UserProfile> getProfile(String username) async {
     final data = await api.get('/users/$username');
+    await AppCache.write('profile_$username', data);
     return UserProfile.fromJson(data);
+  }
+
+  Future<UserProfile?> getCachedProfile(String username) async {
+    final data = await AppCache.read('profile_$username');
+    return data is Map
+        ? UserProfile.fromJson(Map<String, dynamic>.from(data))
+        : null;
   }
 
   Future<UserStats> getMyStats() async {
     final data = await api.get('/users/me/stats');
+    await AppCache.write('my_stats', data);
     return UserStats.fromJson(data);
+  }
+
+  Future<UserStats?> getCachedMyStats() async {
+    final data = await AppCache.read('my_stats');
+    return data is Map
+        ? UserStats.fromJson(Map<String, dynamic>.from(data))
+        : null;
   }
 
   Future<void> updateUsername(String username) async {
@@ -38,12 +55,34 @@ class ProfileService {
 
   Future<List<Challenge>> listMyCompletedChallenges() async {
     final data = await api.get('/users/me/challenges/completed');
+    await AppCache.write('my_completed_challenges', data);
     return (data as List).map((e) => Challenge.fromJson(e)).toList();
+  }
+
+  Future<List<Challenge>?> getCachedMyCompletedChallenges() async {
+    final data = await AppCache.read('my_completed_challenges');
+    return data is List
+        ? data
+              .whereType<Map>()
+              .map((item) => Challenge.fromJson(Map<String, dynamic>.from(item)))
+              .toList()
+        : null;
   }
 
   Future<List<Challenge>> listMyCreatedChallenges() async {
     final data = await api.get('/users/me/challenges/created');
+    await AppCache.write('my_created_challenges', data);
     return (data as List).map((e) => Challenge.fromJson(e)).toList();
+  }
+
+  Future<List<Challenge>?> getCachedMyCreatedChallenges() async {
+    final data = await AppCache.read('my_created_challenges');
+    return data is List
+        ? data
+              .whereType<Map>()
+              .map((item) => Challenge.fromJson(Map<String, dynamic>.from(item)))
+              .toList()
+        : null;
   }
 
   Future<List<Challenge>> listCompletedChallenges(String username) async {

@@ -1,6 +1,7 @@
 import '../models/progress_log.dart';
 import '../models/participation.dart';
 import 'api_client.dart';
+import 'app_cache.dart';
 
 class ParticipationService {
   final ApiClient api;
@@ -8,7 +9,18 @@ class ParticipationService {
 
   Future<List<Participation>> listMine() async {
     final data = await api.get('/participation/me');
+    await AppCache.write('participation_mine', data);
     return (data as List).map((e) => Participation.fromJson(e)).toList();
+  }
+
+  Future<List<Participation>?> getCachedMine() async {
+    final data = await AppCache.read('participation_mine');
+    return data is List
+        ? data
+              .whereType<Map>()
+              .map((item) => Participation.fromJson(Map<String, dynamic>.from(item)))
+              .toList()
+        : null;
   }
 
   Future<Participation> accept(String slug) async {

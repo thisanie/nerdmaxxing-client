@@ -19,6 +19,12 @@ class ChallengesProvider extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      final cached = await service.getCachedInitial();
+      if (cached != null && challenges.isEmpty) {
+        challenges = cached;
+        hasMore = cached.length == _pageSize;
+        notifyListeners();
+      }
       challenges = await service.list(limit: _pageSize, offset: 0);
       hasMore = challenges.length == _pageSize;
     } catch (e) {

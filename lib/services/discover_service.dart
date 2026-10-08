@@ -1,6 +1,7 @@
 import '../models/discover.dart';
 import '../models/challenge.dart';
 import 'api_client.dart';
+import 'app_cache.dart';
 
 class DiscoverService {
   final ApiClient api;
@@ -8,7 +9,15 @@ class DiscoverService {
 
   Future<DiscoverFeed> getFeed() async {
     final data = await api.get('/discover');
+    await AppCache.write('discover_feed', data);
     return DiscoverFeed.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  Future<DiscoverFeed?> getCachedFeed() async {
+    final data = await AppCache.read('discover_feed');
+    return data is Map
+        ? DiscoverFeed.fromJson(Map<String, dynamic>.from(data))
+        : null;
   }
 
   Future<DiscoverSearchResult> search(

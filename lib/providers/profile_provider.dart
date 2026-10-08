@@ -21,6 +21,20 @@ class ProfileProvider extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      final cachedProfile = await service.getCachedProfile(username);
+      final cachedCompleted = isOwnProfile
+          ? await service.getCachedMyCompletedChallenges()
+          : null;
+      final cachedCreated = isOwnProfile
+          ? await service.getCachedMyCreatedChallenges()
+          : null;
+      if (cachedProfile != null || cachedCompleted != null || cachedCreated != null) {
+        profile = cachedProfile ?? profile;
+        if (cachedCompleted != null) completedChallenges = cachedCompleted;
+        if (cachedCreated != null) createdChallenges = cachedCreated;
+        notifyListeners();
+      }
+
       final loadedProfile = await service.getProfile(username);
       final following = isOwnProfile
           ? loadedProfile.isFollowing

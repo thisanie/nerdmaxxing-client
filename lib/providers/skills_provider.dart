@@ -16,6 +16,11 @@ class SkillsProvider extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      final cached = await service.getCachedMine();
+      if (cached != null && skills.isEmpty) {
+        skills = cached;
+        notifyListeners();
+      }
       skills = await service.listMine();
     } catch (e) {
       errorMessage = e.toString();

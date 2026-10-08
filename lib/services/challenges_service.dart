@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import '../models/challenge.dart';
 import '../models/challenge_detail.dart';
 import 'api_client.dart';
+import 'app_cache.dart';
 
 class ChallengesService {
   final ApiClient api;
@@ -20,7 +21,20 @@ class ChallengesService {
       '/challenges',
       query: {'limit': limit, 'offset': offset, 'category': ?category},
     );
+    if (offset == 0 && category == null) {
+      await AppCache.write('challenges_initial', data);
+    }
     return (data as List).map((e) => Challenge.fromJson(e)).toList();
+  }
+
+  Future<List<Challenge>?> getCachedInitial() async {
+    final data = await AppCache.read('challenges_initial');
+    return data is List
+        ? data
+              .whereType<Map>()
+              .map((item) => Challenge.fromJson(Map<String, dynamic>.from(item)))
+              .toList()
+        : null;
   }
 
   Future<Challenge> getBySlug(String slug) async {
@@ -30,7 +44,15 @@ class ChallengesService {
 
   Future<ChallengeDetail> getDetailBySlug(String slug) async {
     final data = await api.get('/challenges/$slug/detail');
+    await AppCache.write('challenge_detail_$slug', data);
     return ChallengeDetail.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  Future<ChallengeDetail?> getCachedDetailBySlug(String slug) async {
+    final data = await AppCache.read('challenge_detail_$slug');
+    return data is Map
+        ? ChallengeDetail.fromJson(Map<String, dynamic>.from(data))
+        : null;
   }
 
   Future<bool> getSaveStatus(String slug) async {

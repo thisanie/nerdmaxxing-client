@@ -11,6 +11,7 @@ import '../../providers/app_state_providers.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../../models/participation.dart';
 import '../../services/challenges_service.dart';
+import '../../services/participation_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../challenge/challenge_detail_screen.dart';
@@ -42,10 +43,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _loadHomeData() async {
     final auth = context.read<AuthProvider>();
     final username = auth.username;
+    final profileService = context.read<ProfileService>();
+    final challengesService = context.read<ChallengesService>();
+    final participationService = context.read<ParticipationService>();
     final profileFuture = username != null && username.isNotEmpty
-        ? context.read<ProfileService>().getProfile(username)
+        ? profileService.getProfile(username)
         : null;
-    final challengesFuture = context.read<ChallengesService>().list(limit: 100);
+    final challengesFuture = challengesService.list(limit: 100);
+
+    final cachedProfile = username != null && username.isNotEmpty
+        ? await profileService.getCachedProfile(username)
+        : null;
+    final cachedChallenges = await challengesService.getCachedInitial();
+    final cachedParticipation =
+      ref.read(participationControllerProvider).valueOrNull ??
+      await participationService.getCachedMine();
+    if (mounted &&
+      (cachedProfile != null ||
+        cachedChallenges != null ||
+        cachedParticipation != null)) {
+      final cachedItems = cachedChallenges ?? const [];
+      final cachedMap = {
+        for (final challenge in cachedItems) challenge.id: challenge,
+      };
+      final cachedActive = (cachedParticipation ?? const [])
+        .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
+        .toList();
+      final cachedPopular = cachedItems
+          .where((challenge) => challenge.enrollmentCount != null)
+          .fold<Challenge?>(
+            null,
+            (popular, challenge) =>
+                popular == null ||
+                    challenge.enrollmentCount! > popular.enrollmentCount!
+                ? challenge
+                : popular,
+          );
+      setState(() {
+        _profile = cachedProfile ?? _profile;
+        if (cachedChallenges != null) {
+          _challengesById = cachedMap;
+          _mostPopularChallenge = cachedPopular;
+        }
+        _resumeParticipation = _selectResumeParticipation(cachedActive);
+      });
+      final cachedResume = _resumeParticipation;
+      final cachedResumeChallenge = cachedResume == null
+          ? null
+          : cachedMap[cachedResume.challengeId];
+      if (cachedResumeChallenge != null) {
+        final cachedDetail = await challengesService.getCachedDetailBySlug(
+          cachedResumeChallenge.slug,
+        );
+        if (mounted && cachedDetail != null) {
+          setState(() => _resumeDetail = cachedDetail);
+        }
+      }
+    }
     try {
       await ref.read(participationControllerProvider.future);
       final profile = profileFuture == null ? null : await profileFuture;

@@ -16,6 +16,14 @@ class DiscoverProvider extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      final cached = await service.getCachedFeed();
+        if (cached != null &&
+          feed.featured == null &&
+          feed.trending.isEmpty &&
+          feed.categories.isEmpty) {
+        feed = cached;
+        notifyListeners();
+      }
       feed = await service.getFeed();
     } catch (e) {
       errorMessage = e.toString();

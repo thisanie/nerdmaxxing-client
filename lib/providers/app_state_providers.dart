@@ -31,9 +31,9 @@ final progressLogsProvider = FutureProvider.autoDispose
       return service.listProgress(participantId, limit: 100);
     });
 
-final myStatsProvider = FutureProvider.autoDispose<UserStats>((ref) {
-  return ref.watch(profileServiceProvider).getMyStats();
-});
+final myStatsProvider = AsyncNotifierProvider.autoDispose<MyStatsController, UserStats>(
+  MyStatsController.new,
+);
 
 final leaderboardProvider = FutureProvider.autoDispose
     .family<Leaderboard, ({String period, String metric, String? playerRank})>((
@@ -61,11 +61,28 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
   ParticipationService get _service => ref.read(participationServiceProvider);
 
   @override
-  Future<List<Participation>> build() => _service.listMine();
+  @override
+  Future<List<Participation>> build() async {
+    final cached = await _service.getCachedMine();
+    if (cached != null) state = AsyncData(cached);
+    try {
+      return await _service.listMine();
+    } catch (_) {
+      if (cached != null) return cached;
+      rethrow;
+    }
+  }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_service.listMine);
+    final cached = state.valueOrNull;
+    state = await AsyncValue.guard(() async {
+      try {
+        return await _service.listMine();
+      } catch (_) {
+        if (cached != null) return cached;
+        rethrow;
+      }
+    });
   }
 
   Future<Participation> accept(String slug) async {
@@ -160,5 +177,21 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
       ...current.where((item) => item.id != participation.id),
     ]);
     ref.invalidate(myStatsProvider);
+  }
+}
+
+class MyStatsController extends AutoDisposeAsyncNotifier<UserStats> {
+  ProfileService get _service => ref.read(profileServiceProvider);
+
+  @override
+  Future<UserStats> build() async {
+    final cached = await _service.getCachedMyStats();
+    if (cached != null) state = AsyncData(cached);
+    try {
+      return await _service.getMyStats();
+    } catch (_) {
+      if (cached != null) return cached;
+      rethrow;
+    }
   }
 }
