@@ -12,6 +12,7 @@ import '../../services/challenges_service.dart';
 import '../../services/notifications_service.dart';
 import '../../services/groups_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_error.dart';
 import '../challenge/challenge_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import '../profile/group_chat_screen.dart';
@@ -247,9 +248,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             : _error != null && _notifications.isEmpty
             ? ListView(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(child: Text(_error!)),
+                  SizedBox(
+                    height: 480,
+                    child: AppErrorView(error: _error!, onRetry: _load),
                   ),
                 ],
               )

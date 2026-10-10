@@ -76,4 +76,82 @@ void main() {
     expect(detail.effectiveRequirements.single.label, 'Complete 10 km');
     expect(detail.attempts.single.metrics['distance'], 6.4);
   });
+
+  test('parses provider, evidence rules, completion, and verification state', () {
+    final detail = ChallengeDetail.fromJson({
+      'challenge': {
+        'id': 'chess-rated-game',
+        'title': 'Complete a rated game',
+        'resources': [],
+        'slug': 'chess-rated-game',
+        'short_description': 'Play one rated game.',
+        'full_description': '',
+        'creator_id': 'creator',
+        'difficulty_level': 'BEGINNER',
+        'aura_points': 20,
+        'status': 'PUBLISHED',
+        'visibility': 'PUBLIC',
+        'verification_type': 'EXTERNAL_ACCOUNT',
+      },
+      'verification': {
+        'type': 'EXTERNAL_ACCOUNT',
+        'kind': 'EXTERNAL_ACCOUNT',
+        'instructions': 'Connect your account.',
+        'required_runs': 1,
+        'provider': {
+          'id': 'chess_com',
+          'name': 'Chess.com',
+          'connect_url': 'https://example.test/connect',
+          'connected': true,
+          'account': {
+            'provider_user_id': 'player-1',
+            'username': 'demo_player',
+            'verified_at': '2026-10-08T12:00:00Z',
+          },
+        },
+        'evidence': {
+          'allowed_types': ['ACCOUNT_CONNECTION'],
+          'requires_file': false,
+          'requires_explanation': false,
+        },
+        'completion': {
+          'mode': 'AUTOMATIC',
+          'requires_review': false,
+        },
+      },
+      'verification_state': {
+        'status': 'READY',
+        'can_retry': false,
+      },
+    });
+
+    expect(detail.verification.kind, 'EXTERNAL_ACCOUNT');
+    expect(detail.verification.provider?.account?.username, 'demo_player');
+    expect(detail.verification.evidence.requiresFile, isFalse);
+    expect(detail.verification.completion.mode, 'AUTOMATIC');
+    expect(detail.verificationState.status, 'READY');
+  });
+
+  test('uses challenge verification type when nested verification is absent', () {
+    final detail = ChallengeDetail.fromJson({
+      'challenge': {
+        'id': 'handstand',
+        'title': 'Handstand',
+        'resources': [],
+        'slug': 'handstand',
+        'short_description': 'Hold a handstand.',
+        'full_description': '',
+        'creator_id': 'creator',
+        'difficulty_level': 'BEGINNER',
+        'aura_points': 20,
+        'status': 'PUBLISHED',
+        'visibility': 'PUBLIC',
+        'verification_type': 'VIDEO_VERIFIED',
+      },
+      'verification': null,
+    });
+
+    expect(detail.verification.type, 'VIDEO_VERIFIED');
+    expect(detail.verification.kind, 'VIDEO_VERIFIED');
+  });
 }

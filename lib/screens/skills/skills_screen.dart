@@ -5,6 +5,7 @@ import '../../models/leaderboard.dart';
 import '../../models/user_stats.dart';
 import '../../providers/app_state_providers.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_error.dart';
 import '../profile/profile_screen.dart';
 
 class SkillsScreen extends ConsumerWidget {
@@ -20,11 +21,7 @@ class SkillsScreen extends ConsumerWidget {
           loading: () =>
               const _RefreshableState(child: CircularProgressIndicator()),
           error: (error, _) => _RefreshableState(
-            child: Text(
-              'Could not load your rank.\n$error',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.danger),
-            ),
+            child: AppErrorView(error: error, onRetry: () => ref.refresh(myStatsProvider.future)),
           ),
           data: (value) => DefaultTabController(
             length: 2,

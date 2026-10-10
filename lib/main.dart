@@ -20,6 +20,7 @@ import 'services/challenges_service.dart';
 import 'services/evidence_service.dart';
 import 'services/groups_service.dart';
 import 'services/invitations_service.dart';
+import 'services/integrations_service.dart';
 import 'services/notifications_service.dart';
 import 'services/leaderboard_service.dart';
 import 'services/discussions_service.dart';
@@ -29,6 +30,7 @@ import 'services/push_notification_service.dart';
 import 'services/skills_service.dart';
 import 'services/token_storage.dart';
 import 'theme/app_theme.dart';
+import 'widgets/app_error.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,6 +82,7 @@ class NerdMaxxingApp extends StatelessWidget {
           Provider(create: (_) => ParticipationService(apiClient)),
           Provider(create: (_) => ProfileService(apiClient)),
           Provider(create: (_) => EvidenceService(apiClient)),
+          Provider(create: (_) => IntegrationsService(apiClient)),
           Provider(create: (_) => GroupsService(apiClient)),
           Provider(create: (_) => InvitationsService(apiClient)),
           Provider(create: (_) => DiscussionsService(apiClient)),
@@ -118,6 +121,7 @@ class NerdMaxxingApp extends StatelessWidget {
             return MaterialApp(
               title: 'NERDMAXXING',
               debugShowCheckedModeBanner: false,
+              scaffoldMessengerKey: AppErrorSnackbar.messengerKey,
               theme: AppTheme.light,
               darkTheme: AppTheme.dark,
               themeMode: themeProvider.themeMode,

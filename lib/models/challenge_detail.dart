@@ -206,23 +206,165 @@ class ChallengeParticipant {
   }
 }
 
+class VerificationAccount {
+  final String providerUserId;
+  final String username;
+  final String? avatarUrl;
+  final DateTime? verifiedAt;
+
+  const VerificationAccount({
+    required this.providerUserId,
+    required this.username,
+    this.avatarUrl,
+    this.verifiedAt,
+  });
+
+  factory VerificationAccount.fromJson(Map<String, dynamic> json) {
+    return VerificationAccount(
+      providerUserId: json['provider_user_id']?.toString() ?? '',
+      username: json['username']?.toString() ?? '',
+      avatarUrl: json['avatar_url']?.toString(),
+      verifiedAt: json['verified_at'] == null
+          ? null
+          : DateTime.tryParse(json['verified_at'].toString()),
+    );
+  }
+}
+
+class VerificationProvider {
+  final String id;
+  final String name;
+  final String connectUrl;
+  final bool connected;
+  final VerificationAccount? account;
+
+  const VerificationProvider({
+    required this.id,
+    required this.name,
+    required this.connectUrl,
+    required this.connected,
+    this.account,
+  });
+
+  factory VerificationProvider.fromJson(Map<String, dynamic> json) {
+    return VerificationProvider(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      connectUrl: json['connect_url']?.toString() ?? '',
+      connected: json['connected'] == true,
+      account: json['account'] is Map
+          ? VerificationAccount.fromJson(
+              Map<String, dynamic>.from(json['account'] as Map),
+            )
+          : null,
+    );
+  }
+}
+
+class VerificationEvidenceRules {
+  final List<String> allowedTypes;
+  final bool requiresFile;
+  final bool requiresExplanation;
+  final int? maxFileSizeBytes;
+  final int? maxDurationSeconds;
+  final List<String> allowedMimeTypes;
+
+  const VerificationEvidenceRules({
+    this.allowedTypes = const [],
+    this.requiresFile = false,
+    this.requiresExplanation = false,
+    this.maxFileSizeBytes,
+    this.maxDurationSeconds,
+    this.allowedMimeTypes = const [],
+  });
+
+  factory VerificationEvidenceRules.fromJson(Map<String, dynamic> json) {
+    return VerificationEvidenceRules(
+      allowedTypes: (json['allowed_types'] as List? ?? [])
+          .map((item) => item.toString())
+          .toList(),
+      requiresFile: json['requires_file'] == true,
+      requiresExplanation: json['requires_explanation'] == true,
+      maxFileSizeBytes: (json['max_file_size_bytes'] as num?)?.toInt(),
+      maxDurationSeconds: (json['max_duration_seconds'] as num?)?.toInt(),
+      allowedMimeTypes: (json['allowed_mime_types'] as List? ?? [])
+          .map((item) => item.toString())
+          .toList(),
+    );
+  }
+}
+
+class VerificationCompletion {
+  final String mode;
+  final bool requiresReview;
+
+  const VerificationCompletion({
+    this.mode = 'SELF_CONFIRMATION',
+    this.requiresReview = false,
+  });
+
+  factory VerificationCompletion.fromJson(Map<String, dynamic> json) {
+    return VerificationCompletion(
+      mode: json['mode']?.toString() ?? 'SELF_CONFIRMATION',
+      requiresReview: json['requires_review'] == true,
+    );
+  }
+}
+
+class VerificationState {
+  final String status;
+  final String? submissionId;
+  final String? rejectionReason;
+  final bool canRetry;
+
+  const VerificationState({
+    this.status = 'NOT_STARTED',
+    this.submissionId,
+    this.rejectionReason,
+    this.canRetry = false,
+  });
+
+  factory VerificationState.fromJson(Map<String, dynamic> json) {
+    return VerificationState(
+      status: json['status']?.toString() ?? 'NOT_STARTED',
+      submissionId: json['submission_id']?.toString(),
+      rejectionReason: json['rejection_reason']?.toString(),
+      canRetry: json['can_retry'] == true,
+    );
+  }
+
+  static const empty = VerificationState();
+}
+
 class ChallengeVerification {
   final String type;
+  final String kind;
   final List<ChallengeRequirement> requirements;
   final int requiredRuns;
   final String instructions;
+  final VerificationProvider? provider;
+  final VerificationEvidenceRules evidence;
+  final VerificationCompletion completion;
 
   const ChallengeVerification({
     required this.type,
+    this.kind = 'SELF_REPORTED',
     this.requirements = const [],
     required this.requiredRuns,
     required this.instructions,
+    this.provider,
+    this.evidence = const VerificationEvidenceRules(),
+    this.completion = const VerificationCompletion(),
   });
 
   factory ChallengeVerification.fromJson(Map<String, dynamic> json) {
     final rawRequirements = json['requirements'];
+    final type = json['type']?.toString() ?? 'SELF_REPORTED';
+    final kind = json['kind']?.toString() ?? type;
+    final providerJson = json['provider'];
     return ChallengeVerification(
-      type: json['type']?.toString() ?? 'SELF_REPORTED',
+      type: type,
+      kind: kind,
       requirements: rawRequirements is List
           ? rawRequirements
                 .whereType<Map>()
@@ -235,6 +377,28 @@ class ChallengeVerification {
           : const [],
       requiredRuns: (json['required_runs'] as num?)?.toInt() ?? 1,
       instructions: json['instructions']?.toString() ?? '',
+      provider: providerJson is Map
+          ? VerificationProvider.fromJson(
+              Map<String, dynamic>.from(providerJson),
+            )
+          : type == 'ACCOUNT_VERIFIED'
+              ? const VerificationProvider(
+                  id: 'chess_com',
+                  name: 'Chess.com',
+                  connectUrl: '',
+                  connected: false,
+                )
+          : null,
+      evidence: json['evidence'] is Map
+          ? VerificationEvidenceRules.fromJson(
+              Map<String, dynamic>.from(json['evidence'] as Map),
+            )
+          : const VerificationEvidenceRules(),
+      completion: json['completion'] is Map
+          ? VerificationCompletion.fromJson(
+              Map<String, dynamic>.from(json['completion'] as Map),
+            )
+          : const VerificationCompletion(),
     );
   }
 
@@ -256,6 +420,7 @@ class ChallengeDetail {
   final int completedParticipantCount;
   final ChallengeProgressSnapshot progress;
   final ChallengeVerification verification;
+  final VerificationState verificationState;
 
   const ChallengeDetail({
     required this.challenge,
@@ -268,6 +433,7 @@ class ChallengeDetail {
     this.completedParticipantCount = 0,
     this.progress = ChallengeProgressSnapshot.empty,
     this.verification = ChallengeVerification.empty,
+    this.verificationState = VerificationState.empty,
   });
 
   factory ChallengeDetail.fromJson(Map<String, dynamic> json) {
@@ -294,13 +460,11 @@ class ChallengeDetail {
           )
         : ChallengeProgressSnapshot.empty;
 
-    final verification = json['verification'] is Map
-        ? ChallengeVerification.fromJson(
-            Map<String, dynamic>.from(json['verification'] as Map),
-          )
-        : ChallengeVerification.empty;
-
     final challenge = Challenge.fromJson(challengeJson);
+    final verificationJson = json['verification'] is Map
+      ? Map<String, dynamic>.from(json['verification'] as Map)
+      : <String, dynamic>{'type': challenge.verificationType};
+    final verification = ChallengeVerification.fromJson(verificationJson);
 
     return ChallengeDetail(
       challenge: challenge,
@@ -328,6 +492,11 @@ class ChallengeDetail {
           (stats['completed_participant_count'] as num?)?.toInt() ?? 0,
       progress: progress,
       verification: verification,
+      verificationState: json['verification_state'] is Map
+          ? VerificationState.fromJson(
+              Map<String, dynamic>.from(json['verification_state'] as Map),
+            )
+          : VerificationState.empty,
     );
   }
 
@@ -336,6 +505,11 @@ class ChallengeDetail {
     metrics: challenge.metrics,
     requirements: challenge.requirements,
     participantCount: challenge.enrollmentCount ?? 0,
+    verification: ChallengeVerification(
+      type: challenge.verificationType,
+      requiredRuns: 1,
+      instructions: '',
+    ),
   );
 
   ChallengeMetric? get primaryMetric {

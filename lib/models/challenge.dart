@@ -185,7 +185,7 @@ class ChallengeRequirement {
   factory ChallengeRequirement.fromJson(Map<String, dynamic> json) {
     final rawValue = json['value'];
     return ChallengeRequirement(
-      metricKey: json['metric_key']?.toString() ?? '',
+      metricKey: json['metric_key']?.toString() ?? json['key']?.toString() ?? '',
       operator: json['operator']?.toString() ?? 'AT_LEAST',
       value: rawValue is num
           ? rawValue.toDouble()

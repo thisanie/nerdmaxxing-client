@@ -9,6 +9,7 @@ import '../../models/user_profile.dart';
 import '../../services/api_client.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_error.dart';
 
 class UpdateProfileScreen extends StatefulWidget {
   final UserProfile profile;
@@ -72,8 +73,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+        AppErrorSnackbar.show(context, e);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

@@ -14,7 +14,9 @@ import '../../services/challenges_service.dart';
 import '../../services/participation_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_error.dart';
 import '../challenge/challenge_detail_screen.dart';
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -29,6 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Challenge? _mostPopularChallenge;
   Participation? _resumeParticipation;
   ChallengeDetail? _resumeDetail;
+  Object? _homeError;
   bool _isScrolled = false;
 
   @override
@@ -41,6 +44,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _loadHomeData() async {
+    if (mounted && _homeError != null) {
+      setState(() => _homeError = null);
+    }
     final auth = context.read<AuthProvider>();
     final username = auth.username;
     final profileService = context.read<ProfileService>();
@@ -143,8 +149,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _resumeParticipation = resumeParticipation;
         _resumeDetail = resumeDetail;
       });
-    } catch (_) {
-      // The discovery feed remains usable if the home summary is unavailable.
+    } catch (error) {
+      // Cached home data can remain visible, but the failed refresh should be
+      // actionable instead of disappearing silently.
+      if (mounted) {
+        AppErrorSnackbar.show(context, error, onRetry: _loadHomeData);
+        if (_profile == null &&
+            _challengesById.isEmpty &&
+            _resumeParticipation == null) {
+          setState(() => _homeError = error);
+        }
+      }
     }
   }
 
@@ -193,6 +208,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .take(2)
         .toList();
     final stats = ref.watch(myStatsProvider).valueOrNull;
+    if (_homeError != null &&
+        _profile == null &&
+        _challengesById.isEmpty &&
+        _resumeParticipation == null) {
+      return Scaffold(
+        body: AppErrorView(error: _homeError!, onRetry: _loadHomeData),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -260,9 +283,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             : () => _openParticipation(_resumeParticipation!),
                       ),
                       const SizedBox(height: 36),
-                      const _SectionHeader(
+                      _SectionHeader(
                         title: 'Your challenges',
                         action: 'View all',
+                        onAction: _openMyChallenges,
                       ),
                       const SizedBox(height: 14),
                       if (active.isEmpty)
@@ -320,6 +344,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           initialChallenge: challenge,
         ),
       ),
+    );
+  }
+
+  void _openMyChallenges() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 }
@@ -553,8 +583,13 @@ class _Stat extends StatelessWidget {
 class _SectionHeader extends StatelessWidget {
   final String title;
   final String action;
+  final VoidCallback? onAction;
 
-  const _SectionHeader({required this.title, required this.action});
+  const _SectionHeader({
+    required this.title,
+    required this.action,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) => Row(
@@ -563,11 +598,19 @@ class _SectionHeader extends StatelessWidget {
     textBaseline: TextBaseline.alphabetic,
     children: [
       Expanded(child: _SectionTitle(title)),
-      Text(
-        action,
-        style: AppFonts.body(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          fontSize: 14,
+      TextButton(
+        onPressed: onAction,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Text(
+          action,
+          style: AppFonts.body(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 14,
+          ),
         ),
       ),
     ],

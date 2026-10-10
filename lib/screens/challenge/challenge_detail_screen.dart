@@ -20,8 +20,10 @@ import '../../services/groups_service.dart';
 import '../../services/notifications_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_error.dart';
 import 'challenge_journey.dart';
 import 'path_screen.dart';
+import '../evidence/submit_evidence_screen.dart';
 
 class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -84,8 +86,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       if (mounted) setState(() => _saved = !_saved);
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        AppErrorSnackbar.show(context, e);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -127,8 +128,17 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       );
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      final message = switch (e.statusCode) {
+        404 => 'This challenge is no longer available.',
+        409 =>
+          'You may already be participating, or you have reached the five active challenge limit.',
+        403 => 'You do not have access to accept this challenge.',
+        _ => null,
+      };
+      if (e.statusCode == 409) {
+        await ref.read(participationControllerProvider.notifier).refresh();
+      }
+      if (mounted) AppErrorSnackbar.show(context, e, message: message);
     } finally {
       if (mounted) setState(() => _accepting = false);
     }
@@ -148,8 +158,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           .showSnackBar(const SnackBar(content: Text('Invitation accepted.')));
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        AppErrorSnackbar.show(context, e);
       }
     }
   }
@@ -167,8 +176,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        AppErrorSnackbar.show(context, e);
       }
     }
   }
@@ -178,8 +186,11 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     if (_error != null) {
       return Scaffold(
         appBar: AppBar(),
-        body: Center(
-          child: Text(_error!, style: const TextStyle(color: AppColors.danger)),
+        body: AppErrorView(
+          error: _error!,
+          resource: 'challenge',
+          onRetry: _load,
+          onBack: () => Navigator.of(context).pop(),
         ),
       );
     }
@@ -191,7 +202,11 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     final participation = ref
         .watch(participationControllerProvider)
         .valueOrNull
-        ?.where((item) => item.challengeId == challenge.id)
+      ?.where(
+        (item) =>
+          item.challengeId == challenge.id &&
+          item.status.toUpperCase() != 'REMOVED',
+      )
         .firstOrNull;
 
     return ChallengeJourney(
@@ -222,12 +237,30 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           ? _promptToAccept()
           : _openPath(detail, milestoneIndex: index),
       onRefresh: _refreshDetail,
-      onProve: () => _showPrototypeSheet(
-        'Prove it',
-        detail.verification.instructions.isEmpty
-            ? 'Submit evidence for the requirements shown on this challenge.'
-            : detail.verification.instructions,
-      ),
+      onProve: () {
+        if (participation == null) {
+          _showPrototypeSheet(
+            'Prove it',
+            detail.verification.instructions.isEmpty
+                ? 'Accept this challenge first, then submit the evidence required for it.'
+                : detail.verification.instructions,
+          );
+          return;
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => SubmitEvidenceScreen(
+              participation: participation,
+              challengeTitle: challenge.title,
+              verificationType: detail.verification.kind,
+              instructions: detail.verification.instructions,
+              provider: detail.verification.provider,
+              evidenceRules: detail.verification.evidence,
+              completion: detail.verification.completion,
+            ),
+          ),
+        );
+      },
       invited: widget.invitation?.invitationId != null,
     );
   }

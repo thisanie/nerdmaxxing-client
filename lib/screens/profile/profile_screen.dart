@@ -17,6 +17,7 @@ import '../../services/groups_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/app_error.dart';
 import '../challenge/challenge_detail_screen.dart';
 import 'group_chat_screen.dart';
 import 'relationship_list_screen.dart';
@@ -138,8 +139,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      AppErrorSnackbar.show(context, e);
     }
   }
 
@@ -168,8 +168,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       });
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        AppErrorSnackbar.show(context, e);
       }
     }
   }
@@ -182,8 +181,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        AppErrorSnackbar.show(context, e);
       }
     }
   }
@@ -247,8 +245,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
           .updateStatus(participation.id, status);
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      AppErrorSnackbar.show(context, e);
     }
   }
 
@@ -259,8 +256,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       await context.read<ProfileProvider>().toggleFollow();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      AppErrorSnackbar.show(context, e);
     } finally {
       if (mounted) setState(() => _isFollowBusy = false);
     }
@@ -356,7 +352,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
         appBar: AppBar(title: const Text('Profile')),
         body: RefreshIndicator(
           onRefresh: _load,
-          child: _RefreshableState(child: Text(provider.errorMessage!)),
+          child: _RefreshableState(
+            child: AppErrorView(error: provider.errorMessage!, onRetry: _load),
+          ),
         ),
       );
     }
