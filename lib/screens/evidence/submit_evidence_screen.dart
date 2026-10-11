@@ -46,6 +46,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   final _picker = ImagePicker();
 
   bool _submitting = false;
+  bool _loadingStatus = true;
   bool _accountConnected = false;
   String? _error;
   XFile? _video;
@@ -57,6 +58,22 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     super.initState();
     _accountConnected = widget.provider?.connected == true;
     _account = widget.provider?.account;
+    _loadStatus();
+  }
+
+  Future<void> _loadStatus() async {
+    final service = context.read<EvidenceService>();
+    final cached = await service.getCachedStatus(widget.participation.challengeId);
+    if (!mounted) return;
+    if (cached != null) setState(() => _submission = cached);
+    try {
+      final fresh = await service.getStatus(widget.participation.challengeId);
+      if (mounted) setState(() => _submission = fresh);
+    } on ApiException catch (e) {
+      if (mounted && cached == null) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _loadingStatus = false);
+    }
   }
 
   EvidenceMode get _mode {
@@ -235,21 +252,14 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Prove it')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _stepper(_submission == null ? 0 : 1),
-              const SizedBox(height: 20),
-              Expanded(
-                child: _submission == null ? _buildForm() : _buildVerify(),
-              ),
-            ],
-          ),
-        ),
+      appBar: AppBar(title: const Text('Submit Evidence')),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: _loadingStatus && _submission == null
+          ? const Center(child: CircularProgressIndicator())
+          : _submission == null
+          ? _buildForm()
+          : _buildVerify(),
       ),
     );
   }
@@ -445,6 +455,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   }
 
   Widget _buildVerify() {
+    final verified = _submission?.status.toUpperCase() == 'VERIFIED';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -455,12 +466,14 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Evidence submitted',
+          verified ? 'Challenge verified' : 'Evidence submitted',
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 8),
         Text(
-          'Confirm you completed this challenge to earn your skill.',
+          verified
+              ? 'This challenge is complete and your evidence has been verified.'
+              : 'Confirm you completed this challenge to earn your skill.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         if (_error != null) ...[
@@ -475,13 +488,14 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
           action: const SizedBox.shrink(),
         ),
         const Spacer(),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _submitting ? null : _verify,
-            child: Text(_submitting ? 'Verifying...' : 'Verify Completion'),
+        if (!verified)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _submitting ? null : _verify,
+              child: Text(_submitting ? 'Verifying...' : 'Verify Completion'),
+            ),
           ),
-        ),
       ],
     );
   }
