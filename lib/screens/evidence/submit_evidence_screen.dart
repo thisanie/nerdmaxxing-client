@@ -331,7 +331,10 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
           if (_mode == EvidenceMode.selfReported) _buildSelfReportedProof(),
           if (_error != null) ...[
             const SizedBox(height: 16),
-            Text(_error!, style: const TextStyle(color: AppColors.danger)),
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ],
           const SizedBox(height: 24),
           ElevatedButton(
@@ -356,7 +359,10 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
             ? 'Connected as ${_account?.username ?? 'connected account'}'
             : 'Connect the account used to verify your result.',
         action: _accountConnected
-            ? const Icon(Icons.check_circle_rounded, color: AppColors.success)
+            ? Icon(
+                Icons.check_circle_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              )
             : FilledButton.icon(
                 onPressed: _submitting ? null : _connectAccount,
                 icon: const Icon(Icons.link_rounded),
@@ -500,7 +506,10 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
         _buildEvidenceSteps(verified),
         if (_error != null) ...[
           const SizedBox(height: 16),
-          Text(_error!, style: const TextStyle(color: AppColors.danger)),
+          Text(
+            _error!,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
         ],
         const SizedBox(height: 16),
         _proofCard(
@@ -523,20 +532,21 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   }
 
   Widget _buildEvidenceSteps(bool verified) {
-    final activeColor = AppColors.success;
+    final scheme = Theme.of(context).colorScheme;
+    final activeColor = scheme.primary;
     final inactiveColor = Theme.of(context).colorScheme.outline;
     return Column(
       children: [
         Row(
           children: [
-            _stepCircle(1, activeColor),
+            _stepCircle(1, completed: true),
             Expanded(
               child: Container(
                 height: 2,
                 color: verified ? activeColor : inactiveColor,
               ),
             ),
-            _stepCircle(2, verified ? activeColor : inactiveColor),
+            _stepCircle(2, completed: verified),
           ],
         ),
         const SizedBox(height: 10),
@@ -556,8 +566,9 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     );
   }
 
-  Widget _stepCircle(int number, Color color) {
-    final completed = color == AppColors.success;
+  Widget _stepCircle(int number, {required bool completed}) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = completed ? scheme.primary : scheme.outline;
     return Container(
       width: 36,
       height: 36,
@@ -568,7 +579,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
         border: Border.all(color: color, width: 2),
       ),
       child: completed
-          ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
+          ? Icon(Icons.check_rounded, color: scheme.onPrimary, size: 20)
           : Text(
               '$number',
               style: TextStyle(color: color, fontWeight: FontWeight.w700),
