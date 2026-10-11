@@ -21,6 +21,24 @@ class Participation {
     this.completedAt,
   });
 
+  Participation copyWith({
+    String? status,
+    String? completionStatus,
+    String? verificationStatus,
+  }) {
+    return Participation(
+      id: id,
+      challengeId: challengeId,
+      userId: userId,
+      status: status ?? this.status,
+      completionStatus: completionStatus ?? this.completionStatus,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+      startedAt: startedAt,
+      lastActivityAt: lastActivityAt,
+      completedAt: completedAt,
+    );
+  }
+
   factory Participation.fromJson(Map<String, dynamic> json) {
     return Participation(
       id: json['id']?.toString() ?? '',

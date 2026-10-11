@@ -8,29 +8,42 @@ class EvidenceService {
   final ApiClient api;
   EvidenceService(this.api);
 
-  Future<EvidenceSubmission?> getStatus(
+  Future<bool> hasSubmitted(
     String challengeId, {
     String? cacheKey,
   }) async {
     try {
       final data = await api.get('/evidence/status/$challengeId');
-      final submission = _parseStatus(data);
-      await _cacheStatus(cacheKey ?? challengeId, submission);
-      return submission;
+      final submitted = data is Map && data['has_submitted'] == true;
+      await _cacheSubmittedFlag(cacheKey ?? challengeId, submitted);
+      return submitted;
     } on ApiException catch (error) {
-      if (error.isNotFound) {
-        await _cacheStatus(cacheKey ?? challengeId, null);
-        return null;
+      if (error.isNotFound && cacheKey != null) {
+        return await getCachedSubmittedFlag(cacheKey) ?? false;
       }
       rethrow;
     }
+  }
+
+  Future<bool?> getCachedSubmittedFlag(String cacheKey) async {
+    final data = await AppCache.read('evidence_submitted_$cacheKey');
+    return data is Map && data['has_submitted'] is bool
+        ? data['has_submitted'] as bool
+        : null;
+  }
+
+  Future<EvidenceSubmission?> getSubmission(String submissionId) async {
+    final data = await api.get('/evidence/$submissionId');
+    final submission = _parseSubmission(data);
+    if (submission != null) await cacheStatus(submission);
+    return submission;
   }
 
   Future<EvidenceSubmission?> getCachedStatus(String cacheKey) async {
     final data = await AppCache.read('evidence_status_$cacheKey');
     if (data is Map && data['submitted'] == false) return null;
     return data is Map
-      ? _parseStatus(data)
+      ? _parseSubmission(data)
         : null;
   }
 
@@ -62,6 +75,7 @@ class EvidenceService {
       }),
     );
     final submission = EvidenceSubmission.fromJson(data);
+    await _cacheSubmittedFlag(submission.participantId, true);
     await cacheStatus(submission);
     return submission;
   }
@@ -95,22 +109,17 @@ class EvidenceService {
     );
   }
 
-  EvidenceSubmission? _parseStatus(dynamic data) {
-    if (data is List) {
-      return data.isEmpty ? null : _parseStatus(data.first);
-    }
+  Future<void> _cacheSubmittedFlag(String cacheKey, bool submitted) async {
+    if (cacheKey.isEmpty) return;
+    await AppCache.write(
+      'evidence_submitted_$cacheKey',
+      {'has_submitted': submitted},
+    );
+  }
+
+  EvidenceSubmission? _parseSubmission(dynamic data) {
     if (data is! Map) return null;
     final json = Map<String, dynamic>.from(data);
-    if (json['submitted'] == false || json['has_submission'] == false) {
-      return null;
-    }
-    for (final key in ['submission', 'evidence', 'data']) {
-      final nested = json[key];
-      if (nested is Map) return _parseStatus(nested);
-    }
-    if (json['id'] == null && json['submission_id'] != null) {
-      json['id'] = json['submission_id'];
-    }
     if (json['id'] == null) return null;
     return EvidenceSubmission.fromJson(json);
   }

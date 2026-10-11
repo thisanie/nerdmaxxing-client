@@ -162,6 +162,19 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
 
   void add(Participation participation) => _replace(participation);
 
+  void markEvidenceSubmitted(String participantId) {
+    final participation = state.valueOrNull
+        ?.where((item) => item.id == participantId)
+        .firstOrNull;
+    if (participation == null) return;
+    _replace(
+      participation.copyWith(
+        status: 'SUBMITTED',
+        verificationStatus: 'PENDING',
+      ),
+    );
+  }
+
   Participation? forChallenge(String challengeId) {
     final items = state.valueOrNull ?? const <Participation>[];
     for (final participation in items) {

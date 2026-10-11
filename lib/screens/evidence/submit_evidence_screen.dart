@@ -21,7 +21,7 @@ class SubmitEvidenceScreen extends ConsumerStatefulWidget {
   final String instructions;
   final VerificationProvider? provider;
   final VerificationEvidenceRules evidenceRules;
-  final VerificationCompletion completion;
+  final String? submissionId;
 
   const SubmitEvidenceScreen({
     super.key,
@@ -31,7 +31,7 @@ class SubmitEvidenceScreen extends ConsumerStatefulWidget {
     this.instructions = '',
     this.provider,
     this.evidenceRules = const VerificationEvidenceRules(),
-    this.completion = const VerificationCompletion(),
+    this.submissionId,
   });
 
   @override
@@ -52,6 +52,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   XFile? _video;
   VerificationAccount? _account;
   EvidenceSubmission? _submission;
+  bool _hasSubmitted = false;
 
   @override
   void initState() {
@@ -65,17 +66,31 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     final service = context.read<EvidenceService>();
     final cacheKey = widget.participation.id;
     final cached = await service.getCachedStatus(cacheKey);
+    final cachedSubmitted = cached != null ||
+        await service.getCachedSubmittedFlag(cacheKey) == true;
     if (!mounted) return;
     try {
-      final fresh = await service.getStatus(
+      final hasSubmitted = await service.hasSubmitted(
         widget.participation.challengeId,
         cacheKey: cacheKey,
       );
-      if (mounted) setState(() => _submission = fresh);
+      EvidenceSubmission? freshSubmission = cached;
+      if (hasSubmitted && freshSubmission == null && widget.submissionId != null) {
+        freshSubmission = await service.getSubmission(widget.submissionId!);
+      }
+      if (mounted) {
+        setState(() {
+          _hasSubmitted = hasSubmitted;
+          _submission = freshSubmission;
+        });
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
-      if (cached != null) {
-        setState(() => _submission = cached);
+      if (cachedSubmitted) {
+        setState(() {
+          _hasSubmitted = true;
+          _submission = cached;
+        });
       } else {
         setState(() => _error = e.message);
       }
@@ -129,8 +144,14 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
         fileBytes: _video == null ? null : await _video!.readAsBytes(),
         fileName: _video?.name,
       );
+      ref
+          .read(participationControllerProvider.notifier)
+          .markEvidenceSubmitted(widget.participation.id);
       if (!mounted) return;
-      setState(() => _submission = submission);
+      setState(() {
+        _hasSubmitted = true;
+        _submission = submission;
+      });
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {
@@ -179,7 +200,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
         padding: const EdgeInsets.all(20),
         child: _loadingStatus && _submission == null
           ? const Center(child: CircularProgressIndicator())
-          : _submission == null
+          : !_hasSubmitted && _submission == null
           ? _buildForm()
           : _buildVerify(),
       ),
@@ -377,7 +398,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
           Text(_error!, style: const TextStyle(color: AppColors.danger)),
         ],
         const Spacer(),
-        if (!verified)
+        if (!verified && _submission != null)
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(

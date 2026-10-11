@@ -257,7 +257,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
               instructions: detail.verification.instructions,
               provider: detail.verification.provider,
               evidenceRules: detail.verification.evidence,
-              completion: detail.verification.completion,
+              submissionId: detail.verificationState.submissionId,
             ),
           ),
         );
