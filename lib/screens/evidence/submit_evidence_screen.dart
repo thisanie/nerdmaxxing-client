@@ -63,11 +63,15 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
 
   Future<void> _loadStatus() async {
     final service = context.read<EvidenceService>();
-    final cached = await service.getCachedStatus(widget.participation.challengeId);
+    final cacheKey = widget.participation.id;
+    final cached = await service.getCachedStatus(cacheKey);
     if (!mounted) return;
     if (cached != null) setState(() => _submission = cached);
     try {
-      final fresh = await service.getStatus(widget.participation.challengeId);
+      final fresh = await service.getStatus(
+        widget.participation.challengeId,
+        cacheKey: cacheKey,
+      );
       if (mounted) setState(() => _submission = fresh);
     } on ApiException catch (e) {
       if (mounted && cached == null) setState(() => _error = e.message);
