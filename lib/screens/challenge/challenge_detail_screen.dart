@@ -15,6 +15,7 @@ import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/discussions_service.dart';
+import '../../services/evidence_service.dart';
 import '../../services/invitations_service.dart';
 import '../../services/groups_service.dart';
 import '../../services/notifications_service.dart';
@@ -224,6 +225,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       saved: _saved,
       onToggleSave: _saving ? null : _toggleSave,
       discussionsService: context.read<DiscussionsService>(),
+      evidenceService: context.read<EvidenceService>(),
       challengeSlug: widget.slug,
       initialDiscussionId: widget.initialDiscussionId,
       initialReplyId: widget.initialReplyId,
@@ -236,7 +238,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           ? _promptToAccept()
           : _openPath(detail, milestoneIndex: index),
       onRefresh: _refreshDetail,
-      onProve: () {
+      onProve: () async {
         if (participation == null) {
           _showPrototypeSheet(
             'Prove it',
@@ -246,7 +248,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           );
           return;
         }
-        Navigator.of(context).push(
+        await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => SubmitEvidenceScreen(
               participation: participation,

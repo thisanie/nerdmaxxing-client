@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../models/challenge.dart';
 import '../../models/challenge_detail.dart';
+import '../../models/evidence_submission.dart';
 import '../../models/participation.dart';
 import '../../services/discussions_service.dart';
+import '../../services/evidence_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/challenge_discussion.dart';
 
@@ -59,7 +61,7 @@ class ChallengeJourney extends StatefulWidget {
   final Participation? participation;
   final VoidCallback onAccept;
   final VoidCallback onTrain;
-  final VoidCallback onProve;
+  final Future<void> Function() onProve;
   final VoidCallback? onDecline;
   final VoidCallback? onInvite;
   final VoidCallback? onDrop;
@@ -75,6 +77,7 @@ class ChallengeJourney extends StatefulWidget {
   final bool accepting;
   final bool invited;
   final Future<void> Function()? onRefresh;
+  final EvidenceService evidenceService;
 
   const ChallengeJourney({
     super.key,
@@ -99,6 +102,7 @@ class ChallengeJourney extends StatefulWidget {
     required this.accepting,
     this.invited = false,
     this.onRefresh,
+    required this.evidenceService,
   });
 
   @override
@@ -108,12 +112,48 @@ class ChallengeJourney extends StatefulWidget {
 class _ChallengeJourneyState extends State<ChallengeJourney> {
   late bool _discussionOpen;
   late _Tone t;
+  EvidenceSubmission? _evidenceSubmission;
 
   @override
   void initState() {
     super.initState();
     _discussionOpen =
         widget.initialDiscussionId != null || widget.initialReplyId != null;
+    _loadEvidenceStatus();
+  }
+
+  @override
+  void didUpdateWidget(covariant ChallengeJourney oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.participation?.id != widget.participation?.id) {
+      _loadEvidenceStatus();
+    }
+  }
+
+  Future<void> _loadEvidenceStatus() async {
+    final participation = widget.participation;
+    if (participation == null) {
+      if (mounted) setState(() => _evidenceSubmission = null);
+      return;
+    }
+    final cached = await widget.evidenceService.getCachedStatus(
+      participation.id,
+    );
+    if (mounted && cached != null) {
+      setState(() => _evidenceSubmission = cached);
+    }
+    try {
+      final fresh = await widget.evidenceService.getStatus(
+        participation.challengeId,
+        cacheKey: participation.id,
+      );
+      if (mounted) setState(() => _evidenceSubmission = fresh);
+    } catch (_) {}
+  }
+
+  Future<void> _openEvidence() async {
+    await widget.onProve();
+    await _loadEvidenceStatus();
   }
 
   bool get active => widget.participation != null;
@@ -459,7 +499,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   Expanded(
                     child: _tall(
                       OutlinedButton(
-                        onPressed: widget.onProve,
+                        onPressed: _openEvidence,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: t.ink,
                           side: BorderSide(
@@ -473,7 +513,17 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        child: const Text('Prove it'),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_evidenceSubmission != null) ...[
+                              const Icon(Icons.check_circle_rounded, size: 20),
+                              const SizedBox(width: 8),
+                            ],
+                            const Text('Prove it'),
+                          ],
+                        ),
                       ),
                     ),
                   ),
