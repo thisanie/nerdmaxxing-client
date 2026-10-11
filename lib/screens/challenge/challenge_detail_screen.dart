@@ -130,8 +130,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       if (!mounted) return;
       final message = switch (e.statusCode) {
         404 => 'This challenge is no longer available.',
-        409 =>
-          'You may already be participating, or you have reached the five active challenge limit.',
+        409 => 'You may already be participating in this challenge.',
         403 => 'You do not have access to accept this challenge.',
         _ => null,
       };
