@@ -80,10 +80,16 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   }
 
   Future<void> _submit() async {
+    final service = context.read<EvidenceService>();
     if (_mode == EvidenceMode.video &&
         widget.evidenceRules.requiresFile &&
         _video == null) {
       setState(() => _error = 'Choose a video before submitting.');
+      return;
+    }
+    final maxSize = widget.evidenceRules.maxFileSizeBytes;
+    if (_video != null && maxSize != null && await _video!.length() > maxSize) {
+      setState(() => _error = 'Video is too large. Max size is ${_formatBytes(maxSize)}.');
       return;
     }
     if (!_formKey.currentState!.validate()) return;
@@ -92,7 +98,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
       _error = null;
     });
     try {
-      final submission = await context.read<EvidenceService>().submit(
+      final submission = await service.submit(
         widget.participation.id,
         explanation: _explanation.text.trim(),
         textContent: _mode == EvidenceMode.account
@@ -146,13 +152,104 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     }
   }
 
+  static String _formatBytes(int bytes) {
+    if (bytes >= 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(bytes % (1024 * 1024) == 0 ? 0 : 1)} MB';
+    }
+    return '${(bytes / 1024).round()} KB';
+  }
+
+  List<String> get _requirements {
+    final rules = widget.evidenceRules;
+    return [
+      if (_mode == EvidenceMode.account) 'Connected account',
+      if (_mode == EvidenceMode.video) 'Video upload',
+      if (rules.requiresExplanation || _mode == EvidenceMode.selfReported)
+        'Written explanation',
+      if (rules.maxDurationSeconds != null)
+        'Up to ${rules.maxDurationSeconds! >= 60 ? '${(rules.maxDurationSeconds! / 60).ceil()} min' : '${rules.maxDurationSeconds}s'}',
+      if (rules.maxFileSizeBytes != null)
+        'Max ${_formatBytes(rules.maxFileSizeBytes!)}',
+    ];
+  }
+
+  Widget _stepper(int current) {
+    Widget step(int index, String label) {
+      final done = index < current;
+      final active = index == current;
+      final scheme = Theme.of(context).colorScheme;
+    final color = done || active ? scheme.primary : scheme.outlineVariant;
+      return Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 4,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: AppFonts.body(
+                color: active ? scheme.onSurface : scheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        step(0, '1. Submit evidence'),
+        const SizedBox(width: 8),
+        step(1, '2. Confirm'),
+      ],
+    );
+  }
+
+  Widget _requirementChips() {
+    final items = _requirements;
+    if (items.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final item in items)
+            Chip(
+              avatar: const Icon(Icons.check_rounded, size: 16),
+              label: Text(item),
+              visualDensity: VisualDensity.compact,
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Submit Evidence')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: _submission == null ? _buildForm() : _buildVerify(),
+      appBar: AppBar(title: const Text('Prove it')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _stepper(_submission == null ? 0 : 1),
+              const SizedBox(height: 20),
+              Expanded(
+                child: _submission == null ? _buildForm() : _buildVerify(),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -175,7 +272,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
           Text(
             widget.challengeTitle,
             style: AppFonts.display(
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 30,
               height: 1.05,
             ),
@@ -183,9 +280,13 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
           const SizedBox(height: 10),
           Text(
             description,
-            style: AppFonts.body(color: AppColors.textSecondary, fontSize: 16),
+            style: AppFonts.body(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 16,
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          _requirementChips(),
           if (_mode == EvidenceMode.account) _buildAccountProof(),
           if (_mode == EvidenceMode.video) _buildVideoProof(),
           if (_mode == EvidenceMode.selfReported) _buildSelfReportedProof(),
@@ -227,7 +328,12 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
       TextFormField(
         controller: _explanation,
         maxLines: 3,
-        decoration: const InputDecoration(labelText: 'Add context (optional)'),
+        decoration: InputDecoration(
+          labelText: widget.evidenceRules.requiresExplanation
+              ? 'Add context'
+              : 'Add context (optional)',
+        ),
+        validator: _explanationValidator,
       ),
     ],
   );
@@ -251,10 +357,20 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
       TextFormField(
         controller: _explanation,
         maxLines: 3,
-        decoration: const InputDecoration(labelText: 'What should we notice? (optional)'),
+        decoration: InputDecoration(
+          labelText: widget.evidenceRules.requiresExplanation
+              ? 'What should we notice?'
+              : 'What should we notice? (optional)',
+        ),
+        validator: _explanationValidator,
       ),
     ],
   );
+
+  String? _explanationValidator(String? v) =>
+      widget.evidenceRules.requiresExplanation && (v == null || v.trim().isEmpty)
+          ? 'Required'
+          : null;
 
   Widget _buildSelfReportedProof() => Column(
     children: [
@@ -282,12 +398,12 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: AppColors.border),
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 30, color: AppColors.primary),
+        Icon(icon, size: 30, color: Theme.of(context).colorScheme.primary),
         const SizedBox(height: 14),
         Text(title, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 6),
@@ -351,6 +467,13 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
           const SizedBox(height: 16),
           Text(_error!, style: const TextStyle(color: AppColors.danger)),
         ],
+        const SizedBox(height: 16),
+        _proofCard(
+          icon: Icons.verified_rounded,
+          title: widget.challengeTitle,
+          detail: 'Your evidence is in. One last step to claim your skill.',
+          action: const SizedBox.shrink(),
+        ),
         const Spacer(),
         SizedBox(
           width: double.infinity,
