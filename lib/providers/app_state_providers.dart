@@ -61,7 +61,6 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
   ParticipationService get _service => ref.read(participationServiceProvider);
 
   @override
-  @override
   Future<List<Participation>> build() async {
     final cached = await _service.getCachedMine();
     if (cached != null) state = AsyncData(cached);
