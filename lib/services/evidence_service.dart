@@ -8,31 +8,34 @@ class EvidenceService {
   final ApiClient api;
   EvidenceService(this.api);
 
-  Future<EvidenceSubmission?> getStatus(String challengeId) async {
+  Future<EvidenceSubmission?> getStatus(
+    String challengeId, {
+    String? cacheKey,
+  }) async {
     try {
       final data = await api.get('/evidence/status/$challengeId');
       final submission = _parseStatus(data);
-      await _cacheStatus(challengeId, submission);
+      await _cacheStatus(cacheKey ?? challengeId, submission);
       return submission;
     } on ApiException catch (error) {
       if (error.isNotFound) {
-        await _cacheStatus(challengeId, null);
+        await _cacheStatus(cacheKey ?? challengeId, null);
         return null;
       }
       rethrow;
     }
   }
 
-  Future<EvidenceSubmission?> getCachedStatus(String challengeId) async {
-    final data = await AppCache.read('evidence_status_$challengeId');
+  Future<EvidenceSubmission?> getCachedStatus(String cacheKey) async {
+    final data = await AppCache.read('evidence_status_$cacheKey');
     if (data is Map && data['submitted'] == false) return null;
     return data is Map
-        ? EvidenceSubmission.fromJson(Map<String, dynamic>.from(data))
+      ? _parseStatus(data)
         : null;
   }
 
   Future<void> cacheStatus(EvidenceSubmission submission) async {
-    await _cacheStatus(submission.challengeId, submission);
+    await _cacheStatus(submission.participantId, submission);
   }
 
   Future<EvidenceSubmission> submit(
@@ -71,12 +74,12 @@ class EvidenceService {
   }
 
   Future<void> _cacheStatus(
-    String challengeId,
+    String cacheKey,
     EvidenceSubmission? submission,
   ) async {
-    if (challengeId.isEmpty) return;
+    if (cacheKey.isEmpty) return;
     await AppCache.write(
-      'evidence_status_$challengeId',
+      'evidence_status_$cacheKey',
       submission == null
           ? <String, dynamic>{'submitted': false}
           : {
@@ -108,6 +111,7 @@ class EvidenceService {
     if (json['id'] == null && json['submission_id'] != null) {
       json['id'] = json['submission_id'];
     }
+    if (json['id'] == null) return null;
     return EvidenceSubmission.fromJson(json);
   }
 }
