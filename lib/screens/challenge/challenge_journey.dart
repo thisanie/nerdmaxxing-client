@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/challenge.dart';
 import '../../models/challenge_detail.dart';
-import '../../models/evidence_submission.dart';
 import '../../models/participation.dart';
 import '../../services/discussions_service.dart';
 import '../../services/evidence_service.dart';
@@ -112,7 +111,7 @@ class ChallengeJourney extends StatefulWidget {
 class _ChallengeJourneyState extends State<ChallengeJourney> {
   late bool _discussionOpen;
   late _Tone t;
-  EvidenceSubmission? _evidenceSubmission;
+  bool _evidenceSubmitted = false;
 
   @override
   void initState() {
@@ -133,21 +132,21 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   Future<void> _loadEvidenceStatus() async {
     final participation = widget.participation;
     if (participation == null) {
-      if (mounted) setState(() => _evidenceSubmission = null);
+      if (mounted) setState(() => _evidenceSubmitted = false);
       return;
     }
-    final cached = await widget.evidenceService.getCachedStatus(
+    final cached = await widget.evidenceService.getCachedSubmittedFlag(
       participation.id,
     );
-    if (mounted && cached != null) {
-      setState(() => _evidenceSubmission = cached);
+    if (mounted && cached == true) {
+      setState(() => _evidenceSubmitted = true);
     }
     try {
-      final fresh = await widget.evidenceService.getStatus(
+      final fresh = await widget.evidenceService.hasSubmitted(
         participation.challengeId,
         cacheKey: participation.id,
       );
-      if (mounted) setState(() => _evidenceSubmission = fresh);
+      if (mounted) setState(() => _evidenceSubmitted = fresh);
     } catch (_) {}
   }
 
@@ -517,7 +516,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (_evidenceSubmission != null) ...[
+                            if (_evidenceSubmitted) ...[
                               const Icon(Icons.check_circle_rounded, size: 20),
                               const SizedBox(width: 8),
                             ],
