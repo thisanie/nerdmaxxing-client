@@ -66,7 +66,6 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     final cacheKey = widget.participation.id;
     final cached = await service.getCachedStatus(cacheKey);
     if (!mounted) return;
-    if (cached != null) setState(() => _submission = cached);
     try {
       final fresh = await service.getStatus(
         widget.participation.challengeId,
@@ -74,7 +73,12 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
       );
       if (mounted) setState(() => _submission = fresh);
     } on ApiException catch (e) {
-      if (mounted && cached == null) setState(() => _error = e.message);
+      if (!mounted) return;
+      if (cached != null) {
+        setState(() => _submission = cached);
+      } else {
+        setState(() => _error = e.message);
+      }
     } finally {
       if (mounted) setState(() => _loadingStatus = false);
     }
@@ -463,23 +467,16 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(
-          Icons.check_circle_rounded,
-          size: 48,
-          color: AppColors.success,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          verified ? 'Challenge verified' : 'Evidence submitted',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
+        Text('Evidence progress', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 8),
         Text(
           verified
-              ? 'This challenge is complete and your evidence has been verified.'
-              : 'Confirm you completed this challenge to earn your skill.',
+              ? 'Your evidence has been verified and this challenge is complete.'
+              : 'Your evidence was submitted. Verify it to complete the challenge.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
+        const SizedBox(height: 32),
+        _buildEvidenceSteps(verified),
         if (_error != null) ...[
           const SizedBox(height: 16),
           Text(_error!, style: const TextStyle(color: AppColors.danger)),
@@ -501,6 +498,60 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildEvidenceSteps(bool verified) {
+    final activeColor = AppColors.success;
+    final inactiveColor = Theme.of(context).colorScheme.outline;
+    return Column(
+      children: [
+        Row(
+          children: [
+            _stepCircle(1, activeColor),
+            Expanded(
+              child: Container(
+                height: 2,
+                color: verified ? activeColor : inactiveColor,
+              ),
+            ),
+            _stepCircle(2, verified ? activeColor : inactiveColor),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Submitted', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              'Verified',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: verified ? null : inactiveColor,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _stepCircle(int number, Color color) {
+    final completed = color == AppColors.success;
+    return Container(
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: completed ? color : Colors.transparent,
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 2),
+      ),
+      child: completed
+          ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
+          : Text(
+              '$number',
+              style: TextStyle(color: color, fontWeight: FontWeight.w700),
+            ),
     );
   }
 }
