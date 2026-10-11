@@ -53,6 +53,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   List<Group> _publicGroups = [];
   bool _groupsLoading = false;
   String? _groupsError;
+  String _participationFilter = 'ALL';
 
   @override
   void initState() {
@@ -329,6 +330,18 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     final provider = context.watch<ProfileProvider>();
     final participationState = ref.watch(participationControllerProvider);
     final participations = participationState.valueOrNull ?? const [];
+    final filteredParticipations = _participationFilter == 'ALL'
+        ? participations
+        : participations
+              .where(
+                (participation) =>
+                    participation.status.toUpperCase() ==
+                    _participationFilter,
+              )
+              .toList();
+    final participationEmptyMessage = _participationFilter == 'ALL'
+        ? 'Discover a challenge and accept it to get started.'
+        : 'No challenges match this status filter.';
     final auth = context.watch<AuthProvider>();
     final profile = provider.profile;
     final isOwnProfile = _isOwnProfile(auth);
@@ -438,7 +451,14 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             ),
             if (_selectedTab == 0) ...[
               if (isOwnProfile) ...[
-                const SliverToBoxAdapter(child: _SectionLabel('In progress')),
+                const SliverToBoxAdapter(child: _SectionLabel('Challenges')),
+                SliverToBoxAdapter(
+                  child: _ParticipationFilters(
+                    selected: _participationFilter,
+                    onSelected: (filter) =>
+                        setState(() => _participationFilter = filter),
+                  ),
+                ),
                 if (participationState.isLoading && participations.isEmpty)
                   const SliverToBoxAdapter(
                     child: Padding(
@@ -446,26 +466,29 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                       child: Center(child: CircularProgressIndicator()),
                     ),
                   )
-                else if (participations.isEmpty)
-                  const SliverToBoxAdapter(
+                else if (filteredParticipations.isEmpty)
+                  SliverToBoxAdapter(
                     child: EmptyState(
                       icon: Icons.flag_rounded,
                       title: 'Your next interesting thing is waiting.',
-                      message:
-                          'Discover a challenge and accept it to get started.',
+                      message: participationEmptyMessage,
                     ),
                   )
                 else
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _ParticipationTile(
-                        participation: participations[index],
+                        participation: filteredParticipations[index],
                         challenge:
-                            _challengesById[participations[index].challengeId],
-                        statusLabel: _statusLabel(participations[index].status),
+                            _challengesById[
+                              filteredParticipations[index].challengeId
+                            ],
+                        statusLabel: _statusLabel(
+                          filteredParticipations[index].status,
+                        ),
                         onChangeStatus: _changeStatus,
                       ),
-                      childCount: participations.length,
+                      childCount: filteredParticipations.length,
                     ),
                   ),
                 const SliverToBoxAdapter(
@@ -1227,6 +1250,55 @@ class _ParticipationTile extends StatelessWidget {
               onPressed: () => onChangeStatus(participation, actionLabel.$2),
               child: Text(actionLabel.$1),
             ),
+    );
+  }
+}
+
+class _ParticipationFilters extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  const _ParticipationFilters({
+    required this.selected,
+    required this.onSelected,
+  });
+
+  static const _filters = [
+    ('ALL', 'All'),
+    ('ACCEPTED', 'Accepted'),
+    ('IN_PROGRESS', 'In progress'),
+    ('PAUSED', 'Paused'),
+    ('SUBMITTED', 'Submitted'),
+    ('COMPLETED', 'Completed'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Row(
+        children: [
+          for (var index = 0; index < _filters.length; index++) ...[
+            if (index > 0) const SizedBox(width: 8),
+            ChoiceChip(
+              label: Text(_filters[index].$2),
+              selected: selected == _filters[index].$1,
+              showCheckmark: false,
+              selectedColor: scheme.primary,
+              labelStyle: TextStyle(
+                color: selected == _filters[index].$1
+                    ? scheme.onPrimary
+                    : scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+              side: BorderSide(color: scheme.outlineVariant),
+              onSelected: (_) => onSelected(_filters[index].$1),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
