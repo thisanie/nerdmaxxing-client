@@ -18,6 +18,7 @@ import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/app_error.dart';
+import '../../widgets/privacy_policy_dialog.dart';
 import '../challenge/challenge_detail_screen.dart';
 import 'group_chat_screen.dart';
 import 'relationship_list_screen.dart';
@@ -333,6 +334,11 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: const Text('Privacy policy'),
+              onTap: () => Navigator.pop(sheetContext, 'privacy'),
+            ),
+            ListTile(
               leading: const Icon(Icons.logout_rounded),
               title: const Text('Log out'),
               onTap: () => Navigator.pop(sheetContext, 'logout'),
@@ -359,6 +365,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     if (!mounted) return;
     if (action == 'update') {
       _openUpdateProfile(profile);
+    } else if (action == 'privacy') {
+      await showPrivacyPolicyDialog(context);
     } else if (action == 'logout') {
       _confirmLogout();
     } else if (action == 'delete') {

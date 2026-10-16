@@ -1,11 +1,14 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/google_auth_button.dart';
+import '../../widgets/privacy_policy_dialog.dart';
 
 /// Redesigned login: left-aligned editorial layout, floating "sticker" cards
 /// that tease the app's loop (train, prove, rank), a scrolling trials ticker, and a
@@ -19,12 +22,18 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
+  static const _privacyAcknowledgedKey = 'privacy_policy_acknowledged_v1';
+
   late final AnimationController _motion; // 6s loop: blob, spark, wipe, CTA
   late final AnimationController _ticker; // 24s loop: marquee
+  bool _checkingPrivacy = true;
+  bool _privacyAccepted = false;
+  bool _privacyPromptOpen = false;
 
   @override
   void initState() {
     super.initState();
+    _loadPrivacyAcknowledgment();
     _motion = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 6),
@@ -40,6 +49,53 @@ class _LoginScreenState extends State<LoginScreen>
     _motion.dispose();
     _ticker.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadPrivacyAcknowledgment() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _privacyAccepted = preferences.getBool(_privacyAcknowledgedKey) ?? false;
+      _checkingPrivacy = false;
+    });
+    if (!_privacyAccepted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _requestPrivacyAcknowledgment();
+      });
+    }
+  }
+
+  Future<void> _continueWithGoogle() async {
+    if (_checkingPrivacy) return;
+    final accepted = await _requestPrivacyAcknowledgment();
+    if (!accepted || !mounted) return;
+    if (!kIsWeb) {
+      await context.read<AuthProvider>().signInWithGoogle();
+    }
+  }
+
+  Future<bool> _requestPrivacyAcknowledgment() async {
+    if (_privacyAccepted) return true;
+    if (_privacyPromptOpen || !mounted) return false;
+    _privacyPromptOpen = true;
+    try {
+      final accepted = await showPrivacyPolicyDialog(
+        context,
+        requireAcceptance: true,
+      );
+      if (accepted != true || !mounted) return false;
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setBool(_privacyAcknowledgedKey, true);
+      if (!mounted) return false;
+      setState(() => _privacyAccepted = true);
+      return true;
+    } finally {
+      _privacyPromptOpen = false;
+    }
+  }
+
+  Future<void> _showPrivacyPolicy() async {
+    await showPrivacyPolicyDialog(context);
   }
 
   @override
@@ -183,12 +239,31 @@ class _LoginScreenState extends State<LoginScreen>
                                   child: SizedBox(
                                     width: double.infinity,
                                     height: 64,
-                                    child: buildGoogleAuthButton(
-                                      isBusy: auth.isBusy,
-                                      onPressed: () => context
-                                          .read<AuthProvider>()
-                                          .signInWithGoogle(),
-                                    ),
+                                    child: _checkingPrivacy
+                                        ? const FilledButton(
+                                            onPressed: null,
+                                            child: Text('Checking privacy policy...'),
+                                          )
+                                        : _privacyAccepted
+                                        ? buildGoogleAuthButton(
+                                            isBusy: auth.isBusy,
+                                            onPressed: () => context
+                                                .read<AuthProvider>()
+                                                .signInWithGoogle(),
+                                          )
+                                        : FilledButton.icon(
+                                            onPressed: auth.isBusy
+                                                ? null
+                                                : _continueWithGoogle,
+                                            icon: const Icon(Icons.shield_outlined),
+                                            label: const Text('Review privacy policy'),
+                                          ),
+                                  ),
+                                ),
+                                Center(
+                                  child: TextButton(
+                                    onPressed: _showPrivacyPolicy,
+                                    child: const Text('Privacy policy'),
                                   ),
                                 ),
                               ],
