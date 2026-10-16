@@ -233,6 +233,11 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       discussionCanPost:
           participation?.status == 'ACCEPTED' ||
           participation?.status == 'IN_PROGRESS',
+        onLogProgress: participation != null &&
+            const {'ACCEPTED', 'IN_PROGRESS', 'PAUSED', 'SUBMITTED'}
+              .contains(participation.status.toUpperCase())
+          ? () => _showProgressDialog(participation)
+          : null,
       onTrain: () => _openPath(detail),
       onOpenMilestone: (index) => participation == null
           ? _promptToAccept()
@@ -416,6 +421,13 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         .then((_) async {
           if (mounted) await _refreshDetail();
         });
+  }
+
+  Future<void> _showProgressDialog(Participation participation) {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => _ProgressDialog(participation: participation),
+    );
   }
 
   int _currentMilestoneIndex(ChallengeDetail detail) {

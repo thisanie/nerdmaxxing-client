@@ -60,6 +60,7 @@ class ChallengeJourney extends StatefulWidget {
   final Participation? participation;
   final VoidCallback onAccept;
   final VoidCallback onTrain;
+  final VoidCallback? onLogProgress;
   final Future<void> Function() onProve;
   final VoidCallback? onDecline;
   final VoidCallback? onInvite;
@@ -85,6 +86,7 @@ class ChallengeJourney extends StatefulWidget {
     required this.participation,
     required this.onAccept,
     required this.onTrain,
+    this.onLogProgress,
     required this.onProve,
     this.onDecline,
     this.onInvite,
@@ -528,6 +530,17 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   ),
                 ],
               ),
+              if (widget.onLogProgress != null) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: widget.onLogProgress,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Log progress'),
+                  ),
+                ),
+              ],
             ] else ...[
               Text(
                 challenge.shortDescription,

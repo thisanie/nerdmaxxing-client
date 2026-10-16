@@ -587,7 +587,7 @@ Returns `404 Not Found` for a participation not owned by the caller and `409 Con
 
 ### `POST /api/v1/participation/{participant_id}/progress`
 
-Requires authentication. Logs time and an optional note for an active participation. `hours_spent` must be greater than 0 and no more than 24.
+Requires authentication. Logs time and an optional note for a participation in `IN_PROGRESS` or `SUBMITTED` status. The client promotes `ACCEPTED` or `PAUSED` participations to `IN_PROGRESS` before logging. A submitted participation remains pending verification; logging activity must not change its participation or verification status. `hours_spent` must be greater than 0 and no more than 24.
 
 ```json
 {
@@ -597,6 +597,8 @@ Requires authentication. Logs time and an optional note for an active participat
 ```
 
 Response `201 Created`: a progress log object. Logging progress updates the participation activity timestamp and the user's streak. A streak resets to `0` after more than 24 hours without a progress log.
+
+Resource completion and metric-attempt endpoints must accept `IN_PROGRESS` or `SUBMITTED` participations. The client promotes `ACCEPTED` or `PAUSED` participations to `IN_PROGRESS` before these writes. Writes for `SUBMITTED` participations must preserve their participation and verification statuses.
 
 ### `GET /api/v1/participation/{participant_id}/progress`
 

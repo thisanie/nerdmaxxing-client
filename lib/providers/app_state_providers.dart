@@ -104,6 +104,7 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     required double hoursSpent,
     String? note,
   }) async {
+    await _moveToInProgressUnlessSubmitted(participantId);
     final log = await _service.logProgress(
       participantId,
       hoursSpent: hoursSpent,
@@ -124,6 +125,7 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     String? note,
     bool logProgress = false,
   }) async {
+    await _moveToInProgressUnlessSubmitted(participantId);
     final result = await _service.completeResource(
       participantId,
       milestoneId: milestoneId,
@@ -146,6 +148,7 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     required String unit,
     String? note,
   }) async {
+    await _moveToInProgressUnlessSubmitted(participantId);
     final result = await _service.logMetricAttempt(
       participantId,
       metricKey: metricKey,
@@ -160,6 +163,16 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
   }
 
   void add(Participation participation) => _replace(participation);
+
+  Future<void> _moveToInProgressUnlessSubmitted(String participantId) async {
+    final participation = state.valueOrNull
+        ?.where((item) => item.id == participantId)
+        .firstOrNull;
+    final status = participation?.status.toUpperCase();
+    if (status == 'ACCEPTED' || status == 'PAUSED') {
+      await updateStatus(participantId, 'IN_PROGRESS');
+    }
+  }
 
   void markEvidenceSubmitted(String participantId) {
     final participation = state.valueOrNull
