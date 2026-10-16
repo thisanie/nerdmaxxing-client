@@ -46,6 +46,7 @@ class _ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   bool _isSigningOut = false;
+  bool _isDeletingAccount = false;
   bool _isFollowBusy = false;
   int _selectedTab = 0;
   Map<String, Challenge> _challengesById = {};
@@ -222,6 +223,43 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     await context.read<AuthProvider>().signOut();
   }
 
+  Future<void> _confirmDeleteAccount() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete account permanently?'),
+        content: const Text(
+          'This permanently deletes your account, sessions, owned challenges, '
+          'groups, and associated records. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete account'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true || !mounted) return;
+    setState(() => _isDeletingAccount = true);
+    try {
+      await context.read<AuthProvider>().deleteAccount();
+    } on ApiException catch (error) {
+      if (mounted) AppErrorSnackbar.show(context, error);
+    } finally {
+      if (mounted) setState(() => _isDeletingAccount = false);
+    }
+  }
+
   String _statusLabel(String status) {
     switch (status) {
       case 'ACCEPTED':
@@ -299,6 +337,19 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               title: const Text('Log out'),
               onTap: () => Navigator.pop(sheetContext, 'logout'),
             ),
+            ListTile(
+              leading: Icon(
+                Icons.delete_forever_outlined,
+                color: Theme.of(sheetContext).colorScheme.error,
+              ),
+              title: Text(
+                'Delete account',
+                style: TextStyle(
+                  color: Theme.of(sheetContext).colorScheme.error,
+                ),
+              ),
+              onTap: () => Navigator.pop(sheetContext, 'delete'),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -310,6 +361,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       _openUpdateProfile(profile);
     } else if (action == 'logout') {
       _confirmLogout();
+    } else if (action == 'delete') {
+      _confirmDeleteAccount();
     }
   }
 
@@ -406,7 +459,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   IconButton(
                     icon: const Icon(Icons.menu_rounded),
                     tooltip: 'Account options',
-                    onPressed: _isSigningOut
+                    onPressed: _isSigningOut || _isDeletingAccount
                         ? null
                         : () => _showAccountMenu(profile),
                   ),

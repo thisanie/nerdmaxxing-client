@@ -150,4 +150,20 @@ class AuthProvider extends ChangeNotifier {
     status = AuthStatus.signedOut;
     notifyListeners();
   }
+
+  Future<void> deleteAccount() async {
+    await authService.deleteAccount();
+    await tokenStorage.clear();
+    await AppCache.clear();
+    try {
+      await _googleSignIn.signOut();
+    } catch (error) {
+      debugPrint('Google sign-out after account deletion failed: $error');
+    }
+    username = null;
+    displayName = null;
+    avatarUrl = null;
+    status = AuthStatus.signedOut;
+    notifyListeners();
+  }
 }

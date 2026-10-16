@@ -40,6 +40,10 @@ class AuthService {
     await tokenStorage.clear();
   }
 
+  Future<void> deleteAccount() async {
+    await api.delete('/users/me');
+  }
+
   Future<bool> checkUsernameAvailability(String username) async {
     final data = await api.get(
       '/users/username-availability',
