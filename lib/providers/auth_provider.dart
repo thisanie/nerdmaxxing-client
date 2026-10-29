@@ -56,6 +56,12 @@ class AuthProvider extends ChangeNotifier {
   String? errorMessage;
   bool isBusy = false;
 
+  void clearErrorMessage() {
+    if (errorMessage == null) return;
+    errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> _restore() async {
     final token = await tokenStorage.accessToken;
     final storedUsername = await tokenStorage.username;

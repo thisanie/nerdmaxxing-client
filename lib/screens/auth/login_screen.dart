@@ -9,11 +9,8 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/google_auth_button.dart';
 import '../../widgets/privacy_policy_dialog.dart';
-import 'password_login_screen.dart';
 
-/// Redesigned login: left-aligned editorial layout, floating "sticker" cards
-/// that tease the app's loop (train, prove, rank), a scrolling trials ticker, and a
-/// pinned CTA. Same theme tokens, same auth wiring as before.
+/// Login and sign-up entry using the app's existing theme and auth providers.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -30,7 +27,13 @@ class _LoginScreenState extends State<LoginScreen>
   bool _checkingPrivacy = true;
   bool _privacyAccepted = false;
   bool _privacyPromptOpen = false;
-  bool _isLogin = false;
+  bool _isLogin = true;
+  bool _showPasswordForm = false;
+  bool _obscurePassword = true;
+  bool _showRecoveryHint = false;
+  String? _credentialError;
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -50,6 +53,8 @@ class _LoginScreenState extends State<LoginScreen>
   void dispose() {
     _motion.dispose();
     _ticker.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -100,13 +105,63 @@ class _LoginScreenState extends State<LoginScreen>
     await showPrivacyPolicyDialog(context);
   }
 
-  Future<void> _openPasswordLogin() async {
+  Future<void> _submitPasswordLogin() async {
     if (_checkingPrivacy || context.read<AuthProvider>().isBusy) return;
+    if (_usernameController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      setState(() => _credentialError = 'Enter your username and password.');
+      return;
+    }
     final accepted = await _requestPrivacyAcknowledgment();
     if (!accepted || !mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const PasswordLoginScreen()),
-    );
+    setState(() {
+      _credentialError = null;
+      _showRecoveryHint = false;
+    });
+    try {
+      await context.read<AuthProvider>().signInWithPassword(
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+      );
+    } catch (error) {
+      if (mounted) setState(() => _credentialError = error.toString());
+    }
+  }
+
+  void _selectMode(bool isLogin) {
+    setState(() {
+      _isLogin = isLogin;
+      _credentialError = null;
+      _showRecoveryHint = false;
+      if (!isLogin) _showPasswordForm = false;
+    });
+    context.read<AuthProvider>().clearErrorMessage();
+  }
+
+  void _togglePasswordForm() {
+    setState(() {
+      _showPasswordForm = !_showPasswordForm;
+      _credentialError = null;
+      _showRecoveryHint = false;
+    });
+    context.read<AuthProvider>().clearErrorMessage();
+  }
+
+  void _clearCredentialFeedback() {
+    if (_credentialError == null &&
+        context.read<AuthProvider>().errorMessage == null) {
+      return;
+    }
+    setState(() => _credentialError = null);
+    context.read<AuthProvider>().clearErrorMessage();
+  }
+
+  void _showPasswordRecoveryHint() {
+    setState(() {
+      _showRecoveryHint = true;
+      _credentialError = null;
+    });
+    context.read<AuthProvider>().clearErrorMessage();
   }
 
   @override
@@ -114,6 +169,8 @@ class _LoginScreenState extends State<LoginScreen>
     final auth = context.watch<AuthProvider>();
     final isLight = Theme.of(context).brightness == Brightness.light;
     final background = isLight ? AppColors.lightBackground : AppColors.background;
+    final panel = isLight ? AppColors.lightSurface : AppColors.surface;
+    final panelBorder = isLight ? AppColors.lightBorder : AppColors.border;
     final textColor = isLight ? AppColors.lightTextPrimary : AppColors.textPrimary;
     final mutedColor = isLight ? AppColors.lightTextSecondary : AppColors.textSecondary;
 
@@ -123,90 +180,49 @@ class _LoginScreenState extends State<LoginScreen>
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxHeight < 700;
-            return Stack(
-              children: [
-                // Soft drifting blob, top-right this time.
-                AnimatedBuilder(
-                  animation: _motion,
-                  builder: (context, child) {
-                    final t = (math.sin(_motion.value * math.pi * 2) + 1) / 2;
-                    return Positioned(
-                      right: -140 + t * 24,
-                      top: -90 + t * 18,
-                      child: child!,
-                    );
-                  },
-                  child: Container(
-                    width: 320,
-                    height: 320,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isLight
-                          ? const Color(0xFFEBF3CC)
-                          : AppColors.primaryMuted,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: .12),
-                          blurRadius: 42,
-                          spreadRadius: 8,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 460),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - 48,
+                      minHeight: math.max(
+                        0.0,
+                        constraints.maxHeight - 38,
+                      ).toDouble(),
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Top: mark + wordmark, left aligned.
                         _Entrance(
-                          delay: .05,
-                          child: Row(
+                          delay: .08,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _SparkMark(controller: _motion, size: 44),
-                              const SizedBox(width: 10),
-                              _Brand(
+                              Row(
+                                children: [
+                                  _SparkMark(controller: _motion, size: 38),
+                                  const SizedBox(width: 10),
+                                  _Brand(
+                                    textColor: textColor,
+                                    controller: _motion,
+                                    fontSize: 20,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: compact ? 26 : 38),
+                              _Headline(
                                 textColor: textColor,
                                 controller: _motion,
-                                fontSize: 22,
+                                fontSize: compact ? 40 : 48,
                               ),
-                            ],
-                          ),
-                        ),
-
-                        // Middle: floating stickers + headline.
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _Entrance(
-                              delay: .2,
-                              child: _StickerCluster(
-                                controller: _motion,
-                                height: compact ? 150 : 210,
-                                isLight: isLight,
-                                textColor: textColor,
-                              ),
-                            ),
-                            SizedBox(height: compact ? 18 : 30),
-                            _Entrance(
-                              delay: .32,
-                              child: _Headline(
-                                textColor: textColor,
-                                controller: _motion,
-                                fontSize: compact ? 38 : 46,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            _Entrance(
-                              delay: .42,
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 320),
+                              const SizedBox(height: 12),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 340,
+                                ),
                                 child: Text(
                                   'The internet should make you more interesting, not more addicted.',
                                   style: AppFonts.body(
@@ -216,127 +232,221 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                              SizedBox(height: compact ? 18 : 26),
+                              _Ticker(
+                                controller: _ticker,
+                                isLight: isLight,
+                                textColor: textColor,
+                              ),
+                            ],
+                          ),
                         ),
-
-                        // Bottom: ticker + CTA.
-                        _Entrance(
-                          delay: .5,
-                          child: RepaintBoundary(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                RepaintBoundary(
-                                  child: _Ticker(
-                                    controller: _ticker,
-                                    isLight: isLight,
-                                    textColor: textColor,
-                                  ),
+                        const SizedBox(height: 28),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: panel,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: panelBorder),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: isLight ? .07 : .18,
                                 ),
-                                const SizedBox(height: 20),
-                                if (auth.errorMessage != null) ...[
-                                  Text(
-                                    auth.errorMessage!,
+                                blurRadius: 28,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SegmentedButton<bool>(
+                                segments: const [
+                                  ButtonSegment<bool>(
+                                    value: true,
+                                    label: Text('Log in'),
+                                  ),
+                                  ButtonSegment<bool>(
+                                    value: false,
+                                    label: Text('Sign up'),
+                                  ),
+                                ],
+                                selected: {_isLogin},
+                                onSelectionChanged: auth.isBusy
+                                    ? null
+                                    : (selection) => _selectMode(selection.first),
+                              ),
+                              const SizedBox(height: 18),
+                              if (auth.errorMessage != null ||
+                                  _credentialError != null) ...[
+                                _AuthMessage(
+                                  message: _credentialError ?? auth.errorMessage!,
+                                  isError: true,
+                                ),
+                                const SizedBox(height: 14),
+                              ],
+                              _AnimatedCta(
+                                radius: 16,
+                                child: SizedBox(
+                                  height: 56,
+                                  child: _checkingPrivacy
+                                      ? const FilledButton(
+                                          onPressed: null,
+                                          child: Text(
+                                            'Checking privacy policy...',
+                                          ),
+                                        )
+                                      : _privacyAccepted
+                                      ? buildGoogleAuthButton(
+                                          isBusy: auth.isBusy,
+                                          onPressed: () => context
+                                              .read<AuthProvider>()
+                                              .signInWithGoogle(),
+                                        )
+                                      : FilledButton.icon(
+                                          onPressed: auth.isBusy
+                                              ? null
+                                              : _continueWithGoogle,
+                                          icon: const Icon(
+                                            Icons.shield_outlined,
+                                          ),
+                                          label: const Text(
+                                            'Review privacy policy',
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                _isLogin
+                                    ? 'Log in with Google'
+                                    : 'Sign up is with Google only.',
+                                textAlign: TextAlign.center,
+                                style: AppFonts.body(
+                                  color: mutedColor,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              if (!_isLogin)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'No new password to remember.',
                                     textAlign: TextAlign.center,
                                     style: AppFonts.body(
-                                      color: AppColors.danger,
-                                      fontSize: 14,
+                                      color: mutedColor,
+                                      fontSize: 13,
                                     ),
                                   ),
-                                  const SizedBox(height: 14),
+                                ),
+                              if (_isLogin) ...[
+                                const SizedBox(height: 8),
+                                TextButton(
+                                  onPressed: _togglePasswordForm,
+                                  child: Text(
+                                    _showPasswordForm
+                                        ? 'Hide username and password'
+                                        : 'Use username and password',
+                                  ),
+                                ),
+                              ],
+                              if (_isLogin && _showPasswordForm) ...[
+                                const Divider(height: 20),
+                                if (_showRecoveryHint) ...[
+                                  const _AuthMessage(
+                                    message:
+                                        'Password reset is not available here. Continue with Google to get back into your account.',
+                                    isError: false,
+                                  ),
+                                  const SizedBox(height: 12),
                                 ],
-                                Center(
-                                  child: SegmentedButton<bool>(
-                                    segments: const [
-                                      ButtonSegment<bool>(
-                                        value: false,
-                                        label: Text('Sign up'),
-                                      ),
-                                      ButtonSegment<bool>(
-                                        value: true,
-                                        label: Text('Log in'),
-                                      ),
-                                    ],
-                                    selected: {_isLogin},
-                                    onSelectionChanged: auth.isBusy
-                                        ? null
-                                        : (selection) => setState(
-                                            () => _isLogin = selection.first,
-                                          ),
+                                TextField(
+                                  controller: _usernameController,
+                                  onChanged: (_) => _clearCredentialFeedback(),
+                                  textCapitalization: TextCapitalization.none,
+                                  autocorrect: false,
+                                  autofillHints: const [AutofillHints.username],
+                                  textInputAction: TextInputAction.next,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Username',
+                                    prefixIcon: Icon(Icons.person_outline),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                Center(
-                                  child: Text(
-                                    _isLogin
-                                        ? 'Log in with Google'
-                                        : 'Create your account with Google',
-                                    style: AppFonts.body(
-                                      color: mutedColor,
-                                      fontSize: 14,
+                                TextField(
+                                  controller: _passwordController,
+                                  onChanged: (_) => _clearCredentialFeedback(),
+                                  obscureText: _obscurePassword,
+                                  autocorrect: false,
+                                  autofillHints: const [AutofillHints.password],
+                                  onSubmitted: (_) => auth.isBusy
+                                      ? null
+                                      : _submitPasswordLogin(),
+                                  decoration: InputDecoration(
+                                    labelText: 'Password',
+                                    prefixIcon: const Icon(Icons.lock_outline),
+                                    suffixIcon: IconButton(
+                                      tooltip: _obscurePassword
+                                          ? 'Show password'
+                                          : 'Hide password',
+                                      onPressed: () => setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      ),
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                _AnimatedCta(
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    height: 64,
-                                    child: _checkingPrivacy
-                                        ? const FilledButton(
-                                            onPressed: null,
-                                            child: Text('Checking privacy policy...'),
-                                          )
-                                        : _privacyAccepted
-                                        ? buildGoogleAuthButton(
-                                            isBusy: auth.isBusy,
-                                            onPressed: () => context
-                                                .read<AuthProvider>()
-                                                .signInWithGoogle(),
-                                          )
-                                        : FilledButton.icon(
-                                            onPressed: auth.isBusy
-                                                ? null
-                                                : _continueWithGoogle,
-                                            icon: const Icon(Icons.shield_outlined),
-                                            label: const Text('Review privacy policy'),
-                                          ),
-                                  ),
-                                ),
-                                Center(
+                                Align(
+                                  alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: _showPrivacyPolicy,
-                                    child: const Text('Privacy policy'),
+                                    onPressed: _showPasswordRecoveryHint,
+                                    child: const Text('Forgot password?'),
                                   ),
                                 ),
-                                if (_isLogin) ...[
-                                  const SizedBox(height: 8),
-                                  OutlinedButton.icon(
+                                SizedBox(
+                                  height: 52,
+                                  child: OutlinedButton(
                                     onPressed: auth.isBusy
                                         ? null
-                                        : _openPasswordLogin,
-                                    icon: const Icon(Icons.key_rounded),
-                                    label: const Text(
-                                      'Log in with username and password',
-                                    ),
+                                        : _submitPasswordLogin,
+                                    child: auth.isBusy
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text('Log in'),
                                   ),
-                                ],
+                                ),
                               ],
-                            ),
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: _showPrivacyPolicy,
+                                child: const Text('Privacy policy'),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
+              ),
             );
           },
         ),
       ),
     );
   }
+
 }
 
 // ---------------------------------------------------------------------------
@@ -1033,6 +1143,33 @@ class _AnimatedCtaState extends State<_AnimatedCta>
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AuthMessage extends StatelessWidget {
+  final String message;
+  final bool isError;
+
+  const _AuthMessage({required this.message, required this.isError});
+
+  @override
+  Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final background = isError
+        ? AppColors.danger.withValues(alpha: isLight ? .10 : .16)
+        : AppColors.primary.withValues(alpha: isLight ? .22 : .14);
+    final foreground = isError ? AppColors.danger : Theme.of(context).colorScheme.onSurface;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        message,
+        style: AppFonts.body(color: foreground, fontSize: 13),
       ),
     );
   }
