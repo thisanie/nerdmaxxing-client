@@ -6,6 +6,7 @@ import 'package:google_sign_in_web/web_only.dart' as web;
 Widget buildGoogleAuthButton({
   required bool isBusy,
   required VoidCallback onPressed,
+  String label = 'Continue with Google',
 }) {
-  return Center(child: web.renderButton());
+  return Semantics(label: label, child: Center(child: web.renderButton()));
 }
