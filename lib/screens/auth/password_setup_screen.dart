@@ -5,13 +5,21 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 
 class PasswordSetupScreen extends StatefulWidget {
-  const PasswordSetupScreen({super.key});
+  final bool hasPassword;
+  final bool canSkip;
+
+  const PasswordSetupScreen({
+    super.key,
+    this.hasPassword = false,
+    this.canSkip = true,
+  });
 
   @override
   State<PasswordSetupScreen> createState() => _PasswordSetupScreenState();
 }
 
 class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
+  final _currentPasswordController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _obscurePassword = true;
@@ -30,7 +38,17 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
     }
     setState(() => _error = null);
     try {
-      await context.read<AuthProvider>().setupPassword(password);
+      final auth = context.read<AuthProvider>();
+      if (widget.hasPassword) {
+        await auth.updatePassword(
+          currentPassword: _currentPasswordController.text,
+          newPassword: password,
+        );
+        if (mounted) Navigator.of(context).pop();
+      } else {
+        await auth.setupPassword(password);
+        if (mounted && !widget.canSkip) Navigator.of(context).pop();
+      }
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
     }
@@ -38,6 +56,7 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
 
   @override
   void dispose() {
+    _currentPasswordController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
@@ -55,15 +74,28 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
             children: [
               const SizedBox(height: 24),
               Text(
-                'Add a password',
+                widget.hasPassword ? 'Update password' : 'Add a password',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
-                'You can use your username and password to sign in next time.',
+                widget.hasPassword
+                    ? 'Choose a new password for your account.'
+                    : 'You can use your username and password to sign in next time.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 28),
+              if (widget.hasPassword) ...[
+                TextField(
+                  controller: _currentPasswordController,
+                  obscureText: true,
+                  autofillHints: const [AutofillHints.password],
+                  decoration: const InputDecoration(
+                    labelText: 'Current password',
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
@@ -130,15 +162,18 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Save password'),
+                      : Text(
+                          widget.hasPassword ? 'Update password' : 'Save password',
+                        ),
                 ),
               ),
-              Center(
-                child: TextButton(
-                  onPressed: auth.isBusy ? null : auth.skipPasswordSetup,
-                  child: const Text('Skip for now'),
+              if (widget.canSkip)
+                Center(
+                  child: TextButton(
+                    onPressed: auth.isBusy ? null : auth.skipPasswordSetup,
+                    child: const Text('Skip for now'),
+                  ),
                 ),
-              ),
             ],
           ),
         ),

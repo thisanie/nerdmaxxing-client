@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _checkingPrivacy = true;
   bool _privacyAccepted = false;
   bool _privacyPromptOpen = false;
+  bool _isLogin = false;
 
   @override
   void initState() {
@@ -97,6 +98,15 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _showPrivacyPolicy() async {
     await showPrivacyPolicyDialog(context);
+  }
+
+  Future<void> _openPasswordLogin() async {
+    if (_checkingPrivacy || context.read<AuthProvider>().isBusy) return;
+    final accepted = await _requestPrivacyAcknowledgment();
+    if (!accepted || !mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const PasswordLoginScreen()),
+    );
   }
 
   @override
@@ -236,6 +246,39 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                   const SizedBox(height: 14),
                                 ],
+                                Center(
+                                  child: SegmentedButton<bool>(
+                                    segments: const [
+                                      ButtonSegment<bool>(
+                                        value: false,
+                                        label: Text('Sign up'),
+                                      ),
+                                      ButtonSegment<bool>(
+                                        value: true,
+                                        label: Text('Log in'),
+                                      ),
+                                    ],
+                                    selected: {_isLogin},
+                                    onSelectionChanged: auth.isBusy
+                                        ? null
+                                        : (selection) => setState(
+                                            () => _isLogin = selection.first,
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Center(
+                                  child: Text(
+                                    _isLogin
+                                        ? 'Log in with Google'
+                                        : 'Create your account with Google',
+                                    style: AppFonts.body(
+                                      color: mutedColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 _AnimatedCta(
                                   child: SizedBox(
                                     width: double.infinity,
@@ -267,19 +310,18 @@ class _LoginScreenState extends State<LoginScreen>
                                     child: const Text('Privacy policy'),
                                   ),
                                 ),
-                                Center(
-                                  child: TextButton(
-                                    onPressed: () => Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder: (_) =>
-                                            const PasswordLoginScreen(),
-                                      ),
-                                    ),
-                                    child: const Text(
+                                if (_isLogin) ...[
+                                  const SizedBox(height: 8),
+                                  OutlinedButton.icon(
+                                    onPressed: auth.isBusy
+                                        ? null
+                                        : _openPasswordLogin,
+                                    icon: const Icon(Icons.key_rounded),
+                                    label: const Text(
                                       'Log in with username and password',
                                     ),
                                   ),
-                                ),
+                                ],
                               ],
                             ),
                           ),

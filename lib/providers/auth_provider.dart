@@ -152,6 +152,27 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    isBusy = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      await authService.updatePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
   void skipPasswordSetup() {
     status = AuthStatus.authenticated;
     notifyListeners();

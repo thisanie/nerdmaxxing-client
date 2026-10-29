@@ -12,6 +12,7 @@ import '../../providers/app_state_providers.dart';
 import '../../providers/profile_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/api_client.dart';
+import '../../services/auth_service.dart';
 import '../../services/challenges_service.dart';
 import '../../services/groups_service.dart';
 import '../../services/profile_service.dart';
@@ -21,6 +22,7 @@ import '../../widgets/app_error.dart';
 import '../../widgets/privacy_policy_dialog.dart';
 import '../challenge/challenge_detail_screen.dart';
 import 'group_chat_screen.dart';
+import '../auth/password_setup_screen.dart';
 import 'relationship_list_screen.dart';
 import 'update_profile_screen.dart';
 
@@ -303,6 +305,15 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   }
 
   Future<void> _showAccountMenu(UserProfile profile) async {
+    late final bool hasPassword;
+    try {
+      hasPassword = await context.read<AuthService>().hasPassword();
+    } on ApiException catch (error) {
+      if (mounted) AppErrorSnackbar.show(context, error);
+      return;
+    }
+    if (!mounted) return;
+
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -314,6 +325,11 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               leading: const Icon(Icons.edit_rounded),
               title: const Text('Update profile'),
               onTap: () => Navigator.pop(sheetContext, 'update'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.lock_outline_rounded),
+              title: Text(hasPassword ? 'Update password' : 'Set up password'),
+              onTap: () => Navigator.pop(sheetContext, 'password'),
             ),
             Consumer<ThemeProvider>(
               builder: (context, themeProvider, _) {
@@ -365,6 +381,15 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     if (!mounted) return;
     if (action == 'update') {
       _openUpdateProfile(profile);
+    } else if (action == 'password') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PasswordSetupScreen(
+            hasPassword: hasPassword,
+            canSkip: false,
+          ),
+        ),
+      );
     } else if (action == 'privacy') {
       await showPrivacyPolicyDialog(context);
     } else if (action == 'logout') {

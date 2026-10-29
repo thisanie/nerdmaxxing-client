@@ -47,6 +47,24 @@ class AuthService {
     await api.post('/auth/password/setup', data: {'password': password});
   }
 
+  Future<bool> hasPassword() async {
+    final data = await api.get('/auth/password/status');
+    return data['has_password'] == true;
+  }
+
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await api.patch(
+      '/auth/password',
+      data: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      },
+    );
+  }
+
   Future<void> logout() async {
     final refreshToken = await tokenStorage.refreshToken;
     if (refreshToken != null) {
