@@ -23,7 +23,6 @@ class _LoginScreenState extends State<LoginScreen>
   static const _privacyAcknowledgedKey = 'privacy_policy_acknowledged_v1';
 
   late final AnimationController _motion; // 6s loop: blob, spark, wipe, CTA
-  late final AnimationController _ticker; // 24s loop: marquee
   bool _checkingPrivacy = true;
   bool _privacyAccepted = false;
   bool _privacyPromptOpen = false;
@@ -43,16 +42,11 @@ class _LoginScreenState extends State<LoginScreen>
       vsync: this,
       duration: const Duration(seconds: 6),
     )..repeat();
-    _ticker = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 24),
-    )..repeat();
   }
 
   @override
   void dispose() {
     _motion.dispose();
-    _ticker.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -170,283 +164,350 @@ class _LoginScreenState extends State<LoginScreen>
     final isLight = Theme.of(context).brightness == Brightness.light;
     final background = isLight ? AppColors.lightBackground : AppColors.background;
     final panel = isLight ? AppColors.lightSurface : AppColors.surface;
-    final panelBorder = isLight ? AppColors.lightBorder : AppColors.border;
     final textColor = isLight ? AppColors.lightTextPrimary : AppColors.textPrimary;
     final mutedColor = isLight ? AppColors.lightTextSecondary : AppColors.textSecondary;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
       backgroundColor: background,
       body: SafeArea(
+        bottom: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxHeight < 700;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 460),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: math.max(
-                        0.0,
-                        constraints.maxHeight - 38,
-                      ).toDouble(),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _Entrance(
-                          delay: .08,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  _SparkMark(controller: _motion, size: 38),
-                                  const SizedBox(width: 10),
-                                  _Brand(
-                                    textColor: textColor,
-                                    controller: _motion,
-                                    fontSize: 20,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: compact ? 26 : 38),
-                              _Headline(
-                                textColor: textColor,
-                                controller: _motion,
-                                fontSize: compact ? 40 : 48,
-                              ),
-                              const SizedBox(height: 12),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 340,
-                                ),
-                                child: Text(
-                                  'The internet should make you more interesting, not more addicted.',
-                                  style: AppFonts.body(
-                                    color: mutedColor,
-                                    fontSize: 16,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: compact ? 18 : 26),
-                              _Ticker(
-                                controller: _ticker,
-                                isLight: isLight,
-                                textColor: textColor,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 28),
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: panel,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: panelBorder),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                  alpha: isLight ? .07 : .18,
-                                ),
-                                blurRadius: 28,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              SegmentedButton<bool>(
-                                segments: const [
-                                  ButtonSegment<bool>(
-                                    value: true,
-                                    label: Text('Log in'),
-                                  ),
-                                  ButtonSegment<bool>(
-                                    value: false,
-                                    label: Text('Sign up'),
-                                  ),
-                                ],
-                                selected: {_isLogin},
-                                onSelectionChanged: auth.isBusy
-                                    ? null
-                                    : (selection) => _selectMode(selection.first),
-                              ),
-                              const SizedBox(height: 18),
-                              if (auth.errorMessage != null ||
-                                  _credentialError != null) ...[
-                                _AuthMessage(
-                                  message: _credentialError ?? auth.errorMessage!,
-                                  isError: true,
-                                ),
-                                const SizedBox(height: 14),
-                              ],
-                              _AnimatedCta(
-                                radius: 16,
-                                child: SizedBox(
-                                  height: 56,
-                                  child: _checkingPrivacy
-                                      ? const FilledButton(
-                                          onPressed: null,
-                                          child: Text(
-                                            'Checking privacy policy...',
-                                          ),
-                                        )
-                                      : _privacyAccepted
-                                      ? buildGoogleAuthButton(
-                                          isBusy: auth.isBusy,
-                                          onPressed: () => context
-                                              .read<AuthProvider>()
-                                              .signInWithGoogle(),
-                                        )
-                                      : FilledButton.icon(
-                                          onPressed: auth.isBusy
-                                              ? null
-                                              : _continueWithGoogle,
-                                          icon: const Icon(
-                                            Icons.shield_outlined,
-                                          ),
-                                          label: const Text(
-                                            'Review privacy policy',
-                                          ),
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                _isLogin
-                                    ? 'Log in with Google'
-                                    : 'Sign up is with Google only.',
-                                textAlign: TextAlign.center,
-                                style: AppFonts.body(
-                                  color: mutedColor,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              if (!_isLogin)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    'No new password to remember.',
-                                    textAlign: TextAlign.center,
-                                    style: AppFonts.body(
-                                      color: mutedColor,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              if (_isLogin) ...[
-                                const SizedBox(height: 8),
-                                TextButton(
-                                  onPressed: _togglePasswordForm,
-                                  child: Text(
-                                    _showPasswordForm
-                                        ? 'Hide username and password'
-                                        : 'Use username and password',
-                                  ),
-                                ),
-                              ],
-                              if (_isLogin && _showPasswordForm) ...[
-                                const Divider(height: 20),
-                                if (_showRecoveryHint) ...[
-                                  const _AuthMessage(
-                                    message:
-                                        'Password reset is not available here. Continue with Google to get back into your account.',
-                                    isError: false,
-                                  ),
-                                  const SizedBox(height: 12),
-                                ],
-                                TextField(
-                                  controller: _usernameController,
-                                  onChanged: (_) => _clearCredentialFeedback(),
-                                  textCapitalization: TextCapitalization.none,
-                                  autocorrect: false,
-                                  autofillHints: const [AutofillHints.username],
-                                  textInputAction: TextInputAction.next,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Username',
-                                    prefixIcon: Icon(Icons.person_outline),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                TextField(
-                                  controller: _passwordController,
-                                  onChanged: (_) => _clearCredentialFeedback(),
-                                  obscureText: _obscurePassword,
-                                  autocorrect: false,
-                                  autofillHints: const [AutofillHints.password],
-                                  onSubmitted: (_) => auth.isBusy
-                                      ? null
-                                      : _submitPasswordLogin(),
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    prefixIcon: const Icon(Icons.lock_outline),
-                                    suffixIcon: IconButton(
-                                      tooltip: _obscurePassword
-                                          ? 'Show password'
-                                          : 'Hide password',
-                                      onPressed: () => setState(
-                                        () => _obscurePassword =
-                                            !_obscurePassword,
-                                      ),
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_outlined
-                                            : Icons.visibility_off_outlined,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: _showPasswordRecoveryHint,
-                                    child: const Text('Forgot password?'),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 52,
-                                  child: OutlinedButton(
-                                    onPressed: auth.isBusy
-                                        ? null
-                                        : _submitPasswordLogin,
-                                    child: auth.isBusy
-                                        ? const SizedBox(
-                                            width: 18,
-                                            height: 18,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Text('Log in'),
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 12),
-                              TextButton(
-                                onPressed: _showPrivacyPolicy,
-                                child: const Text('Privacy policy'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+            return Stack(
+              children: [
+                Positioned(
+                  right: -120,
+                  top: -90,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 340,
+                      height: 340,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isLight
+                            ? AppColors.limeWash
+                            : AppColors.primaryMuted,
+                      ),
                     ),
                   ),
                 ),
-              ),
+                SingleChildScrollView(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 440),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  26,
+                                  26,
+                                  26,
+                                  28,
+                                ),
+                                child: _Entrance(
+                                  delay: .08,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          _SparkMark(
+                                            controller: _motion,
+                                            size: 30,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _Brand(
+                                            textColor: textColor,
+                                            controller: _motion,
+                                            fontSize: 19,
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: compact ? 30 : 48),
+                                      _Headline(
+                                        textColor: textColor,
+                                        controller: _motion,
+                                        fontSize: compact ? 48 : 56,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 340,
+                                        ),
+                                        child: Text(
+                                          'The internet should make you more interesting, not more addicted.',
+                                          style: AppFonts.body(
+                                            color: mutedColor,
+                                            fontSize: 18,
+                                            height: 1.4,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const Expanded(child: SizedBox.shrink()),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: panel,
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(28),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: isLight ? .08 : .22,
+                                      ),
+                                      blurRadius: 32,
+                                      offset: const Offset(0, -8),
+                                    ),
+                                  ],
+                                ),
+                                padding: EdgeInsets.fromLTRB(
+                                  22,
+                                  22,
+                                  22,
+                                  22 + bottomInset,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    SegmentedButton<bool>(
+                                      segments: const [
+                                        ButtonSegment<bool>(
+                                          value: true,
+                                          label: Text('Log in'),
+                                        ),
+                                        ButtonSegment<bool>(
+                                          value: false,
+                                          label: Text('Sign up'),
+                                        ),
+                                      ],
+                                      selected: {_isLogin},
+                                      onSelectionChanged: auth.isBusy
+                                          ? null
+                                          : (selection) =>
+                                                _selectMode(selection.first),
+                                    ),
+                                    const SizedBox(height: 18),
+                                    if (auth.errorMessage != null ||
+                                        _credentialError != null) ...[
+                                      _AuthMessage(
+                                        message:
+                                            _credentialError ??
+                                            auth.errorMessage!,
+                                        isError: true,
+                                      ),
+                                      const SizedBox(height: 14),
+                                    ],
+                                    SizedBox(
+                                      height: 56,
+                                      child: _checkingPrivacy
+                                          ? const FilledButton(
+                                              onPressed: null,
+                                              child: Text(
+                                                'Checking privacy policy...',
+                                              ),
+                                            )
+                                          : _privacyAccepted
+                                          ? buildGoogleAuthButton(
+                                              isBusy: auth.isBusy,
+                                              onPressed: () => context
+                                                  .read<AuthProvider>()
+                                                  .signInWithGoogle(),
+                                            )
+                                          : FilledButton.icon(
+                                              onPressed: auth.isBusy
+                                                  ? null
+                                                  : _continueWithGoogle,
+                                              icon: const Icon(
+                                                Icons.shield_outlined,
+                                              ),
+                                              label: const Text(
+                                                'Review privacy policy',
+                                              ),
+                                            ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      _isLogin
+                                          ? 'Log in with Google'
+                                          : 'Sign up is with Google only.',
+                                      textAlign: TextAlign.center,
+                                      style: AppFonts.body(
+                                        color: mutedColor,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    if (!_isLogin)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          'No new password to remember.',
+                                          textAlign: TextAlign.center,
+                                          style: AppFonts.body(
+                                            color: mutedColor,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    if (_isLogin) ...[
+                                      const SizedBox(height: 8),
+                                      TextButton(
+                                        onPressed: _togglePasswordForm,
+                                        child: Text(
+                                          _showPasswordForm
+                                              ? 'Hide username and password'
+                                              : 'Use username and password',
+                                        ),
+                                      ),
+                                    ],
+                                    if (_isLogin && _showPasswordForm) ...[
+                                      const Divider(height: 20),
+                                      if (_showRecoveryHint) ...[
+                                        const _AuthMessage(
+                                          message:
+                                              'Password reset is not available here. Continue with Google to get back into your account.',
+                                          isError: false,
+                                        ),
+                                        const SizedBox(height: 12),
+                                      ],
+                                      TextField(
+                                        controller: _usernameController,
+                                        onChanged: (_) =>
+                                            _clearCredentialFeedback(),
+                                        textCapitalization:
+                                            TextCapitalization.none,
+                                        autocorrect: false,
+                                        autofillHints: const [
+                                          AutofillHints.username,
+                                        ],
+                                        textInputAction: TextInputAction.next,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Username',
+                                          prefixIcon: Icon(
+                                            Icons.person_outline,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextField(
+                                        controller: _passwordController,
+                                        onChanged: (_) =>
+                                            _clearCredentialFeedback(),
+                                        obscureText: _obscurePassword,
+                                        autocorrect: false,
+                                        autofillHints: const [
+                                          AutofillHints.password,
+                                        ],
+                                        onSubmitted: (_) => auth.isBusy
+                                            ? null
+                                            : _submitPasswordLogin(),
+                                        decoration: InputDecoration(
+                                          labelText: 'Password',
+                                          prefixIcon: const Icon(
+                                            Icons.lock_outline,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            tooltip: _obscurePassword
+                                                ? 'Show password'
+                                                : 'Hide password',
+                                            onPressed: () => setState(
+                                              () => _obscurePassword =
+                                                  !_obscurePassword,
+                                            ),
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                        .visibility_off_outlined,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: TextButton(
+                                          onPressed:
+                                              _showPasswordRecoveryHint,
+                                          child: const Text('Forgot password?'),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 52,
+                                        child: OutlinedButton(
+                                          onPressed: auth.isBusy
+                                              ? null
+                                              : _submitPasswordLogin,
+                                          child: auth.isBusy
+                                              ? const SizedBox(
+                                                  width: 18,
+                                                  height: 18,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                )
+                                              : const Text('Log in'),
+                                        ),
+                                      ),
+                                    ],
+                                    const SizedBox(height: 12),
+                                    Wrap(
+                                      alignment: WrapAlignment.center,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      children: [
+                                        Text(
+                                          'By continuing, you acknowledge our ',
+                                          style: AppFonts.body(
+                                            color: mutedColor,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: _showPrivacyPolicy,
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: Size.zero,
+                                            tapTargetSize:
+                                                MaterialTapTargetSize.shrinkWrap,
+                                          ),
+                                          child: const Text(
+                                            'privacy policy',
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
       ),
     );
   }
-
 }
 
 // ---------------------------------------------------------------------------

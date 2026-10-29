@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 /// Non-web fallback: a normal button that triggers the imperative sign-in flow.
 Widget buildGoogleAuthButton({
   required bool isBusy,
@@ -9,6 +11,10 @@ Widget buildGoogleAuthButton({
     width: double.infinity,
     child: ElevatedButton.icon(
       onPressed: isBusy ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.ink,
+        foregroundColor: Colors.white,
+      ),
       icon: isBusy
           ? const SizedBox(
               width: 18,
