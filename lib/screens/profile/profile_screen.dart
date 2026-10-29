@@ -317,10 +317,12 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             ListTile(
               leading: const Icon(Icons.edit_rounded),
               title: const Text('Update profile'),
@@ -372,8 +374,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               ),
               onTap: () => Navigator.pop(sheetContext, 'delete'),
             ),
-            const SizedBox(height: 8),
-          ],
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
