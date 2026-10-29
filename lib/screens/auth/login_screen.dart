@@ -31,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _obscurePassword = true;
   bool _showRecoveryHint = false;
   String? _credentialError;
+  final _pageScrollController = ScrollController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -47,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _motion.dispose();
+    _pageScrollController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -133,12 +135,25 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _togglePasswordForm() {
+    final opening = !_showPasswordForm;
     setState(() {
-      _showPasswordForm = !_showPasswordForm;
+      _showPasswordForm = opening;
       _credentialError = null;
       _showRecoveryHint = false;
     });
     context.read<AuthProvider>().clearErrorMessage();
+    if (opening) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_pageScrollController.hasClients) return;
+        final position = _pageScrollController.position;
+        if (position.maxScrollExtent <= 0) return;
+        _pageScrollController.animateTo(
+          position.maxScrollExtent,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutCubic,
+        );
+      });
+    }
   }
 
   void _clearCredentialFeedback() {
@@ -191,6 +206,7 @@ class _LoginScreenState extends State<LoginScreen>
                 constraints.maxHeight - 88,
               );
               return SingleChildScrollView(
+                controller: _pageScrollController,
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1180),
@@ -232,6 +248,7 @@ class _LoginScreenState extends State<LoginScreen>
             }
 
             return SingleChildScrollView(
+              controller: _pageScrollController,
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
