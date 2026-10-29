@@ -9,7 +9,13 @@ import '../services/app_cache.dart';
 import '../services/push_notification_service.dart';
 import '../services/token_storage.dart';
 
-enum AuthStatus { unknown, signedOut, needsUsername, authenticated }
+enum AuthStatus {
+  unknown,
+  signedOut,
+  needsUsername,
+  needsPasswordSetup,
+  authenticated,
+}
 
 class AuthProvider extends ChangeNotifier {
   final AuthService authService;
@@ -126,8 +132,55 @@ class AuthProvider extends ChangeNotifier {
 
   void onUsernameSet(String value) {
     username = value;
+    status = AuthStatus.needsPasswordSetup;
+    notifyListeners();
+  }
+
+  Future<void> setupPassword(String password) async {
+    isBusy = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      await authService.setupPassword(password);
+      status = AuthStatus.authenticated;
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  void skipPasswordSetup() {
     status = AuthStatus.authenticated;
     notifyListeners();
+  }
+
+  Future<void> signInWithPassword({
+    required String username,
+    required String password,
+  }) async {
+    isBusy = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      final session = await authService.signInWithPassword(
+        username: username,
+        password: password,
+      );
+      this.username = session.username ?? username;
+      displayName = session.displayName;
+      avatarUrl = session.avatarUrl;
+      status = AuthStatus.authenticated;
+      unawaited(pushNotificationService.registerCurrentToken());
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
   }
 
   Future<void> signOut() async {

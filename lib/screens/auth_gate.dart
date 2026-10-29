@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import 'auth/login_screen.dart';
+import 'auth/password_setup_screen.dart';
 import 'auth/username_setup_screen.dart';
 import 'home/home_shell.dart';
 
@@ -20,6 +21,8 @@ class AuthGate extends StatelessWidget {
         return const LoginScreen();
       case AuthStatus.needsUsername:
         return const UsernameSetupScreen();
+      case AuthStatus.needsPasswordSetup:
+        return const PasswordSetupScreen();
       case AuthStatus.authenticated:
         return const HomeShell();
     }

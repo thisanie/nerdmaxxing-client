@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/google_auth_button.dart';
 import '../../widgets/privacy_policy_dialog.dart';
+import 'password_login_screen.dart';
 
 /// Redesigned login: left-aligned editorial layout, floating "sticker" cards
 /// that tease the app's loop (train, prove, rank), a scrolling trials ticker, and a
@@ -264,6 +265,19 @@ class _LoginScreenState extends State<LoginScreen>
                                   child: TextButton(
                                     onPressed: _showPrivacyPolicy,
                                     child: const Text('Privacy policy'),
+                                  ),
+                                ),
+                                Center(
+                                  child: TextButton(
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) =>
+                                            const PasswordLoginScreen(),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Log in with username and password',
+                                    ),
                                   ),
                                 ),
                               ],

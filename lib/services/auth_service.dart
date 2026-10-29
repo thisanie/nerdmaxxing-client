@@ -24,6 +24,29 @@ class AuthService {
     return session;
   }
 
+  Future<AuthSession> signInWithPassword({
+    required String username,
+    required String password,
+  }) async {
+    final data = await api.post(
+      '/auth/password/login',
+      data: {'username': username, 'password': password},
+      skipAuth: true,
+    );
+    final session = AuthSession.fromJson(data);
+    await tokenStorage.saveTokens(
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      userId: session.userId,
+      username: session.username ?? username,
+    );
+    return session;
+  }
+
+  Future<void> setupPassword(String password) async {
+    await api.post('/auth/password/setup', data: {'password': password});
+  }
+
   Future<void> logout() async {
     final refreshToken = await tokenStorage.refreshToken;
     if (refreshToken != null) {
