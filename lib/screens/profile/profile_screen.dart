@@ -1546,75 +1546,98 @@ class _ChallengeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
       child: InkWell(
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => ChallengeDetailScreen(slug: challenge.slug),
           ),
         ),
-        child: Stack(
-          fit: StackFit.expand,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (challenge.imageUrl != null)
-              Image.network(
-                challenge.imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _fallback(),
-              )
-            else
-              _fallback(),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(7),
-                color: Colors.black.withValues(alpha: 0.68),
-                child: Text(
-                  challenge.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+            Expanded(
+              flex: 3,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (challenge.imageUrl != null)
+                    Image.network(
+                      challenge.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _fallback(context),
+                    )
+                  else
+                    _fallback(context),
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      width: 23,
+                      height: 23,
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_rounded,
+                        color: scheme.onPrimary,
+                        size: 15,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-            Positioned(
-              top: 7,
-              right: 7,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 4,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.bolt_rounded,
-                        size: 13,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${challenge.auraPoints}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 7, 8, 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                          challenge.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppFonts.body(
+                            color: scheme.onSurface,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            height: 1.15,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.bolt_rounded,
+                          size: 13,
+                          color: scheme.primary,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${challenge.auraPoints} aura',
+                          style: AppFonts.body(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1624,12 +1647,14 @@ class _ChallengeTile extends StatelessWidget {
     );
   }
 
-  Widget _fallback() => Container(
-    color: AppColors.limeWash,
+  Widget _fallback(BuildContext context) => Container(
+    color: Theme.of(context).brightness == Brightness.dark
+        ? AppColors.primaryMuted
+        : AppColors.limeWash,
     alignment: Alignment.center,
     child: const Icon(
       Icons.flag_rounded,
-      color: AppColors.lightTextPrimary,
+      color: AppColors.primaryLight,
       size: 28,
     ),
   );
