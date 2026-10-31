@@ -39,7 +39,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
-    _screens = [..._baseScreens];
+    _screens = [..._baseScreens, const SizedBox.shrink()];
     _tabAtRoot = List.filled(_screens.length, true);
     _navigatorKeys = [
       for (var i = 0; i < _screens.length; i++) GlobalKey<NavigatorState>(),
@@ -75,12 +75,15 @@ class _HomeShellState extends State<HomeShell> {
     try {
       final profile = await context.read<ProfileService>().getMyProfile();
       if (!mounted || !profile.isAdmin) return;
+      final adminNavigator = _navigatorKeys.last.currentState;
+      if (adminNavigator == null) return;
+      adminNavigator.pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => const AdminEvidenceScreen(),
+        ),
+      );
       setState(() {
         _isAdmin = true;
-        _screens.add(const AdminEvidenceScreen());
-        _tabAtRoot.add(true);
-        _navigatorKeys.add(GlobalKey<NavigatorState>());
-        _tabNavigators.add(_createTabNavigator(_screens.length - 1));
       });
     } on ApiException {
       // Keep the admin destination hidden if the current profile is unavailable.
@@ -149,7 +152,7 @@ class _HomeShellState extends State<HomeShell> {
       },
       child: Scaffold(
         body: SafeArea(
-          child: IndexedStack(index: _index, children: _tabNavigators),
+            child: IndexedStack(index: _navigationIndex, children: _tabNavigators),
         ),
         bottomNavigationBar: _BottomNavigationBar(
           currentIndex: _navigationIndex,
@@ -160,9 +163,14 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  int get _navigationIndex => _index;
+  int get _navigationIndex => _index.clamp(0, _tabNavigators.length - 1);
 
   void _onNavigationTap(int navigationIndex) {
+    if (navigationIndex < 0 ||
+        navigationIndex >= _tabNavigators.length ||
+        (navigationIndex == _tabNavigators.length - 1 && !_isAdmin)) {
+      return;
+    }
     _resetTabStacks();
     setState(() => _index = navigationIndex);
   }
