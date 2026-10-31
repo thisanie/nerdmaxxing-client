@@ -3,6 +3,7 @@ import 'dart:convert';
 class AppNotification {
   final String id;
   final String type;
+  final String? title;
   final String body;
   final bool isRead;
   final DateTime? createdAt;
@@ -12,6 +13,7 @@ class AppNotification {
   AppNotification({
     required this.id,
     required this.type,
+    this.title,
     required this.body,
     required this.isRead,
     required this.createdAt,
@@ -89,6 +91,7 @@ class AppNotification {
           json['type']?.toString() ??
           json['notification_type']?.toString() ??
           '',
+        title: json['title']?.toString(),
       body: json['body']?.toString() ?? json['message']?.toString() ?? '',
       isRead: json['is_read'] == true || json['read_at'] != null,
       createdAt: json['created_at'] == null
@@ -130,6 +133,13 @@ class AppNotification {
     ];
     return values.any((value) => value?.toUpperCase() == 'FOLLOW');
   }
+
+  bool get isEvidenceApproved => type.toUpperCase() == 'EVIDENCE_APPROVED';
+
+  bool get isEvidenceRejected => type.toUpperCase() == 'EVIDENCE_REJECTED';
+
+  bool get isFollowingChallengeCompleted =>
+      type.toUpperCase() == 'FOLLOWING_CHALLENGE_COMPLETED';
 
   bool get isReply {
     final values = [
@@ -179,6 +189,7 @@ class AppNotification {
     return AppNotification(
       id: id,
       type: type,
+      title: title,
       body: body,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt,
