@@ -325,57 +325,59 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            ListTile(
-              leading: const Icon(Icons.edit_rounded),
-              title: const Text('Update profile'),
-              onTap: () => Navigator.pop(sheetContext, 'update'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.lock_outline_rounded),
-              title: Text(hasPassword ? 'Update password' : 'Set up password'),
-              onTap: () => Navigator.pop(sheetContext, 'password'),
-            ),
-            Consumer<ThemeProvider>(
-              builder: (context, themeProvider, _) {
-                final colorScheme = Theme.of(context).colorScheme;
-                return SwitchListTile.adaptive(
-                  secondary: Icon(
-                    Icons.brightness_6_rounded,
-                    color: colorScheme.onSurface,
-                  ),
-                  title: const Text('Dark theme'),
-                  value: themeProvider.isDark,
-                  onChanged: themeProvider.setDark,
-                  activeThumbColor: AppColors.dark,
-                  activeTrackColor: AppColors.primary,
-                  inactiveThumbColor: colorScheme.onSurfaceVariant,
-                  inactiveTrackColor: colorScheme.surfaceContainerHighest,
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: const Text('Privacy policy'),
-              onTap: () => Navigator.pop(sheetContext, 'privacy'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout_rounded),
-              title: const Text('Log out'),
-              onTap: () => Navigator.pop(sheetContext, 'logout'),
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.delete_forever_outlined,
-                color: Theme.of(sheetContext).colorScheme.error,
+              ListTile(
+                leading: const Icon(Icons.edit_rounded),
+                title: const Text('Update profile'),
+                onTap: () => Navigator.pop(sheetContext, 'update'),
               ),
-              title: Text(
-                'Delete account',
-                style: TextStyle(
+              ListTile(
+                leading: const Icon(Icons.lock_outline_rounded),
+                title: Text(
+                  hasPassword ? 'Update password' : 'Set up password',
+                ),
+                onTap: () => Navigator.pop(sheetContext, 'password'),
+              ),
+              Consumer<ThemeProvider>(
+                builder: (context, themeProvider, _) {
+                  final colorScheme = Theme.of(context).colorScheme;
+                  return SwitchListTile.adaptive(
+                    secondary: Icon(
+                      Icons.brightness_6_rounded,
+                      color: colorScheme.onSurface,
+                    ),
+                    title: const Text('Dark theme'),
+                    value: themeProvider.isDark,
+                    onChanged: themeProvider.setDark,
+                    activeThumbColor: AppColors.dark,
+                    activeTrackColor: AppColors.primary,
+                    inactiveThumbColor: colorScheme.onSurfaceVariant,
+                    inactiveTrackColor: colorScheme.surfaceContainerHighest,
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.privacy_tip_outlined),
+                title: const Text('Privacy policy'),
+                onTap: () => Navigator.pop(sheetContext, 'privacy'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout_rounded),
+                title: const Text('Log out'),
+                onTap: () => Navigator.pop(sheetContext, 'logout'),
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.delete_forever_outlined,
                   color: Theme.of(sheetContext).colorScheme.error,
                 ),
+                title: Text(
+                  'Delete account',
+                  style: TextStyle(
+                    color: Theme.of(sheetContext).colorScheme.error,
+                  ),
+                ),
+                onTap: () => Navigator.pop(sheetContext, 'delete'),
               ),
-              onTap: () => Navigator.pop(sheetContext, 'delete'),
-            ),
               const SizedBox(height: 8),
             ],
           ),
@@ -389,10 +391,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     } else if (action == 'password') {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => PasswordSetupScreen(
-            hasPassword: hasPassword,
-            canSkip: false,
-          ),
+          builder: (_) =>
+              PasswordSetupScreen(hasPassword: hasPassword, canSkip: false),
         ),
       );
     } else if (action == 'privacy') {
@@ -422,17 +422,16 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     final participationState = ref.watch(participationControllerProvider);
     final participations = participationState.valueOrNull ?? const [];
     final activeParticipations = participations
-      .where((participation) => !participation.isCompleted)
-      .toList();
+        .where((participation) => !participation.isCompleted)
+        .toList();
     final filteredParticipations = _participationFilter == 'ALL'
-      ? activeParticipations
-      : activeParticipations
-          .where(
-          (participation) =>
-            participation.status.toUpperCase() ==
-            _participationFilter,
-          )
-          .toList();
+        ? activeParticipations
+        : activeParticipations
+              .where(
+                (participation) =>
+                    participation.status.toUpperCase() == _participationFilter,
+              )
+              .toList();
     final participationEmptyMessage = _participationFilter == 'ALL'
         ? 'Discover a challenge and accept it to get started.'
         : 'No challenges match this status filter.';
@@ -574,9 +573,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                       (context, index) => _ParticipationTile(
                         participation: filteredParticipations[index],
                         challenge:
-                            _challengesById[
-                              filteredParticipations[index].challengeId
-                            ],
+                            _challengesById[filteredParticipations[index]
+                                .challengeId],
                         statusLabel: _statusLabel(
                           filteredParticipations[index].isCompleted
                               ? 'COMPLETED'
@@ -624,25 +622,21 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final challenge = completedChallenges[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: ChallengeCard(
-                            challenge: challenge,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ChallengeDetailScreen(
-                                  slug: challenge.slug,
-                                ),
-                              ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final challenge = completedChallenges[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: ChallengeCard(
+                          challenge: challenge,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ChallengeDetailScreen(slug: challenge.slug),
                             ),
                           ),
-                        );
-                      },
-                      childCount: completedChallenges.length,
-                    ),
+                        ),
+                      );
+                    }, childCount: completedChallenges.length),
                   ),
                 ),
             ],
@@ -653,6 +647,126 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   groups: isOwnProfile ? _myGroups : profile.groups,
                   publicGroups: _publicGroups,
                   isLoading: _groupsLoading,
+                  errorMessage: _groupsError,
+                  onCreate: isOwnProfile ? _createGroup : null,
+                  onJoin: isOwnProfile ? _joinGroup : null,
+                  onLeave: isOwnProfile ? _leaveGroup : null,
+                  onOpenGroup: _openGroup,
+                ),
+              )
+            else if (_selectedTab != 0)
+              const SliverToBoxAdapter(child: _ComingSoonPanel()),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileTabs extends StatelessWidget {
+  final int selectedIndex;
+  final bool showRewards;
+  final ValueChanged<int> onSelected;
+
+  const _ProfileTabs({
+    required this.selectedIndex,
+    required this.showRewards,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final tabs = [
+      (Icons.flag_rounded, 'Challenges'),
+      (Icons.groups_rounded, 'Groups'),
+      if (showRewards) (Icons.emoji_events_rounded, 'Rewards'),
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Row(
+        children: [
+          for (var index = 0; index < tabs.length; index++)
+            Expanded(
+              child: InkWell(
+                onTap: () => onSelected(index),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: selectedIndex == index
+                            ? colorScheme.onSurface
+                            : colorScheme.outline,
+                        width: selectedIndex == index ? 2 : 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        tabs[index].$1,
+                        size: 18,
+                        color: selectedIndex == index
+                            ? colorScheme.onSurface
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        tabs[index].$2,
+                        style: TextStyle(
+                          color: selectedIndex == index
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+      child: Text(
+        text.toUpperCase(),
+        style: AppFonts.label(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileActions extends StatelessWidget {
+  final UserProfile profile;
+  final bool isOwnProfile;
+  final bool isFollowBusy;
+  final VoidCallback onEdit;
+  final VoidCallback onToggleFollow;
+
+  const _ProfileActions({
+    required this.profile,
+    required this.isOwnProfile,
+    required this.isFollowBusy,
+    required this.onEdit,
+    required this.onToggleFollow,
   });
 
   @override
