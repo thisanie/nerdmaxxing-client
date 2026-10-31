@@ -17,6 +17,11 @@ class ProfileService {
     return UserProfile.fromJson(data);
   }
 
+  Future<UserProfile> getMyProfile() async {
+    final data = await api.get('/users/me/profile');
+    return UserProfile.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
   Future<UserProfile?> getCachedProfile(String username) async {
     final data = await AppCache.read('profile_$username');
     return data is Map

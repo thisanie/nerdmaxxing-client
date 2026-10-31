@@ -25,7 +25,6 @@ import 'group_chat_screen.dart';
 import '../auth/password_setup_screen.dart';
 import 'relationship_list_screen.dart';
 import 'update_profile_screen.dart';
-import '../evidence/evidence_review_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final String? username;
@@ -358,11 +357,6 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               onTap: () => Navigator.pop(sheetContext, 'privacy'),
             ),
             ListTile(
-              leading: const Icon(Icons.fact_check_outlined),
-              title: const Text('Evidence review'),
-              onTap: () => Navigator.pop(sheetContext, 'evidence-review'),
-            ),
-            ListTile(
               leading: const Icon(Icons.logout_rounded),
               title: const Text('Log out'),
               onTap: () => Navigator.pop(sheetContext, 'logout'),
@@ -401,10 +395,6 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       );
     } else if (action == 'privacy') {
       await showPrivacyPolicyDialog(context);
-    } else if (action == 'evidence-review') {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const EvidenceReviewScreen()),
-      );
     } else if (action == 'logout') {
       _confirmLogout();
     } else if (action == 'delete') {

@@ -68,3 +68,31 @@ class EvidenceApprovalStatus {
     );
   }
 }
+
+class EvidenceQueuePage {
+  final List<EvidenceSubmission> items;
+  final int total;
+  final int limit;
+  final int offset;
+
+  const EvidenceQueuePage({
+    required this.items,
+    required this.total,
+    required this.limit,
+    required this.offset,
+  });
+
+  factory EvidenceQueuePage.fromJson(Map<String, dynamic> json) {
+    return EvidenceQueuePage(
+      items: (json['items'] as List? ?? [])
+          .whereType<Map>()
+          .map((item) => EvidenceSubmission.fromJson(
+                Map<String, dynamic>.from(item),
+              ))
+          .toList(),
+      total: (json['total'] as num?)?.toInt() ?? 0,
+      limit: (json['limit'] as num?)?.toInt() ?? 20,
+      offset: (json['offset'] as num?)?.toInt() ?? 0,
+    );
+  }
+}

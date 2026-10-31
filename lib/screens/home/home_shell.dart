@@ -6,10 +6,12 @@ import '../discover/people_discover_screen.dart';
 import '../profile/profile_screen.dart';
 import '../profile/group_chat_screen.dart';
 import '../skills/skills_screen.dart';
+import '../evidence/admin_evidence_screen.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../notifications/notifications_screen.dart';
 import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
+import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 
 class HomeShell extends StatefulWidget {
@@ -21,46 +23,68 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
-  late final List<bool> _tabAtRoot = [
-    for (var i = 0; i < _screens.length; i++) true,
-  ];
+  bool _isAdmin = false;
+  late final List<bool> _tabAtRoot;
+  late final List<Widget> _screens;
+  late final List<GlobalKey<NavigatorState>> _navigatorKeys;
+  late final List<Widget> _tabNavigators;
 
-  static const _screens = [
+  static const _baseScreens = [
     HomeScreen(),
     PeopleDiscoverScreen(),
     SkillsScreen(),
     ProfileScreen(),
   ];
 
-  late final List<GlobalKey<NavigatorState>> _navigatorKeys = [
-    for (var i = 0; i < _screens.length; i++) GlobalKey<NavigatorState>(),
-  ];
-
-  late final List<Widget> _tabNavigators = [
-    for (var i = 0; i < _screens.length; i++)
-      Navigator(
-        key: _navigatorKeys[i],
-        observers: [
-          _TabNavigatorObserver(
-            onRouteDepthChanged: (isRoot) {
-              if (mounted && _tabAtRoot[i] != isRoot) {
-                setState(() => _tabAtRoot[i] = isRoot);
-              }
-            },
-          ),
-        ],
-        onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => _screens[i]),
-      ),
-  ];
-
   @override
   void initState() {
     super.initState();
+    _screens = [..._baseScreens];
+    _tabAtRoot = List.filled(_screens.length, true);
+    _navigatorKeys = [
+      for (var i = 0; i < _screens.length; i++) GlobalKey<NavigatorState>(),
+    ];
+    _tabNavigators = [
+      for (var i = 0; i < _screens.length; i++) _createTabNavigator(i),
+    ];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final navigation = context.read<NotificationNavigationController>();
       navigation.addListener(_handleNotificationRequest);
       _handleNotificationRequest();
+      _loadAdminAccess();
     });
+  }
+
+  Widget _createTabNavigator(int index) {
+    return Navigator(
+      key: _navigatorKeys[index],
+      observers: [
+        _TabNavigatorObserver(
+          onRouteDepthChanged: (isRoot) {
+            if (mounted && _tabAtRoot[index] != isRoot) {
+              setState(() => _tabAtRoot[index] = isRoot);
+            }
+          },
+        ),
+      ],
+      onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => _screens[index]),
+    );
+  }
+
+  Future<void> _loadAdminAccess() async {
+    try {
+      final profile = await context.read<ProfileService>().getMyProfile();
+      if (!mounted || !profile.isAdmin) return;
+      setState(() {
+        _isAdmin = true;
+        _screens.add(const AdminEvidenceScreen());
+        _tabAtRoot.add(true);
+        _navigatorKeys.add(GlobalKey<NavigatorState>());
+        _tabNavigators.add(_createTabNavigator(_screens.length - 1));
+      });
+    } on ApiException {
+      // Keep the admin destination hidden if the current profile is unavailable.
+    }
   }
 
   @override
@@ -130,6 +154,7 @@ class _HomeShellState extends State<HomeShell> {
         bottomNavigationBar: _BottomNavigationBar(
           currentIndex: _navigationIndex,
           onTap: _onNavigationTap,
+          isAdmin: _isAdmin,
         ),
       ),
     );
@@ -152,8 +177,13 @@ class _HomeShellState extends State<HomeShell> {
 class _BottomNavigationBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final bool isAdmin;
 
-  const _BottomNavigationBar({required this.currentIndex, required this.onTap});
+  const _BottomNavigationBar({
+    required this.currentIndex,
+    required this.onTap,
+    required this.isAdmin,
+  });
 
   static const _items = [
     (Icons.home_rounded, 'Home'),
@@ -165,6 +195,10 @@ class _BottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final items = [
+      ..._items,
+      if (isAdmin) (Icons.fact_check_rounded, 'Admin'),
+    ];
     return Material(
       color: colorScheme.surface,
       shape: Border(top: BorderSide(color: colorScheme.outline)),
@@ -174,13 +208,13 @@ class _BottomNavigationBar extends StatelessWidget {
           height: 70,
           child: Row(
             children: [
-              for (var index = 0; index < _items.length; index++)
+              for (var index = 0; index < items.length; index++)
                 Expanded(
                   child: InkWell(
                     onTap: () => onTap(index),
                     child: _NavigationItem(
-                      icon: _items[index].$1,
-                      label: _items[index].$2,
+                      icon: items[index].$1,
+                      label: items[index].$2,
                       selected: currentIndex == index,
                     ),
                   ),

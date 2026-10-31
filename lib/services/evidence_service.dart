@@ -39,6 +39,17 @@ class EvidenceService {
     return submission;
   }
 
+  Future<EvidenceQueuePage> listActiveSubmissions({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final data = await api.get(
+      '/evidence/admin/active',
+      query: {'limit': limit, 'offset': offset},
+    );
+    return EvidenceQueuePage.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
   Future<EvidenceApprovalStatus> getApprovalStatus(String submissionId) async {
     final data = await api.get('/evidence/$submissionId/is-approved');
     return EvidenceApprovalStatus.fromJson(Map<String, dynamic>.from(data));

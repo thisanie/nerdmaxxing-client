@@ -52,6 +52,7 @@ class UserProfile {
   final List<ProfileSkill> skills;
   final List<Group> groups;
   final bool isFollowing;
+  final bool isAdmin;
 
   UserProfile({
     required this.id,
@@ -69,6 +70,7 @@ class UserProfile {
     required this.skills,
     required this.groups,
     required this.isFollowing,
+    this.isAdmin = false,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -94,6 +96,7 @@ class UserProfile {
           .map((e) => Group.fromJson(e))
           .toList(),
       isFollowing: json['is_following'] ?? false,
+      isAdmin: json['is_admin'] == true,
     );
   }
 
@@ -114,6 +117,7 @@ class UserProfile {
       skills: skills,
       groups: groups,
       isFollowing: isFollowing ?? this.isFollowing,
+      isAdmin: isAdmin,
     );
   }
 }
