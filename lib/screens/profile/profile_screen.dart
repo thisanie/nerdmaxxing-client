@@ -72,6 +72,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       final isOwnProfile = widget.username == null || username == auth.username;
       final challengesService = context.read<ChallengesService>();
       final groupsService = context.read<GroupsService>();
+      if (isOwnProfile) ref.invalidate(myCompletedChallengesProvider);
       await Future.wait([
         context.read<ProfileProvider>().load(
           username,
@@ -421,13 +422,13 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     final participations = participationState.valueOrNull ?? const [];
     final filteredParticipations = _participationFilter == 'ALL'
         ? participations
-        : participations
-              .where(
-                (participation) =>
-                    participation.status.toUpperCase() ==
-                    _participationFilter,
-              )
-              .toList();
+        : participations.where((participation) {
+            if (_participationFilter == 'COMPLETED') {
+              return participation.isCompleted;
+            }
+            return participation.status.toUpperCase() ==
+                _participationFilter;
+          }).toList();
     final participationEmptyMessage = _participationFilter == 'ALL'
         ? 'Discover a challenge and accept it to get started.'
         : 'No challenges match this status filter.';
@@ -573,7 +574,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                               filteredParticipations[index].challengeId
                             ],
                         statusLabel: _statusLabel(
-                          filteredParticipations[index].status,
+                          filteredParticipations[index].isCompleted
+                              ? 'COMPLETED'
+                              : filteredParticipations[index].status,
                         ),
                         onChangeStatus: _changeStatus,
                       ),

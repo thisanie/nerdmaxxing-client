@@ -9,6 +9,11 @@ class Participation {
   final DateTime? lastActivityAt;
   final DateTime? completedAt;
 
+  bool get isCompleted =>
+      status.toUpperCase() == 'COMPLETED' ||
+      completionStatus.toUpperCase() == 'COMPLETED' ||
+      completedAt != null;
+
   Participation({
     required this.id,
     required this.challengeId,

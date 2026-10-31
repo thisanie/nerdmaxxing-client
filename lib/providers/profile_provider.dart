@@ -40,9 +40,9 @@ class ProfileProvider extends ChangeNotifier {
           ? loadedProfile.isFollowing
           : await service.isFollowing(loadedProfile.id);
       profile = loadedProfile.copyWith(isFollowing: following);
-      completedChallenges = isOwnProfile
-          ? await service.listMyCompletedChallenges()
-          : await service.listCompletedChallenges(username);
+        completedChallenges = isOwnProfile
+          ? []
+          : loadedProfile.completedChallenges;
       createdChallenges = isOwnProfile
           ? await service.listMyCreatedChallenges()
           : [];

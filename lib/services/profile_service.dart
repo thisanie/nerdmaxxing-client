@@ -90,11 +90,6 @@ class ProfileService {
         : null;
   }
 
-  Future<List<Challenge>> listCompletedChallenges(String username) async {
-    final data = await api.get('/users/$username/challenges/completed');
-    return (data as List).map((e) => Challenge.fromJson(e)).toList();
-  }
-
   Future<bool> isFollowing(String userId) async {
     final data = await api.get('/users/$userId/follow-status');
     if (data is bool) return data;
