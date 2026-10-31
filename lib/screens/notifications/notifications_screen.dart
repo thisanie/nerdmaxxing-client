@@ -305,7 +305,7 @@ class _NotificationTile extends StatelessWidget {
     final isGroupMessage = notification.isGroupMessage;
     final isPendingInvitation = notification.isPendingInvitation;
     final isEvidenceResult =
-      notification.isEvidenceApproved || notification.isEvidenceRejected;
+        notification.isEvidenceApproved || notification.isEvidenceRejected;
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       margin: EdgeInsets.zero,
@@ -326,18 +326,18 @@ class _NotificationTile extends StatelessWidget {
                         ? Icons.groups_rounded
                         : isInvitation
                         ? Icons.mail_rounded
-                      : isEvidenceResult
-                      ? notification.isEvidenceApproved
-                          ? Icons.verified_rounded
-                          : Icons.rate_review_outlined
-                      : notification.isFollowingChallengeCompleted
-                      ? Icons.celebration_rounded
+                        : isEvidenceResult
+                        ? notification.isEvidenceApproved
+                              ? Icons.verified_rounded
+                              : Icons.rate_review_outlined
+                        : notification.isFollowingChallengeCompleted
+                        ? Icons.celebration_rounded
                         : notification.isFollow
                         ? Icons.person_add_alt_1_rounded
                         : Icons.notifications_none_rounded,
                     color: notification.isEvidenceRejected
-                      ? colorScheme.error
-                      : AppColors.primary,
+                        ? colorScheme.error
+                        : AppColors.primary,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -347,16 +347,18 @@ class _NotificationTile extends StatelessWidget {
                         Text(
                           isGroupMessage
                               ? notification.groupName ?? 'Group message'
-                            : notification.title ??
-                              (isEvidenceResult
-                                  ? 'Evidence review'
-                                  : notification.isFollowingChallengeCompleted
-                                  ? notification.challengeTitle ??
-                                    'Challenge completed'
-                                  : notification.isFollow
-                                  ? notification.actorName ?? 'New follower'
-                                  : notification.challengeTitle ??
-                                    'Notification')
+                              : notification.title ??
+                                    (isEvidenceResult
+                                        ? 'Evidence review'
+                                        : notification
+                                              .isFollowingChallengeCompleted
+                                        ? notification.challengeTitle ??
+                                              'Challenge completed'
+                                        : notification.isFollow
+                                        ? notification.actorName ??
+                                              'New follower'
+                                        : notification.challengeTitle ??
+                                              'Notification'),
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
