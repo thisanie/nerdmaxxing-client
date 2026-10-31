@@ -420,15 +420,18 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     final provider = context.watch<ProfileProvider>();
     final participationState = ref.watch(participationControllerProvider);
     final participations = participationState.valueOrNull ?? const [];
+    final activeParticipations = participations
+      .where((participation) => !participation.isCompleted)
+      .toList();
     final filteredParticipations = _participationFilter == 'ALL'
-        ? participations
-        : participations.where((participation) {
-            if (_participationFilter == 'COMPLETED') {
-              return participation.isCompleted;
-            }
-            return participation.status.toUpperCase() ==
-                _participationFilter;
-          }).toList();
+      ? activeParticipations
+      : activeParticipations
+          .where(
+          (participation) =>
+            participation.status.toUpperCase() ==
+            _participationFilter,
+          )
+          .toList();
     final participationEmptyMessage = _participationFilter == 'ALL'
         ? 'Discover a challenge and accept it to get started.'
         : 'No challenges match this status filter.';
@@ -1229,7 +1232,11 @@ class _ProfileHeader extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _Stat(value: '${profile.auraPoints}', label: 'Aura'),
+                _Stat(
+                  value: '${profile.auraPoints}',
+                  label: 'Aura',
+                  valueColor: scheme.primary,
+                ),
                 VerticalDivider(width: 1, color: scheme.outline),
                 _Stat(
                   value: '${profile.followerCount}',
@@ -1255,8 +1262,14 @@ class _Stat extends StatelessWidget {
   final String value;
   final String label;
   final VoidCallback? onTap;
+  final Color? valueColor;
 
-  const _Stat({required this.value, required this.label, this.onTap});
+  const _Stat({
+    required this.value,
+    required this.label,
+    this.onTap,
+    this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1271,7 +1284,7 @@ class _Stat extends StatelessWidget {
             Text(
               value,
               style: AppFonts.body(
-                color: scheme.onSurface,
+                color: valueColor ?? scheme.onSurface,
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
                 height: 1.2,
@@ -1361,7 +1374,6 @@ class _ParticipationFilters extends StatelessWidget {
     ('IN_PROGRESS', 'In progress'),
     ('PAUSED', 'Paused'),
     ('SUBMITTED', 'Submitted'),
-    ('COMPLETED', 'Completed'),
   ];
 
   @override
@@ -1564,8 +1576,9 @@ class _ChallengeTile extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
