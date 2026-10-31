@@ -53,6 +53,8 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   VerificationAccount? _account;
   EvidenceSubmission? _submission;
   bool _hasSubmitted = false;
+  String? _rejectedNote;
+  String? _approvalNote;
 
   @override
   void initState() {
@@ -75,13 +77,30 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
         cacheKey: cacheKey,
       );
       EvidenceSubmission? freshSubmission = cached;
-      if (hasSubmitted && freshSubmission == null && widget.submissionId != null) {
-        freshSubmission = await service.getSubmission(widget.submissionId!);
+      final submissionId = widget.submissionId ?? cached?.id;
+      if (submissionId != null) {
+        freshSubmission = await service.getSubmission(submissionId);
       }
+      EvidenceApprovalStatus? approvalStatus;
+      if (freshSubmission != null) {
+        try {
+          approvalStatus = await service.getApprovalStatus(freshSubmission.id);
+        } on ApiException {
+          // The evidence response already contains a review reason when available.
+        }
+      }
+      final wasRejected =
+          freshSubmission?.status.toUpperCase() == 'REJECTED';
       if (mounted) {
         setState(() {
-          _hasSubmitted = hasSubmitted;
-          _submission = freshSubmission;
+          _hasSubmitted = !wasRejected && (hasSubmitted || freshSubmission != null);
+          _submission = wasRejected ? null : freshSubmission;
+          _rejectedNote = wasRejected
+              ? approvalStatus?.note ??
+                freshSubmission?.reviewReason ??
+                'Your previous submission was rejected. You can submit new evidence.'
+              : null;
+          _approvalNote = approvalStatus?.note ?? freshSubmission?.reviewReason;
         });
       }
     } on ApiException catch (e) {
@@ -157,40 +176,9 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
       setState(() {
         _hasSubmitted = true;
         _submission = submission;
+        _rejectedNote = null;
+        _approvalNote = null;
       });
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  Future<void> _verify() async {
-    if (_submission == null) return;
-    setState(() {
-      _submitting = true;
-      _error = null;
-    });
-    try {
-      await context.read<EvidenceService>().selfVerify(_submission!.id);
-      await ref.read(participationControllerProvider.notifier).refresh();
-      ref.invalidate(myStatsProvider);
-      ref.invalidate(myCompletedChallengesProvider);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Challenge Complete'),
-          content: const Text('You earned a new skill.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Nice'),
-            ),
-          ],
-        ),
-      );
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {
@@ -317,6 +305,20 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
             ),
           ),
           const SizedBox(height: 10),
+          if (_rejectedNote != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              margin: const EdgeInsets.only(bottom: 16),
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: Text(
+                _rejectedNote!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+          ],
           Text(
             description,
             style: AppFonts.body(
@@ -490,7 +492,8 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   }
 
   Widget _buildVerify() {
-    final verified = _submission?.status.toUpperCase() == 'VERIFIED';
+    final status = _submission?.status.toUpperCase();
+    final verified = status == 'VERIFIED' || status == 'APPROVED';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -498,8 +501,8 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
         const SizedBox(height: 8),
         Text(
           verified
-              ? 'Your evidence has been verified and this challenge is complete.'
-              : 'Your evidence was submitted. Verify it to complete the challenge.',
+              ? 'Your evidence has been approved and this challenge is complete.'
+              : 'Your evidence was submitted and is waiting for admin review.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 32),
@@ -515,18 +518,18 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
         _proofCard(
           icon: Icons.verified_rounded,
           title: widget.challengeTitle,
-          detail: 'Your evidence is in. One last step to claim your skill.',
+          detail: verified
+              ? 'Your challenge is complete.'
+              : 'You will be notified after your evidence is reviewed.',
           action: const SizedBox.shrink(),
         ),
+        if (_approvalNote?.isNotEmpty == true) ...[
+          const SizedBox(height: 16),
+          Text('Reviewer note', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Text(_approvalNote!),
+        ],
         const Spacer(),
-        if (!verified && _submission != null)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _submitting ? null : _verify,
-              child: Text(_submitting ? 'Verifying...' : 'Verify Completion'),
-            ),
-          ),
       ],
     );
   }
@@ -555,7 +558,7 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
           children: [
             Text('Submitted', style: Theme.of(context).textTheme.titleSmall),
             Text(
-              'Verified',
+              'Approved',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: verified ? null : inactiveColor,
               ),

@@ -39,6 +39,11 @@ class EvidenceService {
     return submission;
   }
 
+  Future<EvidenceApprovalStatus> getApprovalStatus(String submissionId) async {
+    final data = await api.get('/evidence/$submissionId/is-approved');
+    return EvidenceApprovalStatus.fromJson(Map<String, dynamic>.from(data));
+  }
+
   Future<EvidenceSubmission?> getCachedStatus(String cacheKey) async {
     final data = await AppCache.read('evidence_status_$cacheKey');
     if (data is Map && data['submitted'] == false) return null;
@@ -82,6 +87,20 @@ class EvidenceService {
 
   Future<EvidenceSubmission> selfVerify(String submissionId) async {
     final data = await api.post('/evidence/$submissionId/self-verify');
+    final submission = EvidenceSubmission.fromJson(data);
+    await cacheStatus(submission);
+    return submission;
+  }
+
+  Future<EvidenceSubmission> verify(
+    String submissionId, {
+    required String decision,
+    String? note,
+  }) async {
+    final data = await api.post(
+      '/evidence/$submissionId/verify',
+      data: {'decision': decision, 'note': note},
+    );
     final submission = EvidenceSubmission.fromJson(data);
     await cacheStatus(submission);
     return submission;
