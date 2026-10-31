@@ -45,6 +45,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     try {
       final notifications = await context.read<NotificationsService>().list();
       if (!mounted) return;
+      if (notifications.any((notification) => notification.isEvidenceApproved)) {
+        ref.invalidate(myStatsProvider);
+      }
       setState(() => _notifications = notifications);
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);

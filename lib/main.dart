@@ -4,8 +4,9 @@ import 'providers/discover_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
+import 'package:provider/provider.dart' hide Consumer;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+  show Consumer, ProviderScope;
 
 import 'providers/app_state_providers.dart';
 import 'providers/auth_provider.dart';
@@ -55,8 +56,6 @@ class NerdMaxxingApp extends StatelessWidget {
     final notificationsService = NotificationsService(apiClient);
     final notificationBadge = NotificationBadgeController(notificationsService);
     final notificationNavigation = NotificationNavigationController();
-    pushNotificationService.onNotificationReceived =
-        notificationBadge.increment;
     pushNotificationService.onNotificationTap =
         notificationNavigation.requestNotifications;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -115,17 +114,32 @@ class NerdMaxxingApp extends StatelessWidget {
           ),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ],
-        child: Builder(
-          builder: (context) {
-            final themeProvider = context.watch<ThemeProvider>();
-            return MaterialApp(
-              title: 'NERDMAXXING',
-              debugShowCheckedModeBanner: false,
-              scaffoldMessengerKey: AppErrorSnackbar.messengerKey,
-              theme: AppTheme.light,
-              darkTheme: AppTheme.dark,
-              themeMode: themeProvider.themeMode,
-              home: const AuthGate(),
+        child: Consumer(
+          builder: (context, ref, _) {
+            pushNotificationService.onNotificationReceived = (data) {
+              notificationBadge.increment();
+              final eventType =
+                  data['notification_type'] ??
+                  data['type'] ??
+                  data['event_type'] ??
+                  '';
+              if (eventType.toUpperCase() == 'EVIDENCE_APPROVED') {
+                ref.invalidate(myStatsProvider);
+              }
+            };
+            return Builder(
+              builder: (context) {
+                final themeProvider = context.watch<ThemeProvider>();
+                return MaterialApp(
+                  title: 'NERDMAXXING',
+                  debugShowCheckedModeBanner: false,
+                  scaffoldMessengerKey: AppErrorSnackbar.messengerKey,
+                  theme: AppTheme.light,
+                  darkTheme: AppTheme.dark,
+                  themeMode: themeProvider.themeMode,
+                  home: const AuthGate(),
+                );
+              },
             );
           },
         ),

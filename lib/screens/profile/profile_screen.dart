@@ -438,6 +438,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     final auth = context.watch<AuthProvider>();
     final profile = provider.profile;
     final isOwnProfile = _isOwnProfile(auth);
+    final ownStats = isOwnProfile ? ref.watch(myStatsProvider).valueOrNull : null;
     final completedChallenges = isOwnProfile
         ? ref.watch(myCompletedChallengesProvider).valueOrNull ?? const []
         : provider.completedChallenges;
@@ -508,6 +509,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             SliverToBoxAdapter(
               child: _ProfileHeader(
                 profile: profile,
+                auraPoints: ownStats?.auraPoints ?? profile.auraPoints,
                 onFollowersTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => RelationshipListScreen(
@@ -1137,11 +1139,13 @@ class _RefreshableState extends StatelessWidget {
 
 class _ProfileHeader extends StatelessWidget {
   final UserProfile profile;
+  final int auraPoints;
   final VoidCallback onFollowersTap;
   final VoidCallback onFollowingTap;
 
   const _ProfileHeader({
     required this.profile,
+    required this.auraPoints,
     required this.onFollowersTap,
     required this.onFollowingTap,
   });
@@ -1235,7 +1239,7 @@ class _ProfileHeader extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _Stat(
-                  value: '${profile.auraPoints}',
+                  value: '$auraPoints',
                   label: 'Aura',
                   valueColor: scheme.primary,
                 ),

@@ -80,7 +80,7 @@ class PushNotificationService {
 
   Future<void>? _initialization;
   StreamSubscription<String>? _tokenRefreshSubscription;
-  VoidCallback? onNotificationReceived;
+  ValueChanged<Map<String, String>>? onNotificationReceived;
   ValueChanged<Map<String, String>>? onNotificationTap;
 
   PushNotificationService({required this.api, required this.tokenStorage});
@@ -105,7 +105,11 @@ class PushNotificationService {
       await messaging.requestPermission(alert: true, badge: true, sound: true);
       FirebaseMessaging.onMessage.listen((message) async {
         await _showLocalNotification(message);
-        onNotificationReceived?.call();
+        onNotificationReceived?.call(
+          message.data.map(
+            (key, value) => MapEntry(key, value.toString()),
+          ),
+        );
       });
       FirebaseMessaging.onMessageOpenedApp.listen(
         (message) => _handleNotificationTap(message.data),
