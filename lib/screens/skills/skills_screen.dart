@@ -21,7 +21,10 @@ class SkillsScreen extends ConsumerWidget {
           loading: () =>
               const _RefreshableState(child: CircularProgressIndicator()),
           error: (error, _) => _RefreshableState(
-            child: AppErrorView(error: error, onRetry: () => ref.refresh(myStatsProvider.future)),
+            child: AppErrorView(
+              error: error,
+              onRetry: () => ref.refresh(myStatsProvider.future),
+            ),
           ),
           data: (value) => DefaultTabController(
             length: 2,
@@ -167,11 +170,44 @@ class _RankSummary extends StatelessWidget {
         _RankLadder(stats: stats),
         const SizedBox(height: 12),
         Row(
-          Future<void> refreshStats() async {
-            await ref.refresh(myStatsProvider.future);
-          }
-
           children: [
+            _StatTile(
+              label: 'DAY STREAK',
+              value: '${stats.dayStreak}',
+              icon: Icons.local_fire_department_rounded,
+            ),
+            const SizedBox(width: 12),
+            _StatTile(
+              label: 'COMPLETED',
+              value: '${stats.completedChallengeCount}',
+              icon: Icons.task_alt_rounded,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _StatTile(
+              label: 'ACTIVE',
+              value: '${stats.activeChallengeCount}',
+              icon: Icons.radio_button_checked_rounded,
+              accent: true,
+            ),
+            const SizedBox(width: 12),
+            _StatTile(
+              label: 'RANK',
+              value: stats.rank,
+              icon: Icons.emoji_events_rounded,
+              dark: true,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/*
             body: stats.when(
               loading: () => RefreshIndicator(
                 onRefresh: refreshStats,
@@ -361,6 +397,155 @@ class _RankSummary extends StatelessWidget {
           );
         }
       }
+*/
+
+class _RankHeader extends StatelessWidget {
+  final String rank;
+
+  const _RankHeader({required this.rank});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text('Rank', style: Theme.of(context).textTheme.headlineMedium),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.primary
+                : Theme.of(context).colorScheme.onSurface,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            'Rank $rank',
+            style: AppFonts.body(
+              color: isDark ? AppColors.dark : AppColors.primary,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RankLadder extends StatelessWidget {
+  final UserStats stats;
+
+  const _RankLadder({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = Theme.of(context).brightness == Brightness.dark
+        ? scheme.primary
+        : AppColors.primary;
+    const ranks = ['E', 'D', 'C', 'B', 'A', 'S'];
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border.all(color: scheme.outline),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Rank ladder',
+                style: AppFonts.body(
+                  color: scheme.onSurface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                stats.nextRank == null
+                    ? 'MAX RANK'
+                    : '${stats.rankProgress}% to ${stats.nextRank}',
+                style: AppFonts.body(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 42,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  child: Container(height: 3, color: scheme.outline),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (final rank in ranks)
+                      Container(
+                        width: 38,
+                        height: 38,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: rank == stats.rank ? accent : scheme.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: rank == stats.rank
+                                ? scheme.onSurface
+                                : scheme.outline,
+                            width: rank == stats.rank ? 2 : 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          rank,
+                          style: AppFonts.body(
+                            color: rank == stats.rank
+                                ? AppColors.dark
+                                : scheme.onSurfaceVariant,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            stats.nextRank == null
+                ? 'Maximum aura reached'
+                : '${stats.auraToNextRank} aura to ${stats.nextRank} rank',
+            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _LeaderboardMetric { aura, completed, streak }
+
+class _LeaderboardTab extends ConsumerStatefulWidget {
+  final String rank;
+
+  const _LeaderboardTab({required this.rank});
+
+  @override
+  ConsumerState<_LeaderboardTab> createState() => _LeaderboardTabState();
+}
+
+class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
   _LeaderboardMetric _metric = _LeaderboardMetric.aura;
   String _period = 'THIS WEEK';
   String? _playerRank;
@@ -376,70 +561,70 @@ class _RankSummary extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () async {
-        await ref.refresh(leaderboardProvider(filters).future);
+        return ref.refresh(leaderboardProvider(filters).future);
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
         children: [
-        _RankHeader(rank: widget.rank),
-        const SizedBox(height: 20),
-        Text(
-          'THE RANKS',
-          style: AppFonts.label(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 13,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'See who is putting in the work.',
-          style: AppFonts.display(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 30,
-            fontWeight: FontWeight.w700,
-            height: 1.05,
-          ),
-        ),
-        const SizedBox(height: 24),
-        _FilterStrip(
-          period: _period,
-          metric: _metric,
-          onPeriodChanged: (period) => setState(() => _period = period),
-          onMetricChanged: (metric) => setState(() => _metric = metric),
-          playerRank: _playerRank,
-          onPlayerRankChanged: (rank) => setState(() => _playerRank = rank),
-        ),
-        const SizedBox(height: 24),
-        _LeaderboardHeader(metric: _metric, period: _period),
-        const SizedBox(height: 10),
-        leaderboard.when(
-          loading: () => const Padding(
-            padding: EdgeInsets.only(top: 32),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          error: (error, _) => Padding(
-            padding: const EdgeInsets.only(top: 32),
-            child: Text(
-              'Could not load the leaderboard.\n$error',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.danger),
+          _RankHeader(rank: widget.rank),
+          const SizedBox(height: 20),
+          Text(
+            'THE RANKS',
+            style: AppFonts.label(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 13,
             ),
           ),
-          data: (data) => data.entries.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.only(top: 32),
-                  child: Center(
-                    child: Text('No players found for these filters.'),
+          const SizedBox(height: 8),
+          Text(
+            'See who is putting in the work.',
+            style: AppFonts.display(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
+              height: 1.05,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _FilterStrip(
+            period: _period,
+            metric: _metric,
+            onPeriodChanged: (period) => setState(() => _period = period),
+            onMetricChanged: (metric) => setState(() => _metric = metric),
+            playerRank: _playerRank,
+            onPlayerRankChanged: (rank) => setState(() => _playerRank = rank),
+          ),
+          const SizedBox(height: 24),
+          _LeaderboardHeader(metric: _metric, period: _period),
+          const SizedBox(height: 10),
+          leaderboard.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.only(top: 32),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.only(top: 32),
+              child: Text(
+                'Could not load the leaderboard.\n$error',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.danger),
+              ),
+            ),
+            data: (data) => data.entries.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.only(top: 32),
+                    child: Center(
+                      child: Text('No players found for these filters.'),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      for (final entry in data.entries)
+                        _LeaderboardRow(entry: entry, metric: _metric),
+                    ],
                   ),
-                )
-              : Column(
-                  children: [
-                    for (final entry in data.entries)
-                      _LeaderboardRow(entry: entry, metric: _metric),
-                  ],
-                ),
-        ),
+          ),
         ],
       ),
     );

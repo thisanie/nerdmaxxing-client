@@ -41,7 +41,7 @@ class AppColors {
   static const lightTextPrimary = Color(0xFF14140F);
   static const lightTextSecondary = Color(0xFF5C5C53);
   static const lightBorder = Color(0xFFD9D8CC);
-  static const lightPrimary = Color(0xFF4A6410); // deep lime, 6:1+ on white
+  static const lightPrimary = Color(0xff16803C); // deep lime, 6:1+ on white
   static const limeWash = Color(
     0xFFE6F3B0,
   ); // pale lime chip/tile fill on light
