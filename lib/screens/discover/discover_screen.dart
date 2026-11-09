@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer, Provider;
@@ -256,7 +258,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onRefresh: () async {
             await _loadHomeData();
           },
-          color: HomePalette.ink,
+          color: brightness == Brightness.dark
+              ? HomePalette.primary
+              : HomePalette.ink,
           backgroundColor: HomePalette.surface(brightness),
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -527,23 +531,35 @@ class _WeekStrip extends StatelessWidget {
           for (var index = 0; index < days.length; index++)
             Column(
               children: [
-                Container(
+                SizedBox(
                   width: 34,
                   height: 34,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: index == 6 ? HomePalette.primary : null,
-                    border: index == 6
-                        ? null
-                        : Border.all(
-                            color: HomePalette.borderStrong(brightness),
-                            style: BorderStyle.solid,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (index == 6)
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: HomePalette.primary,
+                            shape: BoxShape.circle,
                           ),
+                          child: SizedBox.expand(),
+                        )
+                      else
+                        CustomPaint(
+                          size: const Size.square(34),
+                          painter: _DottedCirclePainter(
+                            color: HomePalette.borderStrong(brightness),
+                          ),
+                        ),
+                      if (index == 6 && streak > 0)
+                        const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: HomePalette.ink,
+                        ),
+                    ],
                   ),
-                  alignment: Alignment.center,
-                  child: index == 6 && streak > 0
-                      ? Icon(Icons.check_rounded, size: 16, color: HomePalette.ink)
-                      : null,
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -564,6 +580,35 @@ class _WeekStrip extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DottedCirclePainter extends CustomPainter {
+  final Color color;
+
+  const _DottedCirclePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.shortestSide / 2 - 1;
+    final paint = Paint()..color = color;
+    const dotCount = 16;
+    for (var index = 0; index < dotCount; index++) {
+      final angle = (index * 2 * math.pi / dotCount) - math.pi / 2;
+      canvas.drawCircle(
+        Offset(
+          center.dx + radius * math.cos(angle),
+          center.dy + radius * math.sin(angle),
+        ),
+        1.2,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DottedCirclePainter oldDelegate) =>
+      color != oldDelegate.color;
 }
 
 class _AuraCard extends StatelessWidget {
@@ -878,8 +923,9 @@ class _ResumeCard extends StatelessWidget {
                     children: [
                       CircularProgressIndicator(
                         value: detail == null ? null : progressValue,
-                        strokeWidth: 5,
-                        backgroundColor: HomePalette.ink.withValues(alpha: 0.15),
+                        strokeWidth: 6,
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: HomePalette.ink.withValues(alpha: 0.2),
                         color: HomePalette.ink,
                       ),
                       Container(
