@@ -547,7 +547,7 @@ class _LeaderboardTab extends ConsumerStatefulWidget {
 
 class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
   _LeaderboardMetric _metric = _LeaderboardMetric.aura;
-  String _period = 'THIS WEEK';
+  String _period = 'ALL TIME';
   String? _playerRank;
 
   @override
