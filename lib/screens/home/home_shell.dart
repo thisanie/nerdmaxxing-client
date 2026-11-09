@@ -218,21 +218,24 @@ class _BottomNavigationBar extends StatelessWidget {
             border: Border.all(color: HomePalette.border(brightness)),
             borderRadius: BorderRadius.circular(30),
           ),
-          child: Row(
-            children: [
-              for (var index = 0; index < items.length; index++)
-                Expanded(
-                  child: InkWell(
-                    onTap: () => onTap(index),
-                    borderRadius: BorderRadius.circular(24),
-                    child: _NavigationItem(
-                      icon: items[index].$1,
-                      label: items[index].$2,
-                      selected: currentIndex == index,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                for (var index = 0; index < items.length; index++)
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => onTap(index),
+                      borderRadius: BorderRadius.circular(24),
+                      child: _NavigationItem(
+                        icon: items[index].$1,
+                        label: items[index].$2,
+                        selected: currentIndex == index,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

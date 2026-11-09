@@ -895,6 +895,9 @@ class _ResumeCard extends StatelessWidget {
     final progressValue = span <= 0
         ? 0.0
         : ((current - baseline) / span).clamp(0.0, 1.0).toDouble();
+    final ringProgress = detail == null
+      ? 0.04
+      : math.max(progressValue, 0.04).toDouble();
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(24),
@@ -922,10 +925,10 @@ class _ResumeCard extends StatelessWidget {
                     alignment: Alignment.center,
                     children: [
                       CircularProgressIndicator(
-                        value: detail == null ? null : progressValue,
+                        value: ringProgress,
                         strokeWidth: 6,
                         strokeCap: StrokeCap.round,
-                        backgroundColor: HomePalette.ink.withValues(alpha: 0.2),
+                        backgroundColor: HomePalette.ink.withValues(alpha: 0.25),
                         color: HomePalette.ink,
                       ),
                       Container(
