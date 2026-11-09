@@ -153,6 +153,126 @@
   .you .av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--primary);display:grid;place-items:center;font-weight:800;font-size:12px}
   .you .t{font-size:13px;font-weight:700;line-height:1.1}.you .t small{display:block;font-weight:600;opacity:.6;font-size:10.5px;margin-top:2px}
   .you .p{margin-left:auto;font-weight:800;font-size:14px}
+
+  /* ===== RANK SUMMARY ===== */
+  .rhero{margin-top:16px;border-radius:26px;padding:16px;color:var(--ink);background:linear-gradient(135deg,var(--primary),var(--mint));position:relative;overflow:hidden}
+  .rhero .e{font-size:10px;letter-spacing:.14em;font-weight:800;opacity:.65}
+  .rhero h3{font-size:19px;line-height:1.12;font-weight:700;margin:6px 0 14px;max-width:210px;letter-spacing:-.01em}
+  .rhero .rw{display:flex;align-items:center;gap:14px}
+  .rring{width:84px;height:84px;border-radius:50%;flex:none;background:conic-gradient(var(--ink) 0 80%,rgba(11,12,5,.16) 80% 100%);display:grid;place-items:center}
+  .rring span{width:68px;height:68px;border-radius:50%;background:#dfffa6;display:grid;place-items:center;font-size:30px;font-weight:800;letter-spacing:-.02em}
+  .rhero .ap{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:.95}
+  .rhero .ap small{display:block;font-size:10px;letter-spacing:.14em;font-weight:800;opacity:.6;margin-top:4px}
+  .rhero .nx{margin-top:14px;display:flex;justify-content:space-between;align-items:center;background:rgba(11,12,5,.9);color:var(--primary);border-radius:14px;padding:10px 14px;font-size:12px;font-weight:700}
+  .rhero .nx span:last-child{color:#fff;opacity:.8;font-weight:600}
+  .ladder{margin-top:12px;background:var(--alt);border:1px solid var(--border);border-radius:24px;padding:16px}
+  .lad{position:relative;display:flex;justify-content:space-between;margin-top:16px}
+  .lad::before{content:"";position:absolute;left:17px;right:17px;top:16px;height:3px;border-radius:2px;background:var(--border)}
+  .lad::after{content:"";position:absolute;left:17px;top:16px;height:3px;width:17%;border-radius:2px;background:linear-gradient(90deg,var(--primary),var(--mint))}
+  .ln{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10px;color:var(--text2);font-weight:600}
+  .ln i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800;background:var(--surface);border:1.5px solid var(--strong);color:var(--text2)}
+  .ln.cur i{background:var(--primary);border-color:transparent;color:var(--ink);box-shadow:0 0 0 5px var(--pmuted)}
+  .ln.nxt i{border:1.5px dashed var(--primary);color:var(--text)}
+  [data-x] .ln.nxt i{border-color:var(--primary)}
+  .ln.cur,.ln.nxt{color:var(--text)}
+  .bento{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .bt{border-radius:22px;padding:14px;height:104px;display:flex;flex-direction:column;justify-content:space-between}
+  .bt .ic{font-size:18px;line-height:1}
+  .bt b{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1}
+  .bt span{font-size:10px;letter-spacing:.13em;font-weight:800;opacity:.75}
+  .bt.s{background:var(--peachW);color:var(--peach)}
+  .bt.c{background:var(--mintW);color:var(--pmint)}
+  .bt.a{background:var(--primary);color:var(--ink)}
+  .bt.r{background:var(--lavW);color:var(--lav)}
+  .wk{margin-top:12px;background:var(--alt);border:1px solid var(--border);border-radius:24px;padding:14px 16px}
+  .bars{display:flex;align-items:flex-end;justify-content:space-between;height:70px;margin-top:12px}
+  .bars div{width:28px;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:9.5px;color:var(--text2);font-weight:600}
+  .bars i{display:block;width:100%;border-radius:8px;background:var(--border)}
+  .bars .t i{background:var(--primary)}
+  .goto{margin-top:12px;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-radius:20px;border:1px solid var(--border);background:var(--alt);font-size:13px;font-weight:600}
+  .goto small{display:block;font-size:10.5px;color:var(--text2);font-weight:500;margin-top:2px}
+  .goto .arr{width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--ink);display:grid;place-items:center;font-weight:800}
+
+  /* ===== CHALLENGE DETAIL ===== */
+  .topbar{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:600}
+  .topbar .mid{color:var(--text2)}.topbar .mid b{color:var(--text)}
+  .cd{margin-top:14px;border-radius:26px;padding:16px;color:var(--ink);background:linear-gradient(135deg,var(--primary),var(--mint))}
+  .cd .tp2{display:flex;justify-content:space-between;align-items:center}
+  .cd .here{font-size:10px;letter-spacing:.14em;font-weight:800;opacity:.7;display:flex;align-items:center;gap:7px}
+  .cd .here::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ink)}
+  .cd .delta{background:var(--ink);color:var(--primary);font-size:11px;font-weight:700;padding:6px 11px;border-radius:999px}
+  .cd .num{font-size:68px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-top:12px}
+  .cd .num small{font-size:18px;font-weight:600;letter-spacing:0;opacity:.6;margin-left:6px}
+  .cd p{font-size:12.5px;line-height:1.35;margin-top:8px;font-weight:600}
+  .cd p span{opacity:.6;font-weight:500}
+  .trk{position:relative;height:6px;border-radius:4px;background:rgba(11,12,5,.16);margin:22px 0 8px}
+  .trk i{position:absolute;left:0;top:0;bottom:0;width:17%;border-radius:4px;background:var(--ink)}
+  .trk em{position:absolute;left:17%;top:-17px;transform:translateX(-50%);font-style:normal;font-size:10px;font-weight:800}
+  .trk u{position:absolute;right:0;top:-18px;text-decoration:none;font-size:12px}
+  .trk s{position:absolute;left:17%;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--ink);transform:translateX(-50%);box-shadow:0 0 0 4px rgba(11,12,5,.15);text-decoration:none}
+  .trk2{display:flex;justify-content:space-between;font-size:10px;font-weight:700;opacity:.65}
+  .cbtns{display:flex;gap:8px;margin-top:14px}
+  .cbtns div{flex:1;text-align:center;padding:12px 0;border-radius:999px;font-size:13px;font-weight:700}
+  .cbtns .p{background:var(--ink);color:var(--primary)}
+  .cbtns .o{border:1.5px solid rgba(11,12,5,.4)}
+  .logp{text-align:center;font-size:11.5px;font-weight:700;margin-top:12px;opacity:.75}
+  .atts{margin-top:12px;background:var(--alt);border:1px solid var(--border);border-radius:24px;padding:14px 16px}
+  .abars{display:flex;align-items:flex-end;justify-content:center;gap:22px;height:116px;margin-top:10px}
+  .ab{width:84px;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--text2);justify-content:flex-end;height:100%}
+  .ab i{display:block;width:100%;border-radius:14px;background:var(--strong)}
+  .ab.hi i{background:var(--primary)}
+  .ab.hi{color:var(--text)}
+  .acap{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:11px;color:var(--text2)}
+  .acap b{color:var(--text)}
+  .tr{margin-top:12px;position:relative}
+  .tr::before{content:"";position:absolute;left:16px;top:20px;bottom:20px;width:2px;background:var(--border)}
+  .ms{position:relative;display:flex;gap:12px;align-items:flex-start;padding:7px 0}
+  .ms i{position:relative;z-index:1;flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;background:var(--bg);border:1.5px solid var(--strong);color:var(--text2)}
+  .ms.on i{background:var(--primary);color:var(--ink);border-color:transparent;box-shadow:0 0 0 5px var(--pmuted)}
+  .ms .t{font-size:14px;font-weight:600;padding-top:7px}
+  .ms.on .t{padding-top:4px}
+  .ms .d{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.35}
+  .ms .pg{margin-top:9px;background:var(--alt);border:1px solid var(--border);border-radius:14px;padding:9px 12px;font-size:10.5px;color:var(--text2)}
+  .ms .pg .bar{margin-bottom:6px}
+  .sum{margin-top:12px;border-radius:24px;padding:16px;background:var(--alt);border:1px solid var(--border);position:relative;overflow:hidden}
+  .sum::before{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,rgba(207,255,71,.2),transparent 70%)}
+  .sum .n{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .sum .n small{font-size:14px;font-weight:600;color:var(--text2);letter-spacing:0;margin-left:8px}
+  .sum .who{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:11.5px;color:var(--text2)}
+  .sum .who i{width:24px;height:24px;border-radius:50%;background:var(--peach)}
+  .disc{margin-top:10px;display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:20px;border:1px solid var(--border);background:var(--alt);font-size:13px;font-weight:600}
+  .disc .dot{width:8px;height:8px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 4px var(--pmuted)}
+  .disc .arr{margin-left:auto;color:var(--text2)}
+  .drop{text-align:center;font-size:12px;color:var(--adv);font-weight:600;margin-top:18px}
+
+  /* ===== PROFILE ===== */
+  .pav{width:92px;height:92px;border-radius:50%;margin:14px auto 0;position:relative;background:linear-gradient(135deg,#b04ae0,#6a2a9a);border:3px solid var(--primary);box-shadow:0 0 0 6px var(--pmuted)}
+  .pav b{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--primary);border:2px solid var(--bg);display:grid;place-items:center;font-size:11px;font-weight:800}
+  .pst{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px;background:var(--alt);border:1px solid var(--border);border-radius:22px;overflow:hidden}
+  .pst div{text-align:center;padding:12px 0;border-right:1px solid var(--border);font-size:11px;color:var(--text2)}
+  .pst div:last-child{border:0}
+  .pst b{display:block;font-size:22px;font-weight:700;color:var(--text)}
+  .pst .hi b{color:var(--primary)}
+  .pbtns{display:flex;gap:8px;margin-top:12px}
+  .pbtns div{flex:1;text-align:center;padding:11px 0;border-radius:999px;font-size:12.5px;font-weight:700}
+  .pbtns .a{background:var(--primary);color:var(--ink)}
+  .pbtns .b{background:var(--alt);border:1px solid var(--border)}
+  .tabs{display:flex;justify-content:space-around;margin-top:18px;border-bottom:1px solid var(--border)}
+  .tabs div{padding:10px 4px;font-size:12px;font-weight:600;color:var(--text2)}
+  .tabs .on{color:var(--text);box-shadow:inset 0 -3px 0 var(--primary)}
+  .pr{display:flex;align-items:center;gap:12px;padding:10px;margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:20px}
+  .pr .th{width:46px;height:46px;border-radius:14px;flex:none;font-size:20px}
+  .pr .th::after{display:none}
+  .pr .t{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pr .st{font-size:10.5px;color:var(--text2);margin-top:2px}
+  .act2{margin-left:auto;flex:none;font-size:11px;font-weight:700;padding:7px 13px;border-radius:999px}
+  .act2.pa{background:var(--alt);border:1px solid var(--border);color:var(--text)}
+  .act2.go{background:var(--primary);color:var(--ink)}
+  .empty{margin-top:8px;border:1.5px dashed var(--strong);border-radius:20px;padding:16px;text-align:center;font-size:12px;color:var(--text2)}
+  .empty b{display:block;color:var(--text);font-size:13px;margin-bottom:3px}
+  .comp{height:150px;border-radius:22px;margin-top:10px}
+  .comp .ov h4{font-size:15px;font-weight:700;margin:7px 0 5px;line-height:1.15}
+  .ok{position:absolute;top:10px;right:10px;z-index:3;width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--ink);display:grid;place-items:center;font-weight:800;font-size:13px}
 </style>
 </head>
 <body>
@@ -252,7 +372,7 @@
 </div></div></div></div>
 
 <!-- RANK -->
-<div class="col"><div class="label">Rank</div>
+<div class="col"><div class="label">Rank · Leaderboard</div>
 <div class="phone"><div class="screen"><span class="notch"></span>
 <div class="status"><span>00:59</span><span>▂▄▆ 46</span></div>
 <div class="scroll">
@@ -284,6 +404,128 @@
   <div class="ni on"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
   <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
 </div></div></div></div>
+
+
+<!-- RANK SUMMARY -->
+<div class="col"><div class="label">Rank · Summary</div>
+<div class="phone"><div class="screen"><span class="notch"></span>
+<div class="status"><span>01:10</span><span>▂▄▆ 44</span></div>
+<div class="scroll">
+  <div class="seg"><div class="on">Summary</div><div>Leaderboard</div></div>
+  <div class="row between" style="margin-top:18px"><div class="h1" style="font-size:32px">Rank</div><span class="rpill" style="font-size:12px">Rank E</span></div>
+
+  <div class="rhero">
+    <div class="e">YOUR PROGRESS</div>
+    <h3>Build your rank one challenge at a time.</h3>
+    <div class="rw">
+      <div class="rring"><span>E</span></div>
+      <div class="ap">80<small>AURA POINTS</small></div>
+    </div>
+    <div class="nx"><span>20 aura to D rank</span><span>80%</span></div>
+  </div>
+
+  <div class="ladder">
+    <div class="row between"><div class="h2">Rank ladder</div><span class="mut" style="font-size:12px">Next: D</span></div>
+    <div class="lad">
+      <div class="ln cur"><i>E</i>You</div>
+      <div class="ln nxt"><i>D</i>100</div>
+      <div class="ln"><i>C</i></div><div class="ln"><i>B</i></div><div class="ln"><i>A</i></div><div class="ln"><i>S</i></div>
+    </div>
+  </div>
+
+  <div class="bento">
+    <div class="bt s"><span class="ic">🔥</span><div><b>1</b><br><span>DAY STREAK</span></div></div>
+    <div class="bt c"><span class="ic">✔</span><div><b>2</b><br><span>COMPLETED</span></div></div>
+    <div class="bt a"><span class="ic">◎</span><div><b>3</b><br><span>ACTIVE</span></div></div>
+    <div class="bt r"><span class="ic">🏆</span><div><b>E</b><br><span>RANK</span></div></div>
+  </div>
+
+  <div class="wk">
+    <div class="row between"><div class="h2" style="font-size:15px">Aura this week</div><span class="mut" style="font-size:11px">+80 AP</span></div>
+    <div class="bars">
+      <div><i style="height:6px"></i>M</div><div><i style="height:6px"></i>T</div><div><i style="height:6px"></i>W</div><div><i style="height:6px"></i>T</div>
+      <div><i style="height:6px"></i>F</div><div><i style="height:6px"></i>S</div><div class="t"><i style="height:44px"></i>S</div>
+    </div>
+  </div>
+
+  <div class="goto"><div>See the leaderboard<small>You're #2 this week</small></div><span class="arr">→</span></div>
+</div>
+<div class="nav">
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 3 3 11h3v9h5v-6h2v6h5v-9h3z"/></svg><span>Home</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div>
+  <div class="ni on"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
+</div></div></div></div>
+
+
+<!-- CHALLENGE DETAIL -->
+<div class="col"><div class="label">Challenge · Accepted</div>
+<div class="phone"><div class="screen"><span class="notch"></span>
+<div class="status"><span>01:16</span><span>▂▄▆ 42</span></div>
+<div class="scroll">
+  <div class="topbar"><div class="iconbtn">←</div><div class="mid">Intermediate · <b>Accepted</b></div><div class="iconbtn">⋮</div></div>
+
+  <div class="cd">
+    <div class="tp2"><span class="here">YOU ARE HERE</span><span class="delta">↘ 100 since start</span></div>
+    <div class="num">800<small>sec</small></div>
+    <p>Time to pick the lock <span>· Best so far. Target is 300.</span></p>
+    <div class="trk"><i></i><em>800</em><s></s><u>🏁</u></div>
+    <div class="trk2"><span>900</span><span>300</span></div>
+    <div class="cbtns"><div class="p">▶ Train</div><div class="o">Prove it</div></div>
+    <div class="logp">+ Log progress</div>
+  </div>
+
+  <div class="row between sec"><div class="h2">Your attempts</div><span class="mut" style="font-size:12px">2 logged</span></div>
+  <div class="atts">
+    <div class="abars">
+      <div class="ab"><span>900</span><i style="height:80px"></i>#1</div>
+      <div class="ab hi"><span>800</span><i style="height:71px"></i>#2</div>
+    </div>
+    <div class="acap"><span>Time to pick the lock</span><b>0.9× your first</b></div>
+  </div>
+
+  <div class="row between sec"><div class="h2">The trail</div><span class="mut" style="font-size:12px">0 of 4 milestones</span></div>
+  <div class="tr">
+    <div class="ms on"><i>01</i><div style="flex:1"><div class="t">Open Your First Lock</div><div class="d">Learn the pins and pick a padlock open, however long it takes.</div>
+      <div class="pg"><div class="bar"><i style="width:3%"></i></div><div class="row between"><span>0 / 1800 seconds</span><span>Next up</span></div></div></div></div>
+    <div class="ms"><i>02</i><div class="t">Under 15 Minutes</div></div>
+    <div class="ms"><i>03</i><div class="t">Under 10 Minutes</div></div>
+    <div class="ms"><i>04</i><div class="t">Under 5 Minutes</div></div>
+  </div>
+
+  <div class="row between sec"><div class="h2">At the summit</div><span class="mut" style="font-size:12px">0% climbed</span></div>
+  <div class="sum"><div class="n">0<small>have cleared it</small></div><div class="who"><i></i>1 nerd is on this trial</div></div>
+  <div class="disc"><span class="dot"></span>Discussion<span class="arr">💬</span></div>
+  <div class="drop">Drop this trial</div>
+</div>
+<div class="nav"><div class="ni"><svg viewBox="0 0 24 24"><path d="M12 3 3 11h3v9h5v-6h2v6h5v-9h3z"/></svg><span>Home</span></div><div class="ni on"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div><div class="ni"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div><div class="ni"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div></div></div></div></div>
+
+<!-- PROFILE -->
+<div class="col"><div class="label">Profile</div>
+<div class="phone"><div class="screen"><span class="notch"></span>
+<div class="status"><span>01:15</span><span>▂▄▆ 42</span></div>
+<div class="scroll">
+  <div class="row between"><span style="width:34px"></span><div style="font-weight:700;font-size:15px">Aniket</div><div class="iconbtn">☰</div></div>
+  <div class="pav"><b>E</b></div>
+  <div style="text-align:center;margin-top:12px"><div style="font-size:13px;font-weight:600">@aniket</div><div class="mut" style="font-size:12px;margin-top:2px">hi, I am Aniket</div></div>
+  <div class="pst"><div class="hi"><b>80</b>Aura</div><div><b>2</b>Followers</div><div><b>2</b>Following</div></div>
+  <div class="pbtns"><div class="a">Edit profile</div><div class="b">Rank E</div></div>
+
+  <div class="tabs"><div class="on">⚑ Challenges</div><div>Groups</div><div>Rewards</div></div>
+  <div class="fbar"><div class="f on">All</div><div class="f">Accepted</div><div class="f">In progress</div><div class="f">Paused</div></div>
+
+  <div class="pr"><div class="img th g3">🔐</div><div style="min-width:0"><div class="t">Pick a Lock in Under 5 Mi…</div><div class="st">In progress</div></div><span class="act2 pa">Pause</span></div>
+  <div class="pr"><div class="img th g2">🔥</div><div style="min-width:0"><div class="t">Make Fire From Sticks: Li…</div><div class="st">Accepted</div></div><span class="act2 go">Start</span></div>
+  <div class="pr"><div class="img th g1">🤸</div><div style="min-width:0"><div class="t">Do a Handstand for 30 S…</div><div class="st">In progress</div></div><span class="act2 pa">Pause</span></div>
+
+  <div class="eyebrow sec">CREATED BY YOU</div>
+  <div class="empty"><b>No challenges yet</b>Create your own and invite nerds to it.</div>
+
+  <div class="eyebrow sec">COMPLETED</div>
+  <div class="img soft comp g5" style="font-size:54px"><span class="ok">✓</span>🧊<div class="ov"><span class="dchip int">Intermediate</span><h4>Solve a Rubik's Cube in Under 2 Minutes</h4><div class="pc"><div class="m" style="display:flex;gap:8px;font-size:10.5px;color:rgba(236,235,227,.8)"><span>🕒 20m–1h</span><span>⚡ 40</span></div></div></div></div>
+  <div class="img soft comp g2" style="font-size:54px"><span class="ok">✓</span>🧩<div class="ov"><span class="dchip beg">Beginner</span><h4>Learn to Solve a Sudoku in Under 5 Minutes</h4><div class="pc"><div class="m" style="display:flex;gap:8px;font-size:10.5px;color:rgba(236,235,227,.8)"><span>🕒 2h–5h</span><span>⚡ 24</span></div></div></div></div>
+</div>
+<div class="nav"><div class="ni"><svg viewBox="0 0 24 24"><path d="M12 3 3 11h3v9h5v-6h2v6h5v-9h3z"/></svg><span>Home</span></div><div class="ni"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div><div class="ni"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div><div class="ni on"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div></div></div></div></div>
 
 </main>
 </body>

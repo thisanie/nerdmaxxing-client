@@ -55,7 +55,7 @@ class _RankTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final selectedForeground = isDark ? AppColors.dark : scheme.surface;
+    final selectedForeground = isDark ? AppColors.dark : AppColors.primary;
     final selectedBackground = isDark ? AppColors.primary : scheme.onSurface;
     return Container(
       height: 54,
@@ -559,74 +559,96 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
     );
     final leaderboard = ref.watch(leaderboardProvider(filters));
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        return ref.refresh(leaderboardProvider(filters).future);
-      },
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
-        children: [
-          _RankHeader(rank: widget.rank),
-          const SizedBox(height: 20),
-          Text(
-            'THE RANKS',
-            style: AppFonts.label(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'See who is putting in the work.',
-            style: AppFonts.display(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              height: 1.05,
-            ),
-          ),
-          const SizedBox(height: 24),
-          _FilterStrip(
-            period: _period,
-            metric: _metric,
-            onPeriodChanged: (period) => setState(() => _period = period),
-            onMetricChanged: (metric) => setState(() => _metric = metric),
-            playerRank: _playerRank,
-            onPlayerRankChanged: (rank) => setState(() => _playerRank = rank),
-          ),
-          const SizedBox(height: 24),
-          _LeaderboardHeader(metric: _metric, period: _period),
-          const SizedBox(height: 10),
-          leaderboard.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.only(top: 32),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.only(top: 32),
-              child: Text(
-                'Could not load the leaderboard.\n$error',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.danger),
-              ),
-            ),
-            data: (data) => data.entries.isEmpty
-                ? const Padding(
-                    padding: EdgeInsets.only(top: 32),
-                    child: Center(
-                      child: Text('No players found for these filters.'),
-                    ),
-                  )
-                : Column(
-                    children: [
-                      for (final entry in data.entries)
-                        _LeaderboardRow(entry: entry, metric: _metric),
-                    ],
+    final periodLabel = switch (_period) {
+      'THIS MONTH' => 'This month',
+      'ALL TIME' => 'All time',
+      _ => 'This week',
+    };
+
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await ref.refresh(leaderboardProvider(filters).future);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              children: [
+                _RankHeader(rank: widget.rank),
+                const SizedBox(height: 4),
+                Text(
+                  'See who is putting in the work.',
+                  style: AppFonts.body(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14,
                   ),
+                ),
+                const SizedBox(height: 16),
+                _FilterStrip(
+                  period: _period,
+                  metric: _metric,
+                  onPeriodChanged: (period) => setState(() => _period = period),
+                  onMetricChanged: (metric) => setState(() => _metric = metric),
+                  playerRank: _playerRank,
+                  onPlayerRankChanged: (rank) =>
+                      setState(() => _playerRank = rank),
+                ),
+                const SizedBox(height: 16),
+                leaderboard.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.only(top: 32),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, _) => Padding(
+                    padding: const EdgeInsets.only(top: 32),
+                    child: Text(
+                      'Could not load the leaderboard.\n$error',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.danger),
+                    ),
+                  ),
+                  data: (data) => data.entries.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.only(top: 32),
+                          child: Center(
+                            child: Text('No players found for these filters.'),
+                          ),
+                        )
+                      : Column(
+                          children: [
+                            _LeaderboardHeader(
+                              metric: _metric,
+                              period: periodLabel,
+                            ),
+                            const SizedBox(height: 4),
+                            _LeaderboardPodium(
+                              entries: data.entries.take(3).toList(),
+                              metric: _metric,
+                            ),
+                            for (final entry in data.entries.skip(3))
+                              _LeaderboardRow(
+                                entry: entry,
+                                metric: _metric,
+                              ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        ),
+        leaderboard.when(
+          data: (data) => _ViewerPosition(
+            leaderboard: data,
+            fallbackRank: widget.rank,
+            metric: _metric,
+          ),
+          loading: () => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 
@@ -659,140 +681,117 @@ class _FilterStrip extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.light
-                ? AppColors.limeWash
-                : AppColors.primaryMuted,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _FilterLabel('TIME PERIOD'),
-              const SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (final option in [
-                      'THIS WEEK',
-                      'THIS MONTH',
-                      'ALL TIME',
-                    ]) ...[
-                      if (option != 'THIS WEEK') const SizedBox(width: 8),
-                      _FilterChip(
-                        label: option,
-                        selected: period == option,
-                        onTap: () => onPeriodChanged(option),
-                      ),
-                    ],
-                  ],
-                ),
+        _FilterRow(
+          children: [
+            for (final option in ['THIS WEEK', 'THIS MONTH', 'ALL TIME'])
+              _FilterChip(
+                label: switch (option) {
+                  'THIS WEEK' => 'This week',
+                  'THIS MONTH' => 'This month',
+                  _ => 'All time',
+                },
+                selected: period == option,
+                onTap: () => onPeriodChanged(option),
               ),
-              const SizedBox(height: 18),
-              _FilterLabel('RANK BY'),
-              const SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _FilterChip(
-                      label: 'AURA',
-                      selected: metric == _LeaderboardMetric.aura,
-                      onTap: () => onMetricChanged(_LeaderboardMetric.aura),
-                    ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: 'COMPLETED',
-                      selected: metric == _LeaderboardMetric.completed,
-                      onTap: () =>
-                          onMetricChanged(_LeaderboardMetric.completed),
-                    ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: 'STREAK',
-                      selected: metric == _LeaderboardMetric.streak,
-                      onTap: () => onMetricChanged(_LeaderboardMetric.streak),
-                    ),
-                  ],
-                ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        _FilterRow(
+          children: [
+            _FilterChip(
+              label: 'Aura',
+              selected: metric == _LeaderboardMetric.aura,
+              emphasized: true,
+              onTap: () => onMetricChanged(_LeaderboardMetric.aura),
+            ),
+            _FilterChip(
+              label: 'Completed',
+              selected: metric == _LeaderboardMetric.completed,
+              emphasized: true,
+              onTap: () => onMetricChanged(_LeaderboardMetric.completed),
+            ),
+            _FilterChip(
+              label: 'Streak',
+              selected: metric == _LeaderboardMetric.streak,
+              emphasized: true,
+              onTap: () => onMetricChanged(_LeaderboardMetric.streak),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        _FilterRow(
+          children: [
+            _FilterChip(
+              label: 'All',
+              selected: playerRank == null,
+              onTap: () => onPlayerRankChanged(null),
+            ),
+            for (final rank in ['E', 'D', 'C', 'B', 'A', 'S'])
+              _FilterChip(
+                label: rank,
+                selected: playerRank == rank,
+                onTap: () => onPlayerRankChanged(rank),
               ),
-              const SizedBox(height: 18),
-              _FilterLabel('PLAYER RANK'),
-              const SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _FilterChip(
-                      label: 'ALL',
-                      selected: playerRank == null,
-                      onTap: () => onPlayerRankChanged(null),
-                    ),
-                    for (final rank in ['E', 'D', 'C', 'B', 'A', 'S']) ...[
-                      const SizedBox(width: 8),
-                      _FilterChip(
-                        label: rank,
-                        selected: playerRank == rank,
-                        onTap: () => onPlayerRankChanged(rank),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _FilterLabel extends StatelessWidget {
-  final String text;
+class _FilterRow extends StatelessWidget {
+  final List<Widget> children;
 
-  const _FilterLabel(this.text);
+  const _FilterRow({required this.children});
 
   @override
-  Widget build(BuildContext context) => Text(
-    text,
-    style: AppFonts.label(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-      fontSize: 10,
-      fontWeight: FontWeight.w700,
-    ),
+  Widget build(BuildContext context) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(children: _spaceChildren(children)),
   );
+
+  List<Widget> _spaceChildren(List<Widget> children) => [
+    for (var index = 0; index < children.length; index++) ...[
+      if (index > 0) const SizedBox(width: 8),
+      children[index],
+    ],
+  ];
 }
 
 class _FilterChip extends StatelessWidget {
   final String label;
   final bool selected;
+  final bool emphasized;
   final VoidCallback onTap;
 
   const _FilterChip({
     required this.label,
     required this.selected,
     required this.onTap,
+    this.emphasized = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final selectedBackground = isDark ? AppColors.primary : scheme.onSurface;
-    final selectedForeground = isDark ? AppColors.dark : scheme.surface;
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    final selectedBackground = emphasized
+        ? (isDark ? HomePalette.primary : HomePalette.ink)
+        : HomePalette.primaryMuted(brightness);
+    final selectedForeground = emphasized
+        ? (isDark ? HomePalette.ink : HomePalette.primary)
+        : (isDark ? HomePalette.primary : HomePalette.lightLink);
+    final background = selected ? selectedBackground : scheme.surface;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? selectedBackground : scheme.surface,
+          color: background,
           border: Border.all(
-            color: selected ? selectedBackground : scheme.outline,
-            width: 1.5,
+            color: selected ? background : scheme.outline,
           ),
           borderRadius: BorderRadius.circular(999),
         ),
@@ -800,7 +799,8 @@ class _FilterChip extends StatelessWidget {
           label,
           style: AppFonts.body(
             color: selected ? selectedForeground : scheme.onSurfaceVariant,
-            fontSize: 14,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -846,6 +846,342 @@ class _LeaderboardHeader extends StatelessWidget {
   }
 }
 
+String _leaderboardMetricSuffix(_LeaderboardMetric metric) => switch (metric) {
+  _LeaderboardMetric.aura => ' AP',
+  _LeaderboardMetric.completed => '',
+  _LeaderboardMetric.streak => 'd',
+};
+
+String _leaderboardDisplayName(LeaderboardEntry entry) {
+  final displayName = entry.displayName?.trim();
+  if (displayName != null && displayName.isNotEmpty) return displayName;
+  final username = entry.username?.trim();
+  return username == null || username.isEmpty ? 'Unknown player' : username;
+}
+
+String _leaderboardInitials(String name) {
+  final initials = name
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .take(2)
+      .map((part) => part[0].toUpperCase())
+      .join();
+  return initials.isEmpty ? '?' : initials;
+}
+
+void _openLeaderboardProfile(BuildContext context, LeaderboardEntry entry) {
+  final username = entry.username;
+  if (username == null || username.isEmpty) return;
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => ProfileScreen(username: username)),
+  );
+}
+
+class _LeaderboardPodium extends StatelessWidget {
+  final List<LeaderboardEntry> entries;
+  final _LeaderboardMetric metric;
+
+  const _LeaderboardPodium({required this.entries, required this.metric});
+
+  @override
+  Widget build(BuildContext context) {
+    final visualOrder = entries.length == 3
+        ? [entries[1], entries[0], entries[2]]
+        : entries;
+    return SizedBox(
+      height: 198,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (final entry in visualOrder)
+            Expanded(child: _PodiumPlayer(entry: entry, metric: metric)),
+        ],
+      ),
+    );
+  }
+}
+
+class _PodiumPlayer extends StatelessWidget {
+  final LeaderboardEntry entry;
+  final _LeaderboardMetric metric;
+
+  const _PodiumPlayer({required this.entry, required this.metric});
+
+  @override
+  Widget build(BuildContext context) {
+    final isWinner = entry.rank == 1;
+    final name = _leaderboardDisplayName(entry);
+    final blockColor = switch (entry.rank) {
+      1 => HomePalette.primary,
+      2 => HomePalette.mint,
+      _ => HomePalette.peach,
+    };
+    final blockHeight = switch (entry.rank) {
+      1 => 58.0,
+      2 => 42.0,
+      _ => 32.0,
+    };
+    return InkWell(
+      onTap: () => _openLeaderboardProfile(context, entry),
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _LeaderboardAvatar(
+              imageUrl: entry.avatarUrl,
+              name: name,
+              size: isWinner ? 66 : 52,
+              winner: isWinner,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppFonts.body(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${entry.metricValue}${_leaderboardMetricSuffix(metric)}',
+              style: AppFonts.body(
+                color: isWinner
+                    ? HomePalette.link(Theme.of(context).brightness)
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Container(
+              height: blockHeight,
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: blockColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(14),
+                ),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '${entry.rank}',
+                style: AppFonts.body(
+                  color: HomePalette.ink,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LeaderboardAvatar extends StatelessWidget {
+  final String? imageUrl;
+  final String name;
+  final double size;
+  final bool winner;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+
+  const _LeaderboardAvatar({
+    required this.imageUrl,
+    required this.name,
+    required this.size,
+    this.winner = false,
+    this.backgroundColor,
+    this.foregroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
+    final url = imageUrl?.trim();
+    final initials = _leaderboardInitials(name);
+    final fallback = DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor ?? HomePalette.surfaceAlt(brightness),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          initials,
+          style: AppFonts.body(
+            color: foregroundColor ?? scheme.onSurface,
+            fontSize: size * 0.32,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+    final child = url == null || url.isEmpty
+        ? fallback
+        : Image.network(url, fit: BoxFit.cover, errorBuilder: (_, _, _) => fallback);
+    return Container(
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(winner ? 2 : 1),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: winner ? HomePalette.primary : scheme.outline,
+        ),
+      ),
+      child: ClipOval(child: child),
+    );
+  }
+}
+
+class _PlayerRankTag extends StatelessWidget {
+  final String rank;
+
+  const _PlayerRankTag({required this.rank});
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: HomePalette.primaryMuted(brightness),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        rank,
+        style: AppFonts.body(
+          color: HomePalette.link(brightness),
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _ViewerPosition extends StatelessWidget {
+  final Leaderboard leaderboard;
+  final String fallbackRank;
+  final _LeaderboardMetric metric;
+
+  const _ViewerPosition({
+    required this.leaderboard,
+    required this.fallbackRank,
+    required this.metric,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final viewer = leaderboard.viewer;
+    LeaderboardEntry? currentEntry;
+    for (final entry in leaderboard.entries) {
+      if (entry.isCurrentUser ||
+          (viewer != null &&
+              viewer.userId.isNotEmpty &&
+              entry.userId == viewer.userId)) {
+        currentEntry = entry;
+        break;
+      }
+    }
+    if (viewer == null && currentEntry == null) {
+      return const SizedBox.shrink();
+    }
+
+    final brightness = Theme.of(context).brightness;
+    final background = brightness == Brightness.dark
+        ? HomePalette.primary
+        : HomePalette.ink;
+    final foreground = brightness == Brightness.dark
+        ? HomePalette.ink
+        : HomePalette.primary;
+    final displayName = currentEntry == null
+        ? 'You'
+        : _leaderboardDisplayName(currentEntry);
+    final username = currentEntry?.username;
+    final playerRank = currentEntry?.playerRank ?? fallbackRank;
+    final viewerRank = currentEntry?.rank ?? viewer?.rank ?? 0;
+    final value = currentEntry?.metricValue ?? viewer?.metricValue ?? 0;
+    final initials = _leaderboardInitials(displayName);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          if (currentEntry == null)
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: foreground,
+              child: Text(
+                initials,
+                style: AppFonts.body(
+                  color: background,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            )
+          else
+            _LeaderboardAvatar(
+              imageUrl: currentEntry.avatarUrl,
+              name: displayName,
+              size: 36,
+              backgroundColor: foreground,
+              foregroundColor: background,
+            ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'You · #${viewerRank > 0 ? viewerRank : '—'}',
+                  style: AppFonts.body(
+                    color: foreground,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  '${username == null || username.isEmpty ? '' : '@$username · '}$playerRank Rank',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.body(
+                    color: foreground.withValues(alpha: 0.72),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$value${_leaderboardMetricSuffix(metric)}',
+            style: AppFonts.body(
+              color: foreground,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _LeaderboardRow extends StatelessWidget {
   final LeaderboardEntry entry;
   final _LeaderboardMetric metric;
@@ -855,119 +1191,83 @@ class _LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = isDark ? scheme.primary : AppColors.primary;
-    final currentUserBackground = isDark ? AppColors.primary : scheme.onSurface;
-    final currentUserForeground = isDark ? AppColors.dark : scheme.surface;
-    final displayName = entry.displayName ?? entry.username ?? 'Unknown player';
+    final displayName = _leaderboardDisplayName(entry);
     final username = entry.username;
-    final handle = entry.username == null ? '' : '@${entry.username}';
-    final initials = displayName
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .take(2)
-        .map((part) => part[0].toUpperCase())
-        .join();
-    final suffix = switch (metric) {
-      _LeaderboardMetric.aura => ' AP',
-      _LeaderboardMetric.completed => '',
-      _LeaderboardMetric.streak => 'd',
-    };
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: entry.isCurrentUser ? currentUserBackground : scheme.surface,
-        border: Border.all(
-          color: entry.isCurrentUser ? currentUserBackground : scheme.outline,
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(26),
+        border: Border(bottom: BorderSide(color: scheme.outline)),
       ),
       child: InkWell(
-        onTap: username == null || username.isEmpty
-            ? null
-            : () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ProfileScreen(username: username),
+        onTap: () => _openLeaderboardProfile(context, entry),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 26,
+                child: Text(
+                  entry.rank.toString().padLeft(2, '0'),
+                  style: AppFonts.body(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-        borderRadius: BorderRadius.circular(26),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 30,
-              child: Text(
-                entry.rank.toString().padLeft(2, '0'),
-                style: TextStyle(
-                  color: entry.isCurrentUser
-                      ? currentUserForeground
-                      : scheme.onSurfaceVariant,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
+              _LeaderboardAvatar(
+                imageUrl: entry.avatarUrl,
+                name: displayName,
+                size: 38,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.body(
+                              color: scheme.onSurface,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        _PlayerRankTag(rank: entry.playerRank),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      username == null || username.isEmpty
+                          ? 'Leaderboard player'
+                          : '@$username',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppFonts.body(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            Container(
-              width: 42,
-              height: 42,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: entry.rank == 1 ? accent : scheme.outline,
-                ),
-              ),
-              child: Text(
-                initials,
+              const SizedBox(width: 8),
+              Text(
+                '${entry.metricValue}${_leaderboardMetricSuffix(metric)}',
                 style: AppFonts.body(
-                  color: entry.isCurrentUser
-                      ? currentUserForeground
-                      : scheme.onSurface,
-                  fontSize: 16,
+                  color: scheme.onSurface,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    displayName,
-                    style: AppFonts.body(
-                      color: entry.isCurrentUser
-                          ? currentUserForeground
-                          : scheme.onSurface,
-                      fontSize: 19,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '$handle  ·  ${entry.playerRank} RANK',
-                    style: AppFonts.body(
-                      color: entry.isCurrentUser
-                          ? currentUserForeground.withValues(alpha: .7)
-                          : scheme.onSurfaceVariant,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              '${entry.metricValue}$suffix',
-              style: AppFonts.body(
-                color: entry.isCurrentUser
-                    ? currentUserForeground
-                    : scheme.onSurface,
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

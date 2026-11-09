@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NerdMaxxing | Leaderboard Preview</title>
+<style>
+  :root,[data-theme="dark"]{
+    color-scheme:dark;--page:#050505;--frame:#242422;--bg:#0F0F0E;--surface:#161615;--alt:#1B1B19;
+    --border:#2C2C2A;--strong:#444441;--text:#ECEBE3;--muted:#8C8C84;--dim:#5A5A53;
+    --primary:#CFFF47;--ink:#0B0C05;--wash:#252B16;--mint:#9FF1C0;--peach:#FFDCC6;
+    --pill-bg:#CFFF47;--pill-fg:#0B0C05;--podium-2:#9FF1C0;--podium-3:#FFDCC6;
+    --rank-wash:#252B16;--rank-fg:#CFFF47;--avatar-a:#292332;--avatar-b:#202C38;--avatar-c:#1D3027;--avatar-d:#33271F;
+  }
+  [data-theme="light"]{
+    color-scheme:light;--page:#E9E9E1;--frame:#101008;--bg:#FFFFFF;--surface:#FFFFFF;--alt:#F7F7F2;
+    --border:#E5E5DC;--strong:#C5C5BA;--text:#101008;--muted:#5C5C53;--dim:#74746B;
+    --primary:#CFFF47;--ink:#0B0C05;--wash:#F4FABE;--mint:#9FF1C0;--peach:#FFDCC6;
+    --pill-bg:#0B0C05;--pill-fg:#CFFF47;--podium-2:#BDE8CE;--podium-3:#F0CDB5;
+    --rank-wash:#E6F3B0;--rank-fg:#365000;--avatar-a:#E1D6FF;--avatar-b:#CEE6FE;--avatar-c:#BAF1DA;--avatar-d:#FFDCC6;
+  }
+  *{box-sizing:border-box}
+  body{min-height:100vh;margin:0;padding:16px;background:var(--page);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;align-items:center;gap:12px;transition:background .25s,color .25s}
+  .preview-head{width:min(460px,calc(100vw - 32px));display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .preview-head h1{font-size:18px;line-height:1.2;margin:0;font-weight:700}
+  .preview-head p{margin:5px 0 0;color:var(--muted);font-size:12px}
+  .theme-toggle{display:flex;padding:4px;border:1px solid var(--border);border-radius:999px;background:var(--alt)}
+  .theme-toggle button{border:0;border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:650;padding:7px 15px;cursor:pointer}
+  .theme-toggle button[aria-pressed="true"]{background:var(--primary);color:var(--ink)}
+  .phone{width:min(380px,calc(100vw - 32px));height:min(800px,calc(100vh - 90px));min-height:600px;padding:10px;border-radius:44px;background:var(--frame);box-shadow:0 24px 60px rgba(0,0,0,.4),inset 0 0 0 2px rgba(255,255,255,.07)}
+  .screen{height:100%;border-radius:35px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column;transition:background .25s}
+  .status{height:34px;flex:none;padding:7px 24px 0;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:650}
+  .status .system{color:var(--muted);font-size:10px}
+  .segmented{height:44px;flex:none;margin:0 16px 8px;padding:4px;display:flex;border:1px solid var(--border);border-radius:999px;background:var(--alt)}
+  .segmented span{flex:1;display:grid;place-items:center;border-radius:999px;color:var(--muted);font-size:12px;font-weight:650}
+  .segmented .active{background:var(--pill-bg);color:var(--pill-fg)}
+  .scroll{flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:0 17px 18px}
+  .scroll::-webkit-scrollbar{display:none}
+  .heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .heading h2{margin:0;font-size:26px;line-height:1.05;font-weight:750;letter-spacing:0}
+  .rank-pill{flex:none;padding:6px 10px;border-radius:999px;background:var(--wash);color:var(--rank-fg);font-size:11px;font-weight:750}
+  .intro{margin:5px 0 8px;color:var(--muted);font-size:12px}
+  .filters{display:grid;gap:4px}
+  .filter-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+  .filter-row::-webkit-scrollbar{display:none}
+  .filter{flex:none;min-height:30px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:var(--alt);color:var(--muted);font:inherit;font-size:10.5px;font-weight:650;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
+  .filter.selected{background:var(--wash);border-color:transparent;color:var(--rank-fg)}
+  .filter.metric.selected{background:var(--pill-bg);color:var(--pill-fg)}
+  .rank-filters .filter{width:32px;padding:0}
+  .rank-filters .filter:first-child{width:auto;padding:0 12px}
+  .list-head{margin:8px 1px 0;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:9px;font-weight:750;letter-spacing:.11em;text-transform:uppercase}
+  .podium{height:112px;display:flex;align-items:flex-end;justify-content:center;gap:9px;margin-top:4px}
+  .podium-person{min-width:0;flex:1;text-align:center}
+  .podium-person .avatar{width:42px;height:42px;margin:0 auto 4px;font-size:14px}
+  .podium-person.first .avatar{width:50px;height:50px;border:2px solid var(--primary);box-shadow:0 0 0 4px var(--wash);font-size:17px}
+  .podium-person .name{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:700}
+  .podium-person .score{display:block;margin-top:2px;color:var(--muted);font-size:9.5px;font-weight:650}
+  .podium-person.first .score{color:var(--primary)}
+  .podium-block{height:26px;margin-top:5px;display:grid;place-items:center;border-radius:12px 12px 0 0;color:var(--ink);font-size:14px;font-weight:800}
+  .podium-person.first .podium-block{height:32px;background:var(--primary)}
+  .podium-person.second .podium-block{background:var(--podium-2)}
+  .podium-person.third .podium-block{height:20px;background:var(--podium-3)}
+  .rows{margin-top:2px}
+  .entry{min-height:58px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);padding:8px 3px}
+  .entry:last-child{border-bottom:0}
+  .entry .position{width:23px;flex:none;color:var(--muted);font-size:11px;font-weight:750}
+  .avatar{width:36px;height:36px;flex:none;display:grid;place-items:center;border:1px solid var(--strong);border-radius:50%;background:var(--avatar-a);color:var(--text);font-size:11px;font-weight:750}
+  .avatar.b{background:var(--avatar-b)}.avatar.c{background:var(--avatar-c)}.avatar.d{background:var(--avatar-d)}
+  .identity{min-width:0;flex:1}
+  .display-name{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;font-weight:700}
+  .display-name .name-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank-tag{flex:none;padding:2px 5px;border-radius:5px;background:var(--rank-wash);color:var(--rank-fg);font-size:8px;font-weight:800}
+  .handle{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;color:var(--muted);font-size:9.5px}
+  .value{flex:none;font-size:12px;font-weight:750}
+  .you{flex:none;margin:0 13px 7px;padding:9px 11px;display:flex;align-items:center;gap:9px;border-radius:17px;background:var(--pill-bg);color:var(--pill-fg)}
+  .you .avatar{width:32px;height:32px;border:0;background:var(--pill-fg);color:var(--pill-bg);font-size:11px}
+  .you-copy{min-width:0;font-size:11px;font-weight:800;line-height:1.15}
+  .you-copy small{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.65;font-size:9px;font-weight:650}
+  .you-score{margin-left:auto;white-space:nowrap;font-size:12px;font-weight:850}
+  .nav{height:58px;flex:none;margin:0 13px 9px;padding:0 8px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:999px;background:var(--alt)}
+  .nav-item{height:42px;min-width:42px;padding:0 11px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;color:var(--muted)}
+  .nav-item svg{width:18px;height:18px;fill:currentColor;flex:none}
+  .nav-item span{display:none;font-size:10px;font-weight:750;white-space:nowrap}
+  .nav-item.active{padding:0 14px;background:var(--pill-bg);color:var(--pill-fg)}
+  .nav-item.active span{display:inline}
+  @media(max-height:760px){
+    .phone{height:min(720px,calc(100vh - 90px));min-height:540px}
+    .segmented{height:40px;margin-bottom:6px}
+    .heading h2{font-size:24px}
+    .intro{margin:4px 0 6px;font-size:11px}
+    .filters{gap:2px}
+    .filter{min-height:26px;padding:0 10px;font-size:10px}
+    .list-head{margin-top:6px}
+    .podium{height:100px;margin-top:2px}
+    .podium-person .avatar{width:36px;height:36px;margin-bottom:3px;font-size:13px}
+    .podium-person.first .avatar{width:40px;height:40px;box-shadow:0 0 0 3px var(--wash);font-size:15px}
+    .podium-person .name{font-size:10px}
+    .podium-person .score{font-size:8px}
+    .podium-block{height:22px;margin-top:4px;font-size:12px}
+    .podium-person.first .podium-block{height:24px}
+    .podium-person.third .podium-block{height:18px}
+    .entry{min-height:50px;padding:6px 3px}
+    .you{margin-bottom:4px;padding:6px 10px}
+    .nav{height:54px}
+  }
+  @media(max-width:400px){body{padding:14px 8px}.preview-head{flex-wrap:wrap;justify-content:center;text-align:center}.phone{width:calc(100vw - 16px);min-height:560px;height:calc(100vh - 128px);padding:7px;border-radius:36px}.screen{border-radius:30px}.scroll{padding-right:14px;padding-left:14px}.segmented{margin-right:13px;margin-left:13px}.podium{gap:5px}.podium-person .name{font-size:10px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+  <header class="preview-head">
+    <div class="preview-copy">
+      <h1>Rank · Leaderboard</h1>
+      <p>Interactive preview with sample players and scores</p>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Preview theme">
+      <button type="button" data-theme-button="dark" aria-pressed="true">Dark</button>
+      <button type="button" data-theme-button="light" aria-pressed="false">Light</button>
+    </div>
+  </header>
+
+  <main class="phone" aria-label="Rank leaderboard preview">
+    <section class="screen">
+      <div class="status"><span>9:41</span><span class="system">▂▄▆ &nbsp; 100%</span></div>
+      <div class="segmented" aria-label="Rank page tabs"><span>Summary</span><span class="active">Leaderboard</span></div>
+      <div class="scroll">
+        <div class="heading"><h2>Rank</h2><span class="rank-pill">Rank E</span></div>
+        <p class="intro">See who is putting in the work.</p>
+        <div class="filters" aria-label="Leaderboard filters">
+          <div class="filter-row" role="group" aria-label="Time period">
+            <button class="filter selected" data-filter-group="period" data-value="week">This week</button>
+            <button class="filter" data-filter-group="period" data-value="month">This month</button>
+            <button class="filter" data-filter-group="period" data-value="all">All time</button>
+          </div>
+          <div class="filter-row" role="group" aria-label="Leaderboard metric">
+            <button class="filter metric selected" data-filter-group="metric" data-value="aura">Aura</button>
+            <button class="filter metric" data-filter-group="metric" data-value="completed">Completed</button>
+            <button class="filter metric" data-filter-group="metric" data-value="streak">Streak</button>
+          </div>
+          <div class="filter-row rank-filters" role="group" aria-label="Player rank">
+            <button class="filter selected" data-filter-group="rank" data-value="all">All</button>
+            <button class="filter" data-filter-group="rank" data-value="E">E</button>
+            <button class="filter" data-filter-group="rank" data-value="D">D</button>
+            <button class="filter" data-filter-group="rank" data-value="C">C</button>
+            <button class="filter" data-filter-group="rank" data-value="B">B</button>
+            <button class="filter" data-filter-group="rank" data-value="A">A</button>
+            <button class="filter" data-filter-group="rank" data-value="S">S</button>
+          </div>
+        </div>
+        <div class="list-head"><span id="period-label">This week</span><span id="metric-label">Aura</span></div>
+        <section class="podium" id="podium" aria-label="Top three players"></section>
+        <section class="rows" id="rows" aria-label="Leaderboard positions"></section>
+      </div>
+      <div class="you" id="you" aria-label="Your leaderboard position"></div>
+      <nav class="nav" aria-label="Primary navigation">
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 3 3 11h3v9h5v-6h2v6h5v-9h3z"/></svg><span>Home</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div>
+        <div class="nav-item active"><svg viewBox="0 0 24 24"><path d="M4 20v-8h4v8zm6 0V4h4v16zm6 0v-6h4v6z"/></svg><span>Rank</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
+      </nav>
+    </section>
+  </main>
+<script>
+  const players = [
+    {name:'Pablo Reyes',handle:'pablo',rank:'A',initials:'PR',avatar:'a',you:false,aura:{week:240,month:940,all:18400},completed:{week:12,month:42,all:140},streak:{week:16,month:16,all:16}},
+    {name:'Aniket Surjuse',handle:'aniket',rank:'E',initials:'AS',avatar:'b',you:true,aura:{week:120,month:610,all:9950},completed:{week:7,month:31,all:112},streak:{week:12,month:12,all:12}},
+    {name:'NerdMax',handle:'nerdmax',rank:'S',initials:'N',avatar:'c',you:false,aura:{week:80,month:580,all:24100},completed:{week:5,month:28,all:206},streak:{week:9,month:21,all:21}},
+    {name:'Dauvii',handle:'dauntless',rank:'E',initials:'D',avatar:'d',you:false,aura:{week:60,month:380,all:3700},completed:{week:4,month:22,all:54},streak:{week:8,month:8,all:8}},
+    {name:'Manthan Chougule',handle:'ero_sennin',rank:'D',initials:'MC',avatar:'a',you:false,aura:{week:40,month:290,all:6200},completed:{week:3,month:18,all:91},streak:{week:6,month:11,all:11}},
+    {name:'Vaishnavi Kulkarni',handle:'vaishnavi',rank:'C',initials:'VK',avatar:'b',you:false,aura:{week:20,month:230,all:4200},completed:{week:2,month:14,all:63},streak:{week:5,month:10,all:10}},
+    {name:'Aditi Rao',handle:'aditi',rank:'B',initials:'AR',avatar:'c',you:false,aura:{week:15,month:180,all:8800},completed:{week:1,month:12,all:135},streak:{week:4,month:14,all:14}},
+    {name:'Rohan Mehta',handle:'rohan',rank:'E',initials:'RM',avatar:'d',you:false,aura:{week:0,month:95,all:610},completed:{week:0,month:5,all:19},streak:{week:0,month:3,all:3}}
+  ];
+  const state = {period:'week',metric:'aura',rank:'all'};
+  const labels = {week:'This week',month:'This month',all:'All time',aura:'Aura',completed:'Completed',streak:'Streak'};
+  const suffix = {aura:' AP',completed:'',streak:'d'};
+  const scoreOf = player => player[state.metric][state.period];
+  const displayScore = player => `${scoreOf(player)}${suffix[state.metric]}`;
+  const sortedPlayers = () => players
+    .filter(player => state.rank === 'all' || player.rank === state.rank)
+    .sort((a,b) => scoreOf(b) - scoreOf(a));
+  const initialsAvatar = player => `<span class="avatar ${player.avatar}">${player.initials}</span>`;
+  function render(){
+    const ranked = sortedPlayers();
+    document.querySelector('#period-label').textContent = labels[state.period];
+    document.querySelector('#metric-label').textContent = labels[state.metric];
+    const podium = ranked.slice(0,3);
+    const podiumOrder = podium.length === 3 ? [podium[1],podium[0],podium[2]] : podium;
+    const place = player => ranked.indexOf(player) + 1;
+    document.querySelector('#podium').innerHTML = podiumOrder.map(player => {
+      const position = place(player);
+      const className = position === 1 ? 'first' : position === 2 ? 'second' : 'third';
+      return `<div class="podium-person ${className}">${initialsAvatar(player)}<span class="name">${player.name.split(' ')[0]}</span><span class="score">${displayScore(player)}</span><div class="podium-block">${position}</div></div>`;
+    }).join('');
+    document.querySelector('#rows').innerHTML = ranked.slice(3).map((player,index) => {
+      const position = index + 4;
+      return `<article class="entry"><span class="position">${String(position).padStart(2,'0')}</span>${initialsAvatar(player)}<div class="identity"><div class="display-name"><span class="name-text">${player.name}</span><span class="rank-tag">${player.rank}</span></div><span class="handle">@${player.handle}</span></div><span class="value">${displayScore(player)}</span></article>`;
+    }).join('');
+    const currentPlayer = players.find(player => player.you);
+    const currentPosition = ranked.includes(currentPlayer) ? place(currentPlayer) : '—';
+    document.querySelector('#you').innerHTML = `${initialsAvatar(currentPlayer)}<span class="you-copy">You · #${currentPosition}<small>@${currentPlayer.handle} · ${currentPlayer.rank} Rank</small></span><span class="you-score">${displayScore(currentPlayer)}</span>`;
+  }
+  document.querySelectorAll('[data-filter-group]').forEach(button => button.addEventListener('click', () => {
+    const group = button.dataset.filterGroup;
+    state[group] = button.dataset.value;
+    document.querySelectorAll(`[data-filter-group="${group}"]`).forEach(option => option.classList.toggle('selected', option === button));
+    render();
+  }));
+  document.querySelectorAll('[data-theme-button]').forEach(button => button.addEventListener('click', () => {
+    document.documentElement.dataset.theme = button.dataset.themeButton;
+    document.querySelectorAll('[data-theme-button]').forEach(option => option.setAttribute('aria-pressed',String(option === button)));
+  }));
+  render();
+</script>
+</body>
+</html>
