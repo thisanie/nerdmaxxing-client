@@ -89,79 +89,140 @@ class _RankTabs extends StatelessWidget {
   }
 }
 
-class _RankSummary extends StatelessWidget {
+class _RankSummary extends ConsumerWidget {
   final UserStats stats;
 
   const _RankSummary({required this.stats});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final weeklyLeaderboard = ref.watch(
+      leaderboardProvider((period: 'week', metric: 'aura', playerRank: null)),
+    ).valueOrNull;
+    int? viewerRank = weeklyLeaderboard?.viewer?.rank;
+    if (viewerRank == 0) viewerRank = null;
+    if (weeklyLeaderboard != null) {
+      for (final entry in weeklyLeaderboard.entries) {
+        if (entry.isCurrentUser) {
+          viewerRank = entry.rank;
+          break;
+        }
+      }
+    }
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         _RankHeader(rank: stats.rank),
-        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 18),
+          child: Text(
+            'Every challenge moves you forward.',
+            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 14),
+          ),
+        ),
         Container(
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.primaryMuted : AppColors.limeWash,
-            borderRadius: BorderRadius.circular(32),
+            gradient: const LinearGradient(
+              colors: [HomePalette.primary, HomePalette.mint],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(26),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'YOUR PROGRESS',
-                style: AppFonts.label(color: scheme.onSurface, fontSize: 13),
+                style: AppFonts.label(
+                  color: HomePalette.ink.withValues(alpha: .65),
+                  fontSize: 10,
+                ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 7),
               Text(
-                'Build your rank one challenge at a time.',
+                stats.nextRank == null
+                    ? 'You have reached the highest rank.'
+                    : 'One more milestone on the way to ${stats.nextRank}.',
                 style: AppFonts.display(
-                  color: scheme.onSurface,
-                  fontSize: 24,
+                  color: HomePalette.ink,
+                  fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  height: 1.1,
+                  height: 1.15,
                 ),
               ),
               const SizedBox(height: 18),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.surfaceAlt : scheme.onSurface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.favorite_rounded,
-                      color: AppColors.primary,
-                      size: 26,
+                  _RankProgressRing(
+                    rank: stats.rank,
+                    progress: stats.nextRank == null
+                        ? 1
+                      : (stats.rankProgress / 100).clamp(0.0, 1.0).toDouble(),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      '${stats.auraPoints}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppFonts.poster(
+                        fontSize: 46,
+                        color: HomePalette.ink,
+                        wdth: 100,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${stats.auraPoints}',
-                    style: AppFonts.poster(
-                      fontSize: 88,
-                      color: scheme.onSurface,
-                      wdth: 100,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Text(
                     'AURA\nPOINTS',
                     style: AppFonts.label(
-                      color: scheme.onSurface.withValues(alpha: .7),
-                      fontSize: 12,
+                      color: HomePalette.ink.withValues(alpha: .65),
+                      fontSize: 9,
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 13,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: HomePalette.ink,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        stats.nextRank == null
+                            ? 'Maximum rank reached'
+                            : '${stats.auraToNextRank} AP to Rank ${stats.nextRank}',
+                        style: AppFonts.body(
+                          color: HomePalette.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      stats.nextRank == null ? '100%' : '${stats.rankProgress}%',
+                      style: AppFonts.body(
+                        color: Colors.white.withValues(alpha: .85),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -175,12 +236,14 @@ class _RankSummary extends StatelessWidget {
               label: 'DAY STREAK',
               value: '${stats.dayStreak}',
               icon: Icons.local_fire_department_rounded,
+              tone: _StatTone.streak,
             ),
             const SizedBox(width: 12),
             _StatTile(
               label: 'COMPLETED',
               value: '${stats.completedChallengeCount}',
               icon: Icons.task_alt_rounded,
+              tone: _StatTone.complete,
             ),
           ],
         ),
@@ -191,18 +254,231 @@ class _RankSummary extends StatelessWidget {
               label: 'ACTIVE',
               value: '${stats.activeChallengeCount}',
               icon: Icons.radio_button_checked_rounded,
-              accent: true,
+              tone: _StatTone.active,
             ),
             const SizedBox(width: 12),
             _StatTile(
               label: 'RANK',
               value: stats.rank,
               icon: Icons.emoji_events_rounded,
-              dark: true,
+              tone: _StatTone.rank,
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        const _WeeklyAuraChart(),
+        const SizedBox(height: 12),
+        Material(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => DefaultTabController.of(context).animateTo(1),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              decoration: BoxDecoration(
+                border: Border.all(color: scheme.outline),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'See the leaderboard',
+                          style: AppFonts.body(
+                            color: scheme.onSurface,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          viewerRank == null
+                              ? 'View this week’s rankings'
+                              : 'You’re #$viewerRank this week',
+                          style: AppFonts.body(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: HomePalette.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: HomePalette.ink,
+                      size: 19,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _RankProgressRing extends StatelessWidget {
+  final String rank;
+  final double progress;
+
+  const _RankProgressRing({required this.rank, required this.progress});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 76,
+      height: 76,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox.expand(
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 6,
+              strokeCap: StrokeCap.round,
+              backgroundColor: HomePalette.ink.withValues(alpha: .16),
+              valueColor: const AlwaysStoppedAnimation(HomePalette.ink),
+            ),
+          ),
+          Container(
+            width: 60,
+            height: 60,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE8FFBC),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              rank,
+              style: AppFonts.display(
+                color: HomePalette.ink,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+const _sampleWeeklyAura = [0, 0, 0, 0, 0, 0, 80];
+
+class _WeeklyAuraChart extends StatelessWidget {
+  const _WeeklyAuraChart();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final total = _sampleWeeklyAura.fold<int>(0, (sum, value) => sum + value);
+    final maxValue = _sampleWeeklyAura.reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 13),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border.all(color: scheme.outline),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Aura this week',
+                  style: AppFonts.body(
+                    color: scheme.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                'SAMPLE',
+                style: AppFonts.label(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 9,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Text(
+                '+$total AP',
+                style: AppFonts.body(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 82,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                for (var index = 0; index < days.length; index++)
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              width: 24,
+                                height:
+                                  maxValue == 0 || _sampleWeeklyAura[index] == 0
+                                  ? 5.0
+                                  : 54.0 *
+                                    _sampleWeeklyAura[index] /
+                                    maxValue,
+                              decoration: BoxDecoration(
+                                color: index == days.length - 1
+                                    ? HomePalette.primary
+                                    : scheme.outline,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          days[index],
+                          style: AppFonts.body(
+                            color: index == days.length - 1
+                                ? scheme.onSurface
+                                : scheme.onSurfaceVariant,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -440,16 +716,23 @@ class _RankLadder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final accent = Theme.of(context).brightness == Brightness.dark
-        ? scheme.primary
-        : AppColors.primary;
+    final progress = stats.nextRank == null
+        ? 1.0
+        : (stats.rankProgress / 100).clamp(0.0, 1.0).toDouble();
     const ranks = ['E', 'D', 'C', 'B', 'A', 'S'];
+    final currentRankIndex = ranks.indexOf(stats.rank).clamp(0, ranks.length - 1);
+    final ladderProgress = stats.nextRank == null
+      ? 1.0
+      : ((currentRankIndex + progress) / (ranks.length - 1))
+          .clamp(0.0, 1.0)
+          .toDouble();
+    final nextRankThreshold = stats.auraPoints + stats.auraToNextRank;
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border.all(color: scheme.outline),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,72 +744,157 @@ class _RankLadder extends StatelessWidget {
                 'Rank ladder',
                 style: AppFonts.body(
                   color: scheme.onSurface,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               Text(
                 stats.nextRank == null
                     ? 'MAX RANK'
-                    : '${stats.rankProgress}% to ${stats.nextRank}',
+                    : 'Next: ${stats.nextRank}',
                 style: AppFonts.body(
                   color: scheme.onSurfaceVariant,
-                  fontSize: 14,
+                  fontSize: 11,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
           SizedBox(
-            height: 42,
+            height: 66,
+            width: double.infinity,
             child: Stack(
-              alignment: Alignment.center,
               children: [
-                Positioned(
-                  left: 20,
-                  right: 20,
-                  child: Container(height: 3, color: scheme.outline),
+                PositionedDirectional(
+                  start: 17,
+                  end: 17,
+                  top: 17,
+                  child: Container(
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: scheme.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
+                if (ladderProgress > 0)
+                  PositionedDirectional(
+                    start: 17,
+                    end: 17,
+                    top: 17,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Container(
+                          width: constraints.maxWidth * ladderProgress,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [HomePalette.primary, HomePalette.mint],
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     for (final rank in ranks)
-                      Container(
-                        width: 38,
-                        height: 38,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: rank == stats.rank ? accent : scheme.surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: rank == stats.rank
-                                ? scheme.onSurface
-                                : scheme.outline,
-                            width: rank == stats.rank ? 2 : 1.5,
-                          ),
-                        ),
-                        child: Text(
-                          rank,
-                          style: AppFonts.body(
-                            color: rank == stats.rank
-                                ? AppColors.dark
-                                : scheme.onSurfaceVariant,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                      _RankLadderStep(
+                        rank: rank,
+                        isCurrent: rank == stats.rank,
+                        isNext: rank == stats.nextRank,
+                        nextRankThreshold: nextRankThreshold,
                       ),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
           Text(
             stats.nextRank == null
                 ? 'Maximum aura reached'
                 : '${stats.auraToNextRank} aura to ${stats.nextRank} rank',
-            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 16),
+            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RankLadderStep extends StatelessWidget {
+  final String rank;
+  final bool isCurrent;
+  final bool isNext;
+  final int nextRankThreshold;
+
+  const _RankLadderStep({
+    required this.rank,
+    required this.isCurrent,
+    required this.isNext,
+    required this.nextRankThreshold,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 36,
+      child: Column(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isCurrent ? HomePalette.primary : scheme.surface,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isCurrent
+                    ? Colors.transparent
+                    : isNext
+                    ? HomePalette.primary
+                    : scheme.outline,
+                width: 1.5,
+              ),
+              boxShadow: isCurrent
+                  ? [
+                      BoxShadow(
+                        color: HomePalette.primary.withValues(alpha: .2),
+                        blurRadius: 0,
+                        spreadRadius: 4,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Text(
+              rank,
+              style: AppFonts.body(
+                color: isCurrent ? HomePalette.ink : scheme.onSurfaceVariant,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            isCurrent
+                ? 'You'
+                : isNext
+                ? '$nextRankThreshold'
+                : '',
+            maxLines: 1,
+            overflow: TextOverflow.clip,
+            style: AppFonts.body(
+              color: isCurrent || isNext
+                  ? scheme.onSurface
+                  : scheme.onSurfaceVariant,
+              fontSize: 9,
+              fontWeight: isCurrent || isNext ? FontWeight.w700 : FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -547,7 +915,7 @@ class _LeaderboardTab extends ConsumerStatefulWidget {
 
 class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
   _LeaderboardMetric _metric = _LeaderboardMetric.aura;
-  String _period = 'ALL TIME';
+  String _period = 'THIS WEEK';
   String? _playerRank;
 
   @override
@@ -1274,71 +1642,76 @@ class _LeaderboardRow extends StatelessWidget {
   }
 }
 
+enum _StatTone { streak, complete, active, rank }
+
 class _StatTile extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  final bool accent;
-  final bool dark;
+  final _StatTone tone;
 
   const _StatTile({
     required this.label,
     required this.value,
     required this.icon,
-    this.accent = false,
-    this.dark = false,
+    required this.tone,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    final accentColor = Theme.of(context).brightness == Brightness.dark
-        ? scheme.primary
-        : AppColors.primary;
-    final background = dark
-        ? (isDarkTheme ? AppColors.surfaceAlt : scheme.onSurface)
-        : accent
-        ? accentColor
-        : scheme.surface;
-    final foreground = dark
-        ? accentColor
-        : accent
-        ? AppColors.dark
-        : scheme.onSurface;
+    final brightness = Theme.of(context).brightness;
+    final (background, foreground) = switch (tone) {
+      _StatTone.streak => (
+        HomePalette.peachWash(brightness),
+        HomePalette.peachText(brightness),
+      ),
+      _StatTone.complete => DiscoverPalette.topicColors('games', brightness),
+      _StatTone.active => (HomePalette.primary, HomePalette.ink),
+      _StatTone.rank => DiscoverPalette.topicColors(
+        'brain & memory',
+        brightness,
+      ),
+    };
     return Expanded(
       child: Container(
-        height: 150,
-        padding: const EdgeInsets.all(18),
+        height: 104,
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: background,
-          border: dark || accent
-              ? null
-              : Border.all(color: scheme.outline, width: 1.5),
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: foreground, size: 30),
-            const Spacer(),
-            Text(
-              value,
-              style: AppFonts.display(
-                color: foreground,
-                fontSize: 56,
-                fontWeight: FontWeight.w500,
-                height: 1,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppFonts.label(
-                color: foreground.withValues(alpha: .7),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
+            Icon(icon, color: foreground, size: 18),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.display(
+                    color: foreground,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.label(
+                    color: foreground.withValues(alpha: .75),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

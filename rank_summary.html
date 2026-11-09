@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10110e">
+  <title>NerdMaxxing | Rank Summary</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --lime: #cfff47;
+      --mint: #a7ecc3;
+      --ink: #11120d;
+      --page: #10110e;
+      --panel: #191a16;
+      --panel-raised: #20211c;
+      --line: #30312b;
+      --text: #f0f0e9;
+      --muted: #9a9b91;
+      --quiet: #696b61;
+      --peach: #ffc9a9;
+      --peach-wash: #33271f;
+      --green: #b7efd1;
+      --green-wash: #1d3027;
+      --lavender: #d7c8ff;
+      --lavender-wash: #292332;
+      --shadow: 0 24px 70px rgb(0 0 0 / 35%);
+    }
+
+    [data-theme="light"] {
+      color-scheme: light;
+      --page: #f3f3ed;
+      --panel: #fff;
+      --panel-raised: #f8f8f2;
+      --line: #e4e4da;
+      --text: #16170f;
+      --muted: #64655b;
+      --quiet: #85867a;
+      --peach: #8d4a20;
+      --peach-wash: #fff0e4;
+      --green: #236449;
+      --green-wash: #e6f5eb;
+      --lavender: #55418e;
+      --lavender-wash: #eee9fb;
+      --shadow: 0 24px 70px rgb(39 40 27 / 12%);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      transition: background .25s ease, color .25s ease;
+    }
+    button { color: inherit; font: inherit; }
+    .preview {
+      min-height: 100svh;
+      padding: 28px 20px 40px;
+      background-image: radial-gradient(ellipse at 50% 0%, rgb(207 255 71 / 7%), transparent 48%);
+    }
+    .preview-head {
+      width: min(100%, 980px);
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; letter-spacing: .04em; }
+    .brand-mark { display: grid; width: 25px; aspect-ratio: 1; place-items: center; border-radius: 8px 8px 8px 3px; background: var(--lime); color: var(--ink); font-size: 13px; }
+    .head-actions { display: flex; align-items: center; gap: 12px; }
+    .eyebrow { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .theme-toggle svg { width: 15px; height: 15px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 420px); justify-content: center; }
+    .app {
+      min-height: 760px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background: var(--page);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .app-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 24px 15px;
+    }
+    .avatar {
+      display: grid;
+      width: 34px;
+      aspect-ratio: 1;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--panel-raised);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 20px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+    .tab { min-height: 38px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .tab.active { background: var(--lime); color: var(--ink); }
+    .content { flex: 1; padding: 22px 20px 20px; }
+    .title-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    h1 { margin: 0; font-size: 34px; line-height: 1; font-weight: 750; letter-spacing: -.035em; }
+    .rank-tag { padding: 7px 11px; border-radius: 999px; background: var(--lime); color: var(--ink); font-size: 11px; font-weight: 800; }
+    .subtitle { margin: 8px 0 18px; color: var(--muted); font-size: 13px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 18px;
+      border-radius: 23px;
+      background: linear-gradient(132deg, #d6ff72 0%, #b4f0a8 52%, #a4e8c6 100%);
+      color: #14170c;
+    }
+    .hero::after { position: absolute; top: -66px; right: -44px; width: 176px; height: 176px; border: 1px solid rgb(17 18 13 / 10%); border-radius: 50%; content: ""; box-shadow: 0 0 0 19px rgb(17 18 13 / 4%), 0 0 0 40px rgb(17 18 13 / 3%); }
+    .hero-kicker { color: rgb(17 18 13 / 65%); font-size: 9px; font-weight: 850; letter-spacing: .16em; }
+    .hero h2 { max-width: 220px; margin: 7px 0 19px; font-size: 19px; line-height: 1.15; font-weight: 750; letter-spacing: -.02em; }
+    .hero-main { display: flex; align-items: center; gap: 15px; }
+    .rank-ring {
+      display: grid;
+      width: 76px;
+      aspect-ratio: 1;
+      flex: none;
+      place-items: center;
+      border-radius: 50%;
+      background: conic-gradient(var(--ink) 0 80%, rgb(17 18 13 / 17%) 80% 100%);
+      transform: rotate(-90deg);
+    }
+    .rank-ring span { display: grid; width: 60px; aspect-ratio: 1; place-items: center; border-radius: 50%; background: #e8ffbc; font-size: 28px; font-weight: 850; transform: rotate(90deg); }
+    .points { font-size: 43px; line-height: .9; font-weight: 850; letter-spacing: -.045em; }
+    .points small { display: block; margin-top: 7px; color: rgb(17 18 13 / 65%); font-size: 9px; font-weight: 850; letter-spacing: .14em; }
+    .next-rank { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-top: 17px; padding: 10px 12px; border-radius: 12px; background: #14170e; color: var(--lime); font-size: 11px; font-weight: 750; }
+    .next-rank span:last-child { color: #fff; font-size: 10px; font-weight: 650; }
+    .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 21px 2px 0; }
+    .section-head h2 { margin: 0; font-size: 15px; font-weight: 750; letter-spacing: -.01em; }
+    .section-head span { color: var(--muted); font-size: 11px; }
+    .ladder { margin-top: 12px; padding: 15px 13px 13px; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+    .steps { position: relative; display: flex; justify-content: space-between; padding-top: 1px; }
+    .steps::before, .steps::after { position: absolute; top: 17px; left: 18px; height: 3px; border-radius: 3px; content: ""; }
+    .steps::before { right: 18px; background: var(--line); }
+    .steps::after { width: calc((100% - 36px) * .17); background: linear-gradient(90deg, var(--lime), var(--mint)); }
+    .step { position: relative; z-index: 1; display: flex; min-width: 34px; flex-direction: column; align-items: center; gap: 6px; color: var(--quiet); font-size: 9px; font-weight: 700; }
+    .step b { display: grid; width: 36px; aspect-ratio: 1; place-items: center; border: 1.5px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--muted); font-size: 12px; }
+    .step.current { color: var(--text); }
+    .step.current b { border-color: transparent; background: var(--lime); color: var(--ink); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lime) 20%, transparent); }
+    .step.next { color: var(--text); }
+    .step.next b { border: 1.5px dashed var(--lime); color: var(--text); }
+    .step small { color: var(--quiet); font-size: 8px; font-weight: 600; }
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 12px; }
+    .stat { display: flex; min-height: 93px; flex-direction: column; justify-content: space-between; padding: 13px; border-radius: 17px; }
+    .stat-icon { font-size: 16px; line-height: 1; }
+    .stat-value { font-size: 30px; line-height: 1; font-weight: 800; letter-spacing: -.035em; }
+    .stat-label { margin-top: 4px; font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+    .stat.streak { background: var(--peach-wash); color: var(--peach); }
+    .stat.complete { background: var(--green-wash); color: var(--green); }
+    .stat.active { background: var(--lime); color: var(--ink); }
+    .stat.rank { background: var(--lavender-wash); color: var(--lavender); }
+    .week { margin-top: 12px; padding: 15px 16px 13px; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+    .week-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .week-head h2 { margin: 0; font-size: 14px; font-weight: 750; }
+    .week-total { color: var(--muted); font-size: 11px; font-weight: 650; }
+    .chart { display: flex; height: 92px; align-items: end; justify-content: space-between; gap: 8px; margin-top: 11px; }
+    .day { display: flex; height: 100%; min-width: 20px; flex: 1; flex-direction: column; align-items: center; justify-content: end; gap: 6px; color: var(--quiet); font-size: 9px; font-weight: 700; }
+    .bar-wrap { display: flex; width: 100%; height: 70px; align-items: end; justify-content: center; }
+    .bar { width: min(100%, 24px); min-height: 4px; border-radius: 7px 7px 3px 3px; background: var(--line); }
+    .day.today { color: var(--text); }
+    .day.today .bar { background: var(--lime); }
+    .leaderboard-link { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 17px; background: var(--panel); text-decoration: none; }
+    .link-title { font-size: 12px; font-weight: 750; }
+    .link-sub { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 550; }
+    .link-arrow { display: grid; width: 31px; aspect-ratio: 1; flex: none; place-items: center; border-radius: 50%; background: var(--lime); color: var(--ink); font-size: 17px; font-weight: 800; }
+    .bottom-nav { display: flex; align-items: center; justify-content: space-around; padding: 10px 12px 12px; border-top: 1px solid var(--line); background: var(--panel); }
+    .nav-item { display: flex; min-width: 54px; height: 42px; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; border-radius: 999px; color: var(--muted); font-size: 10px; font-weight: 750; }
+    .nav-item svg { width: 17px; height: 17px; fill: currentColor; }
+    .nav-item.selected { background: var(--lime); color: var(--ink); }
+    .nav-item:not(.selected) span { display: none; }
+    @media (max-width: 520px) {
+      .preview { min-height: 100svh; padding: 0; background: var(--page); }
+      .preview-head { width: 100%; height: 56px; margin: 0; padding: 0 18px; }
+      .preview-head .eyebrow { display: none; }
+      .layout { min-height: calc(100svh - 56px); }
+      .app { min-height: calc(100svh - 56px); border: 0; border-radius: 0; box-shadow: none; }
+      .app-top { padding-top: 16px; }
+      .content { padding-top: 20px; }
+      .bottom-nav { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <header class="preview-head">
+      <div class="brand"><span class="brand-mark">N</span><span>NERD MAXXING</span></div>
+      <div class="head-actions"><span class="eyebrow">Rank summary concept</span><button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span>Light mode</span></button></div>
+    </header>
+
+    <div class="layout">
+      <section class="app" aria-label="Rank summary screen">
+        <header class="app-top"><span class="eyebrow">Your standing</span><span class="avatar" aria-label="Aniket Surjuse">AS</span></header>
+        <div class="tabs" role="tablist" aria-label="Rank views"><button class="tab active" role="tab" aria-selected="true">Summary</button><button class="tab" role="tab" aria-selected="false">Leaderboard</button></div>
+
+        <div class="content">
+          <div class="title-row"><h1>Rank</h1><span class="rank-tag">Rank E</span></div>
+          <p class="subtitle">Every challenge moves you forward.</p>
+
+          <section class="hero" aria-label="Rank progress">
+            <div class="hero-kicker">YOUR PROGRESS</div>
+            <h2>One more milestone on the way to D.</h2>
+            <div class="hero-main"><div class="rank-ring" aria-label="80 percent to the next rank"><span>E</span></div><div class="points">80<small>AURA POINTS</small></div></div>
+            <div class="next-rank"><span>20 AP to Rank D</span><span>80 / 100 AP</span></div>
+          </section>
+
+          <section class="ladder" aria-label="Rank ladder">
+            <div class="section-head" style="margin:0 1px 14px"><h2>Rank ladder</h2><span>Next: D</span></div>
+            <div class="steps"><div class="step current"><b>E</b><span>You</span></div><div class="step next"><b>D</b><span>100 AP</span></div><div class="step"><b>C</b><small>250</small></div><div class="step"><b>B</b><small>500</small></div><div class="step"><b>A</b><small>1k</small></div><div class="step"><b>S</b><small>2k</small></div></div>
+          </section>
+
+          <section class="stats" aria-label="Your activity">
+            <div class="stat streak"><span class="stat-icon" aria-hidden="true">↗</span><div><div class="stat-value">1</div><div class="stat-label">DAY STREAK</div></div></div>
+            <div class="stat complete"><span class="stat-icon" aria-hidden="true">✓</span><div><div class="stat-value">2</div><div class="stat-label">COMPLETED</div></div></div>
+            <div class="stat active"><span class="stat-icon" aria-hidden="true">◉</span><div><div class="stat-value">3</div><div class="stat-label">ACTIVE</div></div></div>
+            <div class="stat rank"><span class="stat-icon" aria-hidden="true">◆</span><div><div class="stat-value">E</div><div class="stat-label">CURRENT RANK</div></div></div>
+          </section>
+
+          <section class="week" aria-label="Aura earned this week">
+            <div class="week-head"><h2>Aura this week</h2><span class="week-total">+80 AP</span></div>
+            <div class="chart" role="img" aria-label="Weekly aura: zero Monday through Saturday, 80 on Sunday">
+              <div class="day"><div class="bar-wrap"><i class="bar" style="height:5px"></i></div><span>M</span></div>
+              <div class="day"><div class="bar-wrap"><i class="bar" style="height:5px"></i></div><span>T</span></div>
+              <div class="day"><div class="bar-wrap"><i class="bar" style="height:5px"></i></div><span>W</span></div>
+              <div class="day"><div class="bar-wrap"><i class="bar" style="height:5px"></i></div><span>T</span></div>
+              <div class="day"><div class="bar-wrap"><i class="bar" style="height:5px"></i></div><span>F</span></div>
+              <div class="day"><div class="bar-wrap"><i class="bar" style="height:5px"></i></div><span>S</span></div>
+              <div class="day today"><div class="bar-wrap"><i class="bar" style="height:58px"></i></div><span>S</span></div>
+            </div>
+          </section>
+
+          <a class="leaderboard-link" href="#leaderboard" aria-label="Open leaderboard, you are number 2 this week"><span class="link-title">See the leaderboard<span class="link-sub">You’re #2 this week</span></span><span class="link-arrow" aria-hidden="true">→</span></a>
+        </div>
+
+        <nav class="bottom-nav" aria-label="Main navigation">
+          <div class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 11h3v10h6v-6h2v6h7V11h3z"/></svg><span>Home</span></div>
+          <div class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div>
+          <div class="nav-item selected"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
+          <div class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
+        </nav>
+      </section>
+    </div>
+  </main>
+  <script>
+    const toggle = document.querySelector('#themeToggle');
+    const label = toggle.querySelector('span');
+    toggle.addEventListener('click', () => {
+      const light = document.documentElement.dataset.theme !== 'light';
+      document.documentElement.dataset.theme = light ? 'light' : 'dark';
+      toggle.setAttribute('aria-pressed', String(light));
+      toggle.setAttribute('aria-label', `Switch to ${light ? 'dark' : 'light'} theme`);
+      label.textContent = light ? 'Dark mode' : 'Light mode';
+    });
+  </script>
+</body>
+</html>
