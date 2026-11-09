@@ -49,11 +49,17 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
               Text(
                 'Welcome back',
                 style: Theme.of(context).textTheme.headlineSmall,
@@ -120,7 +126,11 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-            ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

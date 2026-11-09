@@ -67,11 +67,17 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
     final auth = context.watch<AuthProvider>();
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
               const SizedBox(height: 24),
               Text(
                 widget.hasPassword ? 'Update password' : 'Add a password',
@@ -174,7 +180,11 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
                     child: const Text('Skip for now'),
                   ),
                 ),
-            ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -86,11 +86,17 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
               const SizedBox(height: 24),
               Text(
                 'Pick a username',
@@ -167,7 +173,11 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-            ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
