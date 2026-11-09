@@ -11,6 +11,7 @@ class ChallengeSection extends StatelessWidget {
   final List<Challenge> challenges;
   final VoidCallback? onSeeAll;
   final bool legendary;
+  final bool compactCards;
   final ValueChanged<Challenge> onChallengeTap;
 
   const ChallengeSection({
@@ -20,6 +21,7 @@ class ChallengeSection extends StatelessWidget {
     required this.onChallengeTap,
     this.onSeeAll,
     this.legendary = false,
+    this.compactCards = false,
   });
 
   @override
@@ -27,7 +29,7 @@ class ChallengeSection extends StatelessWidget {
     if (challenges.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 32),
+      padding: const EdgeInsets.only(bottom: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -40,8 +42,8 @@ class ChallengeSection extends StatelessWidget {
                     title,
                     style: AppFonts.body(
                       color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
                       letterSpacingEm: -0.01,
                     ),
                   ),
@@ -51,9 +53,9 @@ class ChallengeSection extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           SizedBox(
-            height: 330,
+            height: compactCards ? 220 : 330,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               scrollDirection: Axis.horizontal,
@@ -62,10 +64,11 @@ class ChallengeSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final challenge = challenges[index];
                 return SizedBox(
-                  width: 278,
+                  width: compactCards ? 168 : 278,
                   child: ChallengeCard(
                     challenge: challenge,
                     legendary: legendary,
+                    compact: compactCards,
                     onTap: () => onChallengeTap(challenge),
                   ),
                 );

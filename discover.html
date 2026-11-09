@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NerdMaxxing Discover Preview</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --primary:#CFFF47; --bright:#C3FD3F; --mint:#9FF1C0;
+    --bg:#0F0F0E; --surface:#161615; --alt:#1B1B19; --pmuted:#252B16;
+    --text:#ECEBE3; --text2:#8C8C84; --dim:#5A5A53;
+    --border:#2C2C2A; --strong:#444441;
+    --lav:#E1D6FF; --pmint:#BAF1DA; --sky:#CEE6FE; --peach:#FFDCC6;
+    --lavW:#292332; --mintW:#1D3027; --blueW:#202C38; --peachW:#33271F;
+    --warn:#FFAB3D; --adv:#FF6B57; --ink:#0B0C05; --outer:#050505; --frame:#242422;
+  }
+  html[data-theme="light"] {
+    color-scheme:light;
+    --bg:#FFFFFF; --surface:#FFFFFF; --alt:#F7F7F2; --pmuted:#F4FABE;
+    --text:#101008; --text2:#5C5C53; --dim:#8C8C84;
+    --border:#E5E5DC; --strong:#CFCFC4;
+    --lav:#4B3A82; --pmint:#1D5A40; --sky:#1D4A78; --peach:#8A4A1F;
+    --lavW:#E1D6FF; --mintW:#BAF1DA; --blueW:#CEE6FE; --peachW:#FFDCC6;
+    --outer:#E9E9E1; --frame:#101008;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:var(--outer);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;align-items:center;padding:24px 16px 36px;transition:background .2s,color .2s}
+  .preview-head{width:min(100%,420px);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .preview-title{font-size:14px;font-weight:700;letter-spacing:.02em}
+  .theme-toggle{border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);font:inherit;font-size:12px;font-weight:600;padding:8px 12px;cursor:pointer}
+  .phone{width:340px;height:700px;max-width:100%;flex:none;padding:10px;border-radius:44px;background:var(--frame);position:relative;box-shadow:0 24px 60px rgba(0,0,0,.4),inset 0 0 0 2px rgba(255,255,255,.07)}
+  .screen{height:100%;border-radius:35px;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .notch{position:absolute;z-index:5;top:8px;left:50%;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;background:var(--frame)}
+  .status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:6px 24px 0;font-size:12px;font-weight:600}
+  .status .sys{font-size:11px;color:var(--text2)}
+  .scroll{flex:1;overflow:auto;padding:6px 18px 18px;scrollbar-width:none}
+  .scroll::-webkit-scrollbar,.topics::-webkit-scrollbar,.cards::-webkit-scrollbar{display:none}
+  .row{display:flex;align-items:center}.between{justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;letter-spacing:.03em}
+  .brand b{padding:2px 8px;border-radius:8px;background:var(--bright);color:var(--ink);font-weight:800}
+  .icon-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:50%;background:var(--alt);color:var(--text);display:grid;place-items:center}
+  .icon-btn svg{width:18px;height:18px}
+  .page-title{margin-top:16px;font-size:32px;line-height:1.04;font-weight:700;letter-spacing:-.02em}
+  .search{margin-top:14px;display:flex;align-items:center;gap:10px;padding:0 14px;height:46px;border:1px solid var(--border);border-radius:999px;background:var(--alt);color:var(--text2)}
+  .search svg{width:18px;height:18px;flex:none}
+  .search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font:400 13px/1.2 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+  .search input::placeholder{color:var(--text2);opacity:1}
+  .topics{display:flex;gap:8px;margin:12px -18px 0;padding:0 18px;overflow-x:auto;scrollbar-width:none}
+  .topic{flex:none;display:flex;align-items:center;gap:8px;padding:10px 12px;border:0;border-radius:16px;font:600 12px/1.2 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;transition:transform .15s,filter .15s}
+  .topic:active{transform:scale(.97)}
+  .topic svg{width:17px;height:17px}
+  .topic.brain{background:var(--lavW);color:var(--lav)}
+  .topic.games{background:var(--mintW);color:var(--pmint)}
+  .topic.fitness{background:var(--blueW);color:var(--sky)}
+  .topic.cooking{background:var(--peachW);color:var(--peach)}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:22px}
+  .section-title{font-size:17px;line-height:1.15;font-weight:700;letter-spacing:-.01em}
+  .see-all{flex:none;color:var(--primary);font-size:12px;font-weight:600;text-decoration:none}
+  html[data-theme="light"] .see-all{color:#4F6B00}
+  .trend{height:210px;margin-top:12px;border-radius:24px;position:relative;overflow:hidden;background:radial-gradient(circle at 30% 30%,#E0894A,#47200C 70%)}
+  .trend:after,.challenge-card:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(15,15,14,0) 28%,rgba(15,15,14,.9) 100%)}
+  .art-icon{position:absolute;top:30px;right:26px;width:98px;height:98px;color:rgba(255,255,255,.76);z-index:1}
+  .badge{position:absolute;z-index:2;top:12px;left:12px;padding:5px 10px;border-radius:999px;background:var(--primary);color:var(--ink);font-size:10px;font-weight:800;letter-spacing:.04em}
+  .overlay{position:absolute;z-index:2;left:0;right:0;bottom:0;padding:12px 14px;color:#ECEBE3}
+  .trend h2{max-width:270px;margin-bottom:8px;font-size:20px;line-height:1.1;font-weight:700}
+  .chip-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .difficulty,.glass{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:700}
+  .difficulty:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .difficulty.intermediate{background:var(--warn);color:var(--ink)}
+  .glass{background:rgba(255,255,255,.15);color:#ECEBE3;font-weight:600;backdrop-filter:blur(8px)}
+  .cards{display:flex;gap:12px;margin:12px -18px 0;padding:0 18px;overflow-x:auto;scrollbar-width:none}
+  .challenge-card{flex:none;width:168px;height:210px;border-radius:22px;position:relative;overflow:hidden;color:#ECEBE3;background:radial-gradient(circle at 60% 30%,#4A8FD8,#0F2A47 70%)}
+  .challenge-card.cook{background:radial-gradient(circle at 70% 30%,#3AA57A,#0F3324 70%)}
+  .challenge-card.juggle{background:radial-gradient(circle at 30% 30%,#7B5CC4,#2A1A4D 70%)}
+  .challenge-card.lift{background:radial-gradient(circle at 40% 30%,#D6C43A,#403A08 70%)}
+  .challenge-card .art-icon{top:26px;right:18px;width:76px;height:76px}
+  .card-copy{position:absolute;z-index:2;left:12px;right:12px;bottom:12px}
+  .difficulty.beginner{background:var(--primary);color:var(--ink)}
+  .difficulty.advanced{background:var(--adv);color:var(--ink)}
+  .challenge-card h3{margin:8px 0 7px;font-size:14px;line-height:1.15;font-weight:700}
+  .meta{display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.82);font-size:10px}
+  .meta span{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+  .meta svg{width:12px;height:12px}
+  .feed{margin-top:10px;display:flex;flex-direction:column}
+  .activity{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);font-size:12px;line-height:1.35}
+  .activity:last-child{border-bottom:0}
+  .activity-dot{width:8px;height:8px;flex:none;margin:4px 0 0 2px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 4px var(--pmuted)}
+  .activity-copy{flex:1;min-width:0}
+  .activity-copy b{font-weight:700}
+  .time{flex:none;color:var(--text2);font-size:10px}
+  .empty-search{display:none;padding:20px 0;color:var(--text2);font-size:13px}
+  .nav{height:60px;flex:none;margin:0 14px 12px;padding:0 8px;border:1px solid var(--border);border-radius:30px;background:var(--alt);display:flex;align-items:center;justify-content:space-around}
+  html[data-theme="light"] .nav{background:#fff;box-shadow:0 6px 20px rgba(16,16,8,.08)}
+  .nav-item{height:44px;padding:0 13px;border-radius:22px;color:var(--text2);display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+  .nav-item svg{width:20px;height:20px;fill:currentColor}
+  .nav-item span{display:none}
+  .nav-item.active{background:var(--primary);color:var(--ink)}
+  html[data-theme="light"] .nav-item.active{background:var(--ink);color:var(--primary)}
+  .nav-item.active span{display:inline}
+  svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .nav-item svg{fill:currentColor;stroke:none}
+  @media(max-width:390px){body{padding:12px 0 0}.preview-head{padding:0 14px}.phone{width:100%;height:calc(100dvh - 56px);min-height:640px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}.screen{border-radius:0}.notch{display:none}}
+  @media(max-height:720px) and (min-width:391px){body{padding-top:12px}.phone{height:calc(100dvh - 64px)}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 5.2a3.3 3.3 0 0 0-5.8 2.2 3.4 3.4 0 0 0-1.6 5.9 3.5 3.5 0 0 0 3 5.5H12zM12 5.2a3.3 3.3 0 0 1 5.8 2.2 3.4 3.4 0 0 1 1.6 5.9 3.5 3.5 0 0 1-3 5.5H12M8 9.5c1.8 0 2.3 1 2.3 2.5M16 9.5c-1.8 0-2.3 1-2.3 2.5M9 16c1-.7 2-.7 3 0m3 0c-1-.7-2-.7-3 0"/></symbol>
+  <symbol id="i-game" viewBox="0 0 24 24"><path d="M7 8h10a4 4 0 0 1 3.8 2.8l1 3.5a2.5 2.5 0 0 1-4.1 2.5L15 14H9l-2.7 2.8a2.5 2.5 0 0 1-4.1-2.5l1-3.5A4 4 0 0 1 7 8Z"/><path d="M7.5 10.5v4m-2-2h4m7-1h.01m2 2h.01"/></symbol>
+  <symbol id="i-fitness" viewBox="0 0 24 24"><path d="M6 9v6m-3-4v2m18-2v2m-3-4v6M6 12h12"/></symbol>
+  <symbol id="i-cook" viewBox="0 0 24 24"><path d="M4 13h16l-1.4 7H5.4L4 13Zm2-3 1-5m4 5V4m4 6 1-5m2 8H6"/><path d="M7 16h.01m4 0h.01m4 0h.01"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></symbol>
+  <symbol id="i-plank" viewBox="0 0 24 24"><circle cx="7" cy="8" r="2"/><path d="m9 10 5 2 4-2m-7 0-3 5-4 1m10-4 3 4 4 1m-15 0h15"/></symbol>
+  <symbol id="i-juggle" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="12" cy="3" r="2"/><path d="M3 19c2-5 5-7 9-7s7 2 9 7M7 20l5-8 5 8"/></symbol>
+  <symbol id="i-lift" viewBox="0 0 24 24"><path d="M3 10v4m3-7v10m12-10v10m3-7v4M6 12h12"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-7z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10h-6v-6H9v6H3z"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-compass-solid" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-rank" viewBox="0 0 24 24"><path d="M4 20v-8h4v8zm6 0V4h4v16zm6 0v-6h4v6z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0z"/></symbol>
+</svg>
+<header class="preview-head">
+  <div class="preview-title">NerdMaxxing · Discover preview</div>
+  <button class="theme-toggle" type="button">Light theme</button>
+</header>
+<main class="phone" aria-label="NerdMaxxing Discover screen preview">
+  <div class="screen">
+    <span class="notch"></span>
+    <div class="status"><span>00:58</span><span class="sys">▂▄▆ 46</span></div>
+    <div class="scroll">
+      <div class="brand">NERD <b>MAXXING</b></div>
+      <h1 class="page-title">Discover</h1>
+      <label class="search"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="Search people or challenges" aria-label="Search people or challenges"></label>
+      <div class="topics" aria-label="Challenge categories">
+        <button class="topic brain" type="button"><svg><use href="#i-brain"/></svg>Brain &amp; Memory</button>
+        <button class="topic games" type="button"><svg><use href="#i-game"/></svg>Games</button>
+        <button class="topic fitness" type="button"><svg><use href="#i-fitness"/></svg>Fitness</button>
+        <button class="topic cooking" type="button"><svg><use href="#i-cook"/></svg>Cooking</button>
+      </div>
+
+      <section class="discover-section">
+        <div class="section-head"><h2 class="section-title">Trending this week</h2><a class="see-all" href="#trending">View all</a></div>
+        <article class="trend searchable" data-search="pick a lock under five minutes intermediate security">
+          <svg class="art-icon" aria-hidden="true"><use href="#i-lock"/></svg>
+          <span class="badge">#1 TRENDING</span>
+          <div class="overlay">
+            <h2>Pick a Lock in Under 5 Minutes</h2>
+            <div class="chip-row"><span class="difficulty intermediate">Intermediate</span><span class="glass"><svg width="12" height="12"><use href="#i-bolt"/></svg>40 aura</span><span class="glass"><svg width="12" height="12"><use href="#i-clock"/></svg>2h–5h</span></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="discover-section">
+        <div class="section-head"><h2 class="section-title">Picked for you</h2><a class="see-all" href="#picked">See all</a></div>
+        <div class="cards">
+          <article class="challenge-card searchable" data-search="hold a plank for 3 minutes fitness intermediate">
+            <svg class="art-icon" aria-hidden="true"><use href="#i-plank"/></svg>
+            <div class="card-copy"><span class="difficulty intermediate">Intermediate</span><h3>Hold a Plank for 3 Minutes</h3><div class="meta"><span><svg><use href="#i-clock"/></svg>10–30m</span><span><svg><use href="#i-bolt"/></svg>32 AP</span></div></div>
+          </article>
+          <article class="challenge-card cook searchable" data-search="cook 20 meals cooking beginner">
+            <svg class="art-icon" aria-hidden="true"><use href="#i-cook"/></svg>
+            <div class="card-copy"><span class="difficulty beginner">Beginner</span><h3>Cook 20 Meals</h3><div class="meta"><span><svg><use href="#i-clock"/></svg>20h+</span><span><svg><use href="#i-bolt"/></svg>58 AP</span></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="discover-section">
+        <div class="section-head"><h2 class="section-title">New this week</h2><a class="see-all" href="#new">See all</a></div>
+        <div class="cards">
+          <article class="challenge-card juggle searchable" data-search="juggle 3 balls beginner skill">
+            <svg class="art-icon" aria-hidden="true"><use href="#i-juggle"/></svg>
+            <div class="card-copy"><span class="difficulty beginner">Beginner</span><h3>Juggle 3 Balls</h3><div class="meta"><span><svg><use href="#i-clock"/></svg>5–10h</span><span><svg><use href="#i-bolt"/></svg>45 AP</span></div></div>
+          </article>
+          <article class="challenge-card lift searchable" data-search="500 lb combined lift advanced fitness">
+            <svg class="art-icon" aria-hidden="true"><use href="#i-lift"/></svg>
+            <div class="card-copy"><span class="difficulty advanced">Advanced</span><h3>500 lb Combined Lift</h3><div class="meta"><span><svg><use href="#i-clock"/></svg>20–40h</span><span><svg><use href="#i-bolt"/></svg>91 AP</span></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="discover-section">
+        <h2 class="section-title">Recent activity</h2>
+        <div class="feed searchable" data-search="aniket started pick a lock">
+          <div class="activity"><span class="activity-dot"></span><div class="activity-copy"><b>Aniket</b> started Pick a Lock in Under 5 Minutes</div><span class="time">21h</span></div>
+          <div class="activity"><span class="activity-dot"></span><div class="activity-copy"><b>Aniket</b> joined Make Fire From Sticks</div><span class="time">22h</span></div>
+        </div>
+      </section>
+      <p class="empty-search" id="empty-search">No matching challenges found.</p>
+    </div>
+    <nav class="nav" aria-label="Primary navigation">
+      <div class="nav-item"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg><span>Home</span></div>
+      <div class="nav-item active"><svg viewBox="0 0 24 24"><use href="#i-compass-solid"/></svg><span>Discover</span></div>
+      <div class="nav-item"><svg viewBox="0 0 24 24"><use href="#i-rank"/></svg><span>Rank</span></div>
+      <div class="nav-item"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg><span>Profile</span></div>
+    </nav>
+  </div>
+</main>
+<script>
+  const themeToggle = document.querySelector('.theme-toggle');
+  themeToggle.addEventListener('click', () => {
+    const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nextTheme;
+    themeToggle.textContent = nextTheme === 'dark' ? 'Light theme' : 'Dark theme';
+  });
+
+  const search = document.querySelector('#search');
+  const cards = [...document.querySelectorAll('.searchable')];
+  const sections = [...document.querySelectorAll('.discover-section')];
+  const emptyState = document.querySelector('#empty-search');
+  search.addEventListener('input', () => {
+    const query = search.value.trim().toLowerCase();
+    let matchCount = 0;
+    for (const card of cards) {
+      const matches = !query || card.dataset.search.includes(query);
+      card.hidden = !matches;
+      if (matches) matchCount++;
+    }
+    for (const section of sections) {
+      section.hidden = query.length > 0 && !section.querySelector('.searchable:not([hidden])');
+    }
+    emptyState.style.display = query && matchCount === 0 ? 'block' : 'none';
+  });
+
+  document.querySelectorAll('.topic').forEach((topic) => {
+    topic.addEventListener('click', () => {
+      document.querySelectorAll('.topic').forEach((item) => item.style.filter = '');
+      topic.style.filter = 'brightness(1.18)';
+    });
+  });
+</script>
+</body>
+</html>

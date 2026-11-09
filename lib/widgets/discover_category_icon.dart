@@ -16,23 +16,15 @@ class DiscoverCategoryIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final iconColor = brightness == Brightness.dark
-        ? HomePalette.primary
-        : HomePalette.ink;
+    final (iconColor, _) = DiscoverPalette.topicColors(
+      category.name,
+      brightness,
+    );
 
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: HomePalette.primaryMuted(brightness),
-      ),
-      child: Icon(
-        _iconForCategory(category),
-        color: iconColor,
-        size: size * 0.52,
-      ),
+    return Icon(
+      _iconForCategory(category),
+      color: iconColor,
+      size: size,
     );
   }
 

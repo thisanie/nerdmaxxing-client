@@ -10,6 +10,7 @@ import '../../services/api_client.dart';
 import '../../services/discover_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/challenge_section.dart';
+import '../../widgets/difficulty_badge.dart';
 import '../../widgets/discover_category_icon.dart';
 import '../challenge/challenge_detail_screen.dart';
 import '../profile/profile_screen.dart';
@@ -206,9 +207,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                         onChallengeTap: _openChallenge,
                       ),
                     ],
-                    const SizedBox(height: 32),
-                    const _SectionHeading('Browse by topic'),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 22),
                   ],
                 ),
               ),
@@ -242,6 +241,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                   title: 'Picked for you',
                   challenges: feed.recommended,
                   onChallengeTap: _openChallenge,
+                  compactCards: true,
                 ),
               ),
             if (feed.newChallenges.isNotEmpty)
@@ -250,6 +250,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                   title: 'New this week',
                   challenges: feed.newChallenges,
                   onChallengeTap: _openChallenge,
+                  compactCards: true,
                 ),
               ),
             if (feed.legendary.isNotEmpty)
@@ -259,6 +260,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                   challenges: feed.legendary,
                   legendary: true,
                   onChallengeTap: _openChallenge,
+                  compactCards: true,
                 ),
               ),
             if (feed.unexpected.isNotEmpty)
@@ -267,6 +269,7 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                   title: 'Try something unexpected',
                   challenges: feed.unexpected,
                   onChallengeTap: _openChallenge,
+                  compactCards: true,
                 ),
               ),
             if (feed.topNerds.isNotEmpty)
@@ -317,6 +320,7 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -382,8 +386,8 @@ class _SectionHeading extends StatelessWidget {
     title,
     style: AppFonts.body(
       color: Theme.of(context).colorScheme.onSurface,
-      fontSize: 22,
-      fontWeight: FontWeight.w500,
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
       letterSpacingEm: -0.01,
     ),
   );
@@ -395,7 +399,6 @@ class _TopicRow extends StatelessWidget {
   const _TopicRow({required this.categories, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -403,32 +406,45 @@ class _TopicRow extends StatelessWidget {
         children: [
           for (var i = 0; i < categories.length; i++) ...[
             if (i > 0) const SizedBox(width: 9),
-            Material(
-              color: colorScheme.surface,
-              shape: StadiumBorder(
-                side: BorderSide(color: colorScheme.outline),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => onTap(categories[i]),
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(6, 6, 18, 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DiscoverCategoryIcon(category: categories[i]),
-                      const SizedBox(width: 10),
-                      Text(
-                        categories[i].name,
-                        style: AppFonts.body(
-                          color: colorScheme.onSurface,
-                          fontSize: 16,
-                        ),
+            Builder(
+              builder: (context) {
+                final (foreground, background) = DiscoverPalette.topicColors(
+                  categories[i].name,
+                  Theme.of(context).brightness,
+                );
+                return Material(
+                  color: background,
+                  shape: const StadiumBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () => onTap(categories[i]),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 13,
+                        vertical: 10,
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          DiscoverCategoryIcon(
+                            category: categories[i],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            categories[i].name,
+                            style: AppFonts.body(
+                              color: foreground,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ],
@@ -450,10 +466,9 @@ class _TrendingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final imageUrl = challenge?.imageUrl?.trim();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 38, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -483,124 +498,117 @@ class _TrendingSection extends StatelessWidget {
             const _PlaceholderCard(label: 'Challenges are loading up')
           else
             Material(
-              color: colorScheme.surface,
+              color: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-                side: BorderSide(color: colorScheme.outline),
+                borderRadius: BorderRadius.circular(22),
               ),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () => onTap(challenge!),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 190,
-                      width: double.infinity,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          if (imageUrl != null && imageUrl.isNotEmpty)
-                            Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              frameBuilder:
-                                  (context, child, frame, wasSynchronouslyLoaded) {
-                                    if (wasSynchronouslyLoaded || frame != null) {
-                                      return child;
-                                    }
-                                    return _ChallengeArtwork(
-                                      challenge: challenge!,
-                                    );
-                                  },
-                              errorBuilder: (_, _, _) =>
-                                  _ChallengeArtwork(challenge: challenge!),
-                            )
-                          else
-                            _ChallengeArtwork(challenge: challenge!),
-                          Positioned(
-                            top: 16,
-                            left: 16,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                child: Text(
-                                  '#1 TRENDING',
-                                  style: AppFonts.body(
-                                    color: AppColors.dark,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacingEm: 0.03,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            challenge!.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppFonts.body(
-                              color: colorScheme.onSurface,
-                              fontSize: 24,
-                              height: 1.15,
-                              fontWeight: FontWeight.w500,
-                              letterSpacingEm: -0.01,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Container(height: 1, color: colorScheme.outline),
-                          const SizedBox(height: 14),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${challenge!.enrollmentCount ?? 0} nerds joined',
-                                style: TextStyle(
-                                  color: colorScheme.onSurfaceVariant,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.bolt_rounded,
-                                    size: 16,
-                                    color: colorScheme.onSurface,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    '${challenge!.auraPoints} aura',
-                                    style: TextStyle(
-                                      color: colorScheme.onSurface,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                child: SizedBox(
+                  height: 236,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (imageUrl != null && imageUrl.isNotEmpty)
+                        Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          frameBuilder:
+                              (context, child, frame, wasSynchronouslyLoaded) {
+                                if (wasSynchronouslyLoaded || frame != null) {
+                                  return child;
+                                }
+                                return _ChallengeArtwork(challenge: challenge!);
+                              },
+                          errorBuilder: (_, _, _) =>
+                              _ChallengeArtwork(challenge: challenge!),
+                        )
+                      else
+                        _ChallengeArtwork(challenge: challenge!),
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0x22000000),
+                              Colors.transparent,
+                              HomePalette.imageOverlay,
                             ],
+                            stops: [0, 0.35, 1],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Positioned(
+                        top: 14,
+                        left: 14,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              '#1 TRENDING',
+                              style: AppFonts.body(
+                                color: AppColors.dark,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacingEm: 0.03,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        bottom: 16,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              challenge!.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppFonts.body(
+                                color: HomePalette.imageText,
+                                fontSize: 21,
+                                height: 1.15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                DifficultyBadge(
+                                  level: challenge!.difficultyLevel,
+                                ),
+                                _TrendingMeta(
+                                  icon: Icons.bolt_rounded,
+                                  label: '${challenge!.auraPoints} aura',
+                                ),
+                                _TrendingMeta(
+                                  icon: Icons.schedule_rounded,
+                                  label: challenge!.effortLabel,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -633,6 +641,39 @@ class _ChallengeArtwork extends StatelessWidget {
       ),
     );
   }
+}
+
+class _TrendingMeta extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _TrendingMeta({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: HomePalette.imageText.withValues(alpha: 0.16),
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: HomePalette.imageText),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: AppFonts.body(
+              color: HomePalette.imageText,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _PlaceholderCard extends StatelessWidget {

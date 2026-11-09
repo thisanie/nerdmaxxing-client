@@ -150,6 +150,43 @@ class HomePalette {
   }
 }
 
+class DiscoverPalette {
+  static const darkLavender = Color(0xFFE1D6FF);
+  static const darkMint = Color(0xFFBAF1DA);
+  static const darkSky = Color(0xFFCEE6FE);
+  static const darkPeach = Color(0xFFFFDCC6);
+  static const darkLavenderWash = Color(0xFF292332);
+  static const darkMintWash = Color(0xFF1D3027);
+  static const darkSkyWash = Color(0xFF202C38);
+  static const darkPeachWash = Color(0xFF33271F);
+
+  static const lightLavender = Color(0xFF4B3A82);
+  static const lightMint = Color(0xFF1D5A40);
+  static const lightSky = Color(0xFF1D4A78);
+  static const lightPeach = Color(0xFF8A4A1F);
+  static const lightLavenderWash = Color(0xFFE1D6FF);
+  static const lightMintWash = Color(0xFFBAF1DA);
+  static const lightSkyWash = Color(0xFFCEE6FE);
+  static const lightPeachWash = Color(0xFFFFDCC6);
+
+  static (Color foreground, Color background) topicColors(
+    String name,
+    Brightness brightness,
+  ) {
+    final value = name.toLowerCase();
+    final colors = value.contains('brain') || value.contains('memory')
+        ? (darkLavender, darkLavenderWash, lightLavender, lightLavenderWash)
+        : value.contains('game')
+        ? (darkMint, darkMintWash, lightMint, lightMintWash)
+        : value.contains('fitness') || value.contains('sport')
+        ? (darkSky, darkSkyWash, lightSky, lightSkyWash)
+        : (darkPeach, darkPeachWash, lightPeach, lightPeachWash);
+    return brightness == Brightness.dark
+        ? (colors.$1, colors.$2)
+        : (colors.$3, colors.$4);
+  }
+}
+
 /// Font roles, matching the HTML prototypes:
 ///  - display (Bricolage Grotesque): headlines, section titles, and the big
 ///    poster numerals ("60", "42 WPM"). Bricolage ships as a variable font
