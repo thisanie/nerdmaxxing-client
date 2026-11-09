@@ -202,24 +202,29 @@ class _BottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     final items = [
       ..._items,
       if (isAdmin) (Icons.fact_check_rounded, 'Admin'),
     ];
-    return Material(
-      color: colorScheme.surface,
-      shape: Border(top: BorderSide(color: colorScheme.outline)),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 70,
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: HomePalette.surface(brightness),
+            border: Border.all(color: HomePalette.border(brightness)),
+            borderRadius: BorderRadius.circular(30),
+          ),
           child: Row(
             children: [
               for (var index = 0; index < items.length; index++)
                 Expanded(
                   child: InkWell(
                     onTap: () => onTap(index),
+                    borderRadius: BorderRadius.circular(24),
                     child: _NavigationItem(
                       icon: items[index].$1,
                       label: items[index].$2,
@@ -248,37 +253,44 @@ class _NavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
+    final selectedBackground = brightness == Brightness.dark
+        ? HomePalette.primary
+        : HomePalette.ink;
+    final selectedForeground = brightness == Brightness.dark
+        ? HomePalette.ink
+        : HomePalette.primary;
     final color = selected
-        ? colorScheme.onSurface
-        : colorScheme.onSurfaceVariant;
+        ? selectedForeground
+        : HomePalette.textSecondary(brightness);
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-            decoration: BoxDecoration(
-              color: selected
-                  ? (Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.primaryMuted
-                        : AppColors.limeWash)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Icon(icon, size: 22, color: color),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              letterSpacing: .3,
-            ),
-          ),
-        ],
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: EdgeInsets.symmetric(
+          horizontal: selected ? 12 : 10,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? selectedBackground : Colors.transparent,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20, color: color),
+            if (selected) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppFonts.home(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

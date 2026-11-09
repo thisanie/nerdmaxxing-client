@@ -10,6 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/app_state_providers.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../../models/participation.dart';
+import '../../models/user_stats.dart';
 import '../../services/challenges_service.dart';
 import '../../services/participation_service.dart';
 import '../../services/profile_service.dart';
@@ -216,12 +217,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         body: AppErrorView(error: _homeError!, onRetry: _loadHomeData),
       );
     }
+    final brightness = Theme.of(context).brightness;
     return Scaffold(
+      backgroundColor: HomePalette.background(brightness),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor
-            .withValues(alpha: _isScrolled ? 0.88 : 1),
+        backgroundColor: HomePalette.background(brightness)
+          .withValues(alpha: _isScrolled ? 0.88 : 1),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         titleSpacing: 20,
@@ -253,8 +256,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onRefresh: () async {
             await _loadHomeData();
           },
-          color: Theme.of(context).colorScheme.onSurface,
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          color: HomePalette.ink,
+          backgroundColor: HomePalette.surface(brightness),
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -265,12 +268,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Greeting(name: name, streak: stats?.dayStreak ?? 0),
-                      const SizedBox(height: 22),
-                      _StatsRow(
-                        active: stats?.activeChallengeCount ?? 0,
-                        aura: stats?.auraPoints ?? 0,
-                        completed: stats?.completedChallengeCount ?? 0,
-                      ),
+                      _WeekStrip(streak: stats?.dayStreak ?? 0),
+                      const SizedBox(height: 16),
+                      _AuraCard(stats: stats),
                       const SizedBox(height: 16),
                       _ResumeCard(
                         challenge: _resumeParticipation == null
@@ -282,7 +282,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ? null
                             : () => _openParticipation(_resumeParticipation!),
                       ),
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 22),
                       _SectionHeader(
                         title: 'Your challenges',
                         action: 'View all',
@@ -362,6 +362,7 @@ class _HomeBrandHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -370,8 +371,8 @@ class _HomeBrandHeader extends StatelessWidget {
           children: [
             Text(
               'NERD',
-              style: AppFonts.body(
-                color: colorScheme.onSurface,
+              style: AppFonts.home(
+                color: HomePalette.textPrimary(brightness),
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
                 letterSpacingEm: 0.05,
@@ -381,13 +382,13 @@ class _HomeBrandHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: HomePalette.bright,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 'MAXXING',
-                style: AppFonts.body(
-                  color: AppColors.dark,
+                style: AppFonts.home(
+                  color: HomePalette.ink,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   letterSpacingEm: 0.05,
@@ -440,138 +441,315 @@ class _Greeting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Column(
+    final brightness = Theme.of(context).brightness;
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Hey $name',
-          style: AppFonts.body(
-            color: colorScheme.onSurface,
-            fontSize: 34,
-            fontWeight: FontWeight.w500,
-            height: 1.1,
-            letterSpacingEm: -0.02,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hey $name',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppFonts.home(
+                  color: HomePalette.textPrimary(brightness),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  height: 1.05,
+                  letterSpacingEm: -0.02,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Keep learning. Keep levelling up.',
+                style: AppFonts.home(
+                  color: HomePalette.textSecondary(brightness),
+                  fontSize: 12.5,
+                  height: 1.3,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 6),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Text(
-                'Keep learning. Keep levelling up.',
-                style: AppFonts.body(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 15,
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          decoration: BoxDecoration(
+            color: HomePalette.peachWash(brightness),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.local_fire_department_rounded,
+                size: 15,
+                color: HomePalette.peachText(brightness),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$streak ${streak == 1 ? 'day' : 'days'}',
+                style: AppFonts.home(
+                  color: HomePalette.peachText(brightness),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-              decoration: ShapeDecoration(
-                color: colorScheme.surface,
-                shape: StadiumBorder(
-                  side: BorderSide(color: colorScheme.outline),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.local_fire_department_rounded,
-                    size: 16,
-                    color: AppColors.puzzle,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$streak day streak',
-                    style: AppFonts.body(
-                      color: colorScheme.onSurface,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
   }
 }
 
-class _StatsRow extends StatelessWidget {
-  final int active;
-  final int aura;
-  final int completed;
+class _WeekStrip extends StatelessWidget {
+  final int streak;
 
-  const _StatsRow({
-    required this.active,
-    required this.aura,
-    required this.completed,
-  });
+  const _WeekStrip({required this.streak});
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outline),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: _Stat(value: '$active', label: 'Active'),
+    final brightness = Theme.of(context).brightness;
+    final today = DateTime.now();
+    final days = List.generate(7, (index) {
+      return today.subtract(Duration(days: 6 - index));
+    });
+    const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          for (var index = 0; index < days.length; index++)
+            Column(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: index == 6 ? HomePalette.primary : null,
+                    border: index == 6
+                        ? null
+                        : Border.all(
+                            color: HomePalette.borderStrong(brightness),
+                            style: BorderStyle.solid,
+                          ),
+                  ),
+                  alignment: Alignment.center,
+                  child: index == 6 && streak > 0
+                      ? Icon(Icons.check_rounded, size: 16, color: HomePalette.ink)
+                      : null,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  index == 6
+                      ? 'Today'
+                      : weekdayLabels[days[index].weekday - 1],
+                  style: AppFonts.home(
+                    color: index == 6
+                        ? HomePalette.textPrimary(brightness)
+                        : HomePalette.textSecondary(brightness),
+                    fontSize: index == 6 ? 9 : 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            VerticalDivider(width: 1, color: scheme.outline),
-            Expanded(
-              child: _Stat(value: '$aura', label: 'Aura'),
-            ),
-            VerticalDivider(width: 1, color: scheme.outline),
-            Expanded(
-              child: _Stat(value: '$completed', label: 'Completed'),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
 
-class _Stat extends StatelessWidget {
-  final String value;
-  final String label;
+class _AuraCard extends StatelessWidget {
+  final UserStats? stats;
 
-  const _Stat({required this.value, required this.label});
+  const _AuraCard({required this.stats});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 18),
+    final brightness = Theme.of(context).brightness;
+    final progress = ((stats?.rankProgress ?? 0).clamp(0, 100)) / 100;
+    final nextRank = stats?.nextRank;
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: HomePalette.surfaceAlt(brightness),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: HomePalette.border(brightness)),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -40,
+            right: -40,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    HomePalette.primary.withValues(
+                      alpha: brightness == Brightness.dark ? 0.22 : 0.55,
+                    ),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'TOTAL AURA',
+                      style: AppFonts.home(
+                        color: HomePalette.textSecondary(brightness),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacingEm: 0.14,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: brightness == Brightness.dark
+                            ? HomePalette.primaryMuted(brightness)
+                            : HomePalette.primary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Rank ${stats?.rank ?? 'E'}',
+                        style: AppFonts.home(
+                          color: HomePalette.rankText(brightness),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${stats?.auraPoints ?? 0}',
+                  style: AppFonts.home(
+                    color: brightness == Brightness.dark
+                        ? HomePalette.primary
+                        : HomePalette.ink,
+                    fontSize: 48,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                    letterSpacingEm: -0.03,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: stats == null ? null : progress,
+                    minHeight: 6,
+                    backgroundColor: HomePalette.border(brightness),
+                    color: HomePalette.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        nextRank == null
+                            ? 'Highest rank reached'
+                            : '${stats!.auraToNextRank} AP to Rank $nextRank',
+                        style: AppFonts.home(
+                          color: HomePalette.textSecondary(brightness),
+                          fontSize: 10.5,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${stats?.rankProgress ?? 0}%',
+                      style: AppFonts.home(
+                        color: HomePalette.textSecondary(brightness),
+                        fontSize: 10.5,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _AuraStat(
+                        value: '${stats?.activeChallengeCount ?? 0}',
+                        label: 'Active',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _AuraStat(
+                        value: '${stats?.completedChallengeCount ?? 0}',
+                        label: 'Completed',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuraStat extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _AuraStat({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: HomePalette.surface(brightness),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: HomePalette.border(brightness)),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             value,
-            style: AppFonts.body(
-              color: colorScheme.onSurface,
-              fontSize: 30,
-              fontWeight: FontWeight.w500,
-              height: 1.1,
+            style: AppFonts.home(
+              color: HomePalette.textPrimary(brightness),
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
           Text(
             label,
-            style: AppFonts.body(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 13,
+            style: AppFonts.home(
+              color: HomePalette.textSecondary(brightness),
+              fontSize: 11,
             ),
           ),
         ],
@@ -592,29 +770,33 @@ class _SectionHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    crossAxisAlignment: CrossAxisAlignment.baseline,
-    textBaseline: TextBaseline.alphabetic,
-    children: [
-      Expanded(child: _SectionTitle(title)),
-      TextButton(
-        onPressed: onAction,
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: Text(
-          action,
-          style: AppFonts.body(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 14,
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Expanded(child: _SectionTitle(title)),
+        TextButton(
+          onPressed: onAction,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            action,
+            style: AppFonts.home(
+              color: HomePalette.link(brightness),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -623,15 +805,18 @@ class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.title);
 
   @override
-  Widget build(BuildContext context) => Text(
-    title,
-    style: AppFonts.body(
-      color: Theme.of(context).colorScheme.onSurface,
-      fontSize: 22,
-      fontWeight: FontWeight.w500,
-      letterSpacingEm: -0.01,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return Text(
+      title,
+      style: AppFonts.home(
+        color: HomePalette.textPrimary(brightness),
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        letterSpacingEm: -0.01,
+      ),
+    );
+  }
 }
 
 class _ResumeCard extends StatelessWidget {
@@ -665,96 +850,110 @@ class _ResumeCard extends StatelessWidget {
     final progressValue = span <= 0
         ? 0.0
         : ((current - baseline) / span).clamp(0.0, 1.0).toDouble();
-    const onDark = Color(0xFFF6F6F1);
-    const mutedOnDark = Color(0xFF9A9A92);
     return Material(
-      color: AppColors.dark,
-      borderRadius: BorderRadius.circular(28),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(24),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'CONTINUE WHERE YOU LEFT OFF',
-                style: AppFonts.label(color: AppColors.primary, fontSize: 12),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: AppFonts.body(
-                  color: onDark,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w500,
-                  height: 1.15,
-                  letterSpacingEm: -0.01,
-                ),
-              ),
-              const SizedBox(height: 18),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: LinearProgressIndicator(
-                  value: detail == null ? null : progressValue,
-                  minHeight: 6,
-                  backgroundColor: const Color(0xFF2E2E2B),
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    detail == null
-                        ? 'Loading progress...'
-                        : '${(progressValue * 100).round()}% to goal',
-                    style: AppFonts.body(color: mutedOnDark, fontSize: 14),
-                  ),
-                  Text(
-                    detail == null
-                        ? ''
-                        : '${_formatValue(current)} / ${_formatValue(target)} ${metric?.unit ?? ''}'
-                              .trim(),
-                    style: AppFonts.body(color: mutedOnDark, fontSize: 14),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 18,
-                  horizontal: 20,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF3A3A36)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      challenge == null
-                          ? 'Discover a challenge'
-                          : 'Resume challenge',
-                      style: AppFonts.body(
-                        color: onDark,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+      child: Ink(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [HomePalette.primary, HomePalette.mint],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.all(Radius.circular(24)),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 70,
+                  height: 70,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: detail == null ? null : progressValue,
+                        strokeWidth: 5,
+                        backgroundColor: HomePalette.ink.withValues(alpha: 0.15),
+                        color: HomePalette.ink,
                       ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: onDark,
-                      size: 20,
-                    ),
-                  ],
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: const BoxDecoration(
+                          color: HomePalette.resumeRingFill,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                            detail == null
+                              ? '--'
+                              : '${(progressValue * 100).round()}%',
+                          style: AppFonts.home(
+                            color: HomePalette.ink,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'CONTINUE',
+                        style: AppFonts.home(
+                          color: HomePalette.ink.withValues(alpha: 0.65),
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacingEm: 0.13,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.home(
+                          color: HomePalette.ink,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          height: 1.15,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: HomePalette.ink,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          challenge == null ? 'Discover' : 'Resume  →',
+                          style: AppFonts.home(
+                            color: HomePalette.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -766,11 +965,6 @@ class _ResumeCard extends StatelessWidget {
     return double.tryParse('$value') ?? fallback;
   }
 
-  static String _formatValue(double value) {
-    return value == value.roundToDouble()
-        ? value.toInt().toString()
-        : value.toStringAsFixed(1);
-  }
 }
 
 class _ChallengeRow extends StatelessWidget {
@@ -787,14 +981,23 @@ class _ChallengeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPaused = participation.status == 'PAUSED';
-    final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
+    final title = challenge?.title ?? 'Your challenge';
+    final gradient = HomePalette.challengeGradient(title);
+    final icon = title.toLowerCase().contains('fire')
+        ? Icons.local_fire_department_rounded
+        : title.toLowerCase().contains('lock')
+        ? Icons.lock_outline_rounded
+        : title.toLowerCase().contains('chess')
+        ? Icons.extension_rounded
+        : Icons.grid_view_rounded;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: colorScheme.surface,
+        color: HomePalette.surface(brightness),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(22),
-          side: BorderSide(color: colorScheme.outline),
+          side: BorderSide(color: HomePalette.border(brightness)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -807,15 +1010,16 @@ class _ChallengeRow extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest,
+                    gradient: RadialGradient(
+                      colors: gradient,
+                      center: const Alignment(-0.45, -0.5),
+                    ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
-                    challenge?.title.toLowerCase().contains('chess') == true
-                        ? Icons.extension_rounded
-                        : Icons.grid_view_rounded,
-                    color: colorScheme.onSurface,
-                    size: 22,
+                    icon,
+                    color: HomePalette.imageText,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -824,13 +1028,13 @@ class _ChallengeRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        challenge?.title ?? 'Your challenge',
+                        title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppFonts.body(
-                          color: colorScheme.onSurface,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w500,
+                        style: AppFonts.home(
+                          color: HomePalette.textPrimary(brightness),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -854,7 +1058,7 @@ class _ChallengeRow extends StatelessWidget {
                 const SizedBox(width: 8),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: colorScheme.onSurfaceVariant,
+                  color: HomePalette.textSecondary(brightness),
                 ),
               ],
             ),
@@ -874,23 +1078,26 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
+        color: HomePalette.surfaceAlt(brightness),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: scheme.onSurfaceVariant),
+            Icon(icon, size: 14, color: HomePalette.textSecondary(brightness)),
             const SizedBox(width: 3),
           ],
           Text(
             label,
-            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 13),
+            style: AppFonts.home(
+              color: HomePalette.textSecondary(brightness),
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -907,12 +1114,15 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final brightness = Theme.of(context).brightness;
     final bg = paused
-        ? (isDark ? const Color(0xFF4A3B12) : const Color(0xFFFFE7A3))
-        : (isDark ? AppColors.primaryMuted : AppColors.limeWash);
+      ? (isDark
+          ? HomePalette.pausedDarkBackground
+          : HomePalette.pausedLightBackground)
+      : HomePalette.primaryMuted(brightness);
     final fg = paused
-        ? (isDark ? const Color(0xFFFFD98A) : const Color(0xFF7A5A00))
-        : (isDark ? AppColors.primary : const Color(0xFF55700F));
+      ? (isDark ? HomePalette.pausedDarkText : HomePalette.pausedLightText)
+      : (isDark ? HomePalette.primary : HomePalette.lightLink);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -921,7 +1131,7 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppFonts.body(
+        style: AppFonts.home(
           color: fg,
           fontSize: 13,
           fontWeight: FontWeight.w500,
@@ -936,18 +1146,21 @@ class _EmptyChallengeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border.all(color: colorScheme.outline),
+        color: HomePalette.surface(brightness),
+        border: Border.all(color: HomePalette.border(brightness)),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
         'No active challenges yet. Pick one in Discover.',
-        style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13.5),
+        style: AppFonts.home(
+          color: HomePalette.textSecondary(brightness),
+          fontSize: 13.5,
+        ),
       ),
     );
   }
@@ -961,78 +1174,108 @@ class _NudgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final title = challenge?.title ?? 'Discover a challenge';
+    final gradient = HomePalette.challengeGradient(title);
+    final icon = title.toLowerCase().contains('handstand')
+        ? Icons.accessibility_new_rounded
+        : title.toLowerCase().contains('juggle')
+        ? Icons.sports_gymnastics_rounded
+        : title.toLowerCase().contains('lift')
+        ? Icons.fitness_center_rounded
+        : Icons.local_fire_department_rounded;
     return Material(
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-        side: BorderSide(color: colorScheme.outline),
-      ),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
+      child: Ink(
+        height: 140,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: RadialGradient(
+            center: const Alignment(-0.45, -0.55),
+            colors: gradient,
+          ),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(22),
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Container(
-                width: 56,
-                height: 56,
+              const DecoratedBox(
                 decoration: BoxDecoration(
-                  color: AppColors.limeWash,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.local_fire_department_rounded,
-                  color: AppColors.lightTextPrimary,
-                  size: 24,
+                  borderRadius: BorderRadius.all(Radius.circular(22)),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, HomePalette.imageOverlay],
+                    stops: [0.35, 1],
+                  ),
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
+              Positioned(
+                top: 18,
+                right: 24,
+                child: Icon(
+                  icon,
+                  size: 54,
+                  color: HomePalette.imageText.withValues(alpha: 0.75),
+                ),
+              ),
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HomePalette.primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    challenge == null ? 'START HERE' : '#1 MOST JOINED',
+                    style: AppFonts.home(
+                      color: HomePalette.ink,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacingEm: 0.04,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 14,
+                right: 14,
+                bottom: 12,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      challenge == null
-                          ? 'NO CHALLENGES YET'
-                          : '#1 MOST JOINED',
-                      style: AppFonts.label(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 11.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      challenge?.title ?? 'Discover a challenge',
-                      maxLines: 1,
+                      title,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppFonts.body(
-                        color: colorScheme.onSurface,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500,
+                      style: AppFonts.home(
+                        color: HomePalette.imageText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        height: 1.15,
                       ),
                     ),
-                    if (challenge?.auraPoints != null ||
-                        challenge?.enrollmentCount != null) ...[
-                      const SizedBox(height: 8),
+                    if (challenge != null &&
+                        (challenge!.auraPoints > 0 ||
+                            challenge!.enrollmentCount != null)) ...[
+                      const SizedBox(height: 6),
                       Wrap(
-                        spacing: 8,
-                        runSpacing: 6,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
                         children: [
-                          if (challenge?.auraPoints != null)
-                            _InfoChip(
-                              icon: Icons.bolt_rounded,
-                              label: '${challenge!.auraPoints} aura',
-                            ),
-                          if (challenge?.enrollmentCount != null)
-                            Text(
-                              '${challenge!.enrollmentCount} joined',
-                              style: AppFonts.body(
-                                color: colorScheme.onSurfaceVariant,
-                                fontSize: 13,
-                              ),
+                          if (challenge!.auraPoints > 0)
+                            _ImageChip(label: '${challenge!.auraPoints} aura'),
+                          if (challenge!.enrollmentCount != null)
+                            _ImageChip(
+                              label: '${challenge!.enrollmentCount} joined',
                             ),
                         ],
                       ),
@@ -1040,14 +1283,33 @@ class _NudgeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: colorScheme.onSurfaceVariant,
-              ),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class _ImageChip extends StatelessWidget {
+  final String label;
+
+  const _ImageChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.16),
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Text(
+      label,
+      style: AppFonts.home(
+        color: HomePalette.imageText,
+        fontSize: 10.5,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 }

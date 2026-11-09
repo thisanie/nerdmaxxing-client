@@ -53,6 +53,103 @@ class AppColors {
   static const difficultyAdvanced = Color(0xFFFF6B57); // ember-red
 }
 
+/// Home-screen palette tokens taken from the dark and light HTML prototypes.
+class HomePalette {
+  static const primary = Color(0xFFCFFF47);
+  static const bright = Color(0xFFC3FD3F);
+  static const mint = Color(0xFF9FF1C0);
+  static const ink = Color(0xFF0B0C05);
+  static const peach = Color(0xFFFFDCC6);
+  static const peachTextLight = Color(0xFF8A4A1F);
+  static const lightLink = Color(0xFF4F6B00);
+  static const imageText = Color(0xFFECEBE3);
+  static const resumeRingFill = Color(0xFFD9FFA0);
+  static const imageOverlay = Color(0xEB0F0F0E);
+  static const pausedDarkBackground = Color(0xFF4A3B12);
+  static const pausedDarkText = Color(0xFFFFD98A);
+  static const pausedLightBackground = Color(0xFFFFE7A3);
+  static const pausedLightText = Color(0xFF7A5A00);
+
+  static const darkBackground = Color(0xFF0F0F0E);
+  static const darkSurface = Color(0xFF161615);
+  static const darkSurfaceAlt = Color(0xFF1B1B19);
+  static const darkPrimaryMuted = Color(0xFF252B16);
+  static const darkTextPrimary = Color(0xFFECEBE3);
+  static const darkTextSecondary = Color(0xFF8C8C84);
+  static const darkBorder = Color(0xFF2C2C2A);
+  static const darkBorderStrong = Color(0xFF444441);
+  static const darkPeachWash = Color(0xFF33271F);
+
+  static const lightBackground = Color(0xFFFFFFFF);
+  static const lightSurface = Color(0xFFFFFFFF);
+  static const lightSurfaceAlt = Color(0xFFF7F7F2);
+  static const lightPrimaryMuted = Color(0xFFF4FABE);
+  static const lightTextPrimary = Color(0xFF101008);
+  static const lightTextSecondary = Color(0xFF5C5C53);
+  static const lightBorder = Color(0xFFE5E5DC);
+
+  static const challengePurple = Color(0xFF7B5CC4);
+  static const challengePurpleDeep = Color(0xFF2A1A4D);
+  static const challengeGreen = Color(0xFF3AA57A);
+  static const challengeGreenDeep = Color(0xFF0F3324);
+  static const challengeEmber = Color(0xFFE0894A);
+  static const challengeEmberDeep = Color(0xFF47200C);
+  static const challengeBlue = Color(0xFF4A8FD8);
+  static const challengeBlueDeep = Color(0xFF0F2A47);
+
+  static Color background(Brightness brightness) => brightness == Brightness.dark
+      ? darkBackground
+      : lightBackground;
+
+  static Color surface(Brightness brightness) => brightness == Brightness.dark
+      ? darkSurface
+      : lightSurface;
+
+  static Color surfaceAlt(Brightness brightness) =>
+      brightness == Brightness.dark ? darkSurfaceAlt : lightSurfaceAlt;
+
+  static Color primaryMuted(Brightness brightness) =>
+      brightness == Brightness.dark ? darkPrimaryMuted : lightPrimaryMuted;
+
+  static Color textPrimary(Brightness brightness) =>
+      brightness == Brightness.dark ? darkTextPrimary : lightTextPrimary;
+
+  static Color textSecondary(Brightness brightness) =>
+      brightness == Brightness.dark ? darkTextSecondary : lightTextSecondary;
+
+  static Color border(Brightness brightness) =>
+      brightness == Brightness.dark ? darkBorder : lightBorder;
+
+  static Color borderStrong(Brightness brightness) =>
+      brightness == Brightness.dark ? darkBorderStrong : lightBorder;
+
+  static Color peachWash(Brightness brightness) =>
+      brightness == Brightness.dark ? darkPeachWash : peach;
+
+  static Color peachText(Brightness brightness) =>
+      brightness == Brightness.dark ? peach : peachTextLight;
+
+  static Color link(Brightness brightness) =>
+      brightness == Brightness.dark ? primary : lightLink;
+
+  static Color rankText(Brightness brightness) =>
+      brightness == Brightness.dark ? primary : ink;
+
+  static List<Color> challengeGradient(String title) {
+    final normalized = title.toLowerCase();
+    if (normalized.contains('fire')) {
+      return const [challengeGreen, challengeGreenDeep];
+    }
+    if (normalized.contains('plank') || normalized.contains('lift')) {
+      return const [challengeBlue, challengeBlueDeep];
+    }
+    if (normalized.contains('handstand') || normalized.contains('juggle')) {
+      return const [challengePurple, challengePurpleDeep];
+    }
+    return const [challengeEmber, challengeEmberDeep];
+  }
+}
+
 /// Font roles, matching the HTML prototypes:
 ///  - display (Bricolage Grotesque): headlines, section titles, and the big
 ///    poster numerals ("60", "42 WPM"). Bricolage ships as a variable font
@@ -60,6 +157,22 @@ class AppColors {
 ///    slightly compressed "poster" look.
 ///  - body (Instrument Sans): paragraphs, labels, buttons, form fields.
 class AppFonts {
+  static TextStyle home({
+    required Color color,
+    double fontSize = 15,
+    FontWeight fontWeight = FontWeight.w400,
+    double? height,
+    double letterSpacingEm = 0,
+  }) {
+    return GoogleFonts.inter(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      height: height,
+      letterSpacing: letterSpacingEm * fontSize,
+    );
+  }
+
   static TextStyle display({
     required Color color,
     double fontSize = 20,

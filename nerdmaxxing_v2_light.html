@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NerdMaxxing v2 Light</title>
+<style>
+  :root {
+    --primary:#CFFF47; --bright:#C3FD3F; --mint:#9FF1C0;
+    --bg:#0F0F0E; --surface:#161615; --alt:#1B1B19;
+    --pmuted:#252B16;
+    --text:#ECEBE3; --text2:#8C8C84; --dim:#5A5A53;
+    --border:#2C2C2A; --strong:#444441;
+    --lav:#E1D6FF; --pmint:#BAF1DA; --sky:#CEE6FE; --peach:#FFDCC6; --pyel:#F4FABE;
+    --lavW:#292332; --mintW:#1D3027; --blueW:#202C38; --peachW:#33271F; --yelW:#303019;
+    --warn:#FFAB3D; --adv:#FF6B57; --ink:#0B0C05;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050505;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);padding:28px 16px 48px}
+  h1.t{text-align:center;font-size:18px;font-weight:700;margin-bottom:4px}
+  p.s{text-align:center;font-size:12.5px;color:var(--text2);margin-bottom:28px}
+  .stage{display:flex;gap:36px;justify-content:center;flex-wrap:wrap;max-width:1240px;margin:0 auto}
+  .col{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .label{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--text2);text-transform:uppercase}
+  .phone{width:340px;height:700px;border-radius:44px;background:#242422;padding:10px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.6),inset 0 0 0 2px rgba(255,255,255,.07)}
+  .screen{width:100%;height:100%;border-radius:35px;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;background:#242422;z-index:9}
+  .status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:6px 24px 0;font-size:12px;font-weight:600}
+  .status span:last-child{font-size:11px;color:var(--text2)}
+  .scroll{flex:1;overflow-y:auto;padding:6px 18px 18px;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+
+  .row{display:flex;align-items:center}.between{justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;letter-spacing:.03em}
+  .brand b{background:var(--bright);color:var(--ink);padding:2px 8px;border-radius:8px;font-weight:800}
+  .iconbtn{width:34px;height:34px;border-radius:50%;background:var(--alt);border:1px solid var(--border);display:grid;place-items:center;font-size:14px}
+  .h1{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05}
+  .h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+  .mut{color:var(--text2)}
+  .link{font-size:12px;color:var(--primary);font-weight:600}
+  .sec{margin-top:22px}
+  .eyebrow{font-size:10px;letter-spacing:.14em;font-weight:700;color:var(--text2)}
+
+  /* nav */
+  .nav{flex:none;margin:0 14px 12px;height:60px;border-radius:30px;background:var(--alt);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+  .ni{display:flex;align-items:center;gap:6px;height:44px;padding:0 14px;border-radius:22px;color:var(--text2);font-size:12px;font-weight:600}
+  .ni svg{width:20px;height:20px;fill:currentColor}
+  .ni span{display:none}
+  .ni.on{background:var(--primary);color:var(--ink)}
+  .ni.on span{display:inline}
+
+  /* image placeholders */
+  .img{position:relative;overflow:hidden;display:grid;place-items:center;font-size:46px}
+  .img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,15,14,0) 35%,rgba(15,15,14,.92) 100%)}
+  .img.soft::after{background:linear-gradient(180deg,rgba(15,15,14,0) 55%,rgba(15,15,14,.7) 100%)}
+  .g1{background:radial-gradient(circle at 30% 30%,#7b5cc4,#2a1a4d 70%)}
+  .g2{background:radial-gradient(circle at 70% 30%,#3aa57a,#0f3324 70%)}
+  .g3{background:radial-gradient(circle at 30% 70%,#e0894a,#47200c 70%)}
+  .g4{background:radial-gradient(circle at 60% 40%,#4a8fd8,#0f2a47 70%)}
+  .g5{background:radial-gradient(circle at 40% 30%,#d6c43a,#403a08 70%)}
+  .ov{position:absolute;left:0;right:0;bottom:0;padding:12px 14px;z-index:2}
+  .glass{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);font-size:10.5px;font-weight:600;color:var(--text)}
+  .dchip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;font-size:10.5px;font-weight:700}
+  .dchip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .beg{background:var(--primary);color:var(--ink)}
+  .int{background:var(--warn);color:var(--ink)}
+  .adv{background:var(--adv);color:var(--ink)}
+  .badge{position:absolute;top:12px;left:12px;z-index:3;background:var(--primary);color:var(--ink);font-weight:800;font-size:10.5px;padding:5px 10px;border-radius:999px;letter-spacing:.04em}
+
+  /* HOME */
+  .streak{display:inline-flex;gap:5px;align-items:center;padding:6px 11px;border-radius:999px;background:var(--peachW);color:var(--peach);font-size:12px;font-weight:700}
+  .week{display:flex;justify-content:space-between;margin-top:16px}
+  .day{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10px;color:var(--text2);font-weight:600}
+  .day i{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--strong);display:grid;place-items:center;font-style:normal;font-size:12px}
+  .day.done i{background:var(--pmuted);border:0;color:var(--primary)}
+  .day.today i{background:var(--primary);border:0;color:var(--ink);font-weight:800}
+  .day.today{color:var(--text)}
+  .aura{margin-top:16px;background:var(--alt);border:1px solid var(--border);border-radius:24px;padding:16px;position:relative;overflow:hidden}
+  .aura::before{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(207,255,71,.22),transparent 70%)}
+  .aura .big{font-size:48px;font-weight:700;letter-spacing:-.03em;color:var(--primary);line-height:1}
+  .aura .big small{font-size:14px;color:var(--text2);font-weight:600;letter-spacing:0;margin-left:6px}
+  .rpill{background:var(--pmuted);color:var(--primary);padding:6px 11px;border-radius:999px;font-size:11px;font-weight:700}
+  .bar{height:6px;border-radius:4px;background:var(--border);overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--mint));border-radius:4px}
+  .mini{display:flex;gap:10px;margin-top:14px}
+  .mini div{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;font-size:11px;color:var(--text2)}
+  .mini b{display:block;font-size:20px;color:var(--text);font-weight:600}
+  .hero{margin-top:14px;border-radius:24px;padding:16px;color:var(--ink);background:linear-gradient(135deg,var(--primary),var(--mint));display:flex;gap:14px;align-items:center}
+  .ring{width:70px;height:70px;border-radius:50%;flex:none;background:conic-gradient(var(--ink) 0 4%,rgba(11,12,5,.15) 4% 100%);display:grid;place-items:center}
+  .ring span{width:56px;height:56px;border-radius:50%;background:#d9ffa0;display:grid;place-items:center;font-size:13px;font-weight:800}
+  .hero h3{font-size:17px;line-height:1.15;font-weight:700;margin:3px 0 10px}
+  .hero .e{font-size:9.5px;letter-spacing:.13em;font-weight:800;opacity:.65}
+  .hero .go{display:inline-flex;gap:6px;background:var(--ink);color:var(--primary);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:700}
+  .crow{display:flex;gap:12px;align-items:center;padding:10px;margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:20px}
+  .crow .th{width:56px;height:56px;border-radius:16px;flex:none;font-size:24px}
+  .crow .th::after{display:none}
+  .crow .n{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crow .m{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text2);margin:6px 0 5px}
+  .crow .m b{color:var(--primary)}
+  .next{margin-top:12px;height:120px;border-radius:22px}
+
+  /* DISCOVER */
+  .search{margin-top:14px;display:flex;gap:10px;align-items:center;padding:12px 16px;border-radius:999px;background:var(--alt);border:1px solid var(--border);font-size:13px;color:var(--text2)}
+  .topics{display:flex;gap:8px;margin-top:12px;overflow:hidden}
+  .tp{flex:none;padding:10px 14px;border-radius:16px;font-size:12px;font-weight:600;display:flex;gap:8px;align-items:center}
+  .tp.a{background:var(--lavW);color:var(--lav)}
+  .tp.b{background:var(--mintW);color:var(--pmint)}
+  .tp.c{background:var(--blueW);color:var(--sky)}
+  .tp.d{background:var(--peachW);color:var(--peach)}
+  .trend{height:210px;border-radius:26px;margin-top:12px}
+  .trend h3{font-size:20px;line-height:1.1;font-weight:700;margin-bottom:9px;letter-spacing:-.01em}
+  .hs{display:flex;gap:12px;overflow:hidden;margin-top:12px}
+  .pc{flex:none;width:168px;height:210px;border-radius:22px}
+  .pc h4{font-size:14px;line-height:1.15;font-weight:700;margin:8px 0 6px}
+  .pc .m{display:flex;gap:6px;font-size:10.5px;color:rgba(236,235,227,.75)}
+  .feed{margin-top:12px;display:flex;flex-direction:column;gap:2px}
+  .fi{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;line-height:1.3}
+  .fi:last-child{border:0}
+  .fi .dot{width:8px;height:8px;border-radius:50%;background:var(--primary);flex:none;box-shadow:0 0 0 4px var(--pmuted)}
+  .fi .w{margin-left:auto;color:var(--text2);font-size:11px;flex:none}
+
+  /* RANK */
+  .seg{display:flex;padding:4px;border-radius:999px;background:var(--alt);border:1px solid var(--border)}
+  .seg div{flex:1;text-align:center;padding:9px 0;font-size:13px;color:var(--text2);border-radius:999px;font-weight:500}
+  .seg .on{background:var(--primary);color:var(--ink);font-weight:700}
+  .fbar{margin-top:14px;display:flex;gap:8px;overflow:hidden}
+  .f{flex:none;padding:8px 13px;border-radius:999px;border:1px solid var(--border);background:var(--alt);font-size:11.5px;font-weight:600;color:var(--text2)}
+  .f.on{background:var(--pmuted);border-color:transparent;color:var(--primary)}
+  .letters{display:flex;gap:6px;margin-top:10px}
+  .lt{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:700;border:1px solid var(--border);color:var(--text2);background:var(--alt)}
+  .lt.on{background:var(--primary);color:var(--ink);border:0}
+  .lt.all{width:auto;padding:0 12px;border-radius:999px}
+  .pod{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin-top:22px}
+  .pd{flex:1;text-align:center}
+  .pd .av{margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;font-weight:700;border:2px solid var(--strong);background:var(--alt)}
+  .pd.s1 .av{width:70px;height:70px;border-color:var(--primary);font-size:22px;box-shadow:0 0 0 6px var(--pmuted)}
+  .pd.s2 .av,.pd.s3 .av{width:54px;height:54px;font-size:17px}
+  .pd .nm{font-size:12.5px;font-weight:600}
+  .pd .ap{font-size:11px;color:var(--text2);margin-top:1px}
+  .pd.s1 .ap{color:var(--primary);font-weight:700}
+  .block{margin-top:8px;border-radius:14px 14px 0 0;display:grid;place-items:center;font-weight:800;color:var(--ink);font-size:18px}
+  .s1 .block{height:64px;background:var(--primary)}
+  .s2 .block{height:44px;background:var(--mint);opacity:.9}
+  .s3 .block{height:32px;background:var(--peach);opacity:.9}
+  .lrow{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--border)}
+  .lrow .n{width:22px;font-size:13px;color:var(--text2);font-weight:600}
+  .lrow .av{width:36px;height:36px;border-radius:50%;background:var(--alt);border:1px solid var(--strong);display:grid;place-items:center;font-size:12px;font-weight:700}
+  .lrow .nm{font-size:14px;font-weight:600}
+  .lrow .hd{font-size:10.5px;color:var(--text2);margin-top:1px}
+  .lrow .ap{margin-left:auto;font-size:14px;font-weight:600}
+  .rk{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;background:var(--pmuted);color:var(--primary);margin-left:6px}
+  .you{flex:none;margin:0 14px 8px;padding:10px 14px;border-radius:20px;background:var(--primary);color:var(--ink);display:flex;align-items:center;gap:10px}
+  .you .av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--primary);display:grid;place-items:center;font-weight:800;font-size:12px}
+  .you .t{font-size:13px;font-weight:700;line-height:1.1}.you .t small{display:block;font-weight:600;opacity:.6;font-size:10.5px;margin-top:2px}
+  .you .p{margin-left:auto;font-weight:800;font-size:14px}
+
+  /* ===== LIGHT THEME OVERRIDES ===== */
+  :root{
+    --bg:#FFFFFF; --surface:#FFFFFF; --alt:#F7F7F2;
+    --pmuted:#F4FABE;
+    --text:#101008; --text2:#5C5C53; --dim:#8C8C84;
+    --border:#E5E5DC; --strong:#CFCFC4;
+    --lav:#4B3A82; --pmint:#1D5A40; --sky:#1D4A78; --peach:#8A4A1F;
+    --lavW:#E1D6FF; --mintW:#BAF1DA; --blueW:#CEE6FE; --peachW:#FFDCC6; --yelW:#F4FABE;
+  }
+  body{background:#E9E9E1}
+  .phone{background:#101008;box-shadow:0 24px 50px rgba(16,16,8,.25),inset 0 0 0 2px rgba(255,255,255,.08)}
+  .notch{background:#101008}
+  .label,p.s{color:#5C5C53}
+  h1.t{color:#101008}
+  .link{color:#4F6B00}
+  .aura .big{color:var(--ink)}
+  .aura .big small{color:var(--text2)}
+  .rpill,.rk,.f.on,.day.done i,.crow .m b,.pd.s1 .ap{color:var(--ink)}
+  .rpill,.rk{background:var(--primary)}
+  .f.on{background:var(--pyel);border:1px solid #DDEB8A}
+  .day.done i{background:var(--pyel)}
+  .pd.s1 .ap{font-weight:800}
+  .fi .dot{box-shadow:0 0 0 4px var(--pyel)}
+  .bar{background:#E5E5DC}
+  .ov{color:#ECEBE3}
+  .glass{color:#ECEBE3;background:rgba(255,255,255,.2)}
+  .pc .m{color:rgba(255,255,255,.85)}
+  .nav{background:#FFFFFF;box-shadow:0 6px 20px rgba(16,16,8,.08)}
+  .ni.on{background:var(--ink);color:var(--primary)}
+  .you{background:var(--ink);color:#fff}
+  .you .av{background:var(--primary);color:var(--ink)}
+  .you .p{color:var(--primary)}
+  .seg .on{background:var(--ink);color:#fff}
+  .lt.on{background:var(--ink);color:#fff}
+  .crow,.aura{box-shadow:0 1px 0 rgba(16,16,8,.03)}
+  .pd .av{background:#fff}
+  .pd.s1 .av{box-shadow:0 0 0 6px var(--pyel)}
+  .s2 .block{opacity:1}.s3 .block{opacity:1}
+  .mini div{background:#fff}
+  .aura::before{background:radial-gradient(circle,rgba(207,255,71,.55),transparent 70%)}
+</style>
+</head>
+<body>
+<h1 class="t">NerdMaxxing · Light v2</h1>
+<p class="s">Image slots are gradient + emoji placeholders for your real illustrations. Rank values are sample data.</p>
+
+<main class="stage">
+
+<!-- HOME -->
+<div class="col"><div class="label">Home</div>
+<div class="phone"><div class="screen"><span class="notch"></span>
+<div class="status"><span>00:36</span><span>▂▄▆ 33</span></div>
+<div class="scroll">
+  <div class="row between"><div class="brand">NERD <b>MAXXING</b></div><div class="iconbtn">🔔</div></div>
+
+  <div class="row between" style="margin-top:18px">
+    <div><div class="h1">Hey Aniket</div><div class="mut" style="font-size:12.5px;margin-top:4px">Keep learning. Keep levelling up.</div></div>
+    <div class="streak">🔥 1 day</div>
+  </div>
+
+  <div class="week">
+    <div class="day"><i></i>M</div><div class="day"><i></i>T</div><div class="day"><i></i>W</div><div class="day"><i></i>T</div>
+    <div class="day"><i></i>F</div><div class="day"><i></i>S</div><div class="day today"><i>✓</i>Today</div>
+  </div>
+
+  <div class="aura">
+    <div class="row between"><span class="eyebrow">TOTAL AURA</span><span class="rpill">Rank E</span></div>
+    <div class="big" style="margin-top:8px">80<small>AP</small></div>
+    <div class="bar" style="margin-top:14px"><i style="width:32%"></i></div>
+    <div class="row between mut" style="font-size:10.5px;margin-top:6px"><span>170 AP to Rank D</span><span>80 / 250</span></div>
+    <div class="mini"><div><b>3</b>Active</div><div><b>2</b>Completed</div></div>
+  </div>
+
+  <div class="hero">
+    <div class="ring"><span>0%</span></div>
+    <div>
+      <div class="e">CONTINUE</div>
+      <h3>Pick a Lock in Under 5 Minutes</h3>
+      <div class="go">Resume →</div>
+    </div>
+  </div>
+
+  <div class="row between sec"><div class="h2">Your challenges</div><span class="link">View all</span></div>
+  <div class="crow"><div class="img th g3">🔐</div><div style="flex:1;min-width:0"><div class="n">Pick a Lock in Under 5 Minutes</div><div class="m"><span>Active</span><b>⚡ 40</b></div><div class="bar"><i style="width:4%"></i></div></div></div>
+  <div class="crow"><div class="img th g2">🔥</div><div style="flex:1;min-width:0"><div class="n">Make Fire From Sticks</div><div class="m"><span>Active</span><b>⚡ 65</b></div><div class="bar"><i style="width:12%"></i></div></div></div>
+
+  <div class="row between sec"><div class="h2">Maybe try next</div><span class="link">Discover</span></div>
+  <div class="img soft next g1"><span class="badge">#1 MOST JOINED</span>🤸
+    <div class="ov"><div style="font-weight:700;font-size:16px;margin-bottom:6px">Do a Handstand for 30 Seconds</div><span class="glass">⚡ 65 aura</span> <span class="glass">7 joined</span></div></div>
+</div>
+<div class="nav">
+  <div class="ni on"><svg viewBox="0 0 24 24"><path d="M12 3 3 11h3v9h5v-6h2v6h5v-9h3z"/></svg><span>Home</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
+</div></div></div></div>
+
+<!-- DISCOVER -->
+<div class="col"><div class="label">Discover</div>
+<div class="phone"><div class="screen"><span class="notch"></span>
+<div class="status"><span>00:58</span><span>▂▄▆ 46</span></div>
+<div class="scroll">
+  <div class="brand">NERD <b>MAXXING</b></div>
+  <div class="h1" style="margin-top:16px;font-size:32px">Discover</div>
+  <div class="search">🔍 Search people or challenges</div>
+  <div class="topics">
+    <div class="tp a">🧠 Brain &amp; Memory</div><div class="tp b">♟ Games</div><div class="tp c">💪 Fitness</div><div class="tp d">🍳 Cooking</div>
+  </div>
+
+  <div class="row between sec"><div class="h2">Trending this week</div><span class="link">View all</span></div>
+  <div class="img soft trend g3" style="font-size:70px"><span class="badge">#1 TRENDING</span>🔐
+    <div class="ov"><h3>Pick a Lock in Under 5 Minutes</h3><span class="dchip int">Intermediate</span> <span class="glass">⚡ 40</span> <span class="glass">🕒 2h–5h</span></div></div>
+
+  <div class="row between sec"><div class="h2">Picked for you</div><span class="link">See all</span></div>
+  <div class="hs">
+    <div class="img pc g4"><div class="ov"><span class="dchip int">Intermediate</span><h4>Hold a Plank for 3 Minutes</h4><div class="m"><span>🕒 10–30m</span><span>⚡ 32</span></div></div>🧘</div>
+    <div class="img pc g2"><div class="ov"><span class="dchip beg">Beginner</span><h4>Cook 20 Meals</h4><div class="m"><span>🕒 20h+</span><span>⚡ 58</span></div></div>🍳</div>
+  </div>
+
+  <div class="row between sec"><div class="h2">New this week</div><span class="link">See all</span></div>
+  <div class="hs">
+    <div class="img pc g1"><div class="ov"><span class="dchip beg">Beginner</span><h4>Juggle 3 Balls</h4><div class="m"><span>🕒 5–10h</span><span>⚡ 45</span></div></div>🤹</div>
+    <div class="img pc g5"><div class="ov"><span class="dchip adv">Advanced</span><h4>500 lb Combined Lift</h4><div class="m"><span>🕒 20–40h</span><span>⚡ 91</span></div></div>🏋️</div>
+  </div>
+
+  <div class="h2 sec">Recent activity</div>
+  <div class="feed">
+    <div class="fi"><span class="dot"></span><div><b>Aniket</b> started Pick a Lock in Under 5 Minutes</div><span class="w">21h</span></div>
+    <div class="fi"><span class="dot"></span><div><b>Aniket</b> joined Make Fire From Sticks</div><span class="w">22h</span></div>
+  </div>
+</div>
+<div class="nav">
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 3 3 11h3v9h5v-6h2v6h5v-9h3z"/></svg><span>Home</span></div>
+  <div class="ni on"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
+</div></div></div></div>
+
+<!-- RANK -->
+<div class="col"><div class="label">Rank</div>
+<div class="phone"><div class="screen"><span class="notch"></span>
+<div class="status"><span>00:59</span><span>▂▄▆ 46</span></div>
+<div class="scroll">
+  <div class="seg"><div>Summary</div><div class="on">Leaderboard</div></div>
+  <div class="row between" style="margin-top:18px"><div class="h1" style="font-size:32px">Rank</div><span class="rpill" style="font-size:12px">Rank E</span></div>
+  <div class="mut" style="font-size:13px;margin-top:4px">See who is putting in the work.</div>
+
+  <div class="fbar"><div class="f on">This week</div><div class="f">This month</div><div class="f">All time</div></div>
+  <div class="fbar" style="margin-top:8px"><div class="f on">Aura</div><div class="f">Completed</div><div class="f">Streak</div></div>
+  <div class="letters"><div class="lt all on">All</div><div class="lt">E</div><div class="lt">D</div><div class="lt">C</div><div class="lt">B</div><div class="lt">A</div><div class="lt">S</div></div>
+
+  <div class="pod">
+    <div class="pd s2"><div class="av">A</div><div class="nm">Aniket</div><div class="ap">120 AP</div><div class="block">2</div></div>
+    <div class="pd s1"><div class="av">P</div><div class="nm">Pablo</div><div class="ap">240 AP</div><div class="block">1</div></div>
+    <div class="pd s3"><div class="av">N</div><div class="nm">NerdMax</div><div class="ap">80 AP</div><div class="block">3</div></div>
+  </div>
+
+  <div style="margin-top:4px">
+    <div class="lrow"><span class="n">04</span><div class="av">D</div><div><div class="nm">Dauvii<span class="rk">E</span></div><div class="hd">@Dauntless</div></div><div class="ap">60 AP</div></div>
+    <div class="lrow"><span class="n">05</span><div class="av">AS</div><div><div class="nm">Aniket Surjuse<span class="rk">E</span></div><div class="hd">@professor</div></div><div class="ap">40 AP</div></div>
+    <div class="lrow"><span class="n">06</span><div class="av">M</div><div><div class="nm">Manthan Chougule<span class="rk">E</span></div><div class="hd">@ero_sennin</div></div><div class="ap">20 AP</div></div>
+    <div class="lrow" style="border:0"><span class="n">07</span><div class="av">V</div><div><div class="nm">Vaishnavi Kulkarni<span class="rk">E</span></div><div class="hd">@vaishnavi</div></div><div class="ap">0 AP</div></div>
+  </div>
+</div>
+<div class="you"><div class="av">A</div><div class="t">You · #2<small>@aniket · E Rank</small></div><div class="p">120 AP</div></div>
+<div class="nav" style="margin-top:0">
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 3 3 11h3v9h5v-6h2v6h5v-9h3z"/></svg><span>Home</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div>
+  <div class="ni on"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
+  <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
+</div></div></div></div>
+
+</main>
+</body>
+</html>

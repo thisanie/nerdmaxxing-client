@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NerdMaxxing Home Preview</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --primary:#CFFF47; --bright:#C3FD3F; --mint:#9FF1C0;
+    --bg:#0F0F0E; --surface:#161615; --alt:#1B1B19; --pmuted:#252B16;
+    --text:#ECEBE3; --text2:#8C8C84; --dim:#5A5A53;
+    --border:#2C2C2A; --strong:#444441;
+    --peach:#FFDCC6; --peachW:#33271F; --warn:#FFAB3D; --ink:#0B0C05;
+    --frame:#242422; --outer:#050505;
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
+    --bg:#FFFFFF; --surface:#FFFFFF; --alt:#F7F7F2; --pmuted:#F4FABE;
+    --text:#101008; --text2:#5C5C53; --dim:#8C8C84;
+    --border:#E5E5DC; --strong:#CFCFC4;
+    --peach:#8A4A1F; --peachW:#FFDCC6;
+    --frame:#101008; --outer:#E9E9E1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:var(--outer);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;align-items:center;padding:24px 16px 36px;transition:background .2s,color .2s}
+  .preview-head{width:min(100%,420px);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .preview-title{font-size:14px;font-weight:700;letter-spacing:.02em}
+  .theme-toggle{border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);font:inherit;font-size:12px;font-weight:600;padding:8px 12px;cursor:pointer}
+  .phone{width:340px;height:700px;max-width:100%;flex:none;padding:10px;border-radius:44px;background:var(--frame);position:relative;box-shadow:0 24px 60px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.07)}
+  .screen{height:100%;border-radius:35px;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .notch{position:absolute;z-index:5;top:8px;left:50%;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;background:var(--frame)}
+  .status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:6px 24px 0;font-size:12px;font-weight:600}
+  .status .system{font-size:11px;color:var(--text2)}
+  .scroll{flex:1;overflow:auto;padding:6px 18px 18px;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+  .row{display:flex;align-items:center}.between{justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;letter-spacing:.03em}
+  .brand b{padding:2px 8px;border-radius:8px;background:var(--bright);color:var(--ink);font-weight:800}
+  .iconbtn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--alt);display:grid;place-items:center;color:var(--text)}
+  .iconbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .greeting{margin-top:18px;gap:8px}
+  .h1{font-size:28px;font-weight:700;line-height:1.05;letter-spacing:-.02em}
+  .muted{color:var(--text2)}
+  .subtitle{font-size:12.5px;margin-top:4px}
+  .streak{flex:none;display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;background:var(--peachW);color:var(--peach);font-size:12px;font-weight:700}
+  .week{display:flex;justify-content:space-between;margin-top:16px}
+  .day{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10px;color:var(--text2);font-weight:600}
+  .day i{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--strong);display:grid;place-items:center;font-style:normal;font-size:12px}
+  .day.today{color:var(--text)}
+  .day.today i{background:var(--primary);border:0;color:var(--ink);font-weight:800}
+  .aura{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:24px;background:var(--alt);position:relative;overflow:hidden}
+  .aura:before{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(207,255,71,.22),transparent 70%);pointer-events:none}
+  html[data-theme="light"] .aura:before{background:radial-gradient(circle,rgba(207,255,71,.55),transparent 70%)}
+  .eyebrow{font-size:10px;letter-spacing:.14em;font-weight:700;color:var(--text2)}
+  .rank{padding:6px 11px;border-radius:999px;background:var(--pmuted);color:var(--primary);font-size:11px;font-weight:700}
+  html[data-theme="light"] .rank{background:var(--primary);color:var(--ink)}
+  .aura-total{margin-top:8px;color:var(--primary);font-size:48px;line-height:1;font-weight:700;letter-spacing:-.03em}
+  html[data-theme="light"] .aura-total{color:var(--ink)}
+  .aura-total small{margin-left:6px;color:var(--text2);font-size:14px;font-weight:600;letter-spacing:0}
+  .bar{height:6px;border-radius:4px;background:var(--border);overflow:hidden}
+  .bar i{display:block;width:32%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--primary),var(--mint))}
+  .progress{margin-top:14px}
+  .progress-copy{margin-top:6px;font-size:10.5px}
+  .mini{display:flex;gap:10px;margin-top:14px}
+  .mini div{flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text2);font-size:11px}
+  .mini b{display:block;color:var(--text);font-size:20px;font-weight:600}
+  .hero{margin-top:14px;padding:16px;border-radius:24px;background:linear-gradient(135deg,var(--primary),var(--mint));color:var(--ink);display:flex;align-items:center;gap:14px}
+  .ring{width:70px;height:70px;flex:none;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ink) 0 4%,rgba(11,12,5,.15) 4% 100%)}
+  .ring span{width:56px;height:56px;border-radius:50%;background:#D9FFA0;display:grid;place-items:center;font-size:13px;font-weight:800}
+  .hero-copy{min-width:0}
+  .continue{font-size:9.5px;letter-spacing:.13em;font-weight:800;opacity:.65}
+  .hero h2{font-size:17px;line-height:1.15;font-weight:700;margin:3px 0 10px}
+  .go{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--ink);color:var(--primary);font-size:12px;font-weight:700}
+  .section{margin-top:22px}
+  .section-title{font-size:17px;font-weight:700;letter-spacing:-.01em}
+  .link{color:var(--primary);font-size:12px;font-weight:600}
+  html[data-theme="light"] .link{color:#4F6B00}
+  .challenge{display:flex;align-items:center;gap:12px;margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:20px;background:var(--surface)}
+  .thumb{width:56px;height:56px;flex:none;border-radius:16px;display:grid;place-items:center;font-size:24px;position:relative;overflow:hidden}
+  .fire{background:radial-gradient(circle at 70% 30%,#3AA57A,#0F3324 70%)}
+  .lock{background:radial-gradient(circle at 30% 70%,#E0894A,#47200C 70%)}
+  .challenge-copy{flex:1;min-width:0}
+  .challenge-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .challenge-meta{display:flex;justify-content:space-between;margin:6px 0 5px;color:var(--text2);font-size:10.5px}
+  .challenge-meta b{color:var(--primary)}
+  .challenge .bar i{width:4%}
+  .challenge.fire-row .bar i{width:12%}
+  .next{height:140px;margin-top:12px;border-radius:22px;position:relative;overflow:hidden;display:grid;place-items:center;font-size:46px;background:radial-gradient(circle at 30% 30%,#7B5CC4,#2A1A4D 70%)}
+  .next>span:first-child{position:absolute;top:8px;right:26px;z-index:1}
+  .next:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,15,14,0) 35%,rgba(15,15,14,.92) 100%)}
+  .badge{position:absolute;z-index:2;top:12px;left:12px;padding:5px 10px;border-radius:999px;background:var(--primary);color:var(--ink);font-size:10.5px;font-weight:800;letter-spacing:.04em}
+  .overlay{position:absolute;z-index:2;left:0;right:0;bottom:0;padding:12px 14px;color:#ECEBE3}
+  .next-title{font-size:16px;font-weight:700;margin-bottom:6px}
+  .glass{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);color:#ECEBE3;font-size:10.5px;font-weight:600}
+  .nav{height:60px;flex:none;margin:0 14px 12px;padding:0 8px;border:1px solid var(--border);border-radius:30px;background:var(--alt);display:flex;align-items:center;justify-content:space-around}
+  html[data-theme="light"] .nav{background:#fff;box-shadow:0 6px 20px rgba(16,16,8,.08)}
+  .nav-item{height:44px;padding:0 13px;border-radius:22px;color:var(--text2);display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+  .nav-item svg{width:20px;height:20px;fill:currentColor}
+  .nav-item span{display:none}
+  .nav-item.active{background:var(--primary);color:var(--ink)}
+  html[data-theme="light"] .nav-item.active{background:var(--ink);color:var(--primary)}
+  .nav-item.active span{display:inline}
+  @media(max-width:390px){body{padding:12px 0 0}.preview-head{padding:0 14px}.phone{width:100%;height:calc(100dvh - 56px);min-height:640px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}.screen{border-radius:0}.notch{display:none}}
+</style>
+</head>
+<body>
+<header class="preview-head">
+  <div class="preview-title">NerdMaxxing · Home preview</div>
+  <button class="theme-toggle" type="button" aria-label="Switch color theme">Light theme</button>
+</header>
+<main class="phone" aria-label="NerdMaxxing home screen preview">
+  <div class="screen">
+    <span class="notch"></span>
+    <div class="status"><span>00:36</span><span class="system">▂▄▆ 33</span></div>
+    <div class="scroll">
+      <div class="row between">
+        <div class="brand">NERD <b>MAXXING</b></div>
+        <button class="iconbtn" type="button" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+        </button>
+      </div>
+      <div class="row between greeting">
+        <div><div class="h1">Hey Aniket</div><div class="muted subtitle">Keep learning. Keep levelling up.</div></div>
+        <div class="streak"><span>🔥</span> 1 day</div>
+      </div>
+      <div class="week" aria-label="Weekly streak">
+        <div class="day"><i></i>M</div><div class="day"><i></i>T</div><div class="day"><i></i>W</div><div class="day"><i></i>T</div>
+        <div class="day"><i></i>F</div><div class="day"><i></i>S</div><div class="day today"><i>✓</i>Today</div>
+      </div>
+      <section class="aura">
+        <div class="row between"><span class="eyebrow">TOTAL AURA</span><span class="rank">Rank E</span></div>
+        <div class="aura-total">80<small>AP</small></div>
+        <div class="bar progress"><i></i></div>
+        <div class="row between muted progress-copy"><span>170 AP to Rank D</span><span>80 / 250</span></div>
+        <div class="mini"><div><b>3</b>Active</div><div><b>2</b>Completed</div></div>
+      </section>
+      <section class="hero">
+        <div class="ring"><span>0%</span></div>
+        <div class="hero-copy"><div class="continue">CONTINUE</div><h2>Pick a Lock in Under 5 Minutes</h2><div class="go">Resume <span aria-hidden="true">→</span></div></div>
+      </section>
+      <div class="row between section"><div class="section-title">Your challenges</div><span class="link">View all</span></div>
+      <article class="challenge">
+        <div class="thumb lock">🔐</div>
+        <div class="challenge-copy"><div class="challenge-name">Pick a Lock in Under 5 Minutes</div><div class="challenge-meta"><span>Active</span><b>⚡ 40</b></div><div class="bar"><i></i></div></div>
+      </article>
+      <article class="challenge fire-row">
+        <div class="thumb fire">🔥</div>
+        <div class="challenge-copy"><div class="challenge-name">Make Fire From Sticks</div><div class="challenge-meta"><span>Active</span><b>⚡ 65</b></div><div class="bar"><i></i></div></div>
+      </article>
+      <div class="row between section"><div class="section-title">Maybe try next</div><span class="link">Discover</span></div>
+      <div class="next"><span>🤸</span><span class="badge">#1 MOST JOINED</span><div class="overlay"><div class="next-title">Do a Handstand for 30 Seconds</div><span class="glass">⚡ 65 aura</span> <span class="glass">7 joined</span></div></div>
+    </div>
+    <nav class="nav" aria-label="Primary navigation">
+      <div class="nav-item active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 11h3v9h5v-6h2v6h5v-9h3z"/></svg><span>Home</span></div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
+    </nav>
+  </div>
+</main>
+<script>
+  const toggle = document.querySelector('.theme-toggle');
+  toggle.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    toggle.textContent = next === 'dark' ? 'Light theme' : 'Dark theme';
+  });
+</script>
+</body>
+</html>
