@@ -334,7 +334,7 @@ class _NavigationItem extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
+              
               ],
             ),
           ),
