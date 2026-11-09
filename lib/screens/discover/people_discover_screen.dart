@@ -10,6 +10,7 @@ import '../../services/api_client.dart';
 import '../../services/discover_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/challenge_section.dart';
+import '../../widgets/discover_category_icon.dart';
 import '../challenge/challenge_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import 'category_challenges_screen.dart';
@@ -415,20 +416,7 @@ class _TopicRow extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.limeWash,
-                        ),
-                        child: const Icon(
-                          Icons.category_rounded,
-                          color: AppColors.dark,
-                          size: 21,
-                        ),
-                      ),
+                      DiscoverCategoryIcon(category: categories[i]),
                       const SizedBox(width: 10),
                       Text(
                         categories[i].name,
@@ -463,6 +451,7 @@ class _TrendingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final imageUrl = challenge?.imageUrl?.trim();
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 38, 20, 0),
       child: Column(
@@ -511,15 +500,24 @@ class _TrendingSection extends StatelessWidget {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          if (challenge!.imageUrl != null)
+                          if (imageUrl != null && imageUrl.isNotEmpty)
                             Image.network(
-                              challenge!.imageUrl!,
+                              imageUrl,
                               fit: BoxFit.cover,
+                              frameBuilder:
+                                  (context, child, frame, wasSynchronouslyLoaded) {
+                                    if (wasSynchronouslyLoaded || frame != null) {
+                                      return child;
+                                    }
+                                    return _ChallengeArtwork(
+                                      challenge: challenge!,
+                                    );
+                                  },
                               errorBuilder: (_, _, _) =>
-                                  const _ChallengeArtwork(),
+                                  _ChallengeArtwork(challenge: challenge!),
                             )
                           else
-                            const _ChallengeArtwork(),
+                            _ChallengeArtwork(challenge: challenge!),
                           Positioned(
                             top: 16,
                             left: 16,
@@ -613,16 +611,23 @@ class _TrendingSection extends StatelessWidget {
 }
 
 class _ChallengeArtwork extends StatelessWidget {
-  const _ChallengeArtwork();
+  final Challenge challenge;
+
+  const _ChallengeArtwork({required this.challenge});
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      color: isDark ? AppColors.surfaceAlt : AppColors.limeWash,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(-0.45, -0.5),
+          colors: HomePalette.challengeGradient(challenge.title),
+        ),
+      ),
       child: Center(
         child: Icon(
           Icons.auto_awesome_rounded,
-          color: isDark ? AppColors.primary : AppColors.lightTextPrimary,
+          color: HomePalette.imageText,
           size: 38,
         ),
       ),

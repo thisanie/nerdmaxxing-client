@@ -4,6 +4,7 @@ import '../models/challenge.dart';
 import '../models/discover.dart';
 import '../theme/app_theme.dart';
 import 'challenge_card.dart';
+import 'discover_category_icon.dart';
 
 class ChallengeSection extends StatelessWidget {
   final String title;
@@ -126,9 +127,9 @@ class CategorySection extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        Text(
-                          category.icon,
-                          style: const TextStyle(fontSize: 22),
+                        DiscoverCategoryIcon(
+                          category: category,
+                          size: 30,
                         ),
                         const SizedBox(width: 10),
                         Expanded(

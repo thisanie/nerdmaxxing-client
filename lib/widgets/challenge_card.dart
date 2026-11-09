@@ -19,6 +19,7 @@ class ChallengeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final imageUrl = challenge.imageUrl?.trim();
     return Card(
       clipBehavior: Clip.antiAlias,
       color: legendary
@@ -34,9 +35,9 @@ class ChallengeCard extends StatelessWidget {
           children: [
             AspectRatio(
               aspectRatio: 16 / 8,
-              child: challenge.imageUrl != null
+              child: imageUrl != null && imageUrl.isNotEmpty
                   ? Image.network(
-                      challenge.imageUrl!,
+                      imageUrl,
                       fit: BoxFit.cover,
                       frameBuilder:
                           (context, child, frame, wasSynchronouslyLoaded) {
@@ -46,7 +47,7 @@ class ChallengeCard extends StatelessWidget {
                             return Stack(
                               fit: StackFit.expand,
                               children: [
-                                _fallbackImage(context),
+                                _fallbackImage(),
                                 const Center(
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
@@ -55,9 +56,9 @@ class ChallengeCard extends StatelessWidget {
                               ],
                             );
                           },
-                      errorBuilder: (_, _, _) => _fallbackImage(context),
+                      errorBuilder: (_, _, _) => _fallbackImage(),
                     )
-                  : _fallbackImage(context),
+                  : _fallbackImage(),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -146,20 +147,20 @@ class ChallengeCard extends StatelessWidget {
     );
   }
 
-  Widget _fallbackImage(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tint = switch (challenge.difficultyLevel) {
-      'BEGINNER' => const Color(0xFFE3EFE3),
-      'ADVANCED' => const Color(0xFFFBE3DC),
-      _ => const Color(0xFFF2E8DA),
-    };
-    return Container(
-      color: isDark ? AppColors.surfaceAlt : tint,
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.auto_awesome_rounded,
-        size: 34,
-        color: isDark ? AppColors.primary : AppColors.lightTextSecondary,
+  Widget _fallbackImage() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(-0.45, -0.5),
+          colors: HomePalette.challengeGradient(challenge.title),
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.auto_awesome_rounded,
+          size: 34,
+          color: HomePalette.imageText,
+        ),
       ),
     );
   }

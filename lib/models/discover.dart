@@ -81,14 +81,12 @@ class DiscoverCategory {
   final String id;
   final String name;
   final String slug;
-  final String icon;
   final int? challengeCount;
 
   const DiscoverCategory({
     required this.id,
     required this.name,
     required this.slug,
-    required this.icon,
     this.challengeCount,
   });
 
@@ -98,7 +96,6 @@ class DiscoverCategory {
       id: json['id']?.toString() ?? name,
       name: name,
       slug: (json['slug'] ?? json['key'] ?? name).toString(),
-      icon: (json['icon'] ?? json['emoji'] ?? '✦').toString(),
       challengeCount: _toInt(json['challenge_count'] ?? json['count']),
     );
   }
