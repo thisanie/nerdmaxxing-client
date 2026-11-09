@@ -203,36 +203,38 @@ class _BottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
     final items = [
       ..._items,
       if (isAdmin) (Icons.fact_check_rounded, 'Admin'),
     ];
+    final horizontalMargin = isAdmin ? 8.0 : 14.0;
+    final itemInset = isAdmin ? 4.0 : 9.0;
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+        padding: EdgeInsets.fromLTRB(horizontalMargin, 0, horizontalMargin, 12),
         child: Container(
-          height: 60,
+          height: 62,
           decoration: BoxDecoration(
-            color: HomePalette.surface(brightness),
+            color: brightness == Brightness.dark
+                ? HomePalette.darkSurfaceAlt
+                : HomePalette.lightSurface,
             border: Border.all(color: HomePalette.border(brightness)),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(31),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(horizontal: itemInset),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 for (var index = 0; index < items.length; index++)
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => onTap(index),
-                      borderRadius: BorderRadius.circular(24),
-                      child: _NavigationItem(
-                        icon: items[index].$1,
-                        label: items[index].$2,
-                        selected: currentIndex == index,
-                      ),
-                    ),
+                  _NavigationItem(
+                    icon: items[index].$1,
+                    label: items[index].$2,
+                    selected: currentIndex == index,
+                    reduceMotion: reduceMotion,
+                    onTap: () => onTap(index),
                   ),
               ],
             ),
@@ -247,11 +249,15 @@ class _NavigationItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool selected;
+  final bool reduceMotion;
+  final VoidCallback onTap;
 
   const _NavigationItem({
     required this.icon,
     required this.label,
     required this.selected,
+    required this.reduceMotion,
+    required this.onTap,
   });
 
   @override
@@ -266,33 +272,72 @@ class _NavigationItem extends StatelessWidget {
     final color = selected
         ? selectedForeground
         : HomePalette.textSecondary(brightness);
-    return Center(
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: EdgeInsets.symmetric(
-          horizontal: selected ? 12 : 10,
-          vertical: 10,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? selectedBackground : Colors.transparent,
+    final animationDuration = reduceMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 450);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(22),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: color),
-            if (selected) ...[
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: AppFonts.home(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+          child: AnimatedContainer(
+            duration: animationDuration,
+            curve: Curves.easeOutBack,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            padding: EdgeInsets.symmetric(horizontal: selected ? 16 : 12),
+            decoration: BoxDecoration(
+              color: selected ? selectedBackground : Colors.transparent,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TweenAnimationBuilder<double>(
+                  key: ValueKey('icon-$selected'),
+                  tween: Tween(begin: selected ? 0.7 : 1, end: 1),
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 500),
+                  curve: Curves.elasticOut,
+                  builder: (context, scale, child) => Transform.scale(
+                    scale: scale,
+                    child: child,
+                  ),
+                  child: Icon(icon, size: 20, color: color),
+                ),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: selected ? 1 : 0),
+                  duration: animationDuration,
+                  curve: Curves.easeOutBack,
+                  builder: (context, reveal, child) => ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: reveal.clamp(0, 1),
+                      child: Opacity(opacity: reveal.clamp(0, 1), child: child),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 7),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: AppFonts.home(
+                        color: color,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ],
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
