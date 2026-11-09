@@ -229,12 +229,15 @@ class _BottomNavigationBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 for (var index = 0; index < items.length; index++)
-                  _NavigationItem(
-                    icon: items[index].$1,
-                    label: items[index].$2,
-                    selected: currentIndex == index,
-                    reduceMotion: reduceMotion,
-                    onTap: () => onTap(index),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: _NavigationItem(
+                      icon: items[index].$1,
+                      label: items[index].$2,
+                      selected: currentIndex == index,
+                      reduceMotion: reduceMotion,
+                      onTap: () => onTap(index),
+                    ),
                   ),
               ],
             ),
