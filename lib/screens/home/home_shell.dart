@@ -234,9 +234,9 @@ class _BottomNavigationBar extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.fromLTRB(
             horizontalMargin,
-            0,
+            6,
             horizontalMargin,
-            12,
+            6,
           ),
           child: Center(
             child: ConstrainedBox(
