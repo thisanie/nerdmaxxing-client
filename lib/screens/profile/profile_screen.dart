@@ -382,7 +382,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             ],
           ),
         ),
-          ('SUBMITTED', 'Submitted'),
+      ),
     );
 
     if (!mounted) return;
@@ -1019,12 +1019,18 @@ class _GroupsPanel extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-          Center(child: _CompletedCoverArtwork(isChess: isChess, isLight: isLight)),
-                      color: scheme.onSurface,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                    ),
+                child: Text(
+                  isOwnProfile ? 'YOUR GROUPS' : 'GROUPS',
+                  style: AppFonts.label(
+                    color: scheme.onSurface,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
                   ),
+                ),
+              ),
+              if (onCreate != null)
+                TextButton(
+                  onPressed: onCreate,
                   style: TextButton.styleFrom(
                     minimumSize: const Size(0, 29),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -1032,6 +1038,14 @@ class _GroupsPanel extends StatelessWidget {
                     shape: const StadiumBorder(),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: VisualDensity.compact,
+                  ),
+                  child: Text(
+                    'Create',
+                    style: AppFonts.label(
+                      color: scheme.onSurface,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
             ],
