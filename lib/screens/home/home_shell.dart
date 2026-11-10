@@ -152,39 +152,22 @@ class _HomeShellState extends State<HomeShell> {
         }
       },
       child: Scaffold(
-        extendBody: true,
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          fit: StackFit.expand,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Column(
           children: [
-            SafeArea(
-              bottom: false,
-              child: Builder(
-                builder: (context) {
-                  final mediaQuery = MediaQuery.of(context);
-                  return MediaQuery(
-                    data: mediaQuery.copyWith(
-                      padding: mediaQuery.padding.copyWith(
-                        bottom: mediaQuery.padding.bottom + 72,
-                      ),
-                    ),
-                    child: IndexedStack(
-                      index: _navigationIndex,
-                      children: _tabNavigators,
-                    ),
-                  );
-                },
+            Expanded(
+              child: SafeArea(
+                bottom: false,
+                child: IndexedStack(
+                  index: _navigationIndex,
+                  children: _tabNavigators,
+                ),
               ),
             ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _BottomNavigationBar(
-                currentIndex: _navigationIndex,
-                onTap: _onNavigationTap,
-                isAdmin: _isAdmin,
-              ),
+            _BottomNavigationBar(
+              currentIndex: _navigationIndex,
+              onTap: _onNavigationTap,
+              isAdmin: _isAdmin,
             ),
           ],
         ),

@@ -121,7 +121,7 @@ class _RankSummary extends ConsumerWidget {
         18,
         18,
         18,
-        32 + MediaQuery.viewPaddingOf(context).bottom + 72,
+        32,
       ),
       children: [
         _RankHeader(rank: stats.rank),
@@ -963,7 +963,7 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
                 18,
                 18,
                 18,
-                24 + MediaQuery.viewPaddingOf(context).bottom + 72,
+                24,
               ),
               children: [
                 _RankHeader(rank: widget.rank),
