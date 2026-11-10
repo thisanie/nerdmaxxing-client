@@ -267,15 +267,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+                  padding: const EdgeInsets.fromLTRB(26, 20, 26, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Greeting(name: name, streak: stats?.dayStreak ?? 0),
                       _WeekStrip(activityDays: stats?.activityDays ?? const []),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       _AuraCard(stats: stats),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       _ResumeCard(
                         challenge: _resumeParticipation == null
                             ? null
@@ -459,7 +459,7 @@ class _Greeting extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: AppFonts.home(
                   color: HomePalette.textPrimary(brightness),
-                  fontSize: 28,
+                  fontSize: 32,
                   fontWeight: FontWeight.w700,
                   height: 1.05,
                   letterSpacingEm: -0.02,
@@ -470,7 +470,7 @@ class _Greeting extends StatelessWidget {
                 'Keep learning. Keep levelling up.',
                 style: AppFonts.home(
                   color: HomePalette.textSecondary(brightness),
-                  fontSize: 12.5,
+                  fontSize: 15,
                   height: 1.3,
                 ),
               ),
@@ -479,7 +479,7 @@ class _Greeting extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
             color: HomePalette.peachWash(brightness),
             borderRadius: BorderRadius.circular(999),
@@ -489,7 +489,7 @@ class _Greeting extends StatelessWidget {
             children: [
               Icon(
                 Icons.local_fire_department_rounded,
-                size: 15,
+                size: 19,
                 color: HomePalette.peachText(brightness),
               ),
               const SizedBox(width: 4),
@@ -497,7 +497,7 @@ class _Greeting extends StatelessWidget {
                 '$streak ${streak == 1 ? 'day' : 'days'}',
                 style: AppFonts.home(
                   color: HomePalette.peachText(brightness),
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -534,7 +534,7 @@ class _WeekStrip extends StatelessWidget {
     const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -550,8 +550,8 @@ class _WeekStrip extends StatelessWidget {
                 return Column(
                   children: [
                     SizedBox(
-                      width: 34,
-                      height: 34,
+                      width: 40,
+                      height: 40,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
@@ -565,7 +565,7 @@ class _WeekStrip extends StatelessWidget {
                             )
                           else
                             CustomPaint(
-                              size: const Size.square(34),
+                              size: const Size.square(40),
                               painter: _DottedCirclePainter(
                                 color: HomePalette.borderStrong(brightness),
                               ),
@@ -573,7 +573,7 @@ class _WeekStrip extends StatelessWidget {
                           if (isActive)
                             const Icon(
                               Icons.check_rounded,
-                              size: 16,
+                              size: 20,
                               color: HomePalette.ink,
                             ),
                         ],
@@ -586,7 +586,7 @@ class _WeekStrip extends StatelessWidget {
                         color: isToday
                             ? HomePalette.textPrimary(brightness)
                             : HomePalette.textSecondary(brightness),
-                        fontSize: isToday ? 9 : 10,
+                        fontSize: isToday ? 11 : 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -669,7 +669,7 @@ class _AuraCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -680,7 +680,7 @@ class _AuraCard extends StatelessWidget {
                       'TOTAL AURA',
                       style: AppFonts.home(
                         color: HomePalette.textSecondary(brightness),
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         letterSpacingEm: 0.14,
                       ),
@@ -700,7 +700,7 @@ class _AuraCard extends StatelessWidget {
                         'Rank ${stats?.rank ?? 'E'}',
                         style: AppFonts.home(
                           color: HomePalette.rankText(brightness),
-                          fontSize: 11,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -714,7 +714,7 @@ class _AuraCard extends StatelessWidget {
                     color: brightness == Brightness.dark
                         ? HomePalette.primary
                         : HomePalette.ink,
-                    fontSize: 48,
+                    fontSize: 56,
                     fontWeight: FontWeight.w700,
                     height: 1,
                     letterSpacingEm: -0.03,
@@ -725,7 +725,7 @@ class _AuraCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: stats == null ? null : progress,
-                    minHeight: 6,
+                    minHeight: 8,
                     backgroundColor: HomePalette.border(brightness),
                     color: HomePalette.primary,
                   ),
@@ -741,7 +741,7 @@ class _AuraCard extends StatelessWidget {
                             : '${stats!.auraToNextRank} AP to Rank $nextRank',
                         style: AppFonts.home(
                           color: HomePalette.textSecondary(brightness),
-                          fontSize: 10.5,
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -749,7 +749,7 @@ class _AuraCard extends StatelessWidget {
                       '${stats?.rankProgress ?? 0}%',
                       style: AppFonts.home(
                         color: HomePalette.textSecondary(brightness),
-                        fontSize: 10.5,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -791,7 +791,7 @@ class _AuraStat extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
         color: HomePalette.surface(brightness),
         borderRadius: BorderRadius.circular(14),
@@ -804,7 +804,7 @@ class _AuraStat extends StatelessWidget {
             value,
             style: AppFonts.home(
               color: HomePalette.textPrimary(brightness),
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -812,7 +812,7 @@ class _AuraStat extends StatelessWidget {
             label,
             style: AppFonts.home(
               color: HomePalette.textSecondary(brightness),
-              fontSize: 11,
+              fontSize: 13,
             ),
           ),
         ],
@@ -852,7 +852,7 @@ class _SectionHeader extends StatelessWidget {
             action,
             style: AppFonts.home(
               color: HomePalette.link(brightness),
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -874,7 +874,7 @@ class _SectionTitle extends StatelessWidget {
       title,
       style: AppFonts.home(
         color: HomePalette.textPrimary(brightness),
-        fontSize: 17,
+        fontSize: 20,
         fontWeight: FontWeight.w700,
         letterSpacingEm: -0.01,
       ),
@@ -933,12 +933,12 @@ class _ResumeCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Row(
               children: [
                 SizedBox(
-                  width: 76,
-                  height: 76,
+                  width: 88,
+                  height: 88,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -956,8 +956,8 @@ class _ResumeCard extends StatelessWidget {
                         ),
                       ),
                       Container(
-                        width: 60,
-                        height: 60,
+                        width: 70,
+                        height: 70,
                         decoration: const BoxDecoration(
                           color: Color(0xFFE8FFBC),
                           shape: BoxShape.circle,
@@ -969,7 +969,7 @@ class _ResumeCard extends StatelessWidget {
                               : '${(progressValue * 100).round()}%',
                           style: AppFonts.home(
                             color: HomePalette.ink,
-                            fontSize: 13,
+                            fontSize: 16,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -986,7 +986,7 @@ class _ResumeCard extends StatelessWidget {
                         'CONTINUE',
                         style: AppFonts.home(
                           color: HomePalette.ink.withValues(alpha: 0.65),
-                          fontSize: 9.5,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w800,
                           letterSpacingEm: 0.13,
                         ),
@@ -998,7 +998,7 @@ class _ResumeCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.home(
                           color: HomePalette.ink,
-                          fontSize: 17,
+                          fontSize: 20,
                           fontWeight: FontWeight.w700,
                           height: 1.15,
                         ),
@@ -1006,8 +1006,8 @@ class _ResumeCard extends StatelessWidget {
                       const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
+                          horizontal: 18,
+                          vertical: 10,
                         ),
                         decoration: BoxDecoration(
                           color: HomePalette.ink,
@@ -1017,7 +1017,7 @@ class _ResumeCard extends StatelessWidget {
                           challenge == null ? 'Discover' : 'Resume  →',
                           style: AppFonts.home(
                             color: HomePalette.primary,
-                            fontSize: 12,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -1065,7 +1065,7 @@ class _ChallengeRow extends StatelessWidget {
         ? Icons.extension_rounded
         : Icons.grid_view_rounded;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Material(
         color: HomePalette.surface(brightness),
         shape: RoundedRectangleBorder(
@@ -1076,12 +1076,12 @@ class _ChallengeRow extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 66,
+                  height: 66,
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
                       colors: gradient,
@@ -1092,7 +1092,7 @@ class _ChallengeRow extends StatelessWidget {
                   child: Icon(
                     icon,
                     color: HomePalette.imageText,
-                    size: 24,
+                    size: 28,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -1106,7 +1106,7 @@ class _ChallengeRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.home(
                           color: HomePalette.textPrimary(brightness),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1153,7 +1153,7 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: HomePalette.surfaceAlt(brightness),
         borderRadius: BorderRadius.circular(10),
@@ -1162,14 +1162,14 @@ class _InfoChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: HomePalette.textSecondary(brightness)),
-            const SizedBox(width: 3),
+            Icon(icon, size: 17, color: HomePalette.textSecondary(brightness)),
+            const SizedBox(width: 4),
           ],
           Text(
             label,
             style: AppFonts.home(
               color: HomePalette.textSecondary(brightness),
-              fontSize: 11,
+              fontSize: 13,
             ),
           ),
         ],
@@ -1197,7 +1197,7 @@ class _StatusPill extends StatelessWidget {
       ? (isDark ? HomePalette.pausedDarkText : HomePalette.pausedLightText)
       : (isDark ? HomePalette.primary : HomePalette.lightLink);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(10),
@@ -1206,7 +1206,7 @@ class _StatusPill extends StatelessWidget {
         label,
         style: AppFonts.home(
           color: fg,
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -1222,7 +1222,7 @@ class _EmptyChallengeRow extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: HomePalette.surface(brightness),
         border: Border.all(color: HomePalette.border(brightness)),
@@ -1232,7 +1232,7 @@ class _EmptyChallengeRow extends StatelessWidget {
         'No active challenges yet. Pick one in Discover.',
         style: AppFonts.home(
           color: HomePalette.textSecondary(brightness),
-          fontSize: 13.5,
+          fontSize: 15,
         ),
       ),
     );
@@ -1261,7 +1261,7 @@ class _NudgeCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
       child: Ink(
-        height: 140,
+        height: 180,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
           gradient: RadialGradient(
@@ -1291,17 +1291,17 @@ class _NudgeCard extends StatelessWidget {
                 right: 24,
                 child: Icon(
                   icon,
-                  size: 54,
+                  size: 64,
                   color: HomePalette.imageText.withValues(alpha: 0.75),
                 ),
               ),
               Positioned(
-                top: 12,
-                left: 12,
+                top: 16,
+                left: 16,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
+                    horizontal: 13,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: HomePalette.primary,
@@ -1311,7 +1311,7 @@ class _NudgeCard extends StatelessWidget {
                     challenge == null ? 'START HERE' : '#1 MOST JOINED',
                     style: AppFonts.home(
                       color: HomePalette.ink,
-                      fontSize: 10.5,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w800,
                       letterSpacingEm: 0.04,
                     ),
@@ -1319,9 +1319,9 @@ class _NudgeCard extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 14,
-                right: 14,
-                bottom: 12,
+                left: 18,
+                right: 18,
+                bottom: 16,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1331,7 +1331,7 @@ class _NudgeCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.home(
                         color: HomePalette.imageText,
-                        fontSize: 16,
+                        fontSize: 20,
                         fontWeight: FontWeight.w700,
                         height: 1.15,
                       ),
@@ -1371,7 +1371,7 @@ class _ImageChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
     decoration: BoxDecoration(
       color: Colors.white.withValues(alpha: 0.16),
       borderRadius: BorderRadius.circular(999),
@@ -1380,7 +1380,7 @@ class _ImageChip extends StatelessWidget {
       label,
       style: AppFonts.home(
         color: HomePalette.imageText,
-        fontSize: 10.5,
+        fontSize: 12.5,
         fontWeight: FontWeight.w600,
       ),
     ),
