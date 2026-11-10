@@ -277,6 +277,7 @@ class _LoginScreenState extends State<LoginScreen>
           },
         ),
       ),
+    ),
     );
   }
 
@@ -1194,11 +1195,6 @@ class _SparkPainter extends CustomPainter {
     );
     canvas.restore();
   }
-  const _SparkPainter({
-    required this.color,
-    this.topOpacity = 1,
-    this.bottomOpacity = 1,
-  });
 
   @override
   bool shouldRepaint(covariant _SparkPainter old) =>
@@ -1333,7 +1329,7 @@ class _AnimatedCtaState extends State<_AnimatedCta>
                 child: IgnorePointer(
                   child: AnimatedBuilder(
                     animation: _arrow,
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_forward_rounded,
                       color: Theme.of(context).colorScheme.primary,
                       size: 22,
@@ -1449,8 +1445,10 @@ class _ModeTab extends StatelessWidget {
     return Expanded(
       child: Material(
         color: selected
-          ? (isLight ? AppColors.lightSurfaceAlt : AppColors.surfaceAlt)
-          : Colors.transparent,
+            ? (Theme.of(context).brightness == Brightness.light
+                  ? AppColors.lightSurfaceAlt
+                  : AppColors.surfaceAlt)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
         child: InkWell(
           onTap: onTap,

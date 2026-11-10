@@ -342,7 +342,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           children: [
             Text(
               title.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 11,
                 letterSpacing: 2,
