@@ -159,14 +159,21 @@ class _HomeShellState extends State<HomeShell> {
           children: [
             SafeArea(
               bottom: false,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: 68 + MediaQuery.of(context).padding.bottom,
-                ),
-                child: IndexedStack(
-                  index: _navigationIndex,
-                  children: _tabNavigators,
-                ),
+              child: Builder(
+                builder: (context) {
+                  final mediaQuery = MediaQuery.of(context);
+                  return MediaQuery(
+                    data: mediaQuery.copyWith(
+                      padding: mediaQuery.padding.copyWith(
+                        bottom: mediaQuery.padding.bottom + 68,
+                      ),
+                    ),
+                    child: IndexedStack(
+                      index: _navigationIndex,
+                      children: _tabNavigators,
+                    ),
+                  );
+                },
               ),
             ),
             Positioned(
