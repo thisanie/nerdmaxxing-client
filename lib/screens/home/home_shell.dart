@@ -226,7 +226,7 @@ class _BottomNavigationBar extends StatelessWidget {
       if (isAdmin) (Icons.fact_check_rounded, 'Admin'),
     ];
     final horizontalMargin = isAdmin ? 8.0 : 12.0;
-    final itemInset = isAdmin ? 4.0 : 6.0;
+    final itemInset = 12.0;
     return SafeArea(
       top: false,
       child: SizedBox(
@@ -263,7 +263,7 @@ class _BottomNavigationBar extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: itemInset),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       for (var index = 0; index < items.length; index++)
                         Padding(
