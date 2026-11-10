@@ -508,6 +508,36 @@ class AppTheme {
     );
   }
 
+  static ThemeData neutralActionTheme(ThemeData theme) {
+    final scheme = theme.colorScheme;
+    final neutralAction = scheme.onSurface;
+    final actionForeground = scheme.surface;
+    return theme.copyWith(
+      colorScheme: scheme.copyWith(
+        primary: neutralAction,
+        onPrimary: actionForeground,
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: theme.filledButtonTheme.style?.copyWith(
+          backgroundColor: WidgetStatePropertyAll(neutralAction),
+          foregroundColor: WidgetStatePropertyAll(actionForeground),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: theme.elevatedButtonTheme.style?.copyWith(
+          backgroundColor: WidgetStatePropertyAll(neutralAction),
+          foregroundColor: WidgetStatePropertyAll(actionForeground),
+        ),
+      ),
+      inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: neutralAction, width: 1.5),
+        ),
+      ),
+    );
+  }
+
   static Color difficultyColor(String level) {
     switch (level) {
       case 'BEGINNER':

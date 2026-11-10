@@ -14,7 +14,9 @@ Future<bool?> showPrivacyPolicyDialog(
 }) {
   return showDialog<bool>(
     context: context,
-    builder: (dialogContext) => Dialog(
+    builder: (dialogContext) => Theme(
+      data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+      child: Dialog(
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -46,7 +48,7 @@ Future<bool?> showPrivacyPolicyDialog(
                     children: [
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD4EBD5),
+                          color: const Color(0xFFE6E6D9),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Padding(
@@ -57,7 +59,7 @@ Future<bool?> showPrivacyPolicyDialog(
                           child: Text(
                             'BEFORE YOU CONTINUE',
                             style: AppFonts.label(
-                              color: const Color(0xFF087D32),
+                              color: const Color(0xFF37382F),
                               fontSize: 12,
                             ),
                           ),
@@ -65,7 +67,7 @@ Future<bool?> showPrivacyPolicyDialog(
                       ),
                       const Icon(
                         Icons.verified_user_outlined,
-                        color: AppColors.lightPrimary,
+                        color: const Color(0xFF37382F),
                         size: 23,
                       ),
                     ],
@@ -135,14 +137,14 @@ Future<bool?> showPrivacyPolicyDialog(
                         }
                       },
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.lightPrimary,
+                        foregroundColor: const Color(0xFF37382F),
                         padding: const EdgeInsets.symmetric(horizontal: 2),
                       ),
                       icon: const Icon(Icons.open_in_new, size: 18),
                       label: Text(
                         'Read the full Privacy Policy',
                         style: AppFonts.body(
-                          color: AppColors.lightPrimary,
+                          color: const Color(0xFF37382F),
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -162,13 +164,13 @@ Future<bool?> showPrivacyPolicyDialog(
                         TextButton(
                           onPressed: () => Navigator.of(dialogContext).pop(false),
                           style: TextButton.styleFrom(
-                            foregroundColor: AppColors.lightPrimary,
+                            foregroundColor: const Color(0xFF37382F),
                             minimumSize: const Size(0, 52),
                           ),
                           child: Text(
                             'Not now',
                             style: AppFonts.body(
-                              color: AppColors.lightPrimary,
+                              color: const Color(0xFF37382F),
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
                             ),
@@ -179,7 +181,7 @@ Future<bool?> showPrivacyPolicyDialog(
                           requireAcceptance ? true : null,
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.lightPrimary,
+                          backgroundColor: const Color(0xFF37382F),
                           foregroundColor: Colors.white,
                           minimumSize: const Size(0, 52),
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -205,6 +207,7 @@ Future<bool?> showPrivacyPolicyDialog(
           ),
         ),
       ),
+      ),
     ),
   );
 }
@@ -221,7 +224,7 @@ class _PrivacyTopic extends StatelessWidget {
       height: 42,
       child: Row(
         children: [
-          Icon(icon, color: AppColors.lightPrimary, size: 20),
+          Icon(icon, color: const Color(0xFF37382F), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

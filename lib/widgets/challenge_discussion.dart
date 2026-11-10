@@ -183,7 +183,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     var draft = comment.body;
     final body = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: AlertDialog(
         title: const Text('Edit comment'),
         content: TextFormField(
           maxLength: 2200,
@@ -201,6 +203,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
             child: const Text('SAVE'),
           ),
         ],
+        ),
       ),
     );
     if (body == null || body.isEmpty || body == comment.body) return;
@@ -215,7 +218,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   Future<void> _delete(DiscussionComment comment) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: AlertDialog(
         title: const Text('Delete comment?'),
         actions: [
           TextButton(
@@ -227,6 +232,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
             child: const Text('DELETE'),
           ),
         ],
+        ),
       ),
     );
     if (confirmed != true) return;
@@ -253,7 +259,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     var draft = reply.body;
     final body = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: AlertDialog(
         title: const Text('Edit reply'),
         content: TextFormField(
           maxLength: 2200,
@@ -271,6 +279,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
             child: const Text('SAVE'),
           ),
         ],
+        ),
       ),
     );
     if (body == null || body.isEmpty || body == reply.body) return;

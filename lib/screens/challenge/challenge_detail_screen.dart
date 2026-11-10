@@ -274,14 +274,19 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   Future<void> _inviteFriend() async {
     await showDialog<void>(
       context: context,
-      builder: (_) => _InviteFriendsDialog(challenge: widget.slug),
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: _InviteFriendsDialog(challenge: widget.slug),
+      ),
     );
   }
 
   Future<void> _dropChallenge() async {
     final shouldDrop = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: AlertDialog(
         title: const Text('Drop this challenge?'),
         content: const Text(
           'Your progress will remain recorded, but this challenge will no longer be active.',
@@ -297,6 +302,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             child: const Text('DROP CHALLENGE'),
           ),
         ],
+        ),
       ),
     );
     if (shouldDrop != true || !mounted) return;
@@ -326,7 +332,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       context: context,
       backgroundColor: AppColors.surface,
       showDragHandle: true,
-      builder: (context) => Padding(
+      builder: (context) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(context)),
+        child: Padding(
         padding: const EdgeInsets.fromLTRB(22, 8, 22, 34),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -335,7 +343,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             Text(
               title.toUpperCase(),
               style: const TextStyle(
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 11,
                 letterSpacing: 2,
                 fontWeight: FontWeight.w700,
@@ -357,6 +365,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -364,7 +373,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   Future<void> _promptToAccept() async {
     final shouldAccept = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: AlertDialog(
         title: const Text('Accept this challenge first'),
         content: const Text(
           'Accept the challenge to unlock its milestones and resources.',
@@ -389,6 +400,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             ],
           ),
         ],
+        ),
       ),
     );
     if (shouldAccept == true && mounted) {
@@ -426,7 +438,10 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   Future<void> _showProgressDialog(Participation participation) {
     return showDialog<void>(
       context: context,
-      builder: (_) => _ProgressDialog(participation: participation),
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: _ProgressDialog(participation: participation),
+      ),
     );
   }
 

@@ -657,7 +657,10 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   Future<void> _completeResource(_PathResource resource) async {
     final input = await showDialog<_CompletionInput>(
       context: context,
-      builder: (_) => _CompletionDialog(metric: _detail.primaryMetric),
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: _CompletionDialog(metric: _detail.primaryMetric),
+      ),
     );
     if (input == null) return;
 
@@ -754,7 +757,10 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   Future<void> _logResult() async {
     final input = await showDialog<_MetricInput>(
       context: context,
-      builder: (_) => _MetricDialog(metrics: _detail.metricDefinitions),
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: _MetricDialog(metrics: _detail.metricDefinitions),
+      ),
     );
     if (input == null || widget.participation == null) return;
     final previousStreak =

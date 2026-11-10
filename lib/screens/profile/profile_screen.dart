@@ -130,7 +130,10 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   Future<void> _createGroup() async {
     final draft = await showDialog<_GroupDraft>(
       context: context,
-      builder: (_) => const _CreateGroupDialog(),
+      builder: (dialogContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+        child: const _CreateGroupDialog(),
+      ),
     );
     if (draft == null || !mounted) return;
     try {
@@ -204,7 +207,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   Future<void> _confirmLogout() async {
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(context)),
+        child: AlertDialog(
         title: const Text('Log out?'),
         content: const Text(
           'You will need to sign in again to access your account.',
@@ -220,6 +225,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             child: const Text('Log out'),
           ),
         ],
+        ),
       ),
     );
 
@@ -231,7 +237,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   Future<void> _confirmDeleteAccount() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(context)),
+        child: AlertDialog(
         title: const Text('Delete account permanently?'),
         content: const Text(
           'This permanently deletes your account, sessions, owned challenges, '
@@ -251,6 +259,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             child: const Text('Delete account'),
           ),
         ],
+        ),
       ),
     );
 
@@ -320,7 +329,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (sheetContext) => SafeArea(
+      builder: (sheetContext) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(sheetContext)),
+        child: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -348,8 +359,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                     title: const Text('Dark theme'),
                     value: themeProvider.isDark,
                     onChanged: themeProvider.setDark,
-                    activeThumbColor: AppColors.dark,
-                    activeTrackColor: AppColors.primary,
+                    activeThumbColor: colorScheme.surface,
+                    activeTrackColor: colorScheme.onSurface,
                     inactiveThumbColor: colorScheme.onSurfaceVariant,
                     inactiveTrackColor: colorScheme.surfaceContainerHighest,
                   );
@@ -381,6 +392,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               const SizedBox(height: 8),
             ],
           ),
+        ),
         ),
       ),
     );

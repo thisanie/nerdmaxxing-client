@@ -8,6 +8,7 @@ import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
 import '../../services/invitations_service.dart';
 import '../../services/token_storage.dart';
+import '../../theme/app_theme.dart';
 import '../challenge/challenge_detail_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
@@ -128,7 +129,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (context) {
+      builder: (context) => Theme(
+        data: AppTheme.neutralActionTheme(Theme.of(context)),
+        child: Builder(
+          builder: (context) {
         final theme = Theme.of(context);
         final group = widget.group;
         return SafeArea(
@@ -221,7 +225,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ),
           ),
         );
-      },
+          },
+        ),
+      ),
     );
   }
 
