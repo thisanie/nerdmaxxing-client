@@ -527,7 +527,9 @@ class _WeekStrip extends StatelessWidget {
         .where((entry) => entry.date != null)
         .toList()
       ..sort((a, b) => a.date!.compareTo(b.date!));
-    if (days.isEmpty) return const SizedBox.shrink();
+    if (days.isEmpty || !days.any((entry) => entry.activity.active)) {
+      return const SizedBox.shrink();
+    }
     final today = DateTime.now();
     const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
