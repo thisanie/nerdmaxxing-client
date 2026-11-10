@@ -1382,12 +1382,12 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(22, 10, 10, 6),
+            padding: const EdgeInsets.fromLTRB(26, 14, 14, 8),
             child: Row(
               children: [
                 Container(
-                  width: 12,
-                  height: 12,
+                  width: 14,
+                  height: 14,
                   decoration: const BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
@@ -1399,7 +1399,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                     'Discussion',
                     style: AppFonts.body(
                       color: t.ink,
-                      fontSize: 14,
+                      fontSize: 24,
                       fontWeight: FontWeight.w700,
                       letterSpacingEm: -0.02,
                     ),
@@ -1408,18 +1408,18 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 IconButton(
                   tooltip: 'Close discussion',
                   onPressed: () => setState(() => _discussionOpen = false),
-                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: t.ink),
+                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: t.ink, size: 30),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 10),
+            padding: const EdgeInsets.fromLTRB(26, 0, 26, 14),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Questions, ideas, and useful breakthroughs.',
-                style: AppFonts.body(color: t.muted, fontSize: 12),
+                style: AppFonts.body(color: t.muted, fontSize: 14),
               ),
             ),
           ),
