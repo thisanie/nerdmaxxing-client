@@ -486,7 +486,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 profile.name ?? profile.username ?? 'Profile',
                 style: AppFonts.body(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 18,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -765,7 +765,7 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
+      padding: const EdgeInsets.fromLTRB(18, 22, 18, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -773,7 +773,7 @@ class _SectionLabel extends StatelessWidget {
             text.toUpperCase(),
             style: AppFonts.label(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -782,7 +782,7 @@ class _SectionLabel extends StatelessWidget {
               count!,
               style: AppFonts.body(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 12,
+                fontSize: 10,
               ),
             ),
         ],
@@ -991,7 +991,7 @@ class _GroupsPanel extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final sectionStyle = AppFonts.label(
       color: scheme.onSurfaceVariant,
-      fontSize: 12,
+      fontSize: 10,
       fontWeight: FontWeight.w800,
     );
     if (isLoading) {
@@ -1019,7 +1019,7 @@ class _GroupsPanel extends StatelessWidget {
                   isOwnProfile ? 'YOUR GROUPS' : 'GROUPS',
                   style: AppFonts.label(
                     color: scheme.onSurface,
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1039,7 +1039,7 @@ class _GroupsPanel extends StatelessWidget {
                     'Create',
                     style: AppFonts.label(
                       color: scheme.onSurface,
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1148,7 +1148,7 @@ class _GroupTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.body(
                       color: scheme.onSurface,
-                      fontSize: 15,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1159,7 +1159,7 @@ class _GroupTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.body(
                       color: scheme.onSurfaceVariant,
-                      fontSize: 12,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -1374,7 +1374,7 @@ class _ProfileHeader extends StatelessWidget {
               '@${profile.username}',
               style: AppFonts.body(
                 color: scheme.onSurfaceVariant,
-                fontSize: 15,
+                fontSize: 13,
               ),
             ),
           ],
@@ -1385,7 +1385,7 @@ class _ProfileHeader extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppFonts.body(
                 color: scheme.onSurfaceVariant,
-                fontSize: 14,
+                fontSize: 12,
                 height: 1.4,
               ),
             ),
@@ -1513,166 +1513,126 @@ class _CompletedChallengeCard extends StatelessWidget {
     return Material(
       color: scheme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(17),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: scheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 150,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _CompletedChallengeCover(
-                    challenge: challenge,
-                    isLight: isLight,
-                    isChess: isChess,
+        child: SizedBox(
+          height: 150,
+          width: double.infinity,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _CompletedChallengeCover(
+                challenge: challenge,
+                isLight: isLight,
+                isChess: isChess,
+              ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Color(0xD9000000)],
+                    stops: [0.35, 1],
                   ),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: HomePalette.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    size: 17,
+                    color: HomePalette.ink,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 13,
+                right: 13,
+                bottom: 11,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
+                        horizontal: 9,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: HomePalette.primary,
+                        color: difficultyColor,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        '✓ VERIFIED',
+                        difficulty,
                         style: AppFonts.label(
-                          color: HomePalette.ink,
+                          color: difficulty == 'BEGINNER'
+                              ? HomePalette.ink
+                              : const Color(0xFF23170A),
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(13, 12, 13, 13),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: difficultyColor,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          difficulty,
-                          style: AppFonts.label(
-                            color: difficulty == 'BEGINNER'
-                                ? HomePalette.ink
-                                : const Color(0xFF23170A),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        'COMPLETED',
-                        style: AppFonts.label(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    challenge.title,
-                    style: AppFonts.display(
-                      color: scheme.onSurface,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      height: 1.18,
-                    ),
-                  ),
-                  if (challenge.shortDescription.isNotEmpty) ...[
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     Text(
-                      challenge.shortDescription,
+                      challenge.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppFonts.body(
-                        color: scheme.onSurfaceVariant,
-                        fontSize: 14,
-                        height: 1.4,
+                      style: AppFonts.display(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        height: 1.15,
                       ),
                     ),
-                  ],
-                  const SizedBox(height: 12),
-                  Divider(height: 1, color: scheme.outlineVariant),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.schedule_rounded,
-                        size: 14,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        challenge.effortLabel,
-                        style: AppFonts.body(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 12,
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 13,
+                          color: Colors.white.withValues(alpha: .85),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Icon(
-                        Icons.bolt_rounded,
-                        size: 14,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${challenge.auraPoints} aura',
-                        style: AppFonts.body(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const Spacer(),
-                      Flexible(
-                        child: Text(
-                          'Skill earned ✓',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
+                        const SizedBox(width: 4),
+                        Text(
+                          challenge.effortLabel,
                           style: AppFonts.body(
-                            color: isLight
-                                ? HomePalette.lightLink
-                                : HomePalette.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                            color: Colors.white.withValues(alpha: .85),
+                            fontSize: 10,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.bolt_rounded,
+                          size: 13,
+                          color: Colors.white.withValues(alpha: .85),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${challenge.auraPoints}',
+                          style: AppFonts.body(
+                            color: Colors.white.withValues(alpha: .85),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1893,7 +1853,7 @@ class _ParticipationFilters extends StatelessWidget {
     final isLight = Theme.of(context).brightness == Brightness.light;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 8),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
       child: Row(
         children: [
           for (var index = 0; index < _filters.length; index++) ...[
@@ -1912,7 +1872,7 @@ class _ParticipationFilters extends StatelessWidget {
                 color: selected == _filters[index].$1
                     ? (isLight ? HomePalette.lightLink : HomePalette.primary)
                     : scheme.onSurfaceVariant,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
               side: BorderSide(
@@ -1994,7 +1954,7 @@ class _ProfileRowAction extends StatelessWidget {
             shape: const StadiumBorder(),
             textStyle: AppFonts.label(
               color: HomePalette.ink,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
             ),
           )
@@ -2010,7 +1970,7 @@ class _ProfileRowAction extends StatelessWidget {
             shape: const StadiumBorder(),
             textStyle: AppFonts.label(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           );
@@ -2051,7 +2011,7 @@ class _RowCard extends StatelessWidget {
         elevation: 0,
         color: scheme.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: scheme.outlineVariant),
         ),
         clipBehavior: Clip.antiAlias,
@@ -2085,7 +2045,7 @@ class _RowCard extends StatelessWidget {
                           color: leadingIconColor ?? scheme.onSurface,
                         ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2096,16 +2056,16 @@ class _RowCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.body(
                           color: scheme.onSurface,
-                          fontSize: 15,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 3),
                       Text(
                         subtitle,
                         style: AppFonts.body(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
                     ],
