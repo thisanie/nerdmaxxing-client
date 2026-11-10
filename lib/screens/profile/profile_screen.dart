@@ -753,7 +753,7 @@ class _ProfileTabs extends StatelessWidget {
       if (showRewards) (Icons.emoji_events_rounded, 'Rewards'),
     ];
     return Padding(
-      padding: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.only(top: 24),
       child: Row(
         children: [
           for (var index = 0; index < tabs.length; index++)
@@ -761,7 +761,7 @@ class _ProfileTabs extends StatelessWidget {
               child: InkWell(
                 onTap: () => onSelected(index),
                 child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
@@ -777,7 +777,7 @@ class _ProfileTabs extends StatelessWidget {
                     children: [
                       Icon(
                         tabs[index].$1,
-                        size: 16,
+                        size: 20,
                           color: selectedIndex == index
                             ? colorScheme.onSurface
                             : colorScheme.onSurfaceVariant,
@@ -789,7 +789,7 @@ class _ProfileTabs extends StatelessWidget {
                           color: selectedIndex == index
                               ? colorScheme.onSurface
                               : colorScheme.onSurfaceVariant,
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -813,7 +813,7 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 22, 18, 8),
+      padding: const EdgeInsets.fromLTRB(26, 26, 26, 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -821,7 +821,7 @@ class _SectionLabel extends StatelessWidget {
             text.toUpperCase(),
             style: AppFonts.home(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.w800,
               letterSpacingEm: 0.14,
             ),
@@ -831,7 +831,7 @@ class _SectionLabel extends StatelessWidget {
               count!,
               style: AppFonts.home(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 10,
+                fontSize: 12,
               ),
             ),
         ],
@@ -873,10 +873,10 @@ class _ProfileActions extends StatelessWidget {
               backgroundColor: HomePalette.primary,
               foregroundColor: HomePalette.ink,
               shape: shape,
-              padding: const EdgeInsets.symmetric(vertical: 11),
+              padding: const EdgeInsets.symmetric(vertical: 15),
               textStyle: AppFonts.home(
                 color: HomePalette.ink,
-                fontSize: 12.5,
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -888,10 +888,10 @@ class _ProfileActions extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: scheme.onSurface,
               shape: shape,
-              padding: const EdgeInsets.symmetric(vertical: 11),
+              padding: const EdgeInsets.symmetric(vertical: 15),
               textStyle: AppFonts.home(
                 color: scheme.onSurface,
-                fontSize: 12.5,
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -903,10 +903,10 @@ class _ProfileActions extends StatelessWidget {
               backgroundColor: HomePalette.primary,
               foregroundColor: HomePalette.ink,
               shape: shape,
-              padding: const EdgeInsets.symmetric(vertical: 11),
+              padding: const EdgeInsets.symmetric(vertical: 15),
               textStyle: AppFonts.home(
                 color: HomePalette.ink,
-                fontSize: 12.5,
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -914,24 +914,24 @@ class _ProfileActions extends StatelessWidget {
           );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+      padding: const EdgeInsets.fromLTRB(26, 16, 26, 0),
       child: Row(
         children: [
           Expanded(child: primary),
-          const SizedBox(width: 9),
+          const SizedBox(width: 12),
           Expanded(
             child: OutlinedButton(
               onPressed: null,
               style: OutlinedButton.styleFrom(
                 disabledForegroundColor: scheme.onSurface,
                 shape: shape,
-                padding: const EdgeInsets.symmetric(vertical: 11),
+                padding: const EdgeInsets.symmetric(vertical: 15),
                 side: BorderSide(
                   color: HomePalette.border(Theme.of(context).brightness),
                 ),
                 textStyle: AppFonts.home(
                   color: scheme.onSurface,
-                  fontSize: 12.5,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1413,7 +1413,7 @@ class _ProfileHeader extends StatelessWidget {
     final displayName = profile.name ?? profile.username ?? 'Nerd';
     final initial = displayName.trim().characters.firstOrNull?.toUpperCase();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
+      padding: const EdgeInsets.fromLTRB(26, 14, 26, 0),
       child: Column(
         children: [
           Stack(
@@ -1421,8 +1421,8 @@ class _ProfileHeader extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Container(
-                width: 92,
-                height: 92,
+                width: 112,
+                height: 112,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
@@ -1450,7 +1450,7 @@ class _ProfileHeader extends StatelessWidget {
                           initial ?? '?',
                           style: AppFonts.home(
                             color: Colors.white,
-                            fontSize: 40,
+                            fontSize: 48,
                             fontWeight: FontWeight.w600,
                           ),
                         )
@@ -1461,8 +1461,8 @@ class _ProfileHeader extends StatelessWidget {
                 right: -2,
                 bottom: -2,
                 child: Container(
-                  width: 26,
-                  height: 26,
+                  width: 32,
+                  height: 32,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: HomePalette.ink,
@@ -1473,7 +1473,7 @@ class _ProfileHeader extends StatelessWidget {
                     profile.rank,
                     style: AppFonts.home(
                       color: HomePalette.primary,
-                      fontSize: 11,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -1482,12 +1482,12 @@ class _ProfileHeader extends StatelessWidget {
             ],
           ),
           if (profile.username != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               '@${profile.username}',
               style: AppFonts.home(
                 color: scheme.onSurfaceVariant,
-                fontSize: 13,
+                fontSize: 16,
               ),
             ),
           ],
@@ -1498,12 +1498,12 @@ class _ProfileHeader extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppFonts.home(
                 color: scheme.onSurfaceVariant,
-                fontSize: 12,
+                fontSize: 14.5,
                 height: 1.4,
               ),
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Container(
             decoration: BoxDecoration(
               color: isLight
@@ -1554,7 +1554,7 @@ class _ProfileHeader extends StatelessWidget {
 
   Widget _statDivider(ColorScheme scheme) => Container(
     width: 1,
-    height: 54,
+    height: 66,
     color: scheme.outlineVariant,
   );
 }
@@ -1580,7 +1580,7 @@ class _Stat extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 14),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1588,7 +1588,7 @@ class _Stat extends StatelessWidget {
                 value,
                 style: AppFonts.home(
                   color: valueColor ?? scheme.onSurface,
-                  fontSize: 22,
+                  fontSize: 26,
                   fontWeight: FontWeight.w700,
                   height: 1.2,
                 ),
@@ -1599,7 +1599,7 @@ class _Stat extends StatelessWidget {
                 maxLines: 1,
                 style: AppFonts.home(
                   color: scheme.onSurfaceVariant,
-                  fontSize: 11,
+                  fontSize: 13,
                 ),
               ),
             ],
