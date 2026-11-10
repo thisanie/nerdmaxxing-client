@@ -474,7 +474,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
       );
     }
 
+    final brightness = Theme.of(context).brightness;
     return Scaffold(
+      backgroundColor: HomePalette.background(brightness),
       body: RefreshIndicator(
         onRefresh: () async => _load(),
         color: Theme.of(context).colorScheme.onSurface,
@@ -482,6 +484,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar(
+              automaticallyImplyLeading: false,
+              toolbarHeight: 44,
               title: Text(
                 profile.name ?? profile.username ?? 'Profile',
                 style: AppFonts.home(
@@ -492,7 +496,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               ),
               centerTitle: true,
               floating: true,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              backgroundColor: HomePalette.background(brightness),
               surfaceTintColor: Colors.transparent,
               elevation: 0,
               actions: [
@@ -500,6 +504,13 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   IconButton(
                     icon: const Icon(Icons.menu_rounded),
                     tooltip: 'Account options',
+                    style: IconButton.styleFrom(
+                      fixedSize: const Size(34, 34),
+                      padding: EdgeInsets.zero,
+                      backgroundColor: HomePalette.surfaceAlt(brightness),
+                      side: BorderSide(color: HomePalette.border(brightness)),
+                      shape: const CircleBorder(),
+                    ),
                     onPressed: _isSigningOut || _isDeletingAccount
                         ? null
                         : () => _showAccountMenu(profile),
@@ -593,40 +604,42 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: HomePalette.border(
-                              Theme.of(context).brightness,
-                            ),
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
+                      child: CustomPaint(
+                        painter: _DashedBorderPainter(
+                          color: brightness == Brightness.dark
+                              ? HomePalette.darkBorderStrong
+                              : const Color(0xFFCFCFC4),
                         ),
-                        child: Column(
-                          children: [
-                            Text(
-                              'No challenges yet',
-                              style: AppFonts.home(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'No challenges yet',
+                                  style: AppFonts.home(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Create your own and invite nerds to it.',
+                                  textAlign: TextAlign.center,
+                                  style: AppFonts.home(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 3),
-                            Text(
-                              'Create your own and invite nerds to it.',
-                              textAlign: TextAlign.center,
-                              style: AppFonts.home(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -642,7 +655,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   ),
               ],
               SliverToBoxAdapter(
-                  child: _SectionLabel('Completed'),
+                child: _SectionLabel('Completed'),
               ),
               if (completedChallenges.isEmpty)
                 SliverToBoxAdapter(
@@ -663,7 +676,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final challenge = completedChallenges[index];
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 11),
+                        padding: const EdgeInsets.only(top: 10),
                         child: _CompletedChallengeCard(
                           challenge: challenge,
                           onTap: () => Navigator.of(context).push(
@@ -1295,23 +1308,11 @@ class _RewardsPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 28, 18, 12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 18),
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant),
-        ),
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Center(
         child: Text(
           'Coming soon',
-          textAlign: TextAlign.center,
-          style: AppFonts.home(
-            color: scheme.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+          style: AppFonts.home(color: scheme.onSurfaceVariant, fontSize: 14),
         ),
       ),
     );
@@ -1337,6 +1338,37 @@ class _RefreshableState extends StatelessWidget {
   }
 }
 
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+
+  const _DashedBorderPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final border = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(.75, .75, size.width - 1.5, size.height - 1.5),
+          const Radius.circular(20),
+        ),
+      );
+    for (final metric in path.computeMetrics()) {
+      for (double start = 0; start < metric.length; start += 8) {
+        final end = start + 5 < metric.length ? start + 5 : metric.length;
+        canvas.drawPath(metric.extractPath(start, end), border);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
 class _ProfileHeader extends StatelessWidget {
   final UserProfile profile;
   final int auraPoints;
@@ -1357,7 +1389,7 @@ class _ProfileHeader extends StatelessWidget {
     final displayName = profile.name ?? profile.username ?? 'Nerd';
     final initial = displayName.trim().characters.firstOrNull?.toUpperCase();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
       child: Column(
         children: [
           Stack(
@@ -1367,13 +1399,25 @@ class _ProfileHeader extends StatelessWidget {
               Container(
                 width: 92,
                 height: 92,
-                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: HomePalette.primary, width: 1.5),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFB04AE0), Color(0xFF6A2A9A)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(color: HomePalette.primary, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isLight
+                          ? HomePalette.lightPrimaryMuted
+                          : HomePalette.darkPrimaryMuted,
+                      spreadRadius: 6,
+                    ),
+                  ],
                 ),
                 child: CircleAvatar(
-                  backgroundColor: const Color(0xFF8A3DBA),
+                  backgroundColor: Colors.transparent,
                   backgroundImage: profile.avatarUrl != null
                       ? NetworkImage(profile.avatarUrl!)
                       : null,
@@ -1382,8 +1426,8 @@ class _ProfileHeader extends StatelessWidget {
                           initial ?? '?',
                           style: AppFonts.home(
                             color: Colors.white,
-                            fontSize: 37,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 40,
+                            fontWeight: FontWeight.w600,
                           ),
                         )
                       : null,
@@ -1391,10 +1435,10 @@ class _ProfileHeader extends StatelessWidget {
               ),
               Positioned(
                 right: -2,
-                bottom: 0,
+                bottom: -2,
                 child: Container(
-                  width: 27,
-                  height: 27,
+                  width: 26,
+                  height: 26,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: HomePalette.ink,
@@ -1405,7 +1449,7 @@ class _ProfileHeader extends StatelessWidget {
                     profile.rank,
                     style: AppFonts.home(
                       color: HomePalette.primary,
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -1424,7 +1468,7 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ],
           if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-            const SizedBox(height: 7),
+            const SizedBox(height: 2),
             Text(
               profile.bio!,
               textAlign: TextAlign.center,
@@ -1455,7 +1499,9 @@ class _ProfileHeader extends StatelessWidget {
                   child: _Stat(
                     value: '$auraPoints',
                     label: 'Aura',
-                    valueColor: HomePalette.primary,
+                    valueColor: isLight
+                      ? HomePalette.lightLink
+                      : HomePalette.primary,
                   ),
                 ),
                 _statDivider(scheme),
@@ -1484,7 +1530,7 @@ class _ProfileHeader extends StatelessWidget {
 
   Widget _statDivider(ColorScheme scheme) => Container(
     width: 1,
-    height: 34,
+    height: 54,
     color: scheme.outlineVariant,
   );
 }
@@ -1553,16 +1599,30 @@ class _CompletedChallengeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isLight = Theme.of(context).brightness == Brightness.light;
-    final isChess = challenge.title.toLowerCase().contains('chess');
-    final difficulty = challenge.difficultyLevel.replaceAll('_', ' ');
-    final difficultyColor = difficulty == 'BEGINNER'
-        ? HomePalette.primary
-        : const Color(0xFFFFAB3D);
+    final title = challenge.title.toLowerCase();
+    final isChess = title.contains('chess');
+    final isRubiks = title.contains('rubik');
+    final isSudoku = title.contains('sudoku');
+    final difficulty = challenge.difficultyLevel
+        .toLowerCase()
+        .split('_')
+        .map(
+          (word) => word.isEmpty
+          ? word
+          : '${word[0].toUpperCase()}${word.substring(1)}',
+        )
+        .join(' ');
+    final difficultyColor = switch (difficulty.toLowerCase()) {
+      'beginner' => HomePalette.primary,
+      'intermediate' => const Color(0xFFFFAB3D),
+      'advanced' => const Color(0xFFFF6B57),
+      _ => HomePalette.primary,
+    };
 
     return Material(
       color: scheme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -1577,14 +1637,16 @@ class _CompletedChallengeCard extends StatelessWidget {
                 challenge: challenge,
                 isLight: isLight,
                 isChess: isChess,
+                isRubiks: isRubiks,
+                isSudoku: isSudoku,
               ),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Color(0xD9000000)],
-                    stops: [0.35, 1],
+                    colors: [Colors.transparent, Color(0xB30F0F0E)],
+                    stops: [0.55, 1],
                   ),
                 ),
               ),
@@ -1606,9 +1668,9 @@ class _CompletedChallengeCard extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 13,
-                right: 13,
-                bottom: 11,
+                left: 14,
+                right: 14,
+                bottom: 12,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1621,15 +1683,27 @@ class _CompletedChallengeCard extends StatelessWidget {
                         color: difficultyColor,
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text(
-                        difficulty,
-                        style: AppFonts.home(
-                          color: difficulty == 'BEGINNER'
-                              ? HomePalette.ink
-                              : const Color(0xFF23170A),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: HomePalette.ink,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            difficulty,
+                            style: AppFonts.home(
+                              color: HomePalette.ink,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -1691,35 +1765,53 @@ class _CompletedChallengeCover extends StatelessWidget {
   final Challenge challenge;
   final bool isLight;
   final bool isChess;
+  final bool isRubiks;
+  final bool isSudoku;
 
   const _CompletedChallengeCover({
     required this.challenge,
     required this.isLight,
     required this.isChess,
+    required this.isRubiks,
+    required this.isSudoku,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colors = isChess
-        ? (isLight
-              ? const [Color(0xFFF3DFC5), Color(0xFFD0E7DC), Color(0xFFD7E2F4)]
-              : const [Color(0xFF443019), Color(0xFF25403B), Color(0xFF28334A)])
-        : (isLight
-              ? const [Color(0xFFCCE5D2), Color(0xFFC5D8E8), Color(0xFFDED5ED)]
-              : const [Color(0xFF19352D), Color(0xFF293A4C), Color(0xFF302547)]);
+      final colors = isRubiks
+        ? const [Color(0xFFD6C43A), Color(0xFF403A08)]
+        : isSudoku
+      ? const [Color(0xFF3AA57A), Color(0xFF0F3324)]
+      : isChess
+      ? (isLight
+        ? const [Color(0xFFF3DFC5), Color(0xFFD0E7DC)]
+        : const [Color(0xFF443019), Color(0xFF25403B)])
+      : HomePalette.challengeGradient(challenge.title);
     final fallback = DecoratedBox(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: isRubiks || isSudoku
+            ? RadialGradient(
+                center: isRubiks
+                    ? const Alignment(-.2, -.4)
+                    : const Alignment(.4, -.4),
+                radius: .95,
+                colors: colors,
+              )
+            : LinearGradient(
+                colors: colors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          CustomPaint(painter: _CompletedCoverPattern()),
-          Center(child: _CompletedCoverArtwork(isChess: isChess, isLight: isLight)),
+          Center(
+            child: _CompletedCoverArtwork(
+              isChess: isChess,
+              isLight: isLight,
+            ),
+          ),
         ],
       ),
     );
@@ -1733,26 +1825,6 @@ class _CompletedChallengeCover extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) => fallback,
     );
   }
-}
-
-class _CompletedCoverPattern extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: .07)
-      ..strokeWidth = 1;
-    for (var offset = -size.height; offset < size.width; offset += 34) {
-      canvas.drawLine(Offset(offset, 0), Offset(offset + size.height, size.height), paint);
-      canvas.drawLine(
-        Offset(offset, size.height),
-        Offset(offset + size.height, 0),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _CompletedCoverArtwork extends StatelessWidget {
@@ -1873,7 +1945,6 @@ class _ParticipationTile extends StatelessWidget {
           : _ProfileRowAction(
               label: actionLabel.$1,
               primary: actionLabel.$1 == 'Start',
-              large: true,
               onPressed: () => onChangeStatus(participation, actionLabel.$2),
             ),
     );
@@ -1902,7 +1973,7 @@ class _ParticipationFilters extends StatelessWidget {
     final isLight = Theme.of(context).brightness == Brightness.light;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
       child: Row(
         children: [
           for (var index = 0; index < _filters.length; index++) ...[
@@ -1911,9 +1982,9 @@ class _ParticipationFilters extends StatelessWidget {
               label: Text(_filters[index].$2),
               selected: selected == _filters[index].$1,
               showCheckmark: false,
-              visualDensity: VisualDensity.compact,
+              visualDensity: VisualDensity.standard,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 13),
               selectedColor: isLight
                   ? HomePalette.lightPrimaryMuted
                   : HomePalette.darkPrimaryMuted,
@@ -1988,13 +2059,11 @@ class _ProfileRowAction extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
   final bool primary;
-  final bool large;
 
   const _ProfileRowAction({
     required this.label,
     required this.onPressed,
     this.primary = false,
-    this.large = false,
   });
 
   @override
@@ -2003,11 +2072,8 @@ class _ProfileRowAction extends StatelessWidget {
         ? FilledButton.styleFrom(
             backgroundColor: HomePalette.primary,
             foregroundColor: HomePalette.ink,
-            minimumSize: Size(0, large ? 48 : 32),
-            padding: EdgeInsets.symmetric(
-              horizontal: large ? 20 : 13,
-              vertical: large ? 12 : 0,
-            ),
+            minimumSize: const Size(0, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 13),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             shape: const StadiumBorder(),
@@ -2019,11 +2085,8 @@ class _ProfileRowAction extends StatelessWidget {
           )
         : OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurface,
-            minimumSize: Size(0, large ? 48 : 32),
-            padding: EdgeInsets.symmetric(
-              horizontal: large ? 20 : 13,
-              vertical: large ? 12 : 0,
-            ),
+            minimumSize: const Size(0, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 13),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             side: BorderSide(
