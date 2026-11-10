@@ -156,13 +156,27 @@ class _HomeShellState extends State<HomeShell> {
       child: Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
-        body: SafeArea(
-            child: IndexedStack(index: _navigationIndex, children: _tabNavigators),
-        ),
-        bottomNavigationBar: _BottomNavigationBar(
-          currentIndex: _navigationIndex,
-          onTap: _onNavigationTap,
-          isAdmin: _isAdmin,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            SafeArea(
+              bottom: false,
+              child: IndexedStack(
+                index: _navigationIndex,
+                children: _tabNavigators,
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _BottomNavigationBar(
+                currentIndex: _navigationIndex,
+                onTap: _onNavigationTap,
+                isAdmin: _isAdmin,
+              ),
+            ),
+          ],
         ),
       ),
     );
