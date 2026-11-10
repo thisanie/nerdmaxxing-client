@@ -66,8 +66,11 @@ class _HomeShellState extends State<HomeShell> {
             }
           },
         ),
-      ],
-      onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => _screens[index]),
+            extendBody: true,
+            backgroundColor: Colors.transparent,
+            body: SafeArea(
+              bottom: false,
+              child: IndexedStack(index: _navigationIndex, children: _tabNavigators),
     );
   }
 
@@ -208,38 +211,53 @@ class _BottomNavigationBar extends StatelessWidget {
       ..._items,
       if (isAdmin) (Icons.fact_check_rounded, 'Admin'),
     ];
-    final horizontalMargin = isAdmin ? 8.0 : 14.0;
-    final itemInset = isAdmin ? 4.0 : 9.0;
+    final horizontalMargin = isAdmin ? 8.0 : 12.0;
+    final itemInset = isAdmin ? 4.0 : 6.0;
     return SafeArea(
       top: false,
       child: Padding(
         padding: EdgeInsets.fromLTRB(horizontalMargin, 0, horizontalMargin, 12),
-        child: Container(
-          height: 62,
-          decoration: BoxDecoration(
-            color: brightness == Brightness.dark
-                ? HomePalette.darkSurfaceAlt
-                : HomePalette.lightSurface,
-            border: Border.all(color: HomePalette.border(brightness)),
-            borderRadius: BorderRadius.circular(31),
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: itemInset),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                for (var index = 0; index < items.length; index++)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: _NavigationItem(
-                      icon: items[index].$1,
-                      label: items[index].$2,
-                      selected: currentIndex == index,
-                      reduceMotion: reduceMotion,
-                      onTap: () => onTap(index),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isAdmin ? 400 : 320),
+            child: Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                color: brightness == Brightness.dark
+                    ? HomePalette.darkSurfaceAlt
+                    : HomePalette.lightSurface,
+                border: Border.all(color: HomePalette.border(brightness)),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: brightness == Brightness.dark ? .24 : .12,
                     ),
+                    blurRadius: 22,
+                    offset: const Offset(0, 8),
                   ),
-              ],
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: itemInset),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    for (var index = 0; index < items.length; index++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: _NavigationItem(
+                          icon: items[index].$1,
+                          label: items[index].$2,
+                          selected: currentIndex == index,
+                          reduceMotion: reduceMotion,
+                          onTap: () => onTap(index),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -291,7 +309,7 @@ class _NavigationItem extends StatelessWidget {
             duration: animationDuration,
             curve: Curves.easeOutBack,
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            padding: EdgeInsets.symmetric(horizontal: selected ? 16 : 12),
+            padding: EdgeInsets.symmetric(horizontal: selected ? 10 : 8),
             decoration: BoxDecoration(
               color: selected ? selectedBackground : Colors.transparent,
               borderRadius: BorderRadius.circular(22),
