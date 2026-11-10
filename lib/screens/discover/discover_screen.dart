@@ -205,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final auth = context.watch<AuthProvider>();
     final participation = ref.watch(participationControllerProvider);
     final participationItems = participation.valueOrNull ?? const [];
-    final name = _profile?.name ?? auth.displayName ?? auth.username ?? 'Pablo';
+    final name = _profile?.name ?? auth.displayName ?? auth.username ?? 'You!';
     final active = participationItems
         .where((p) => p.status != 'COMPLETED' && p.status != 'REMOVED')
         .take(2)
@@ -272,7 +272,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Greeting(name: name, streak: stats?.dayStreak ?? 0),
-                      _WeekStrip(streak: stats?.dayStreak ?? 0),
+                      _WeekStrip(activityDays: stats?.activityDays ?? const []),
                       const SizedBox(height: 16),
                       _AuraCard(stats: stats),
                       const SizedBox(height: 16),
@@ -510,17 +510,25 @@ class _Greeting extends StatelessWidget {
 }
 
 class _WeekStrip extends StatelessWidget {
-  final int streak;
+  final List<UserActivityDay> activityDays;
 
-  const _WeekStrip({required this.streak});
+  const _WeekStrip({required this.activityDays});
 
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
+    final days = activityDays
+        .map(
+          (activity) => (
+            activity: activity,
+            date: DateTime.tryParse(activity.date),
+          ),
+        )
+        .where((entry) => entry.date != null)
+        .toList()
+      ..sort((a, b) => a.date!.compareTo(b.date!));
+    if (days.isEmpty) return const SizedBox.shrink();
     final today = DateTime.now();
-    final days = List.generate(7, (index) {
-      return today.subtract(Duration(days: 6 - index));
-    });
     const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Padding(
@@ -528,53 +536,61 @@ class _WeekStrip extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          for (var index = 0; index < days.length; index++)
-            Column(
-              children: [
-                SizedBox(
-                  width: 34,
-                  height: 34,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      if (index == 6)
-                        const DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: HomePalette.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: SizedBox.expand(),
-                        )
-                      else
-                        CustomPaint(
-                          size: const Size.square(34),
-                          painter: _DottedCirclePainter(
-                            color: HomePalette.borderStrong(brightness),
-                          ),
-                        ),
-                      if (index == 6 && streak > 0)
-                        const Icon(
-                          Icons.check_rounded,
-                          size: 16,
-                          color: HomePalette.ink,
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  index == 6
-                      ? 'Today'
-                      : weekdayLabels[days[index].weekday - 1],
-                  style: AppFonts.home(
-                    color: index == 6
-                        ? HomePalette.textPrimary(brightness)
-                        : HomePalette.textSecondary(brightness),
-                    fontSize: index == 6 ? 9 : 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+          for (final entry in days)
+            Builder(
+              builder: (context) {
+                final date = entry.date!;
+                final isToday =
+                  date.year == today.year &&
+                  date.month == today.month &&
+                  date.day == today.day;
+                final isActive = entry.activity.active;
+                return Column(
+                  children: [
+                    SizedBox(
+                      width: 34,
+                      height: 34,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (isActive)
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: HomePalette.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: SizedBox.expand(),
+                            )
+                          else
+                            CustomPaint(
+                              size: const Size.square(34),
+                              painter: _DottedCirclePainter(
+                                color: HomePalette.borderStrong(brightness),
+                              ),
+                            ),
+                          if (isActive)
+                            const Icon(
+                              Icons.check_rounded,
+                              size: 16,
+                              color: HomePalette.ink,
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      isToday ? 'Today' : weekdayLabels[date.weekday - 1],
+                      style: AppFonts.home(
+                        color: isToday
+                            ? HomePalette.textPrimary(brightness)
+                            : HomePalette.textSecondary(brightness),
+                        fontSize: isToday ? 9 : 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
         ],
       ),

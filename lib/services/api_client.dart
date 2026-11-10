@@ -59,9 +59,11 @@ enum _RefreshOutcome {
 class ApiClient {
   static const String _configuredBaseUrl = String.fromEnvironment(
     'NM_API_BASE_URL',
-    defaultValue: 'https://nerdmaxxing-server-seven.vercel.app/api/v1',
+    defaultValue: 'https://app.nerdmaxxing.com/api/v1',
   );
   // 'https://nerdmaxxing-server-seven.vercel.app/api/v1'
+  
+  
   
 
   static String get baseUrl {

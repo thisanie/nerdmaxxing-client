@@ -3,6 +3,7 @@ import '../models/user_stats.dart';
 import '../models/user_profile.dart';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 import 'api_client.dart';
 import 'app_cache.dart';
@@ -30,7 +31,14 @@ class ProfileService {
   }
 
   Future<UserStats> getMyStats() async {
-    final data = await api.get('/users/me/stats');
+    var timezone = 'UTC';
+    try {
+      timezone = (await FlutterTimezone.getLocalTimezone()).identifier;
+    } catch (_) {}
+    final data = await api.get(
+      '/users/me/stats',
+      query: {'timezone': timezone},
+    );
     await AppCache.write('my_stats', data);
     return UserStats.fromJson(data);
   }

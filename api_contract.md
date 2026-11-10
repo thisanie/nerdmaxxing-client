@@ -621,7 +621,27 @@ fields are per-user state and must not be stored on the shared challenge resourc
 
 ### `GET /api/v1/users/me/stats`
 
-Requires authentication. Returns the current user's activity summary: `active_challenge_count`, `completed_challenge_count`, `day_streak`, and `aura_points`.
+Requires authentication. Returns the current user's activity summary. The optional IANA `timezone` query parameter determines the local dates in `activity_days` and defaults to `UTC`.
+
+Response includes `active_challenge_count`, `completed_challenge_count`, `day_streak`, `aura_points`, and `activity_days` for the latest seven local dates. Each activity day contains a `date` (`YYYY-MM-DD`) and an `active` boolean. Rank fields are also returned when available.
+
+Example response:
+
+```json
+{
+  "active_challenge_count": 0,
+  "completed_challenge_count": 0,
+  "day_streak": 0,
+  "aura_points": 0,
+  "activity_days": [
+    { "date": "2026-11-10", "active": true }
+  ],
+  "rank": "E",
+  "rank_progress": 0,
+  "next_rank": "D",
+  "aura_to_next_rank": 0
+}
+```
 
 ## Evidence
 
