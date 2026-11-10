@@ -185,9 +185,7 @@ class _LoginScreenState extends State<LoginScreen>
       backgroundColor: background,
       body: SafeArea(
         bottom: false,
-        child: Theme(
-          data: AppTheme.neutralActionTheme(Theme.of(context)),
-          child: LayoutBuilder(
+        child: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth > 850) {
               final horizontalPadding = math.min(
@@ -277,7 +275,6 @@ class _LoginScreenState extends State<LoginScreen>
           },
         ),
       ),
-    ),
     );
   }
 
@@ -353,7 +350,7 @@ class _LoginScreenState extends State<LoginScreen>
               height: orbSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isLight ? AppColors.lightSurfaceAlt : AppColors.surfaceAlt,
+                color: isLight ? AppColors.limeWash : AppColors.primaryMuted,
               ),
             ),
           ),
@@ -574,6 +571,10 @@ class _LoginScreenState extends State<LoginScreen>
                 height: 52,
                 child: FilledButton(
                   onPressed: auth.isBusy ? null : _submitPasswordLogin,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                  ),
                   child: auth.isBusy
                       ? const SizedBox(
                           width: 18,
@@ -743,7 +744,7 @@ class _Wipe extends StatelessWidget {
                   widthFactor: wipe,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: AppColors.textPrimary,
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const SizedBox.expand(),
@@ -822,9 +823,8 @@ class _StickerCluster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final edge = isLight ? AppColors.ink : AppColors.textPrimary;
-        final stickerColor = isLight ? AppColors.ink : AppColors.textPrimary;
-        return SizedBox(
+    final edge = isLight ? AppColors.ink : AppColors.primary;
+    return SizedBox(
           height: height,
           width: double.infinity,
           child: Stack(
@@ -837,7 +837,7 @@ class _StickerCluster extends StatelessWidget {
               phase: 0,
               angle: -.10,
               child: _Sticker(
-                background: AppColors.textPrimary,
+                background: AppColors.primary,
                 edge: edge,
                 shadow: isLight,
                 child: Column(
@@ -880,7 +880,7 @@ class _StickerCluster extends StatelessWidget {
                     Text(
                       'Prove it.',
                       style: AppFonts.display(
-                        color: AppColors.textPrimary,
+                        color: AppColors.primary,
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         height: 1,
@@ -919,7 +919,7 @@ class _StickerCluster extends StatelessWidget {
                       width: 22,
                       height: 22,
                       decoration: const BoxDecoration(
-                        color: AppColors.textPrimary,
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -1077,7 +1077,7 @@ class _Ticker extends StatelessWidget {
                         const Icon(
                           Icons.auto_awesome,
                           size: 14,
-                          color: AppColors.textPrimary,
+                          color: AppColors.primary,
                         ),
                         const SizedBox(width: 8),
                         Flexible(
@@ -1125,8 +1125,7 @@ class _SparkMark extends StatelessWidget {
           scale: .94 + pulse * .08,
           child: CustomPaint(
             size: Size(size, size),
-            painter: _SparkPainter(
-              color: color,
+              painter: _SparkPainter(
               topOpacity: .25 + twinkle * .75,
               bottomOpacity: 1 - twinkle * .65,
             ),
@@ -1138,15 +1137,10 @@ class _SparkMark extends StatelessWidget {
 }
 
 class _SparkPainter extends CustomPainter {
-  final Color color;
   final double topOpacity;
   final double bottomOpacity;
 
-  const _SparkPainter({
-    required this.color,
-    this.topOpacity = 1,
-    this.bottomOpacity = 1,
-  });
+  const _SparkPainter({this.topOpacity = 1, this.bottomOpacity = 1});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1154,7 +1148,7 @@ class _SparkPainter extends CustomPainter {
     canvas.save();
     canvas.scale(scale);
 
-    final neutral = Paint()..color = color;
+    final lime = Paint()..color = AppColors.primary;
     final outline = Paint()
       ..color = AppColors.ink
       ..style = PaintingStyle.stroke
@@ -1168,7 +1162,7 @@ class _SparkPainter extends CustomPainter {
       ..cubicTo(36, 52, 30, 46, 16, 44)
       ..cubicTo(30, 42, 36, 36, 38, 22)
       ..close();
-    canvas.drawPath(main, neutral);
+    canvas.drawPath(main, lime);
     canvas.drawPath(main, outline);
 
     final top = Path()
@@ -1198,9 +1192,7 @@ class _SparkPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SparkPainter old) =>
-      old.color != color ||
-      old.topOpacity != topOpacity ||
-      old.bottomOpacity != bottomOpacity;
+      old.topOpacity != topOpacity || old.bottomOpacity != bottomOpacity;
 }
 
 // ---------------------------------------------------------------------------
@@ -1257,19 +1249,18 @@ class _AnimatedCtaState extends State<_AnimatedCta>
 
   @override
   Widget build(BuildContext context) {
-    // The sheen stays neutral against the theme surface.
     final shineBar = Transform.rotate(
       angle: -.25,
-      child: SizedBox(
+      child: const SizedBox(
         width: 90,
         height: 110,
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0),
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: .14),
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0),
+                Color(0x00C8F53A),
+                Color(0x47C8F53A),
+                Color(0x00C8F53A),
               ],
             ),
           ),
@@ -1331,7 +1322,7 @@ class _AnimatedCtaState extends State<_AnimatedCta>
                     animation: _arrow,
                     child: Icon(
                       Icons.arrow_forward_rounded,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: AppColors.primary,
                       size: 22,
                     ),
                     builder: (context, icon) {
@@ -1363,7 +1354,7 @@ class _AuthMessage extends StatelessWidget {
     final isLight = Theme.of(context).brightness == Brightness.light;
     final background = isError
         ? AppColors.danger.withValues(alpha: isLight ? .10 : .16)
-        : Theme.of(context).colorScheme.surfaceContainerHighest;
+        : AppColors.primary.withValues(alpha: isLight ? .22 : .14);
     final foreground = isError ? AppColors.danger : Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1444,11 +1435,7 @@ class _ModeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Material(
-        color: selected
-            ? (Theme.of(context).brightness == Brightness.light
-                  ? AppColors.lightSurfaceAlt
-                  : AppColors.surfaceAlt)
-            : Colors.transparent,
+          color: selected ? AppColors.limeWash : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
         child: InkWell(
           onTap: onTap,
