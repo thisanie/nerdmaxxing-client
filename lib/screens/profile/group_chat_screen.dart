@@ -409,10 +409,13 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
     final bubbleColor = isMine
-        ? colors.primary
+        ? (isLight ? Colors.black : colors.primary)
         : colors.surfaceContainerHighest;
-    final textColor = isMine ? colors.onPrimary : colors.onSurface;
+    final textColor = isMine
+        ? (isLight ? Colors.white : colors.onPrimary)
+        : colors.onSurface;
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: ConstrainedBox(

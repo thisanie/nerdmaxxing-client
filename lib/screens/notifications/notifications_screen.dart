@@ -340,6 +340,8 @@ class _NotificationTile extends StatelessWidget {
                         : Icons.notifications_none_rounded,
                     color: notification.isEvidenceRejected
                         ? colorScheme.error
+                        : Theme.of(context).brightness == Brightness.light
+                        ? Colors.black
                         : AppColors.primary,
                   ),
                   const SizedBox(width: 12),
@@ -380,12 +382,14 @@ class _NotificationTile extends StatelessWidget {
                     ),
                   ),
                   if (!notification.isRead)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 8, top: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 4),
                       child: Icon(
                         Icons.circle,
                         size: 8,
-                        color: AppColors.primary,
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? Colors.black
+                            : AppColors.primary,
                       ),
                     ),
                 ],
