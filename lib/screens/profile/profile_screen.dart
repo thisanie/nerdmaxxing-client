@@ -1273,6 +1273,8 @@ class _GroupTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
 
 class _GroupInfoPill extends StatelessWidget {
   final String label;
