@@ -2003,10 +2003,10 @@ class _ProfileRowAction extends StatelessWidget {
         ? FilledButton.styleFrom(
             backgroundColor: HomePalette.primary,
             foregroundColor: HomePalette.ink,
-            minimumSize: Size(0, large ? 38 : 32),
+            minimumSize: Size(0, large ? 48 : 32),
             padding: EdgeInsets.symmetric(
-              horizontal: large ? 16 : 13,
-              vertical: large ? 8 : 0,
+              horizontal: large ? 20 : 13,
+              vertical: large ? 12 : 0,
             ),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
@@ -2019,10 +2019,10 @@ class _ProfileRowAction extends StatelessWidget {
           )
         : OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurface,
-            minimumSize: Size(0, large ? 38 : 32),
+            minimumSize: Size(0, large ? 48 : 32),
             padding: EdgeInsets.symmetric(
-              horizontal: large ? 16 : 13,
-              vertical: large ? 8 : 0,
+              horizontal: large ? 20 : 13,
+              vertical: large ? 12 : 0,
             ),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
