@@ -159,9 +159,14 @@ class _HomeShellState extends State<HomeShell> {
           children: [
             SafeArea(
               bottom: false,
-              child: IndexedStack(
-                index: _navigationIndex,
-                children: _tabNavigators,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: 68 + MediaQuery.of(context).padding.bottom,
+                ),
+                child: IndexedStack(
+                  index: _navigationIndex,
+                  children: _tabNavigators,
+                ),
               ),
             ),
             Positioned(
