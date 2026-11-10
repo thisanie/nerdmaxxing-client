@@ -521,10 +521,19 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
               if (widget.onLogProgress != null) ...[
                 const SizedBox(height: 8),
                 Align(
-                  alignment: Alignment.centerLeft,
+                  alignment: Alignment.center,
                   child: TextButton.icon(
                     onPressed: widget.onLogProgress,
-                    icon: const Icon(Icons.add_rounded),
+                    style: TextButton.styleFrom(
+                      foregroundColor: HomePalette.ink,
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      textStyle: AppFonts.body(
+                        color: HomePalette.ink,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    icon: const Icon(Icons.add_rounded, size: 16),
                     label: const Text('Log progress'),
                   ),
                 ),
@@ -693,13 +702,14 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   );
 
   Widget _progressRuler(ChallengeMetric metric) {
+    const heroInk = HomePalette.ink;
     final base = _progressBaselineValue ?? metric.baseline ?? 0;
     final current = _progressMetricValue ?? metric.current ?? base;
     final target = metric.target ?? current;
     final span = target - base;
     final ratio = span == 0 ? 0.0 : ((current - base) / span).clamp(0.0, 1.0);
     final labelStyle = AppFonts.body(
-      color: t.ink.withValues(alpha: .7),
+      color: heroInk.withValues(alpha: .7),
       fontSize: 10,
     );
 
@@ -722,7 +732,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                     child: Text(
                       _formatValue(current),
                       style: AppFonts.body(
-                        color: t.ink,
+                        color: heroInk,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -731,7 +741,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   Positioned(
                     right: 0,
                     top: 0,
-                    child: Icon(Icons.flag_rounded, size: 20, color: t.ink),
+                    child: Icon(Icons.flag_rounded, size: 20, color: heroInk),
                   ),
                   Positioned(
                     left: 0,
@@ -740,7 +750,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                     child: Container(
                       height: 3,
                       decoration: BoxDecoration(
-                        color: t.ink.withValues(alpha: .22),
+                        color: heroInk.withValues(alpha: .22),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -752,7 +762,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                       width: x + knob / 2,
                       height: 3,
                       decoration: BoxDecoration(
-                        color: t.ink,
+                        color: heroInk,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -764,9 +774,12 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                       width: knob,
                       height: knob,
                       decoration: BoxDecoration(
-                        color: t.ink,
+                        color: heroInk,
                         shape: BoxShape.circle,
-                        border: Border.all(color: t.hero, width: 3),
+                        border: Border.all(
+                          color: heroInk.withValues(alpha: .18),
+                          width: 3,
+                        ),
                       ),
                     ),
                   ),
@@ -783,7 +796,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             Text(
               _formatValue(target),
               style: labelStyle.copyWith(
-                color: t.ink,
+                color: heroInk,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -831,7 +844,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: 116,
+            height: 124,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
