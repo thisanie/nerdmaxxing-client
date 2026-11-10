@@ -615,7 +615,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 if (createdChallenges.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
+                      padding: const EdgeInsets.fromLTRB(26, 0, 26, 12),
                       child: CustomPaint(
                         painter: _DashedBorderPainter(
                           color: brightness == Brightness.dark
@@ -683,12 +683,12 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 26),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final challenge = completedChallenges[index];
                       return Padding(
-                        padding: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.only(top: 12),
                         child: _CompletedChallengeCard(
                           challenge: challenge,
                           onTap: () => Navigator.of(context).push(
@@ -1062,7 +1062,7 @@ class _GroupsPanel extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final sectionStyle = AppFonts.home(
       color: scheme.onSurfaceVariant,
-      fontSize: 10,
+      fontSize: 12,
       fontWeight: FontWeight.w800,
     );
     if (isLoading) {
@@ -1082,7 +1082,7 @@ class _GroupsPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(18, 17, 18, 0),
+          padding: const EdgeInsets.fromLTRB(26, 22, 26, 12),
           child: Row(
             children: [
               Expanded(
@@ -1090,7 +1090,7 @@ class _GroupsPanel extends StatelessWidget {
                   isOwnProfile ? 'YOUR GROUPS' : 'GROUPS',
                   style: AppFonts.home(
                     color: scheme.onSurface,
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1099,8 +1099,8 @@ class _GroupsPanel extends StatelessWidget {
                 TextButton(
                   onPressed: onCreate,
                   style: TextButton.styleFrom(
-                    minimumSize: const Size(0, 29),
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     side: BorderSide(color: scheme.outlineVariant),
                     shape: const StadiumBorder(),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1110,7 +1110,7 @@ class _GroupsPanel extends StatelessWidget {
                     'Create',
                     style: AppFonts.home(
                       color: scheme.onSurface,
-                      fontSize: 10,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1135,7 +1135,7 @@ class _GroupsPanel extends StatelessWidget {
           ),
         if (isOwnProfile) ...[
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 24, 18, 0),
+            padding: const EdgeInsets.fromLTRB(26, 28, 26, 12),
             child: Text('FIND YOUR PEOPLE', style: sectionStyle),
           ),
           if (publicGroups.isEmpty)
@@ -1180,40 +1180,40 @@ class _GroupTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 0, 18, 7),
+      padding: const EdgeInsets.fromLTRB(26, 0, 26, 12),
       child: Card(
         margin: EdgeInsets.zero,
         elevation: 0,
         color: scheme.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           side: BorderSide(color: HomePalette.border(brightness)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
-                  width: 46,
-                  height: 46,
+                  width: 60,
+                  height: 60,
                   decoration: BoxDecoration(
                     color: HomePalette.surfaceAlt(brightness),
-                    borderRadius: BorderRadius.circular(13),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
                     group.visibility.toUpperCase() == 'PRIVATE'
                         ? Icons.shield_outlined
                         : Icons.groups_rounded,
-                    size: 20,
+                    size: 26,
                     color: brightness == Brightness.light
                         ? HomePalette.lightLink
                         : HomePalette.primary,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1225,7 +1225,7 @@ class _GroupTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.home(
                           color: scheme.onSurface,
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1236,7 +1236,7 @@ class _GroupTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.home(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 10.5,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -1290,10 +1290,10 @@ class _GroupEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 12, 18, 4),
+      padding: const EdgeInsets.fromLTRB(26, 12, 26, 4),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           border: Border.all(color: scheme.outlineVariant),
           borderRadius: BorderRadius.circular(15),
@@ -1305,16 +1305,16 @@ class _GroupEmptyState extends StatelessWidget {
               title,
               style: AppFonts.home(
                 color: scheme.onSurface,
-                fontSize: 12,
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(
               message,
               style: AppFonts.home(
                 color: scheme.onSurfaceVariant,
-                fontSize: 10,
+                fontSize: 13,
                 height: 1.4,
               ),
             ),
@@ -1652,7 +1652,7 @@ class _CompletedChallengeCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
-          height: 150,
+          height: 200,
           width: double.infinity,
           child: Stack(
             fit: StackFit.expand,
@@ -1692,9 +1692,9 @@ class _CompletedChallengeCard extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 14,
-                right: 14,
-                bottom: 12,
+                left: 18,
+                right: 18,
+                bottom: 16,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1723,7 +1723,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                             difficulty,
                             style: AppFonts.home(
                               color: HomePalette.ink,
-                              fontSize: 10.5,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -1737,7 +1737,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.home(
                         color: Colors.white,
-                        fontSize: 15,
+                        fontSize: 19,
                         fontWeight: FontWeight.w700,
                         height: 1.15,
                       ),
@@ -1755,7 +1755,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                           challenge.effortLabel,
                           style: AppFonts.home(
                             color: Colors.white.withValues(alpha: .85),
-                            fontSize: 10,
+                            fontSize: 12.5,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -1769,7 +1769,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                           '${challenge.auraPoints}',
                           style: AppFonts.home(
                             color: Colors.white.withValues(alpha: .85),
-                            fontSize: 10,
+                            fontSize: 12.5,
                           ),
                         ),
                       ],
@@ -1997,19 +1997,18 @@ class _ParticipationFilters extends StatelessWidget {
     final isLight = Theme.of(context).brightness == Brightness.light;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
+      padding: const EdgeInsets.fromLTRB(26, 10, 26, 10),
       child: Row(
         children: [
           for (var index = 0; index < _filters.length; index++) ...[
-            if (index > 0) const SizedBox(width: 8),
+            if (index > 0) const SizedBox(width: 10),
             ChoiceChip(
               label: Text(_filters[index].$2),
               selected: selected == _filters[index].$1,
               showCheckmark: false,
               visualDensity: VisualDensity.standard,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.symmetric(horizontal: 13),
-              selectedColor: isLight
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ? HomePalette.lightPrimaryMuted
                   : HomePalette.darkPrimaryMuted,
                 backgroundColor: isLight
@@ -2019,7 +2018,7 @@ class _ParticipationFilters extends StatelessWidget {
                 color: selected == _filters[index].$1
                     ? (isLight ? HomePalette.lightLink : HomePalette.primary)
                     : scheme.onSurfaceVariant,
-                fontSize: 11.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
               side: BorderSide(
@@ -2096,21 +2095,21 @@ class _ProfileRowAction extends StatelessWidget {
         ? FilledButton.styleFrom(
             backgroundColor: HomePalette.primary,
             foregroundColor: HomePalette.ink,
-            minimumSize: const Size(0, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 13),
+            minimumSize: const Size(0, 38),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             shape: const StadiumBorder(),
             textStyle: AppFonts.home(
               color: HomePalette.ink,
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
             ),
           )
         : OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurface,
-            minimumSize: const Size(0, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 13),
+            minimumSize: const Size(0, 38),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             side: BorderSide(
@@ -2119,7 +2118,7 @@ class _ProfileRowAction extends StatelessWidget {
             shape: const StadiumBorder(),
             textStyle: AppFonts.home(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
           );
@@ -2154,13 +2153,13 @@ class _RowCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 0, 18, 7),
+      padding: const EdgeInsets.fromLTRB(26, 0, 26, 12),
       child: Card(
         margin: EdgeInsets.zero,
         elevation: 0,
         color: scheme.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           side: BorderSide(
             color: HomePalette.border(Theme.of(context).brightness),
           ),
@@ -2169,15 +2168,15 @@ class _RowCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
-                  width: 46,
-                  height: 46,
+                  width: 60,
+                  height: 60,
                   decoration: BoxDecoration(
                     color: leadingColor,
-                    borderRadius: BorderRadius.circular(13),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: challenge?.imageUrl?.trim().isNotEmpty == true
@@ -2186,17 +2185,17 @@ class _RowCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Icon(
                             leadingIcon,
-                            size: 22,
+                            size: 26,
                             color: leadingIconColor ?? scheme.onSurface,
                           ),
                         )
                       : Icon(
                           leadingIcon,
-                          size: 22,
+                          size: 26,
                           color: leadingIconColor ?? scheme.onSurface,
                         ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2207,16 +2206,16 @@ class _RowCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.home(
                           color: scheme.onSurface,
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Text(
                         subtitle,
                         style: AppFonts.home(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 11,
+                          fontSize: 13,
                         ),
                       ),
                     ],
