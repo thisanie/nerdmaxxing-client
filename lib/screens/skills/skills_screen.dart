@@ -961,19 +961,19 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.fromLTRB(
-                18,
-                18,
-                18,
+                26,
+                20,
+                26,
                 24,
               ),
               children: [
                 _RankHeader(rank: widget.rank),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   'See who is putting in the work.',
                   style: AppFonts.body(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 13,
+                    fontSize: 15,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1143,7 +1143,7 @@ class _FilterRow extends StatelessWidget {
 
   List<Widget> _spaceChildren(List<Widget> children) => [
     for (var index = 0; index < children.length; index++) ...[
-      if (index > 0) const SizedBox(width: 8),
+      if (index > 0) const SizedBox(width: 10),
       children[index],
     ],
   ];
@@ -1178,7 +1178,7 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         decoration: BoxDecoration(
           color: background,
           border: Border.all(
@@ -1190,7 +1190,7 @@ class _FilterChip extends StatelessWidget {
           label,
           style: AppFonts.body(
             color: selected ? selectedForeground : scheme.onSurfaceVariant,
-            fontSize: 11.5,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1280,7 +1280,7 @@ class _LeaderboardPodium extends StatelessWidget {
         ? [entries[1], entries[0], entries[2]]
         : entries;
     return SizedBox(
-      height: 198,
+      height: 250,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -1308,9 +1308,9 @@ class _PodiumPlayer extends StatelessWidget {
       _ => HomePalette.peach,
     };
     final blockHeight = switch (entry.rank) {
-      1 => 58.0,
-      2 => 42.0,
-      _ => 32.0,
+      1 => 72.0,
+      2 => 52.0,
+      _ => 40.0,
     };
     return InkWell(
       onTap: () => _openLeaderboardProfile(context, entry),
@@ -1323,17 +1323,17 @@ class _PodiumPlayer extends StatelessWidget {
             _LeaderboardAvatar(
               imageUrl: entry.avatarUrl,
               name: name,
-              size: isWinner ? 66 : 52,
+              size: isWinner ? 82 : 64,
               winner: isWinner,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppFonts.body(
                 color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1344,7 +1344,7 @@ class _PodiumPlayer extends StatelessWidget {
                 color: isWinner
                     ? HomePalette.link(Theme.of(context).brightness)
                     : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1363,7 +1363,7 @@ class _PodiumPlayer extends StatelessWidget {
                 '${entry.rank}',
                 style: AppFonts.body(
                   color: HomePalette.ink,
-                  fontSize: 18,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1441,16 +1441,16 @@ class _PlayerRankTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: HomePalette.primaryMuted(brightness),
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         rank,
         style: AppFonts.body(
           color: HomePalette.link(brightness),
-          fontSize: 9,
+          fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -1503,23 +1503,23 @@ class _ViewerPosition extends StatelessWidget {
     final initials = _leaderboardInitials(displayName);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      margin: const EdgeInsets.fromLTRB(18, 0, 18, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
         children: [
           if (currentEntry == null)
             CircleAvatar(
-              radius: 18,
+              radius: 22,
               backgroundColor: foreground,
               child: Text(
                 initials,
                 style: AppFonts.body(
                   color: background,
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1528,11 +1528,11 @@ class _ViewerPosition extends StatelessWidget {
             _LeaderboardAvatar(
               imageUrl: currentEntry.avatarUrl,
               name: displayName,
-              size: 36,
+              size: 44,
               backgroundColor: foreground,
               foregroundColor: background,
             ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1542,7 +1542,7 @@ class _ViewerPosition extends StatelessWidget {
                   'You · #${viewerRank > 0 ? viewerRank : '—'}',
                   style: AppFonts.body(
                     color: foreground,
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1552,7 +1552,7 @@ class _ViewerPosition extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppFonts.body(
                     color: foreground.withValues(alpha: 0.72),
-                    fontSize: 10,
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -1563,7 +1563,7 @@ class _ViewerPosition extends StatelessWidget {
             '$value${_leaderboardMetricSuffix(metric)}',
             style: AppFonts.body(
               color: foreground,
-              fontSize: 14,
+              fontSize: 17,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -1591,16 +1591,16 @@ class _LeaderboardRow extends StatelessWidget {
       child: InkWell(
         onTap: () => _openLeaderboardProfile(context, entry),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
           child: Row(
             children: [
               SizedBox(
-                width: 26,
+                width: 32,
                 child: Text(
                   entry.rank.toString().padLeft(2, '0'),
                   style: AppFonts.body(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1608,9 +1608,9 @@ class _LeaderboardRow extends StatelessWidget {
               _LeaderboardAvatar(
                 imageUrl: entry.avatarUrl,
                 name: displayName,
-                size: 38,
+                size: 46,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1624,7 +1624,7 @@ class _LeaderboardRow extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppFonts.body(
                               color: scheme.onSurface,
-                              fontSize: 14,
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1642,7 +1642,7 @@ class _LeaderboardRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.body(
                         color: scheme.onSurfaceVariant,
-                        fontSize: 11,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -1653,7 +1653,7 @@ class _LeaderboardRow extends StatelessWidget {
                 '${entry.metricValue}${_leaderboardMetricSuffix(metric)}',
                 style: AppFonts.body(
                   color: scheme.onSurface,
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
               ),
