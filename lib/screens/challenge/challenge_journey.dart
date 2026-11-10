@@ -36,7 +36,7 @@ class _Tone {
             ink: HomePalette.lightTextPrimary,
             muted: HomePalette.lightTextSecondary,
             border: HomePalette.lightBorder,
-            strong: HomePalette.lightBorder,
+            strong: const Color(0xFFCFCFC4),
             hero: HomePalette.mint,
             accent: HomePalette.primary,
           )
@@ -797,14 +797,6 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
   Widget _attempts(BuildContext context) {
     final attempts = widget.detail.attempts;
-    if (attempts.isEmpty) {
-      return _card(
-        child: Text(
-          'No attempts logged yet.',
-          style: AppFonts.body(color: t.muted, fontSize: 10),
-        ),
-      );
-    }
     final primary = widget.detail.primaryMetric;
     double? valueOf(ChallengeAttempt a) =>
         (primary != null ? a.metrics[primary.key] : null) ??
@@ -812,7 +804,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
 
     // Attempts arrive newest-first; chart the latest few in chronological order.
     final chrono = attempts.reversed.toList();
-    final start = chrono.length > 4 ? chrono.length - 4 : 0;
+    final start = chrono.length > 5 ? chrono.length - 5 : 0;
     final shown = chrono.sublist(start);
     final values = shown.map(valueOf).toList();
     final maxValue = values.whereType<double>().fold<double>(
@@ -820,14 +812,13 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       (a, b) => b > a ? b : a,
     );
     final unit = primary?.unit ?? '';
-    final first = valueOf(chrono.first);
-    final last = valueOf(chrono.last);
-    final bestIndex = maxValue <= 0
-        ? -1
-        : values.indexWhere((v) => v == maxValue);
+    final first = chrono.isEmpty ? null : valueOf(chrono.first);
+    final last = chrono.isEmpty ? null : valueOf(chrono.last);
 
     final String footer;
-    if (first != null && last != null && first > 0 && chrono.length > 1) {
+    if (chrono.isEmpty) {
+      footer = 'No attempts logged yet.';
+    } else if (first != null && last != null && first > 0 && chrono.length > 1) {
       footer =
           '${primary?.label ?? 'Result'}  ·  ${_formatValue(last / first)}× your first attempt';
     } else {
@@ -844,18 +835,19 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                for (var i = 0; i < shown.length; i++)
+                for (var i = 0; i < 5; i++)
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: _attemptBar(
-                        value: values[i],
-                        max: maxValue,
-                        unit: unit,
-                        number: start + i + 1,
-                        isLatest: i == shown.length - 1,
-                        isBest: i == bestIndex && i != shown.length - 1,
-                      ),
+                      child: i < shown.length
+                          ? _attemptBar(
+                              value: values[i],
+                              max: maxValue,
+                              unit: unit,
+                              number: start + i + 1,
+                              isLatest: i == shown.length - 1,
+                            )
+                          : _attemptPlaceholder(number: start + i + 1),
                     ),
                   ),
               ],
@@ -876,7 +868,6 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     required String unit,
     required int number,
     required bool isLatest,
-    required bool isBest,
   }) {
     const maxBar = 80.0;
     const minBar = 18.0;
@@ -884,11 +875,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         ? 0.0
         : (value / max).clamp(0.0, 1.0);
     final barHeight = minBar + (maxBar - minBar) * ratio;
-    final Color fill = isLatest
-        ? HomePalette.primary
-        : isBest
-        ? (t.light ? AppColors.lightTextPrimary : AppColors.textPrimary)
-        : (t.light ? HomePalette.lightSurfaceAlt : HomePalette.darkSurfaceAlt);
+    final fill = isLatest ? HomePalette.primary : t.strong;
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -904,18 +891,36 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           decoration: BoxDecoration(
             color: fill,
             borderRadius: BorderRadius.circular(14),
-            border: isLatest
-                ? Border.all(
-                    color: t.light
-                        ? AppColors.lightTextPrimary
-                        : HomePalette.primary,
-                    width: 1.5,
-                  )
-                : null,
           ),
         ),
         const SizedBox(height: 8),
         Text('#$number', style: AppFonts.body(color: t.muted, fontSize: 9)),
+      ],
+    );
+  }
+
+  Widget _attemptPlaceholder({required int number}) {
+    const heights = [80.0, 71.0, 54.0, 40.0, 29.0];
+    final labelColor = t.light
+        ? const Color(0xFF85867C)
+        : AppColors.textDim;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        const SizedBox(height: 10),
+        const SizedBox(height: 6),
+        Container(
+          height: heights[number - 1],
+          decoration: BoxDecoration(
+            color: t.strong.withValues(alpha: .48),
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '#$number',
+          style: AppFonts.body(color: labelColor, fontSize: 9),
+        ),
       ],
     );
   }

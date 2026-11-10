@@ -123,12 +123,15 @@
     .section-head span { color: var(--text-2); font-size: 10px; white-space: nowrap; }
     .card { border: 1px solid var(--border); border-radius: 21px; background: var(--alt); }
     .attempts { padding: 13px 15px 12px; }
-    .attempt-bars { height: 113px; display: flex; justify-content: center; align-items: end; gap: 18px; }
-    .attempt { width: 76px; height: 100%; display: flex; flex-direction: column; justify-content: end; align-items: center; gap: 5px; color: var(--text-2); font-size: 9px; font-weight: 700; }
+    .attempt-bars { height: 113px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end; gap: 8px; max-width: 324px; margin: 0 auto; }
+    .attempt { min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: end; align-items: center; gap: 5px; color: var(--text-2); font-size: 9px; font-weight: 700; }
     .attempt-value { color: var(--text); font-size: 10px; }
     .attempt-bar { width: 100%; border-radius: 12px 12px 6px 6px; background: var(--strong); }
     .attempt.latest { color: var(--text); }
     .attempt.latest .attempt-bar { background: var(--lime); }
+    .attempt.placeholder { color: var(--text-3); }
+    .attempt.placeholder .attempt-value { visibility: hidden; }
+    .attempt.placeholder .attempt-bar { background: var(--strong); opacity: .48; }
     .attempt-caption { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--text-2); font-size: 9px; }
     .attempt-caption b { color: var(--text); font-weight: 700; text-align: right; }
     .trail { position: relative; padding-left: 2px; }
@@ -275,6 +278,9 @@
               <div class="attempt-bars">
                 <div class="attempt"><span class="attempt-value">900</span><i class="attempt-bar" style="height:80px"></i><span>#1</span></div>
                 <div class="attempt latest"><span class="attempt-value">800</span><i class="attempt-bar" style="height:71px"></i><span>#2</span></div>
+                <div class="attempt placeholder" aria-hidden="true"><span class="attempt-value">&nbsp;</span><i class="attempt-bar" style="height:54px"></i><span>#3</span></div>
+                <div class="attempt placeholder" aria-hidden="true"><span class="attempt-value">&nbsp;</span><i class="attempt-bar" style="height:40px"></i><span>#4</span></div>
+                <div class="attempt placeholder" aria-hidden="true"><span class="attempt-value">&nbsp;</span><i class="attempt-bar" style="height:29px"></i><span>#5</span></div>
               </div>
               <div class="attempt-caption"><span>Time to pick the lock</span><b>0.9× your first</b></div>
             </div>
