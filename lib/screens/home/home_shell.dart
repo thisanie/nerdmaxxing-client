@@ -250,9 +250,7 @@ class _BottomNavigationBar extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: brightness == Brightness.dark
-                      ? HomePalette.darkSurfaceAlt
-                      : HomePalette.lightSurface,
+                  color: Colors.transparent,
                   border: Border.all(color: HomePalette.border(brightness)),
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
