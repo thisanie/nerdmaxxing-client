@@ -846,6 +846,7 @@ class _ProfileActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     const shape = StadiumBorder();
     final spinner = SizedBox(
       width: 16,
@@ -1165,91 +1166,137 @@ class _GroupTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMember = group.membershipStatus == 'ACTIVE';
     final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 62),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+    final brightness = Theme.of(context).brightness;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 7),
+      child: Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        color: scheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: HomePalette.border(brightness)),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.light
-                    ? HomePalette.lightPrimaryMuted
-                    : HomePalette.darkPrimaryMuted,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                group.visibility == 'PRIVATE'
-                    ? Icons.shield_outlined
-                    : Icons.groups_rounded,
-                size: 18,
-                color: Theme.of(context).brightness == Brightness.light
-                    ? HomePalette.lightLink
-                    : HomePalette.primary,
-              ),
-            ),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    group.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppFonts.home(
-                      color: scheme.onSurface,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: HomePalette.surfaceAlt(brightness),
+                    borderRadius: BorderRadius.circular(13),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'} · ${group.visibility.toLowerCase() == 'private' ? 'Private' : 'Public'}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppFonts.home(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 10,
-                    ),
+                  child: Icon(
+                    group.visibility.toUpperCase() == 'PRIVATE'
+                        ? Icons.shield_outlined
+                        : Icons.groups_rounded,
+                    size: 20,
+                    color: brightness == Brightness.light
+                        ? HomePalette.lightLink
+                        : HomePalette.primary,
                   ),
-                ],
-              ),
-            ),
-            if (onJoin != null && !isMember)
-              _ProfileRowAction(
-                label: 'Join',
-                onPressed: () => onJoin!(group),
-              )
-            else if (isMember && onLeave != null)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (onTap != null)
-                    _ProfileRowAction(label: 'Open', onPressed: onTap!),
-                  PopupMenuButton<String>(
-                    tooltip: 'Group options',
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.more_horiz_rounded, size: 20),
-                    onSelected: (value) {
-                      if (value == 'leave') onLeave!(group);
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'leave', child: Text('Leave group')),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.home(
+                          color: scheme.onSurface,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          _GroupInfoPill(
+                            label:
+                                '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
+                            brightness: brightness,
+                          ),
+                          _GroupInfoPill(
+                            label: group.visibility.toLowerCase() == 'private'
+                                ? 'Private'
+                                : 'Public',
+                            brightness: brightness,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              )
-            else if (onTap != null)
-              _ProfileRowAction(label: 'Open', onPressed: onTap!)
-          ],
+                ),
+                if (onJoin != null && !isMember)
+                  _ProfileRowAction(
+                    label: 'Join',
+                    onPressed: () => onJoin!(group),
+                  )
+                else if (isMember && onLeave != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onTap != null)
+                        _ProfileRowAction(label: 'Open', onPressed: onTap!),
+                      PopupMenuButton<String>(
+                        tooltip: 'Group options',
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.more_horiz_rounded, size: 20),
+                        onSelected: (value) {
+                          if (value == 'leave') onLeave!(group);
+                        },
+                        itemBuilder: (context) => const [
+                          PopupMenuItem(
+                            value: 'leave',
+                            child: Text('Leave group'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                else if (onTap != null)
+                  _ProfileRowAction(label: 'Open', onPressed: onTap!),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+class _GroupInfoPill extends StatelessWidget {
+  final String label;
+  final Brightness brightness;
+
+  const _GroupInfoPill({required this.label, required this.brightness});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: HomePalette.surfaceAlt(brightness),
+        border: Border.all(color: HomePalette.border(brightness)),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppFonts.home(
+          color: HomePalette.textSecondary(brightness),
+          fontSize: 9.5,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
