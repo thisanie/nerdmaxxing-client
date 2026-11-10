@@ -1873,6 +1873,7 @@ class _ParticipationTile extends StatelessWidget {
           : _ProfileRowAction(
               label: actionLabel.$1,
               primary: actionLabel.$1 == 'Start',
+              large: true,
               onPressed: () => onChangeStatus(participation, actionLabel.$2),
             ),
     );
@@ -1987,11 +1988,13 @@ class _ProfileRowAction extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
   final bool primary;
+  final bool large;
 
   const _ProfileRowAction({
     required this.label,
     required this.onPressed,
     this.primary = false,
+    this.large = false,
   });
 
   @override
@@ -2000,8 +2003,11 @@ class _ProfileRowAction extends StatelessWidget {
         ? FilledButton.styleFrom(
             backgroundColor: HomePalette.primary,
             foregroundColor: HomePalette.ink,
-            minimumSize: const Size(0, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 13),
+            minimumSize: Size(0, large ? 38 : 32),
+            padding: EdgeInsets.symmetric(
+              horizontal: large ? 16 : 13,
+              vertical: large ? 8 : 0,
+            ),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             shape: const StadiumBorder(),
@@ -2013,8 +2019,11 @@ class _ProfileRowAction extends StatelessWidget {
           )
         : OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurface,
-            minimumSize: const Size(0, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 13),
+            minimumSize: Size(0, large ? 38 : 32),
+            padding: EdgeInsets.symmetric(
+              horizontal: large ? 16 : 13,
+              vertical: large ? 8 : 0,
+            ),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             side: BorderSide(
