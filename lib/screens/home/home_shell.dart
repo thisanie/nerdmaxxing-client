@@ -154,17 +154,27 @@ class _HomeShellState extends State<HomeShell> {
       child: Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
-        body: SafeArea(
-          bottom: false,
-          child: IndexedStack(
-            index: _navigationIndex,
-            children: _tabNavigators,
-          ),
-        ),
-        bottomNavigationBar: _BottomNavigationBar(
-          currentIndex: _navigationIndex,
-          onTap: _onNavigationTap,
-          isAdmin: _isAdmin,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            SafeArea(
+              bottom: false,
+              child: IndexedStack(
+                index: _navigationIndex,
+                children: _tabNavigators,
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _BottomNavigationBar(
+                currentIndex: _navigationIndex,
+                onTap: _onNavigationTap,
+                isAdmin: _isAdmin,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -219,47 +229,55 @@ class _BottomNavigationBar extends StatelessWidget {
     final itemInset = isAdmin ? 4.0 : 6.0;
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(horizontalMargin, 0, horizontalMargin, 12),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: isAdmin ? 400 : 320),
-            child: Container(
-              width: double.infinity,
-              height: 56,
-              decoration: BoxDecoration(
-                color: brightness == Brightness.dark
-                    ? HomePalette.darkSurfaceAlt
-                    : HomePalette.lightSurface,
-                border: Border.all(color: HomePalette.border(brightness)),
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(
-                      alpha: brightness == Brightness.dark ? .24 : .12,
-                    ),
-                    blurRadius: 22,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: itemInset),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    for (var index = 0; index < items.length; index++)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: _NavigationItem(
-                          icon: items[index].$1,
-                          label: items[index].$2,
-                          selected: currentIndex == index,
-                          reduceMotion: reduceMotion,
-                          onTap: () => onTap(index),
-                        ),
+      child: SizedBox(
+        height: 68,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            horizontalMargin,
+            0,
+            horizontalMargin,
+            12,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isAdmin ? 400 : 320),
+              child: Container(
+                width: double.infinity,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: brightness == Brightness.dark
+                      ? HomePalette.darkSurfaceAlt
+                      : HomePalette.lightSurface,
+                  border: Border.all(color: HomePalette.border(brightness)),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: brightness == Brightness.dark ? .24 : .12,
                       ),
+                      blurRadius: 22,
+                      offset: const Offset(0, 8),
+                    ),
                   ],
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: itemInset),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      for (var index = 0; index < items.length; index++)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: _NavigationItem(
+                            icon: items[index].$1,
+                            label: items[index].$2,
+                            selected: currentIndex == index,
+                            reduceMotion: reduceMotion,
+                            onTap: () => onTap(index),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
