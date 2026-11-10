@@ -499,9 +499,7 @@ class AppTheme {
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
-        actionTextColor: brightness == Brightness.dark
-            ? const Color(0xFF111111)
-            : primary,
+        actionTextColor: primary,
         closeIconColor: brightness == Brightness.dark
             ? const Color(0xFF111111)
             : Colors.white,

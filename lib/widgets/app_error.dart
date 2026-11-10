@@ -2,7 +2,8 @@ import 'dart:async' show TimeoutException;
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart' show DioException, DioExceptionType;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SnackBar;
+import 'app_snack_bar.dart';
 
 import '../services/api_client.dart';
 import '../theme/app_theme.dart';
