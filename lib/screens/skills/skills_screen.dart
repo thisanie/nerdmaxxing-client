@@ -118,22 +118,22 @@ class _RankSummary extends ConsumerWidget {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        18,
-        18,
-        18,
-        32,
+        26,
+        20,
+        26,
+        36,
       ),
       children: [
         _RankHeader(rank: stats.rank),
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 16),
+          padding: const EdgeInsets.only(top: 6, bottom: 20),
           child: Text(
             'Every challenge moves you forward.',
-            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 13),
+            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 15),
           ),
         ),
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [HomePalette.primary, HomePalette.mint],
@@ -149,22 +149,22 @@ class _RankSummary extends ConsumerWidget {
                 'YOUR PROGRESS',
                 style: AppFonts.label(
                   color: HomePalette.ink.withValues(alpha: .65),
-                  fontSize: 10,
+                  fontSize: 12,
                 ),
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: 9),
               Text(
                 stats.nextRank == null
                     ? 'You have reached the highest rank.'
                     : 'One more milestone on the way to ${stats.nextRank}.',
                 style: AppFonts.display(
                   color: HomePalette.ink,
-                  fontSize: 20,
+                  fontSize: 24,
                   fontWeight: FontWeight.w700,
                   height: 1.15,
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 22),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -181,7 +181,7 @@ class _RankSummary extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.poster(
-                        fontSize: 46,
+                        fontSize: 56,
                         color: HomePalette.ink,
                         wdth: 100,
                       ),
@@ -192,20 +192,20 @@ class _RankSummary extends ConsumerWidget {
                     'AURA\nPOINTS',
                     style: AppFonts.label(
                       color: HomePalette.ink.withValues(alpha: .65),
-                      fontSize: 9,
+                      fontSize: 11,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 13,
-                  vertical: 10,
+                  horizontal: 16,
+                  vertical: 14,
                 ),
                 decoration: BoxDecoration(
                   color: HomePalette.ink,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -217,7 +217,7 @@ class _RankSummary extends ConsumerWidget {
                             : '${stats.auraToNextRank} AP to Rank ${stats.nextRank}',
                         style: AppFonts.body(
                           color: HomePalette.primary,
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -227,7 +227,7 @@ class _RankSummary extends ConsumerWidget {
                       stats.nextRank == null ? '100%' : '${stats.rankProgress}%',
                       style: AppFonts.body(
                         color: Colors.white.withValues(alpha: .85),
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -237,9 +237,9 @@ class _RankSummary extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _RankLadder(stats: stats),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Row(
           children: [
             _StatTile(
@@ -248,7 +248,7 @@ class _RankSummary extends ConsumerWidget {
               icon: Icons.local_fire_department_rounded,
               tone: _StatTone.streak,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             _StatTile(
               label: 'COMPLETED',
               value: '${stats.completedChallengeCount}',
@@ -257,7 +257,7 @@ class _RankSummary extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Row(
           children: [
             _StatTile(
@@ -266,7 +266,7 @@ class _RankSummary extends ConsumerWidget {
               icon: Icons.radio_button_checked_rounded,
               tone: _StatTone.active,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             _StatTile(
               label: 'RANK',
               value: stats.rank,
@@ -275,9 +275,9 @@ class _RankSummary extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         const _WeeklyAuraChart(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Material(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(20),
@@ -285,7 +285,7 @@ class _RankSummary extends ConsumerWidget {
             borderRadius: BorderRadius.circular(20),
             onTap: () => DefaultTabController.of(context).animateTo(1),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
               decoration: BoxDecoration(
                 border: Border.all(color: scheme.outline),
                 borderRadius: BorderRadius.circular(20),
@@ -300,26 +300,26 @@ class _RankSummary extends ConsumerWidget {
                           'See the leaderboard',
                           style: AppFonts.body(
                             color: scheme.onSurface,
-                            fontSize: 14,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 3),
                         Text(
                           viewerRank == null
                               ? 'View this week’s rankings'
                               : 'You’re #$viewerRank this week',
                           style: AppFonts.body(
                             color: scheme.onSurfaceVariant,
-                            fontSize: 11,
+                            fontSize: 13,
                           ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    width: 34,
-                    height: 34,
+                    width: 40,
+                    height: 40,
                     alignment: Alignment.center,
                     decoration: const BoxDecoration(
                       color: HomePalette.primary,
@@ -328,7 +328,7 @@ class _RankSummary extends ConsumerWidget {
                     child: const Icon(
                       Icons.arrow_forward_rounded,
                       color: HomePalette.ink,
-                      size: 19,
+                      size: 22,
                     ),
                   ),
                 ],
@@ -350,23 +350,23 @@ class _RankProgressRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 76,
-      height: 76,
+      width: 88,
+      height: 88,
       child: Stack(
         alignment: Alignment.center,
         children: [
           SizedBox.expand(
             child: CircularProgressIndicator(
               value: progress,
-              strokeWidth: 6,
+              strokeWidth: 7,
               strokeCap: StrokeCap.round,
               backgroundColor: HomePalette.ink.withValues(alpha: .16),
               valueColor: const AlwaysStoppedAnimation(HomePalette.ink),
             ),
           ),
           Container(
-            width: 60,
-            height: 60,
+            width: 70,
+            height: 70,
             alignment: Alignment.center,
             decoration: const BoxDecoration(
               color: Color(0xFFE8FFBC),
@@ -376,7 +376,7 @@ class _RankProgressRing extends StatelessWidget {
               rank,
               style: AppFonts.display(
                 color: HomePalette.ink,
-                fontSize: 28,
+                fontSize: 32,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -400,11 +400,11 @@ class _WeeklyAuraChart extends StatelessWidget {
     final maxValue = _sampleWeeklyAura.reduce((a, b) => a > b ? a : b);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 13),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border.all(color: scheme.outline),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(26),
       ),
       child: Column(
         children: [
@@ -415,7 +415,7 @@ class _WeeklyAuraChart extends StatelessWidget {
                   'Aura this week',
                   style: AppFonts.body(
                     color: scheme.onSurface,
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -424,7 +424,7 @@ class _WeeklyAuraChart extends StatelessWidget {
                 'SAMPLE',
                 style: AppFonts.label(
                   color: scheme.onSurfaceVariant,
-                  fontSize: 9,
+                  fontSize: 11,
                 ),
               ),
               const SizedBox(width: 9),
@@ -432,15 +432,15 @@ class _WeeklyAuraChart extends StatelessWidget {
                 '+$total AP',
                 style: AppFonts.body(
                   color: scheme.onSurfaceVariant,
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           SizedBox(
-            height: 82,
+            height: 104,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -454,11 +454,11 @@ class _WeeklyAuraChart extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.bottomCenter,
                             child: Container(
-                              width: 24,
+                              width: 28,
                                 height:
                                   maxValue == 0 || _sampleWeeklyAura[index] == 0
-                                  ? 5.0
-                                  : 54.0 *
+                                  ? 6.0
+                                  : 72.0 *
                                     _sampleWeeklyAura[index] /
                                     maxValue,
                               decoration: BoxDecoration(
@@ -477,7 +477,7 @@ class _WeeklyAuraChart extends StatelessWidget {
                             color: index == days.length - 1
                                 ? scheme.onSurface
                                 : scheme.onSurfaceVariant,
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -745,11 +745,11 @@ class _RankLadder extends StatelessWidget {
           .toDouble();
     final nextRankThreshold = stats.auraPoints + stats.auraToNextRank;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border.all(color: scheme.outline),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(26),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -761,7 +761,7 @@ class _RankLadder extends StatelessWidget {
                 'Rank ladder',
                 style: AppFonts.body(
                   color: scheme.onSurface,
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -771,20 +771,21 @@ class _RankLadder extends StatelessWidget {
                     : 'Next: ${stats.nextRank}',
                 style: AppFonts.body(
                   color: scheme.onSurfaceVariant,
-                  fontSize: 11,
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 8),
           SizedBox(
-            height: 66,
+            height: 82,
             width: double.infinity,
             child: Stack(
               children: [
                 PositionedDirectional(
-                  start: 17,
-                  end: 17,
-                  top: 17,
+                  start: 20,
+                  end: 20,
+                  top: 20,
                   child: Container(
                     height: 3,
                     decoration: BoxDecoration(
@@ -795,9 +796,9 @@ class _RankLadder extends StatelessWidget {
                 ),
                 if (ladderProgress > 0)
                   PositionedDirectional(
-                    start: 17,
-                    end: 17,
-                    top: 17,
+                  start: 20,
+                    end: 20,
+                    top: 20,
                     child: LayoutBuilder(
                       builder: (context, constraints) => Align(
                         alignment: AlignmentDirectional.centerStart,
@@ -834,7 +835,7 @@ class _RankLadder extends StatelessWidget {
             stats.nextRank == null
                 ? 'Maximum aura reached'
                 : '${stats.auraToNextRank} aura to ${stats.nextRank} rank',
-            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 11),
+            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 13),
           ),
         ],
       ),
@@ -859,12 +860,12 @@ class _RankLadderStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return SizedBox(
-      width: 36,
+      width: 40,
       child: Column(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: isCurrent ? HomePalette.primary : scheme.surface,
@@ -891,12 +892,12 @@ class _RankLadderStep extends StatelessWidget {
               rank,
               style: AppFonts.body(
                 color: isCurrent ? HomePalette.ink : scheme.onSurfaceVariant,
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           Text(
             isCurrent
                 ? 'You'
@@ -909,7 +910,7 @@ class _RankLadderStep extends StatelessWidget {
               color: isCurrent || isNext
                   ? scheme.onSurface
                   : scheme.onSurfaceVariant,
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: isCurrent || isNext ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
@@ -1697,17 +1698,17 @@ class _StatTile extends StatelessWidget {
     };
     return Expanded(
       child: Container(
-        height: 104,
-        padding: const EdgeInsets.all(14),
+        height: 128,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(22),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: foreground, size: 18),
+            Icon(icon, color: foreground, size: 24),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1717,19 +1718,19 @@ class _StatTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppFonts.display(
                     color: foreground,
-                    fontSize: 34,
+                    fontSize: 40,
                     fontWeight: FontWeight.w700,
                     height: 1,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppFonts.label(
                     color: foreground.withValues(alpha: .75),
-                    fontSize: 9,
+                    fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
