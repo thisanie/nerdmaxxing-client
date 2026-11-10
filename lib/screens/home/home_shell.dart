@@ -206,10 +206,10 @@ class _BottomNavigationBar extends StatelessWidget {
   });
 
   static const _items = [
-    (Icons.home_rounded, 'Home'),
-    (Icons.explore_rounded, 'Discover'),
-    (Icons.leaderboard_rounded, 'Rank'),
-    (Icons.person_rounded, 'Profile'),
+    (Icons.home_outlined, Icons.home_rounded, 'Home'),
+    (Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
+    (Icons.emoji_events_outlined, Icons.emoji_events_rounded, 'Rank'),
+    (Icons.account_circle_outlined, Icons.account_circle_rounded, 'Profile'),
   ];
 
   @override
@@ -218,14 +218,15 @@ class _BottomNavigationBar extends StatelessWidget {
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     final items = [
       ..._items,
-      if (isAdmin) (Icons.fact_check_rounded, 'Admin'),
+      if (isAdmin)
+        (Icons.fact_check_outlined, Icons.fact_check_rounded, 'Admin'),
     ];
     const horizontalMargin = 14.0;
     const itemInset = 8.0;
     return SafeArea(
       top: false,
       child: SizedBox(
-        height: 72,
+        height: 84,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             horizontalMargin,
@@ -238,7 +239,7 @@ class _BottomNavigationBar extends StatelessWidget {
               constraints: const BoxConstraints(),
               child: Container(
                 width: double.infinity,
-                height: 60,
+                height: 72,
                 decoration: BoxDecoration(
                   color: brightness == Brightness.dark
                       ? HomePalette.darkSurfaceAlt
@@ -256,14 +257,19 @@ class _BottomNavigationBar extends StatelessWidget {
                   ],
                 ),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: itemInset),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: itemInset,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       for (var index = 0; index < items.length; index++)
                         _NavigationItem(
-                          icon: items[index].$1,
-                          label: items[index].$2,
+                          icon: currentIndex == index
+                              ? items[index].$2
+                              : items[index].$1,
+                          label: items[index].$3,
                           selected: currentIndex == index,
                           reduceMotion: reduceMotion,
                           onTap: () => onTap(index),
@@ -322,7 +328,7 @@ class _NavigationItem extends StatelessWidget {
           child: AnimatedContainer(
             duration: animationDuration,
             curve: Curves.easeOutBack,
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             padding: EdgeInsets.symmetric(horizontal: selected ? 14 : 12),
             decoration: BoxDecoration(
               color: selected ? selectedBackground : Colors.transparent,
@@ -342,7 +348,7 @@ class _NavigationItem extends StatelessWidget {
                     scale: scale,
                     child: child,
                   ),
-                  child: Icon(icon, size: 20, color: color),
+                  child: Icon(icon, size: 28, color: color),
                 ),
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: selected ? 1 : 0),
@@ -363,7 +369,7 @@ class _NavigationItem extends StatelessWidget {
                       softWrap: false,
                       style: AppFonts.home(
                         color: color,
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
