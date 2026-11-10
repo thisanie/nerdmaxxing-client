@@ -2009,9 +2009,10 @@ class _ParticipationFilters extends StatelessWidget {
               visualDensity: VisualDensity.standard,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              selectedColor: isLight
                   ? HomePalette.lightPrimaryMuted
                   : HomePalette.darkPrimaryMuted,
-                backgroundColor: isLight
+              backgroundColor: isLight
                   ? HomePalette.lightSurfaceAlt
                   : HomePalette.darkSurfaceAlt,
               labelStyle: AppFonts.home(
