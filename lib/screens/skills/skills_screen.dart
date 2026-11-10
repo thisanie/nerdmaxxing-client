@@ -58,9 +58,9 @@ class _RankTabs extends StatelessWidget {
     final selectedForeground = isDark ? AppColors.dark : AppColors.primary;
     final selectedBackground = isDark ? AppColors.primary : scheme.onSurface;
     return Container(
-      height: 54,
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      padding: const EdgeInsets.all(5),
+      height: 46,
+      margin: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border.all(color: scheme.outline),
@@ -79,10 +79,15 @@ class _RankTabs extends StatelessWidget {
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
-        labelStyle: AppFonts.body(color: selectedForeground, fontSize: 16),
+        labelStyle: AppFonts.body(
+          color: selectedForeground,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
         unselectedLabelStyle: AppFonts.body(
           color: scheme.onSurfaceVariant,
-          fontSize: 16,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -113,18 +118,18 @@ class _RankSummary extends ConsumerWidget {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        16,
-        20,
-        16,
-        32 + MediaQuery.viewPaddingOf(context).bottom + 68,
+        18,
+        18,
+        18,
+        32 + MediaQuery.viewPaddingOf(context).bottom + 72,
       ),
       children: [
         _RankHeader(rank: stats.rank),
         Padding(
-          padding: const EdgeInsets.only(top: 6, bottom: 18),
+          padding: const EdgeInsets.only(top: 4, bottom: 16),
           child: Text(
             'Every challenge moves you forward.',
-            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 14),
+            style: AppFonts.body(color: scheme.onSurfaceVariant, fontSize: 13),
           ),
         ),
         Container(
@@ -691,9 +696,15 @@ class _RankHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('Rank', style: Theme.of(context).textTheme.headlineMedium),
+        Text('Rank', style: AppFonts.body(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          height: 1.05,
+          letterSpacingEm: -0.02,
+        )),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
           decoration: BoxDecoration(
             color: isDark
                 ? AppColors.primary
@@ -704,7 +715,8 @@ class _RankHeader extends StatelessWidget {
             'Rank $rank',
             style: AppFonts.body(
               color: isDark ? AppColors.dark : AppColors.primary,
-              fontSize: 14,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -948,10 +960,10 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                24 + MediaQuery.viewPaddingOf(context).bottom + 68,
+                18,
+                18,
+                18,
+                24 + MediaQuery.viewPaddingOf(context).bottom + 72,
               ),
               children: [
                 _RankHeader(rank: widget.rank),
@@ -960,7 +972,7 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
                   'See who is putting in the work.',
                   style: AppFonts.body(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 14,
+                    fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1165,7 +1177,7 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
         decoration: BoxDecoration(
           color: background,
           border: Border.all(
@@ -1177,7 +1189,7 @@ class _FilterChip extends StatelessWidget {
           label,
           style: AppFonts.body(
             color: selected ? selectedForeground : scheme.onSurfaceVariant,
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1490,11 +1502,11 @@ class _ViewerPosition extends StatelessWidget {
     final initials = _leaderboardInitials(displayName);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [

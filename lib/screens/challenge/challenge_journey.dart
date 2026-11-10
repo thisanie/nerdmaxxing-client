@@ -202,7 +202,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           ),
           style: AppFonts.body(
             color: t.ink,
-            fontSize: 11,
+            fontSize: 12.5,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -314,7 +314,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   // ---------------------------------------------------------------- shell
 
   Widget _section(String title, Widget child, {String? trailing}) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+    padding: const EdgeInsets.fromLTRB(18, 22, 18, 0),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -329,15 +329,16 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   title,
                   style: AppFonts.body(
                     color: t.ink,
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
+                    letterSpacingEm: -0.01,
                   ),
                 ),
               ),
               if (trailing != null)
                 Text(
                   trailing,
-                  style: AppFonts.body(color: t.muted, fontSize: 10),
+                  style: AppFonts.body(color: t.muted, fontSize: 12),
                 ),
             ],
           ),
@@ -362,7 +363,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     child: child,
   );
 
-  Widget _tall(Widget child) => SizedBox(height: 42, child: child);
+  Widget _tall(Widget child) => SizedBox(height: 44, child: child);
 
   // ---------------------------------------------------------------- hero
 
@@ -375,7 +376,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     final current = _formatValue(_progressMetricValue);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -420,7 +421,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 Text(
                   active ? current : target,
                   style: AppFonts.poster(
-                    fontSize: 72,
+                    fontSize: 68,
                     color: heroInk,
                     wdth: 100,
                   ),
@@ -428,14 +429,14 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 const SizedBox(width: 8),
                 Flexible(
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
                       unit,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.body(
-                        color: heroInk.withValues(alpha: .7),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        color: heroInk.withValues(alpha: .6),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -448,15 +449,15 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 metricLabel,
                 style: AppFonts.body(
                   color: heroInk,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
                 primary?.target == null
                     ? 'Progress is being tracked.'
                     : 'Best so far. Target is ${_formatValue(primary!.target)}.',
-                style: AppFonts.body(color: heroInk, fontSize: 13),
+                style: AppFonts.body(color: heroInk, fontSize: 12.5),
               ),
               if (primary != null && primary.target != null) ...[
                 const SizedBox(height: 20),
@@ -475,7 +476,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                           shape: const StadiumBorder(),
                           textStyle: AppFonts.body(
                             color: t.ink,
-                            fontSize: 11,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -498,7 +499,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                           shape: const StadiumBorder(),
                           textStyle: AppFonts.body(
                             color: t.ink,
-                            fontSize: 11,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -529,7 +530,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                       padding: const EdgeInsets.symmetric(vertical: 9),
                       textStyle: AppFonts.body(
                         color: HomePalette.ink,
-                        fontSize: 10,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -581,7 +582,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                           shape: const StadiumBorder(),
                           textStyle: AppFonts.body(
                             color: HomePalette.primary,
-                            fontSize: 11,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -618,7 +619,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 '${widget.detail.participantCount} nerds are on this trial  ·  ${widget.detail.completedParticipantCount} have cleared it',
                 style: AppFonts.body(
                   color: heroInk.withValues(alpha: .7),
-                  fontSize: 10,
+                  fontSize: 11.5,
                 ),
               ),
               if (widget.invited && widget.onDecline != null)
@@ -666,7 +667,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             '${_formatValue(delta.abs())} since start',
             style: AppFonts.body(
               color: fg,
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -683,7 +684,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           label,
           style: AppFonts.label(
             color: t.ink.withValues(alpha: .6),
-              fontSize: 8,
+              fontSize: 10,
           ),
         ),
         const SizedBox(height: 6),
@@ -693,7 +694,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           overflow: TextOverflow.ellipsis,
           style: AppFonts.body(
             color: t.ink,
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -869,7 +870,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           const SizedBox(height: 10),
           Divider(height: 1, color: t.border),
           const SizedBox(height: 9),
-          Text(footer, style: AppFonts.body(color: t.muted, fontSize: 9)),
+          Text(footer, style: AppFonts.body(color: t.muted, fontSize: 11)),
         ],
       ),
     );
@@ -896,7 +897,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           value == null
               ? '--'
               : '${_formatValue(value)}${unit.length <= 3 ? unit : ''}',
-          style: AppFonts.body(color: t.ink, fontSize: 10),
+          style: AppFonts.body(color: t.ink, fontSize: 10.5, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 6),
         Container(
@@ -907,7 +908,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           ),
         ),
         const SizedBox(height: 8),
-        Text('#$number', style: AppFonts.body(color: t.muted, fontSize: 9)),
+        Text('#$number', style: AppFonts.body(color: t.muted, fontSize: 10.5, fontWeight: FontWeight.w700)),
       ],
     );
   }
@@ -932,7 +933,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         const SizedBox(height: 8),
         Text(
           '#$number',
-          style: AppFonts.body(color: labelColor, fontSize: 9),
+          style: AppFonts.body(color: labelColor, fontSize: 10.5, fontWeight: FontWeight.w700),
         ),
       ],
     );
@@ -988,7 +989,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
       return _card(
         child: Text(
           'This challenge has no configured milestones yet.',
-          style: AppFonts.body(color: t.muted, fontSize: 10),
+          style: AppFonts.body(color: t.muted, fontSize: 12),
         ),
       );
     }
@@ -1049,7 +1050,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             number,
             style: AppFonts.body(
               color: HomePalette.ink,
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -1069,7 +1070,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         ),
         child: Text(
           number,
-          style: AppFonts.body(color: t.muted, fontSize: 10),
+          style: AppFonts.body(color: t.muted, fontSize: 11, fontWeight: FontWeight.w800),
         ),
       );
     }
@@ -1108,8 +1109,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                       milestone.title,
                       style: AppFonts.body(
                         color: done || current || preview ? t.ink : t.muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                         height: 1.2,
                       ),
                     ),
@@ -1120,7 +1121,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                         milestone.description,
                         style: AppFonts.body(
                           color: t.muted,
-                          fontSize: 10,
+                          fontSize: 11,
                           height: 1.4,
                         ),
                       ),
@@ -1174,10 +1175,10 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(left, style: AppFonts.body(color: t.muted, fontSize: 9)),
+              Text(left, style: AppFonts.body(color: t.muted, fontSize: 10.5)),
               Text(
                 'Next up',
-                style: AppFonts.body(color: t.muted, fontSize: 9),
+                style: AppFonts.body(color: t.muted, fontSize: 10.5),
               ),
             ],
           ),
@@ -1234,6 +1235,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 '${detail.completedParticipantCount}',
                 style: AppFonts.body(
                   color: peopleInk,
+                  fontWeight: FontWeight.w800,
                   fontSize: 44,
                   height: 1,
                   letterSpacingEm: -0.035,
@@ -1244,7 +1246,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 'have cleared it',
                 style: AppFonts.body(
                   color: peopleMuted,
-                  fontSize: 10,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   height: 1,
                 ),
               ),
@@ -1277,7 +1280,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   '${detail.participantCount} nerds are on this trial',
                   style: AppFonts.body(
                     color: peopleMuted,
-                    fontSize: 9,
+                    fontSize: 11.5,
                   ),
                 ),
               ),
@@ -1324,7 +1327,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   // ------------------------------------------------------------ discussion
 
   Widget _discussionSection(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+    padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
     child: Material(
       color: t.card,
       borderRadius: BorderRadius.circular(17),
@@ -1359,8 +1362,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   'Discussion',
                   style: AppFonts.body(
                     color: t.ink,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -1416,7 +1419,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Questions, ideas, and useful breakthroughs.',
-                style: AppFonts.body(color: t.muted, fontSize: 10),
+                style: AppFonts.body(color: t.muted, fontSize: 12),
               ),
             ),
           ),
@@ -1446,7 +1449,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           widget.challenge.shortDescription,
           style: AppFonts.body(
             color: t.ink,
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             height: 1.4,
           ),
@@ -1455,7 +1458,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
           const SizedBox(height: 8),
           Text(
             widget.challenge.fullDescription,
-            style: AppFonts.body(color: t.muted, fontSize: 10, height: 1.45),
+            style: AppFonts.body(color: t.muted, fontSize: 12, height: 1.45),
           ),
         ],
       ],
@@ -1478,7 +1481,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                     : verification.instructions,
                 style: AppFonts.body(
                   color: t.ink,
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   height: 1.4,
                 ),
@@ -1488,7 +1491,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 'Your result is signed to your profile and reviewed according to the challenge verification rules.',
                 style: AppFonts.body(
                   color: t.muted,
-                  fontSize: 10,
+                  fontSize: 12,
                   height: 1.4,
                 ),
               ),
@@ -1539,7 +1542,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
         Expanded(
           child: Text(
             label,
-            style: AppFonts.body(color: t.muted, fontSize: 10),
+            style: AppFonts.body(color: t.muted, fontSize: 12),
           ),
         ),
         const SizedBox(width: 16),
@@ -1549,7 +1552,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             textAlign: TextAlign.right,
             style: AppFonts.body(
               color: t.ink,
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -1575,7 +1578,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
             number,
             style: AppFonts.body(
               color: t.accent,
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -1597,7 +1600,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   ),
                 ],
               ),
-              style: AppFonts.body(color: t.ink, fontSize: 11, height: 1.4),
+              style: AppFonts.body(color: t.ink, fontSize: 13, height: 1.4),
             ),
           ),
         ),
@@ -1606,7 +1609,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   );
 
   Widget _finalCta(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+    padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
     child: active
         ? Center(
             child: TextButton(
@@ -1615,8 +1618,8 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 foregroundColor: const Color(0xFFFF6B57),
                 textStyle: AppFonts.body(
                   color: const Color(0xFFFF6B57),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               child: const Text('Drop this trial'),
@@ -1637,7 +1640,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                   'Ready to take on ${widget.challenge.title}?',
                   style: AppFonts.body(
                     color: t.ink,
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
                   ),
@@ -1645,12 +1648,12 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                 const SizedBox(height: 5),
                 Text(
                   'Accept it to open the first milestone and start tracking progress.',
-                  style: AppFonts.body(color: t.muted, fontSize: 10),
+                  style: AppFonts.body(color: t.muted, fontSize: 12),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
-                  height: 42,
+                  height: 44,
                   child: FilledButton(
                     onPressed: widget.accepting ? null : widget.onAccept,
                     style: FilledButton.styleFrom(
@@ -1659,7 +1662,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                       shape: const StadiumBorder(),
                       textStyle: AppFonts.body(
                         color: HomePalette.ink,
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -1674,7 +1677,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
                     onPressed: widget.onToggleSave,
                     style: TextButton.styleFrom(
                       foregroundColor: t.muted,
-                      textStyle: AppFonts.body(color: t.muted, fontSize: 10),
+                      textStyle: AppFonts.body(color: t.muted, fontSize: 12),
                     ),
                     child: Text(widget.saved ? 'Saved' : 'Save for later'),
                   ),

@@ -35,12 +35,12 @@ class AppColors {
   static const ink = Color(0xFF0B0C05);
 
   // ---- Light theme ----
-  static const lightBackground = Color(0xFFF7F7F2);
+  static const lightBackground = Color(0xFFFFFFFF);
   static const lightSurface = Color(0xFFFFFFFF);
-  static const lightSurfaceAlt = Color(0xFFECEBE2);
-  static const lightTextPrimary = Color(0xFF14140F);
+  static const lightSurfaceAlt = Color(0xFFF7F7F2);
+  static const lightTextPrimary = Color(0xFF101008);
   static const lightTextSecondary = Color(0xFF5C5C53);
-  static const lightBorder = Color(0xFFD9D8CC);
+  static const lightBorder = Color(0xFFE5E5DC);
   static const lightPrimary = Color(0xff16803C); // deep lime, 6:1+ on white
   static const limeWash = Color(
     0xFFE6F3B0,
