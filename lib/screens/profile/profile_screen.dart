@@ -20,7 +20,6 @@ import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/app_error.dart';
-import '../../widgets/challenge_card.dart';
 import '../../widgets/privacy_policy_dialog.dart';
 import '../challenge/challenge_detail_screen.dart';
 import 'group_chat_screen.dart';
@@ -383,7 +382,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             ],
           ),
         ),
-      ),
+          ('SUBMITTED', 'Submitted'),
     );
 
     if (!mounted) return;
@@ -547,12 +546,17 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             ),
             if (_selectedTab == 0) ...[
               if (isOwnProfile) ...[
-                const SliverToBoxAdapter(child: _SectionLabel('Challenges')),
                 SliverToBoxAdapter(
                   child: _ParticipationFilters(
                     selected: _participationFilter,
                     onSelected: (filter) =>
                         setState(() => _participationFilter = filter),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _SectionLabel(
+                    'Your challenges',
+                    count: '${filteredParticipations.length} active',
                   ),
                 ),
                 if (participationState.isLoading && participations.isEmpty)
@@ -588,8 +592,11 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                       childCount: filteredParticipations.length,
                     ),
                   ),
-                const SliverToBoxAdapter(
-                  child: _SectionLabel('Created by you'),
+                SliverToBoxAdapter(
+                  child: _SectionLabel(
+                    'Created by you',
+                    count: '${createdChallenges.length} challenges',
+                  ),
                 ),
                 if (createdChallenges.isEmpty)
                   const SliverToBoxAdapter(
@@ -608,7 +615,12 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                     ),
                   ),
               ],
-              const SliverToBoxAdapter(child: _SectionLabel('Completed')),
+              SliverToBoxAdapter(
+                child: _SectionLabel(
+                  'Completed',
+                  count: '${completedChallenges.length} adventures',
+                ),
+              ),
               if (completedChallenges.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -623,49 +635,22 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final challenge = completedChallenges[index];
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: Stack(
-                          children: [
-                            ChallengeCard(
-                              challenge: challenge,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChallengeDetailScreen(
-                                    slug: challenge.slug,
-                                  ),
-                                ),
+                        padding: const EdgeInsets.only(bottom: 11),
+                        child: _CompletedChallengeCard(
+                          challenge: challenge,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ChallengeDetailScreen(
+                                slug: challenge.slug,
+                                initialChallenge: challenge,
                               ),
                             ),
-                            Positioned(
-                              top: 10,
-                              right: 10,
-                              child: IgnorePointer(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 9,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: HomePalette.primary,
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    'VERIFIED  ✓',
-                                    style: AppFonts.label(
-                                      color: HomePalette.ink,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       );
                     }, childCount: completedChallenges.length),
@@ -777,18 +762,34 @@ class _ProfileTabs extends StatelessWidget {
 
 class _SectionLabel extends StatelessWidget {
   final String text;
-  const _SectionLabel(this.text);
+  final String? count;
+
+  const _SectionLabel(this.text, {this.count});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
-      child: Text(
-        text.toUpperCase(),
-        style: AppFonts.label(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          fontSize: 12,
-        ),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            text.toUpperCase(),
+            style: AppFonts.label(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (count != null)
+            Text(
+              count!,
+              style: AppFonts.body(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 9,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -991,6 +992,12 @@ class _GroupsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final sectionStyle = AppFonts.label(
+      color: scheme.onSurfaceVariant,
+      fontSize: 9,
+      fontWeight: FontWeight.w800,
+    );
     if (isLoading) {
       return const Padding(
         padding: EdgeInsets.all(32),
@@ -999,72 +1006,75 @@ class _GroupsPanel extends StatelessWidget {
     }
     if (errorMessage != null) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
+        padding: const EdgeInsets.fromLTRB(18, 24, 18, 8),
         child: Text(errorMessage!),
       );
     }
 
-    final joinedSection = [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 10),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                isOwnProfile ? 'My groups' : 'Groups',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
-            if (onCreate != null)
-              IconButton(
-                tooltip: 'Create group',
-                onPressed: onCreate,
-                icon: const Icon(Icons.add_rounded),
-              ),
-          ],
-        ),
-      ),
-      if (groups.isEmpty)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-          child: Text(
-            isOwnProfile
-                ? 'You have not joined any groups yet.'
-                : 'No groups yet.',
-          ),
-        )
-      else
-        ...groups.map(
-          (group) => _GroupTile(
-            group: group,
-            onLeave: onLeave,
-            onTap: () => onOpenGroup(group),
-          ),
-        ),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ...joinedSection,
-        if (isOwnProfile) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
-            child: Text(
-              'Discover public groups',
-              style: Theme.of(context).textTheme.titleLarge,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18, 17, 18, 0),
+          child: Row(
+            children: [
+              Expanded(
+          Center(child: _CompletedCoverArtwork(isChess: isChess, isLight: isLight)),
+                      color: scheme.onSurface,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, 29),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    side: BorderSide(color: scheme.outlineVariant),
+                    shape: const StadiumBorder(),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (groups.isEmpty)
+          _GroupEmptyState(
+            title: isOwnProfile ? 'Your group story starts here.' : 'No groups yet.',
+            message: isOwnProfile
+                ? 'Join a crew and make small adventures together.'
+                : 'This profile has not joined a group yet.',
+          )
+        else
+          ...groups.map(
+            (group) => _GroupTile(
+              group: group,
+              onLeave: onLeave,
+              onTap: () => onOpenGroup(group),
             ),
           ),
+        if (isOwnProfile) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 24, 18, 0),
+            child: Text('FIND YOUR PEOPLE', style: sectionStyle),
+          ),
           if (publicGroups.isEmpty)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: Text('No public groups available.'),
+            _GroupEmptyState(
+              title: 'Small adventures are better together.',
+              message: 'Explore public groups to find your next curious crew.',
             )
           else
             ...publicGroups.map(
-              (group) => _GroupTile(group: group, onJoin: onJoin),
+              (group) => _GroupTile(
+                group: group,
+                onJoin: onJoin,
+                onLeave: onLeave,
+                onTap: group.membershipStatus == 'ACTIVE'
+                    ? () => onOpenGroup(group)
+                    : null,
+              ),
             ),
         ],
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -1086,27 +1096,139 @@ class _GroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMember = group.membershipStatus == 'ACTIVE';
-    return _RowCard(
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
       onTap: onTap,
-      leadingIcon: group.visibility == 'PRIVATE'
-          ? Icons.lock_rounded
-          : Icons.groups_rounded,
-      leadingColor: AppColors.limeWash,
-      leadingIconColor: AppColors.lightTextPrimary,
-      title: group.name,
-      subtitle:
-          '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
-      trailing: onJoin != null && !isMember
-          ? TextButton(
-              onPressed: () => onJoin!(group),
-              child: const Text('Join'),
-            )
-          : onLeave != null && isMember
-          ? TextButton(
-              onPressed: () => onLeave!(group),
-              child: const Text('Leave'),
-            )
-          : null,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 62),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.light
+                    ? HomePalette.lightPrimaryMuted
+                    : HomePalette.darkPrimaryMuted,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                group.visibility == 'PRIVATE'
+                    ? Icons.shield_outlined
+                    : Icons.groups_rounded,
+                size: 18,
+                color: Theme.of(context).brightness == Brightness.light
+                    ? HomePalette.lightLink
+                    : HomePalette.primary,
+              ),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    group.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.body(
+                      color: scheme.onSurface,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'} · ${group.visibility.toLowerCase() == 'private' ? 'Private' : 'Public'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.body(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 9,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onJoin != null && !isMember)
+              _ProfileRowAction(
+                label: 'Join',
+                onPressed: () => onJoin!(group),
+              )
+            else if (isMember && onLeave != null)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (onTap != null)
+                    _ProfileRowAction(label: 'Open', onPressed: onTap!),
+                  PopupMenuButton<String>(
+                    tooltip: 'Group options',
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.more_horiz_rounded, size: 20),
+                    onSelected: (value) {
+                      if (value == 'leave') onLeave!(group);
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'leave', child: Text('Leave group')),
+                    ],
+                  ),
+                ],
+              )
+            else if (onTap != null)
+              _ProfileRowAction(label: 'Open', onPressed: onTap!)
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupEmptyState extends StatelessWidget {
+  final String title;
+  final String message;
+
+  const _GroupEmptyState({required this.title, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 4),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: scheme.outlineVariant),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: AppFonts.body(
+                color: scheme.onSurface,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              message,
+              style: AppFonts.body(
+                color: scheme.onSurfaceVariant,
+                fontSize: 10,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1174,7 +1296,7 @@ class _RewardsPanel extends StatelessWidget {
                   '$auraPoints',
                   style: AppFonts.poster(
                     color: HomePalette.ink,
-                    fontSize: 48,
+                    fontSize: 42,
                     wdth: 100,
                   ),
                 ),
@@ -1250,45 +1372,86 @@ class _RewardsPanel extends StatelessWidget {
             )
           else
             for (final skill in skills)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: scheme.outlineVariant),
+                  ),
+                ),
                 child: Row(
                   children: [
                     Container(
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest,
+                        color: isLight
+                            ? HomePalette.lightPrimaryMuted
+                            : HomePalette.darkPrimaryMuted,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.auto_awesome_rounded,
                         color: isLight
-                            ? HomePalette.lightTextPrimary
+                            ? HomePalette.lightLink
                             : HomePalette.primary,
                         size: 17,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        skill.name,
-                        style: AppFonts.body(
-                          color: scheme.onSurface,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            skill.name,
+                            style: AppFonts.body(
+                              color: scheme.onSurface,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'Unlocked after a verified challenge',
+                            style: AppFonts.body(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Icon(
-                      Icons.check_circle_rounded,
-                      color: HomePalette.primary,
-                      size: 16,
+                    Container(
+                      width: 27,
+                      height: 27,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: HomePalette.ink,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: scheme.surface, width: 2),
+                      ),
+                      child: Text(
+                        profile.rank,
+                        style: AppFonts.body(
+                          color: HomePalette.primary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
           const SizedBox(height: 20),
+          Text(
+            'YOUR NUMBERS',
+            style: AppFonts.label(
+              color: scheme.onSurfaceVariant,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           _RewardsCountRow(
             title: 'Challenges completed',
             subtitle: 'Adventures finished and verified',
@@ -1319,12 +1482,17 @@ class _RewardsCountRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 62),
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+      ),
       child: Row(
         children: [
           Expanded(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -1591,6 +1759,330 @@ class _Stat extends StatelessWidget {
   }
 }
 
+class _CompletedChallengeCard extends StatelessWidget {
+  final Challenge challenge;
+  final VoidCallback onTap;
+
+  const _CompletedChallengeCard({
+    required this.challenge,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final isChess = challenge.title.toLowerCase().contains('chess');
+    final difficulty = challenge.difficultyLevel.replaceAll('_', ' ');
+    final difficultyColor = difficulty == 'BEGINNER'
+        ? HomePalette.primary
+        : const Color(0xFFFFAB3D);
+
+    return Material(
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(17),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 150,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _CompletedChallengeCover(
+                    challenge: challenge,
+                    isLight: isLight,
+                    isChess: isChess,
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: HomePalette.primary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '✓ VERIFIED',
+                        style: AppFonts.label(
+                          color: HomePalette.ink,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(13, 12, 13, 13),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: difficultyColor,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          difficulty,
+                          style: AppFonts.label(
+                            color: difficulty == 'BEGINNER'
+                                ? HomePalette.ink
+                                : const Color(0xFF23170A),
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'COMPLETED',
+                        style: AppFonts.label(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    challenge.title,
+                    style: AppFonts.display(
+                      color: scheme.onSurface,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      height: 1.18,
+                    ),
+                  ),
+                  if (challenge.shortDescription.isNotEmpty) ...[
+                    const SizedBox(height: 5),
+                    Text(
+                      challenge.shortDescription,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppFonts.body(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 10,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Divider(height: 1, color: scheme.outlineVariant),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        challenge.effortLabel,
+                        style: AppFonts.body(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 9,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Icon(
+                        Icons.bolt_rounded,
+                        size: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${challenge.auraPoints} aura',
+                        style: AppFonts.body(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 9,
+                        ),
+                      ),
+                      const Spacer(),
+                      Flexible(
+                        child: Text(
+                          'Skill earned ✓',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: AppFonts.body(
+                            color: isLight
+                                ? HomePalette.lightLink
+                                : HomePalette.primary,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CompletedChallengeCover extends StatelessWidget {
+  final Challenge challenge;
+  final bool isLight;
+  final bool isChess;
+
+  const _CompletedChallengeCover({
+    required this.challenge,
+    required this.isLight,
+    required this.isChess,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = isChess
+        ? (isLight
+              ? const [Color(0xFFF3DFC5), Color(0xFFD0E7DC), Color(0xFFD7E2F4)]
+              : const [Color(0xFF443019), Color(0xFF25403B), Color(0xFF28334A)])
+        : (isLight
+              ? const [Color(0xFFCCE5D2), Color(0xFFC5D8E8), Color(0xFFDED5ED)]
+              : const [Color(0xFF19352D), Color(0xFF293A4C), Color(0xFF302547)]);
+    final fallback = DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CustomPaint(painter: _CompletedCoverPattern()),
+          Center(child: _CompletedCoverArtwork(isChess: isChess, isLight: isLight)),
+        ],
+      ),
+    );
+
+    if (challenge.imageUrl == null || challenge.imageUrl!.trim().isEmpty) {
+      return fallback;
+    }
+    return Image.network(
+      challenge.imageUrl!,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => fallback,
+    );
+  }
+}
+
+class _CompletedCoverPattern extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: .07)
+      ..strokeWidth = 1;
+    for (var offset = -size.height; offset < size.width; offset += 34) {
+      canvas.drawLine(Offset(offset, 0), Offset(offset + size.height, size.height), paint);
+      canvas.drawLine(
+        Offset(offset, size.height),
+        Offset(offset + size.height, 0),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _CompletedCoverArtwork extends StatelessWidget {
+  final bool isChess;
+  final bool isLight;
+
+  const _CompletedCoverArtwork({required this.isChess, required this.isLight});
+
+  @override
+  Widget build(BuildContext context) {
+    if (isChess) {
+      return Text(
+        '♞',
+        style: TextStyle(
+          color: isLight ? const Color(0xFF273830) : const Color(0xFFF4E3BF),
+          fontFamily: 'Georgia',
+          fontSize: 65,
+          height: 1,
+          shadows: const [
+            Shadow(color: Color(0x55000000), blurRadius: 18, offset: Offset(0, 8)),
+          ],
+        ),
+      );
+    }
+
+    const tileColors = [
+      Color(0xFFE44335),
+      Color(0xFFFFCF38),
+      Color(0xFFF7F5EB),
+      Color(0xFF2778CF),
+      Color(0xFF38AD68),
+      Color(0xFFFFCF38),
+      Color(0xFFE44335),
+      Color(0xFFF7F5EB),
+      Color(0xFF2778CF),
+    ];
+    return Transform.rotate(
+      angle: -.14,
+      child: Container(
+        width: 102,
+        height: 102,
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF11130F),
+          border: Border.all(color: const Color(0xFF11130F), width: 5),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(color: Color(0x55000000), blurRadius: 25, offset: Offset(0, 15)),
+          ],
+        ),
+        child: GridView.count(
+          crossAxisCount: 3,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 5,
+          crossAxisSpacing: 5,
+          children: [
+            for (final color in tileColors)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ParticipationTile extends StatelessWidget {
   final Participation participation;
   final Challenge? challenge;
@@ -1619,6 +2111,7 @@ class _ParticipationTile extends StatelessWidget {
       _ => null,
     };
     return _RowCard(
+      challenge: challenge,
       onTap: challenge == null
           ? null
           : () => Navigator.of(context).push(
@@ -1630,16 +2123,17 @@ class _ParticipationTile extends StatelessWidget {
               ),
             ),
       leadingIcon: Icons.flag_rounded,
-      leadingColor: scheme.surfaceContainerHighest,
+            leadingColor: scheme.surfaceContainerHighest,
       title:
           challenge?.title ??
           'Challenge $shortId${challengeId.length > 6 ? '...' : ''}',
       subtitle: statusLabel,
       trailing: actionLabel == null
           ? null
-          : TextButton(
+          : _ProfileRowAction(
+              label: actionLabel.$1,
+              primary: actionLabel.$1 == 'Start',
               onPressed: () => onChangeStatus(participation, actionLabel.$2),
-              child: Text(actionLabel.$1),
             ),
     );
   }
@@ -1659,15 +2153,15 @@ class _ParticipationFilters extends StatelessWidget {
     ('ACCEPTED', 'Accepted'),
     ('IN_PROGRESS', 'In progress'),
     ('PAUSED', 'Paused'),
-    ('SUBMITTED', 'Submitted'),
   ];
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
       child: Row(
         children: [
           for (var index = 0; index < _filters.length; index++) ...[
@@ -1676,14 +2170,25 @@ class _ParticipationFilters extends StatelessWidget {
               label: Text(_filters[index].$2),
               selected: selected == _filters[index].$1,
               showCheckmark: false,
-              selectedColor: scheme.primary,
-              labelStyle: TextStyle(
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              selectedColor: isLight
+                  ? HomePalette.lightPrimaryMuted
+                  : HomePalette.darkPrimaryMuted,
+              labelStyle: AppFonts.body(
                 color: selected == _filters[index].$1
-                    ? scheme.onPrimary
+                    ? (isLight ? HomePalette.lightLink : HomePalette.primary)
                     : scheme.onSurfaceVariant,
+                fontSize: 9,
                 fontWeight: FontWeight.w600,
               ),
-              side: BorderSide(color: scheme.outlineVariant),
+              side: BorderSide(
+                color: selected == _filters[index].$1
+                    ? Colors.transparent
+                    : scheme.outlineVariant,
+              ),
+              shape: const StadiumBorder(),
               onSelected: (_) => onSelected(_filters[index].$1),
             ),
           ],
@@ -1701,7 +2206,9 @@ class _CreatedChallengeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPrivate = challenge.visibility.toUpperCase() == 'PRIVATE';
+    final scheme = Theme.of(context).colorScheme;
     return _RowCard(
+      challenge: challenge,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => ChallengeDetailScreen(
@@ -1711,41 +2218,78 @@ class _CreatedChallengeTile extends StatelessWidget {
         ),
       ),
       leadingIcon: isPrivate ? Icons.lock_rounded : Icons.edit_note_rounded,
-      leadingColor: AppColors.limeWash,
-      leadingIconColor: AppColors.lightTextPrimary,
+      leadingColor: scheme.surfaceContainerHighest,
+      leadingIconColor: HomePalette.primary,
       title: challenge.title,
-      subtitle: isPrivate ? 'Private' : 'Public',
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.limeWash,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.bolt_rounded,
-              size: 14,
-              color: AppColors.lightTextPrimary,
+      subtitle:
+          '${isPrivate ? 'Private' : 'Public'} · ${challenge.enrollmentCount ?? 0} participants',
+      trailing: _ProfileRowAction(
+        label: 'View',
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ChallengeDetailScreen(
+              slug: challenge.slug,
+              initialChallenge: challenge,
             ),
-            const SizedBox(width: 3),
-            Text(
-              '${challenge.auraPoints}',
-              style: AppFonts.body(
-                color: AppColors.lightTextPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
+class _ProfileRowAction extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final bool primary;
+
+  const _ProfileRowAction({
+    required this.label,
+    required this.onPressed,
+    this.primary = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final style = primary
+        ? FilledButton.styleFrom(
+            backgroundColor: HomePalette.primary,
+            foregroundColor: HomePalette.ink,
+            minimumSize: const Size(0, 29),
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            shape: const StadiumBorder(),
+            textStyle: AppFonts.label(
+              color: HomePalette.ink,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+            ),
+          )
+        : OutlinedButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            minimumSize: const Size(0, 29),
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            shape: const StadiumBorder(),
+            textStyle: AppFonts.label(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+            ),
+          );
+    return primary
+        ? FilledButton(onPressed: onPressed, style: style, child: Text(label))
+        : OutlinedButton(onPressed: onPressed, style: style, child: Text(label));
+  }
+}
+
 class _RowCard extends StatelessWidget {
+  final Challenge? challenge;
   final VoidCallback? onTap;
   final IconData leadingIcon;
   final Color leadingColor;
@@ -1755,6 +2299,7 @@ class _RowCard extends StatelessWidget {
   final Widget? trailing;
 
   const _RowCard({
+    this.challenge,
     required this.onTap,
     required this.leadingIcon,
     required this.leadingColor,
@@ -1768,29 +2313,47 @@ class _RowCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 7),
       child: Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        color: scheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(9),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
                     color: leadingColor,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(13),
                   ),
-                  child: Icon(
-                    leadingIcon,
-                    size: 22,
-                    color: leadingIconColor ?? scheme.onSurface,
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: challenge?.imageUrl?.trim().isNotEmpty == true
+                      ? Image.network(
+                          challenge!.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                            leadingIcon,
+                            size: 22,
+                            color: leadingIconColor ?? scheme.onSurface,
+                          ),
+                        )
+                      : Icon(
+                          leadingIcon,
+                          size: 22,
+                          color: leadingIconColor ?? scheme.onSurface,
+                        ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1801,8 +2364,8 @@ class _RowCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.body(
                           color: scheme.onSurface,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -1810,7 +2373,7 @@ class _RowCard extends StatelessWidget {
                         subtitle,
                         style: AppFonts.body(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 13,
+                          fontSize: 9,
                         ),
                       ),
                     ],
