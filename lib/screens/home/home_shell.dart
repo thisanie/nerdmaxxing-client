@@ -152,6 +152,7 @@ class _HomeShellState extends State<HomeShell> {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Column(
           children: [
