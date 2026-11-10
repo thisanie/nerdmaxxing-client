@@ -328,9 +328,6 @@ class AppErrorSnackbar {
     if (ctx == null) return;
 
     final info = AppErrorInfo.from(error);
-    final dark = Theme.of(ctx).brightness == Brightness.dark;
-    final bg = dark ? _lime : const Color(0xFF111111);
-    final fg = dark ? const Color(0xFF111111) : Colors.white;
     final text =
         message ??
         switch (info.kind) {
@@ -346,24 +343,11 @@ class AppErrorSnackbar {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 4),
-          backgroundColor: bg,
-          margin: const EdgeInsets.fromLTRB(14, 0, 14, 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          content: Text(
-            text,
-            style: TextStyle(color: fg, fontWeight: FontWeight.w500),
-          ),
+          content: Text(text),
           action: onRetry == null
               ? null
-              : SnackBarAction(
-                  label: 'RETRY',
-                  textColor: dark ? const Color(0xFF111111) : _lime,
-                  onPressed: onRetry,
-                ),
+              : SnackBarAction(label: 'RETRY', onPressed: onRetry),
         ),
       );
   }

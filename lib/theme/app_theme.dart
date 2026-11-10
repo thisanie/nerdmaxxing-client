@@ -487,6 +487,29 @@ class AppTheme {
         ),
         hintStyle: AppFonts.body(color: textSecondary),
       ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: brightness == Brightness.dark
+            ? primary
+            : const Color(0xFF111111),
+        contentTextStyle: AppFonts.body(
+          color: brightness == Brightness.dark
+              ? const Color(0xFF111111)
+              : Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        actionTextColor: brightness == Brightness.dark
+            ? const Color(0xFF111111)
+            : primary,
+        closeIconColor: brightness == Brightness.dark
+            ? const Color(0xFF111111)
+            : Colors.white,
+        showCloseIcon: true,
+        dismissDirection: DismissDirection.horizontal,
+        insetPadding: const EdgeInsets.fromLTRB(26, 0, 26, 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: surface,
         selectedItemColor: primary,

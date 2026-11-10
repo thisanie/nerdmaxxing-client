@@ -10,6 +10,7 @@ import '../../services/invitations_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/token_storage.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_error.dart';
 import '../challenge/challenge_detail_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
@@ -27,7 +28,15 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   List<GroupMessage> _messages = [];
   bool _loading = true;
   bool _sending = false;
-  String? _error;
+  String? _errorValue;
+  String? get _error => _errorValue;
+  set _error(String? value) {
+    _errorValue = value;
+    if (value == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) AppErrorSnackbar.show(context, value, message: value);
+    });
+  }
   String? _currentUserId;
   String? _respondingInvitationId;
 
@@ -259,16 +268,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       ),
       body: Column(
         children: [
-          if (_error != null)
-            MaterialBanner(
-              content: Text(_error!),
-              actions: [
-                TextButton(
-                  onPressed: _loadMessages,
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
           Expanded(child: _buildMessages()),
           _buildComposer(),
         ],
