@@ -165,7 +165,7 @@ class _HomeShellState extends State<HomeShell> {
                   return MediaQuery(
                     data: mediaQuery.copyWith(
                       padding: mediaQuery.padding.copyWith(
-                        bottom: mediaQuery.padding.bottom + 68,
+                        bottom: mediaQuery.padding.bottom + 72,
                       ),
                     ),
                     child: IndexedStack(
@@ -237,56 +237,53 @@ class _BottomNavigationBar extends StatelessWidget {
       ..._items,
       if (isAdmin) (Icons.fact_check_rounded, 'Admin'),
     ];
-    final horizontalMargin = isAdmin ? 8.0 : 12.0;
-    final itemInset = 12.0;
+    const horizontalMargin = 14.0;
+    const itemInset = 8.0;
     return SafeArea(
       top: false,
       child: SizedBox(
-        height: 68,
+        height: 72,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
             horizontalMargin,
-            6,
+            0,
             horizontalMargin,
-            6,
+            12,
           ),
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isAdmin ? 400 : 320),
+              constraints: const BoxConstraints(),
               child: Container(
                 width: double.infinity,
-                height: 56,
+                height: 60,
                 decoration: BoxDecoration(
                   color: brightness == Brightness.dark
                       ? HomePalette.darkSurfaceAlt
                       : HomePalette.lightSurface,
                   border: Border.all(color: HomePalette.border(brightness)),
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(
-                        alpha: brightness == Brightness.dark ? .24 : .12,
+                        alpha: brightness == Brightness.dark ? .24 : .08,
                       ),
-                      blurRadius: 22,
-                      offset: const Offset(0, 8),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: itemInset),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       for (var index = 0; index < items.length; index++)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: _NavigationItem(
-                            icon: items[index].$1,
-                            label: items[index].$2,
-                            selected: currentIndex == index,
-                            reduceMotion: reduceMotion,
-                            onTap: () => onTap(index),
-                          ),
+                        _NavigationItem(
+                          icon: items[index].$1,
+                          label: items[index].$2,
+                          selected: currentIndex == index,
+                          reduceMotion: reduceMotion,
+                          onTap: () => onTap(index),
                         ),
                     ],
                   ),
@@ -343,7 +340,7 @@ class _NavigationItem extends StatelessWidget {
             duration: animationDuration,
             curve: Curves.easeOutBack,
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            padding: EdgeInsets.symmetric(horizontal: selected ? 10 : 8),
+            padding: EdgeInsets.symmetric(horizontal: selected ? 14 : 12),
             decoration: BoxDecoration(
               color: selected ? selectedBackground : Colors.transparent,
               borderRadius: BorderRadius.circular(22),
@@ -376,15 +373,15 @@ class _NavigationItem extends StatelessWidget {
                     ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 7),
+                    padding: const EdgeInsets.only(left: 6),
                     child: Text(
                       label,
                       maxLines: 1,
                       softWrap: false,
                       style: AppFonts.home(
                         color: color,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),

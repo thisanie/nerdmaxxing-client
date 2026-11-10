@@ -112,7 +112,12 @@ class _RankSummary extends ConsumerWidget {
     }
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        20,
+        16,
+        32 + MediaQuery.viewPaddingOf(context).bottom + 68,
+      ),
       children: [
         _RankHeader(rank: stats.rank),
         Padding(
@@ -942,7 +947,12 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                24 + MediaQuery.viewPaddingOf(context).bottom + 68,
+              ),
               children: [
                 _RankHeader(rank: widget.rank),
                 const SizedBox(height: 4),

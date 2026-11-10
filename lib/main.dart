@@ -41,6 +41,32 @@ void main() {
   runApp(const NerdMaxxingApp());
 }
 
+/// Caps the layout at phone width so wide windows don't stretch the UI.
+class _PhoneFrame extends StatelessWidget {
+  static const maxWidth = 400.0;
+  final Widget child;
+
+  const _PhoneFrame({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    if (media.size.width <= maxWidth) return child;
+    return ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: Center(
+        child: SizedBox(
+          width: maxWidth,
+          child: MediaQuery(
+            data: media.copyWith(size: Size(maxWidth, media.size.height)),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class NerdMaxxingApp extends StatelessWidget {
   const NerdMaxxingApp({super.key});
 
@@ -137,6 +163,7 @@ class NerdMaxxingApp extends StatelessWidget {
                   theme: AppTheme.light,
                   darkTheme: AppTheme.dark,
                   themeMode: themeProvider.themeMode,
+                  builder: (context, child) => _PhoneFrame(child: child!),
                   home: const AuthGate(),
                 );
               },

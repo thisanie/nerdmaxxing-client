@@ -218,18 +218,13 @@ class AppFonts {
     double letterSpacingEm = -0.02,
     double wdth = 100,
   }) {
-    return GoogleFonts.bricolageGrotesque(
+    // Prototype uses Inter everywhere; wdth is kept only for call-site compatibility.
+    return GoogleFonts.inter(
       color: color,
       fontSize: fontSize,
       fontWeight: fontWeight,
       height: height,
       letterSpacing: letterSpacingEm * fontSize,
-    ).copyWith(
-      // Only takes effect if the variable-font asset is loaded (see note in
-      // pubspec below); GoogleFonts falls back to the nearest static cut
-      // otherwise, which is still fine for anything except the very large
-      // poster numerals.
-      fontVariations: [FontVariation('wdth', wdth)],
     );
   }
 
@@ -258,7 +253,7 @@ class AppFonts {
     double height = 1.4,
     double letterSpacingEm = 0,
   }) {
-    return GoogleFonts.instrumentSans(
+    return GoogleFonts.inter(
       color: color,
       fontSize: fontSize,
       fontWeight: fontWeight,
@@ -336,7 +331,7 @@ class AppTheme {
 
     // Base text theme in Instrument Sans (body copy), with the display
     // roles overridden to Bricolage Grotesque below.
-    final textTheme = GoogleFonts.instrumentSansTextTheme(base.textTheme)
+    final textTheme = GoogleFonts.interTextTheme(base.textTheme)
         .copyWith(
           // Poster-scale display numerals. Compose with AppFonts.poster() at
           // point of use for anything larger than this (e.g. the giant "60").
