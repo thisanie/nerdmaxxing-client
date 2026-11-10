@@ -214,6 +214,9 @@ class _BottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      return const SizedBox.shrink();
+    }
     final brightness = Theme.of(context).brightness;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     final items = [
