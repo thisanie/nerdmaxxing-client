@@ -7,6 +7,7 @@ import '../../models/challenge.dart';
 import '../../models/group.dart';
 import '../../models/participation.dart';
 import '../../models/user_profile.dart';
+import '../../models/user_stats.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/app_state_providers.dart';
 import '../../providers/profile_provider.dart';
@@ -486,8 +487,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 profile.name ?? profile.username ?? 'Profile',
                 style: AppFonts.body(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               centerTitle: true,
@@ -628,14 +629,43 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                       final challenge = completedChallenges[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 14),
-                        child: ChallengeCard(
-                          challenge: challenge,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ChallengeDetailScreen(slug: challenge.slug),
+                        child: Stack(
+                          children: [
+                            ChallengeCard(
+                              challenge: challenge,
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChallengeDetailScreen(
+                                    slug: challenge.slug,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: IgnorePointer(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 9,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: HomePalette.primary,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    'VERIFIED  ✓',
+                                    style: AppFonts.label(
+                                      color: HomePalette.ink,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }, childCount: completedChallenges.length),
@@ -656,8 +686,16 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   onOpenGroup: _openGroup,
                 ),
               )
+            else if (_selectedTab == 2 && isOwnProfile)
+              SliverToBoxAdapter(
+                child: _RewardsPanel(
+                  profile: profile,
+                  auraPoints: ownStats?.auraPoints ?? profile.auraPoints,
+                  stats: ownStats,
+                ),
+              )
             else if (_selectedTab != 0)
-              const SliverToBoxAdapter(child: _ComingSoonPanel()),
+              const SliverToBoxAdapter(child: SizedBox.shrink()),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
@@ -686,7 +724,7 @@ class _ProfileTabs extends StatelessWidget {
       if (showRewards) (Icons.emoji_events_rounded, 'Rewards'),
     ];
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: 14),
       child: Row(
         children: [
           for (var index = 0; index < tabs.length; index++)
@@ -699,7 +737,7 @@ class _ProfileTabs extends StatelessWidget {
                     border: Border(
                       bottom: BorderSide(
                         color: selectedIndex == index
-                            ? colorScheme.onSurface
+                          ? colorScheme.onSurface
                             : colorScheme.outline,
                         width: selectedIndex == index ? 2 : 1,
                       ),
@@ -711,7 +749,7 @@ class _ProfileTabs extends StatelessWidget {
                       Icon(
                         tabs[index].$1,
                         size: 18,
-                        color: selectedIndex == index
+                          color: selectedIndex == index
                             ? colorScheme.onSurface
                             : colorScheme.onSurfaceVariant,
                       ),
@@ -782,12 +820,13 @@ class _ProfileActions extends StatelessWidget {
     );
 
     final Widget primary = isOwnProfile
-        ? OutlinedButton(
+        ? FilledButton(
             onPressed: onEdit,
-            style: OutlinedButton.styleFrom(
+            style: FilledButton.styleFrom(
+              backgroundColor: HomePalette.primary,
+              foregroundColor: HomePalette.ink,
               shape: shape,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              side: BorderSide(color: scheme.outline),
+              padding: const EdgeInsets.symmetric(vertical: 11),
             ),
             child: const Text('Edit profile'),
           )
@@ -795,42 +834,40 @@ class _ProfileActions extends StatelessWidget {
         ? OutlinedButton(
             onPressed: isFollowBusy ? null : onToggleFollow,
             style: OutlinedButton.styleFrom(
+              foregroundColor: scheme.onSurface,
               shape: shape,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 11),
             ),
             child: isFollowBusy ? spinner : const Text('Following'),
           )
         : FilledButton(
             onPressed: isFollowBusy ? null : onToggleFollow,
             style: FilledButton.styleFrom(
+              backgroundColor: HomePalette.primary,
+              foregroundColor: HomePalette.ink,
               shape: shape,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 11),
             ),
             child: isFollowBusy ? spinner : const Text('Follow'),
           );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
       child: Row(
         children: [
           Expanded(flex: 3, child: primary),
-          const SizedBox(width: 10),
+          const SizedBox(width: 9),
           Expanded(
             flex: 2,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: ShapeDecoration(
-                shape: StadiumBorder(side: BorderSide(color: scheme.outline)),
+            child: OutlinedButton(
+              onPressed: null,
+              style: OutlinedButton.styleFrom(
+                disabledForegroundColor: scheme.onSurface,
+                shape: shape,
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                side: BorderSide(color: scheme.outline),
               ),
-              alignment: Alignment.center,
-              child: Text(
-                'Rank ${profile.rank}',
-                style: AppFonts.body(
-                  color: scheme.onSurface,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text('Rank ${profile.rank}'),
             ),
           ),
         ],
@@ -1074,45 +1111,250 @@ class _GroupTile extends StatelessWidget {
   }
 }
 
-class _ComingSoonPanel extends StatelessWidget {
-  const _ComingSoonPanel();
+class _RewardsPanel extends StatelessWidget {
+  final UserProfile profile;
+  final int auraPoints;
+  final UserStats? stats;
+
+  const _RewardsPanel({
+    required this.profile,
+    required this.auraPoints,
+    required this.stats,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final progress = (stats?.rankProgress ?? 0).clamp(0, 100) / 100;
+    final nextRank = stats?.nextRank;
+    final skills = profile.skills;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 42),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          border: Border.all(color: colorScheme.outline),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.hourglass_empty_rounded,
-              size: 34,
-              color: colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              'Coming soon',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'This section is still being levelled up.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 13.5,
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [HomePalette.primary, HomePalette.mint],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(18),
             ),
-          ],
-        ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'TOTAL AURA',
+                      style: AppFonts.label(
+                        color: HomePalette.ink.withValues(alpha: .7),
+                        fontSize: 9,
+                      ),
+                    ),
+                    Text(
+                      'RANK ${profile.rank}',
+                      style: AppFonts.label(
+                        color: HomePalette.ink,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '$auraPoints',
+                  style: AppFonts.poster(
+                    color: HomePalette.ink,
+                    fontSize: 48,
+                    wdth: 100,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 5,
+                    backgroundColor: HomePalette.ink.withValues(alpha: .18),
+                    valueColor: const AlwaysStoppedAnimation(HomePalette.ink),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      stats == null
+                          ? 'Rank progress updating'
+                          : nextRank == null
+                          ? 'Top rank reached'
+                          : '${stats.auraToNextRank} Aura to rank $nextRank',
+                      style: AppFonts.body(
+                        color: HomePalette.ink.withValues(alpha: .75),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '${(progress * 100).round()}%',
+                      style: AppFonts.body(
+                        color: HomePalette.ink,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 22),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'SKILLS EARNED',
+                style: AppFonts.label(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 10,
+                ),
+              ),
+              Text(
+                '${skills.length} unlocked',
+                style: AppFonts.body(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 9,
+                ),
+              ),
+            ],
+          ),
+          if (skills.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                'Complete and verify a challenge to earn your first skill.',
+                style: AppFonts.body(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+              ),
+            )
+          else
+            for (final skill in skills)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.auto_awesome_rounded,
+                        color: isLight
+                            ? HomePalette.lightTextPrimary
+                            : HomePalette.primary,
+                        size: 17,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        skill.name,
+                        style: AppFonts.body(
+                          color: scheme.onSurface,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      color: HomePalette.primary,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+          const SizedBox(height: 20),
+          _RewardsCountRow(
+            title: 'Challenges completed',
+            subtitle: 'Adventures finished and verified',
+            count: profile.completedChallengesCount,
+          ),
+          _RewardsCountRow(
+            title: 'Challenges created',
+            subtitle: 'Ideas shared with the community',
+            count: profile.createdChallengesCount,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RewardsCountRow extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final int count;
+
+  const _RewardsCountRow({
+    required this.title,
+    required this.subtitle,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppFonts.body(
+                    color: scheme.onSurface,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: AppFonts.body(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 9,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '$count',
+            style: AppFonts.body(
+              color: scheme.onSurface,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1153,13 +1395,11 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final initial = (profile.name ?? profile.username ?? '?')
-        .trim()
-        .characters
-        .firstOrNull
-        ?.toUpperCase();
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final displayName = profile.name ?? profile.username ?? 'Nerd';
+    final initial = displayName.trim().characters.firstOrNull?.toUpperCase();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
       child: Column(
         children: [
           Stack(
@@ -1167,25 +1407,25 @@ class _ProfileHeader extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Container(
-                width: 96,
-                height: 96,
+                width: 92,
+                height: 92,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary, width: 1.5),
+                  border: Border.all(color: HomePalette.primary, width: 1.5),
                 ),
                 child: CircleAvatar(
-                  backgroundColor: const Color(0xFFA23BBF),
+                  backgroundColor: const Color(0xFF8A3DBA),
                   backgroundImage: profile.avatarUrl != null
                       ? NetworkImage(profile.avatarUrl!)
                       : null,
                   child: profile.avatarUrl == null
                       ? Text(
                           initial ?? '?',
-                          style: AppFonts.body(
+                          style: AppFonts.display(
                             color: Colors.white,
-                            fontSize: 40,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 37,
+                            fontWeight: FontWeight.w700,
                           ),
                         )
                       : null,
@@ -1195,65 +1435,95 @@ class _ProfileHeader extends StatelessWidget {
                 right: -2,
                 bottom: 0,
                 child: Container(
-                  width: 24,
-                  height: 24,
+                  width: 27,
+                  height: 27,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.borderStrong,
+                    color: HomePalette.ink,
                     shape: BoxShape.circle,
                     border: Border.all(color: scheme.surface, width: 2),
                   ),
                   child: Text(
                     profile.rank,
                     style: AppFonts.body(
-                      color: AppColors.primary,
+                      color: HomePalette.primary,
                       fontSize: 10,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(
+            displayName,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppFonts.display(
+              color: scheme.onSurface,
+              fontSize: 21,
+              fontWeight: FontWeight.w700,
+              height: 1.15,
+            ),
+          ),
           if (profile.username != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 3),
             Text(
               '@${profile.username}',
               style: AppFonts.body(
                 color: scheme.onSurfaceVariant,
-                fontSize: 15,
+                fontSize: 12,
               ),
             ),
           ],
           if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 7),
             Text(
               profile.bio!,
               textAlign: TextAlign.center,
-              style: AppFonts.body(color: scheme.onSurface, fontSize: 14),
+              style: AppFonts.body(
+                color: scheme.onSurfaceVariant,
+                fontSize: 11,
+                height: 1.4,
+              ),
             ),
           ],
-          const SizedBox(height: 20),
-          IntrinsicHeight(
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: isLight
+                  ? HomePalette.lightSurfaceAlt
+                  : HomePalette.darkSurfaceAlt,
+              border: Border.all(color: scheme.outlineVariant),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _Stat(
-                  value: '$auraPoints',
-                  label: 'Aura',
-                  valueColor: scheme.primary,
+                Expanded(
+                  child: _Stat(
+                    value: '$auraPoints',
+                    label: 'Aura',
+                    valueColor: isLight ? HomePalette.ink : HomePalette.primary,
+                  ),
                 ),
-                VerticalDivider(width: 1, color: scheme.outline),
-                _Stat(
-                  value: '${profile.followerCount}',
-                  label: 'Followers',
-                  onTap: onFollowersTap,
+                _statDivider(scheme),
+                Expanded(
+                  child: _Stat(
+                    value: '${profile.followerCount}',
+                    label: 'Followers',
+                    onTap: onFollowersTap,
+                  ),
                 ),
-                VerticalDivider(width: 1, color: scheme.outline),
-                _Stat(
-                  value: '${profile.followingCount}',
-                  label: 'Following',
-                  onTap: onFollowingTap,
+                _statDivider(scheme),
+                Expanded(
+                  child: _Stat(
+                    value: '${profile.followingCount}',
+                    label: 'Following',
+                    onTap: onFollowingTap,
+                  ),
                 ),
               ],
             ),
@@ -1262,6 +1532,12 @@ class _ProfileHeader extends StatelessWidget {
       ),
     );
   }
+
+  Widget _statDivider(ColorScheme scheme) => Container(
+    width: 1,
+    height: 34,
+    color: scheme.outlineVariant,
+  );
 }
 
 class _Stat extends StatelessWidget {
@@ -1282,29 +1558,33 @@ class _Stat extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 96),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: AppFonts.body(
-                color: valueColor ?? scheme.onSurface,
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                height: 1.2,
+      child: SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 9),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: AppFonts.body(
+                  color: valueColor ?? scheme.onSurface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: AppFonts.body(
-                color: scheme.onSurfaceVariant,
-                fontSize: 13,
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                style: AppFonts.body(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 10,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
