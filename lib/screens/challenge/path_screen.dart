@@ -640,7 +640,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
     if (uri == null || !uri.hasScheme) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('This resource link is not available yet.'),
           ),
         );
@@ -650,7 +650,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open this resource.')),
+        SnackBar(content: Text('Could not open this resource.')),
       );
     }
   }
@@ -721,7 +721,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       if (!mounted) return;
       setState(() => resource.saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Resource marked complete.')),
+        SnackBar(content: Text('Resource marked complete.')),
       );
     } on ApiException catch (error) {
       if (mounted) {
@@ -780,7 +780,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       await _refresh();
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Result logged.')));
+          .showSnackBar(SnackBar(content: Text('Result logged.')));
       if (await _claimStreakCelebrationForToday()) {
         if (!mounted) return;
         await _showStreakCelebration(previousStreak + 1);

@@ -124,7 +124,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
           .accept(widget.slug);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Challenge accepted. Ready when you are.'),
         ),
       );
@@ -156,7 +156,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       await notifications.markRead(widget.invitation!.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Invitation accepted.')));
+          .showSnackBar(SnackBar(content: Text('Invitation accepted.')));
     } on ApiException catch (e) {
       if (mounted) {
         AppErrorSnackbar.show(context, e);
@@ -173,7 +173,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       await notifications.markRead(widget.invitation!.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Invitation declined.')));
+          .showSnackBar(SnackBar(content: Text('Invitation declined.')));
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
@@ -318,7 +318,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       await participation.updateStatus(current.id, 'REMOVED');
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Challenge dropped.')));
+          .showSnackBar(SnackBar(content: Text('Challenge dropped.')));
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
@@ -553,7 +553,7 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
       await Clipboard.setData(ClipboardData(text: link.url));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invite link copied to clipboard.')),
+        SnackBar(content: Text('Invite link copied to clipboard.')),
       );
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);

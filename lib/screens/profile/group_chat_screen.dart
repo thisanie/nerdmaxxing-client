@@ -569,7 +569,7 @@ class _InvitationActions extends StatelessWidget {
                 : Colors.black,
           ),
           onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Rollback will be available soon.')),
+            SnackBar(content: Text('Rollback will be available soon.')),
           ),
           child: const Text('Rollback'),
         ),

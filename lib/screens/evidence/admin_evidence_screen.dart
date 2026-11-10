@@ -124,7 +124,7 @@ class _AdminEvidenceScreenState extends State<AdminEvidenceScreen> {
         !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open this evidence link.')),
+          SnackBar(content: Text('Could not open this evidence link.')),
         );
       }
     }

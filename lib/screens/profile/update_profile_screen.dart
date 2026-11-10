@@ -52,7 +52,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     final username = _usernameController.text.trim();
     if (username.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Username cannot be empty.')),
+        SnackBar(content: Text('Username cannot be empty.')),
       );
       return;
     }

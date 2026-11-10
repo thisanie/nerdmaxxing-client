@@ -6,7 +6,12 @@ import '../theme/app_theme.dart';
 /// Drop-in replacement for Material's SnackBar so every alert shares one look.
 /// Files import Material with `hide SnackBar` and use this instead.
 class SnackBar extends m.SnackBar {
-  const SnackBar({super.key, required Widget content, super.action})
+  SnackBar({
+    super.key,
+    required Widget content,
+    super.action,
+    super.duration = const Duration(seconds: 4),
+  })
     : super(
         content: _Toast(content),
         behavior: m.SnackBarBehavior.floating,
@@ -15,7 +20,6 @@ class SnackBar extends m.SnackBar {
         padding: EdgeInsets.zero,
         margin: const EdgeInsets.fromLTRB(26, 0, 26, 24),
         dismissDirection: DismissDirection.horizontal,
-        duration: const Duration(seconds: 4),
       );
 }
 

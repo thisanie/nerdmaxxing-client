@@ -112,7 +112,7 @@ class _CreateChallengeScreenState extends State<CreateChallengeScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Challenge created as a private draft.')),
+        SnackBar(content: Text('Challenge created as a private draft.')),
       );
     } on ApiException catch (e) {
       setState(() => _error = e.message);

@@ -129,7 +129,7 @@ Future<bool?> showPrivacyPolicyDialog(
                         );
                         if (!opened && dialogContext.mounted) {
                           ScaffoldMessenger.maybeOf(dialogContext)?.showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
                                 'Could not open the privacy policy.',
                               ),

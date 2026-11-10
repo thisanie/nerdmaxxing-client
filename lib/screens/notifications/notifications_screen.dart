@@ -99,7 +99,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             .toList();
       });
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Invitation accepted.')));
+          .showSnackBar(SnackBar(content: Text('Invitation accepted.')));
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
@@ -180,7 +180,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     if (!mounted) return;
     if (challenge == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Challenge details are unavailable.')),
+        SnackBar(content: Text('Challenge details are unavailable.')),
       );
       return;
     }
@@ -206,7 +206,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       final username = notification.actorUsername;
       if (username == null || username.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Follower profile is unavailable.')),
+          SnackBar(content: Text('Follower profile is unavailable.')),
         );
         return;
       }
@@ -228,7 +228,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     if (groupId == null || groupId.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Group details are unavailable.')),
+          SnackBar(content: Text('Group details are unavailable.')),
         );
       }
       return;
