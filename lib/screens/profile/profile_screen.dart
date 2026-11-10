@@ -486,7 +486,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 profile.name ?? profile.username ?? 'Profile',
                 style: AppFonts.body(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 15,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -673,11 +673,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               )
             else if (_selectedTab == 2 && isOwnProfile)
               SliverToBoxAdapter(
-                child: _RewardsPanel(
-                  profile: profile,
-                  auraPoints: ownStats?.auraPoints ?? profile.auraPoints,
-                  stats: ownStats,
-                ),
+                child: const _RewardsPanel(),
               )
             else if (_selectedTab != 0)
               const SliverToBoxAdapter(child: SizedBox.shrink()),
@@ -769,7 +765,7 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -777,7 +773,7 @@ class _SectionLabel extends StatelessWidget {
             text.toUpperCase(),
             style: AppFonts.label(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -786,7 +782,7 @@ class _SectionLabel extends StatelessWidget {
               count!,
               style: AppFonts.body(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 9,
+                fontSize: 12,
               ),
             ),
         ],
@@ -995,7 +991,7 @@ class _GroupsPanel extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final sectionStyle = AppFonts.label(
       color: scheme.onSurfaceVariant,
-      fontSize: 9,
+      fontSize: 12,
       fontWeight: FontWeight.w800,
     );
     if (isLoading) {
@@ -1023,7 +1019,7 @@ class _GroupsPanel extends StatelessWidget {
                   isOwnProfile ? 'YOUR GROUPS' : 'GROUPS',
                   style: AppFonts.label(
                     color: scheme.onSurface,
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1043,7 +1039,7 @@ class _GroupsPanel extends StatelessWidget {
                     'Create',
                     style: AppFonts.label(
                       color: scheme.onSurface,
-                      fontSize: 9,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1152,7 +1148,7 @@ class _GroupTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.body(
                       color: scheme.onSurface,
-                      fontSize: 11,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1163,7 +1159,7 @@ class _GroupTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.body(
                       color: scheme.onSurfaceVariant,
-                      fontSize: 9,
+                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -1248,295 +1244,30 @@ class _GroupEmptyState extends StatelessWidget {
 }
 
 class _RewardsPanel extends StatelessWidget {
-  final UserProfile profile;
-  final int auraPoints;
-  final UserStats? stats;
-
-  const _RewardsPanel({
-    required this.profile,
-    required this.auraPoints,
-    required this.stats,
-  });
+  const _RewardsPanel();
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isLight = Theme.of(context).brightness == Brightness.light;
-    final progress = (stats?.rankProgress ?? 0).clamp(0, 100) / 100;
-    final nextRank = stats?.nextRank;
-    final skills = profile.skills;
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [HomePalette.primary, HomePalette.mint],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'TOTAL AURA',
-                      style: AppFonts.label(
-                        color: HomePalette.ink.withValues(alpha: .7),
-                        fontSize: 9,
-                      ),
-                    ),
-                    Text(
-                      'RANK ${profile.rank}',
-                      style: AppFonts.label(
-                        color: HomePalette.ink,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '$auraPoints',
-                  style: AppFonts.poster(
-                    color: HomePalette.ink,
-                    fontSize: 42,
-                    wdth: 100,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 5,
-                    backgroundColor: HomePalette.ink.withValues(alpha: .18),
-                    valueColor: const AlwaysStoppedAnimation(HomePalette.ink),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      stats == null
-                          ? 'Rank progress updating'
-                          : nextRank == null
-                          ? 'Top rank reached'
-                          : '${stats?.auraToNextRank ?? 0} Aura to rank $nextRank',
-                      style: AppFonts.body(
-                        color: HomePalette.ink.withValues(alpha: .75),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '${(progress * 100).round()}%',
-                      style: AppFonts.body(
-                        color: HomePalette.ink,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+      padding: const EdgeInsets.fromLTRB(18, 28, 18, 12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 18),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        child: Text(
+          'Coming soon',
+          textAlign: TextAlign.center,
+          style: AppFonts.display(
+            color: scheme.onSurface,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 22),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'SKILLS EARNED',
-                style: AppFonts.label(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 10,
-                ),
-              ),
-              Text(
-                '${skills.length} unlocked',
-                style: AppFonts.body(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 9,
-                ),
-              ),
-            ],
-          ),
-          if (skills.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                'Complete and verify a challenge to earn your first skill.',
-                style: AppFonts.body(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 11,
-                ),
-              ),
-            )
-          else
-            for (final skill in skills)
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: scheme.outlineVariant),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: isLight
-                            ? HomePalette.lightPrimaryMuted
-                            : HomePalette.darkPrimaryMuted,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.auto_awesome_rounded,
-                        color: isLight
-                            ? HomePalette.lightLink
-                            : HomePalette.primary,
-                        size: 17,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            skill.name,
-                            style: AppFonts.body(
-                              color: scheme.onSurface,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            'Unlocked after a verified challenge',
-                            style: AppFonts.body(
-                              color: scheme.onSurfaceVariant,
-                              fontSize: 9,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 27,
-                      height: 27,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: HomePalette.ink,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: scheme.surface, width: 2),
-                      ),
-                      child: Text(
-                        profile.rank,
-                        style: AppFonts.body(
-                          color: HomePalette.primary,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          const SizedBox(height: 20),
-          Text(
-            'YOUR NUMBERS',
-            style: AppFonts.label(
-              color: scheme.onSurfaceVariant,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          _RewardsCountRow(
-            title: 'Challenges completed',
-            subtitle: 'Adventures finished and verified',
-            count: profile.completedChallengesCount,
-          ),
-          _RewardsCountRow(
-            title: 'Challenges created',
-            subtitle: 'Ideas shared with the community',
-            count: profile.createdChallengesCount,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RewardsCountRow extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final int count;
-
-  const _RewardsCountRow({
-    required this.title,
-    required this.subtitle,
-    required this.count,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      constraints: const BoxConstraints(minHeight: 62),
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppFonts.body(
-                    color: scheme.onSurface,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: AppFonts.body(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 9,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '$count',
-            style: AppFonts.body(
-              color: scheme.onSurface,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1637,26 +1368,13 @@ class _ProfileHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            displayName,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppFonts.display(
-              color: scheme.onSurface,
-              fontSize: 21,
-              fontWeight: FontWeight.w700,
-              height: 1.15,
-            ),
-          ),
           if (profile.username != null) ...[
-            const SizedBox(height: 3),
+            const SizedBox(height: 12),
             Text(
               '@${profile.username}',
               style: AppFonts.body(
                 color: scheme.onSurfaceVariant,
-                fontSize: 12,
+                fontSize: 15,
               ),
             ),
           ],
@@ -1667,7 +1385,7 @@ class _ProfileHeader extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppFonts.body(
                 color: scheme.onSurfaceVariant,
-                fontSize: 11,
+                fontSize: 14,
                 height: 1.4,
               ),
             ),
@@ -1762,7 +1480,7 @@ class _Stat extends StatelessWidget {
                 maxLines: 1,
                 style: AppFonts.body(
                   color: scheme.onSurfaceVariant,
-                  fontSize: 10,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -1831,7 +1549,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                         '✓ VERIFIED',
                         style: AppFonts.label(
                           color: HomePalette.ink,
-                          fontSize: 8,
+                          fontSize: 10,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1863,7 +1581,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                             color: difficulty == 'BEGINNER'
                                 ? HomePalette.ink
                                 : const Color(0xFF23170A),
-                            fontSize: 8,
+                            fontSize: 10,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -1872,7 +1590,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                         'COMPLETED',
                         style: AppFonts.label(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 8,
+                          fontSize: 10,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -1883,7 +1601,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                     challenge.title,
                     style: AppFonts.display(
                       color: scheme.onSurface,
-                      fontSize: 15,
+                      fontSize: 17,
                       fontWeight: FontWeight.w700,
                       height: 1.18,
                     ),
@@ -1896,7 +1614,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.body(
                         color: scheme.onSurfaceVariant,
-                        fontSize: 10,
+                        fontSize: 14,
                         height: 1.4,
                       ),
                     ),
@@ -1908,7 +1626,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.schedule_rounded,
-                        size: 12,
+                        size: 14,
                         color: scheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
@@ -1916,13 +1634,13 @@ class _CompletedChallengeCard extends StatelessWidget {
                         challenge.effortLabel,
                         style: AppFonts.body(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 9,
+                          fontSize: 12,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Icon(
                         Icons.bolt_rounded,
-                        size: 12,
+                        size: 14,
                         color: scheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
@@ -1930,7 +1648,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                         '${challenge.auraPoints} aura',
                         style: AppFonts.body(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 9,
+                          fontSize: 12,
                         ),
                       ),
                       const Spacer(),
@@ -1944,7 +1662,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                             color: isLight
                                 ? HomePalette.lightLink
                                 : HomePalette.primary,
-                            fontSize: 9,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -2175,7 +1893,7 @@ class _ParticipationFilters extends StatelessWidget {
     final isLight = Theme.of(context).brightness == Brightness.light;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 8),
       child: Row(
         children: [
           for (var index = 0; index < _filters.length; index++) ...[
@@ -2194,7 +1912,7 @@ class _ParticipationFilters extends StatelessWidget {
                 color: selected == _filters[index].$1
                     ? (isLight ? HomePalette.lightLink : HomePalette.primary)
                     : scheme.onSurfaceVariant,
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
               side: BorderSide(
@@ -2276,7 +1994,7 @@ class _ProfileRowAction extends StatelessWidget {
             shape: const StadiumBorder(),
             textStyle: AppFonts.label(
               color: HomePalette.ink,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w800,
             ),
           )
@@ -2292,7 +2010,7 @@ class _ProfileRowAction extends StatelessWidget {
             shape: const StadiumBorder(),
             textStyle: AppFonts.label(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           );
@@ -2378,16 +2096,16 @@ class _RowCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.body(
                           color: scheme.onSurface,
-                          fontSize: 11,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 6),
                       Text(
                         subtitle,
                         style: AppFonts.body(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 9,
+                          fontSize: 12,
                         ),
                       ),
                     ],
