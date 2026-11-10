@@ -484,7 +484,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
             SliverAppBar(
               title: Text(
                 profile.name ?? profile.username ?? 'Profile',
-                style: AppFonts.body(
+                style: AppFonts.home(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -553,12 +553,6 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                         setState(() => _participationFilter = filter),
                   ),
                 ),
-                SliverToBoxAdapter(
-                  child: _SectionLabel(
-                    'Your challenges',
-                    count: '${filteredParticipations.length} active',
-                  ),
-                ),
                 if (participationState.isLoading && participations.isEmpty)
                   const SliverToBoxAdapter(
                     child: Padding(
@@ -593,16 +587,48 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                     ),
                   ),
                 SliverToBoxAdapter(
-                  child: _SectionLabel(
-                    'Created by you',
-                    count: '${createdChallenges.length} challenges',
-                  ),
+                  child: _SectionLabel('Created by you'),
                 ),
                 if (createdChallenges.isEmpty)
-                  const SliverToBoxAdapter(
+                  SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-                      child: Text('No challenges created yet.'),
+                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: HomePalette.border(
+                              Theme.of(context).brightness,
+                            ),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'No challenges yet',
+                              style: AppFonts.home(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Create your own and invite nerds to it.',
+                              textAlign: TextAlign.center,
+                              style: AppFonts.home(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   )
                 else
@@ -616,10 +642,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                   ),
               ],
               SliverToBoxAdapter(
-                child: _SectionLabel(
-                  'Completed',
-                  count: '${completedChallenges.length} adventures',
-                ),
+                  child: _SectionLabel('Completed'),
               ),
               if (completedChallenges.isEmpty)
                 SliverToBoxAdapter(
@@ -705,7 +728,7 @@ class _ProfileTabs extends StatelessWidget {
       if (showRewards) (Icons.emoji_events_rounded, 'Rewards'),
     ];
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.only(top: 18),
       child: Row(
         children: [
           for (var index = 0; index < tabs.length; index++)
@@ -713,14 +736,14 @@ class _ProfileTabs extends StatelessWidget {
               child: InkWell(
                 onTap: () => onSelected(index),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
                         color: selectedIndex == index
-                          ? colorScheme.onSurface
-                            : colorScheme.outline,
-                        width: selectedIndex == index ? 2 : 1,
+                            ? HomePalette.primary
+                            : HomePalette.border(Theme.of(context).brightness),
+                        width: selectedIndex == index ? 3 : 1,
                       ),
                     ),
                   ),
@@ -729,7 +752,7 @@ class _ProfileTabs extends StatelessWidget {
                     children: [
                       Icon(
                         tabs[index].$1,
-                        size: 18,
+                        size: 16,
                           color: selectedIndex == index
                             ? colorScheme.onSurface
                             : colorScheme.onSurfaceVariant,
@@ -737,11 +760,11 @@ class _ProfileTabs extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         tabs[index].$2,
-                        style: TextStyle(
+                        style: AppFonts.home(
                           color: selectedIndex == index
                               ? colorScheme.onSurface
                               : colorScheme.onSurfaceVariant,
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -771,16 +794,17 @@ class _SectionLabel extends StatelessWidget {
         children: [
           Text(
             text.toUpperCase(),
-            style: AppFonts.label(
+            style: AppFonts.home(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 10,
               fontWeight: FontWeight.w800,
+              letterSpacingEm: 0.14,
             ),
           ),
           if (count != null)
             Text(
               count!,
-              style: AppFonts.body(
+              style: AppFonts.home(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 10,
               ),
@@ -824,6 +848,11 @@ class _ProfileActions extends StatelessWidget {
               foregroundColor: HomePalette.ink,
               shape: shape,
               padding: const EdgeInsets.symmetric(vertical: 11),
+              textStyle: AppFonts.home(
+                color: HomePalette.ink,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             child: const Text('Edit profile'),
           )
@@ -834,6 +863,11 @@ class _ProfileActions extends StatelessWidget {
               foregroundColor: scheme.onSurface,
               shape: shape,
               padding: const EdgeInsets.symmetric(vertical: 11),
+              textStyle: AppFonts.home(
+                color: scheme.onSurface,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             child: isFollowBusy ? spinner : const Text('Following'),
           )
@@ -844,6 +878,11 @@ class _ProfileActions extends StatelessWidget {
               foregroundColor: HomePalette.ink,
               shape: shape,
               padding: const EdgeInsets.symmetric(vertical: 11),
+              textStyle: AppFonts.home(
+                color: HomePalette.ink,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             child: isFollowBusy ? spinner : const Text('Follow'),
           );
@@ -852,17 +891,23 @@ class _ProfileActions extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
       child: Row(
         children: [
-          Expanded(flex: 3, child: primary),
+          Expanded(child: primary),
           const SizedBox(width: 9),
           Expanded(
-            flex: 2,
             child: OutlinedButton(
               onPressed: null,
               style: OutlinedButton.styleFrom(
                 disabledForegroundColor: scheme.onSurface,
                 shape: shape,
                 padding: const EdgeInsets.symmetric(vertical: 11),
-                side: BorderSide(color: scheme.outline),
+                side: BorderSide(
+                  color: HomePalette.border(Theme.of(context).brightness),
+                ),
+                textStyle: AppFonts.home(
+                  color: scheme.onSurface,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               child: Text('Rank ${profile.rank}'),
             ),
@@ -989,7 +1034,7 @@ class _GroupsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final sectionStyle = AppFonts.label(
+    final sectionStyle = AppFonts.home(
       color: scheme.onSurfaceVariant,
       fontSize: 10,
       fontWeight: FontWeight.w800,
@@ -1017,7 +1062,7 @@ class _GroupsPanel extends StatelessWidget {
               Expanded(
                 child: Text(
                   isOwnProfile ? 'YOUR GROUPS' : 'GROUPS',
-                  style: AppFonts.label(
+                  style: AppFonts.home(
                     color: scheme.onSurface,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -1037,7 +1082,7 @@ class _GroupsPanel extends StatelessWidget {
                   ),
                   child: Text(
                     'Create',
-                    style: AppFonts.label(
+                    style: AppFonts.home(
                       color: scheme.onSurface,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -1146,7 +1191,7 @@ class _GroupTile extends StatelessWidget {
                     group.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppFonts.body(
+                    style: AppFonts.home(
                       color: scheme.onSurface,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1157,7 +1202,7 @@ class _GroupTile extends StatelessWidget {
                     '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'} · ${group.visibility.toLowerCase() == 'private' ? 'Private' : 'Public'}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppFonts.body(
+                    style: AppFonts.home(
                       color: scheme.onSurfaceVariant,
                       fontSize: 10,
                     ),
@@ -1221,7 +1266,7 @@ class _GroupEmptyState extends StatelessWidget {
           children: [
             Text(
               title,
-              style: AppFonts.body(
+              style: AppFonts.home(
                 color: scheme.onSurface,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -1230,7 +1275,7 @@ class _GroupEmptyState extends StatelessWidget {
             const SizedBox(height: 3),
             Text(
               message,
-              style: AppFonts.body(
+              style: AppFonts.home(
                 color: scheme.onSurfaceVariant,
                 fontSize: 10,
                 height: 1.4,
@@ -1262,7 +1307,7 @@ class _RewardsPanel extends StatelessWidget {
         child: Text(
           'Coming soon',
           textAlign: TextAlign.center,
-          style: AppFonts.display(
+          style: AppFonts.home(
             color: scheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -1335,7 +1380,7 @@ class _ProfileHeader extends StatelessWidget {
                   child: profile.avatarUrl == null
                       ? Text(
                           initial ?? '?',
-                          style: AppFonts.display(
+                          style: AppFonts.home(
                             color: Colors.white,
                             fontSize: 37,
                             fontWeight: FontWeight.w700,
@@ -1358,7 +1403,7 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                   child: Text(
                     profile.rank,
-                    style: AppFonts.body(
+                    style: AppFonts.home(
                       color: HomePalette.primary,
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -1372,7 +1417,7 @@ class _ProfileHeader extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               '@${profile.username}',
-              style: AppFonts.body(
+              style: AppFonts.home(
                 color: scheme.onSurfaceVariant,
                 fontSize: 13,
               ),
@@ -1383,7 +1428,7 @@ class _ProfileHeader extends StatelessWidget {
             Text(
               profile.bio!,
               textAlign: TextAlign.center,
-              style: AppFonts.body(
+              style: AppFonts.home(
                 color: scheme.onSurfaceVariant,
                 fontSize: 12,
                 height: 1.4,
@@ -1396,8 +1441,12 @@ class _ProfileHeader extends StatelessWidget {
               color: isLight
                   ? HomePalette.lightSurfaceAlt
                   : HomePalette.darkSurfaceAlt,
-              border: Border.all(color: scheme.outlineVariant),
-              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isLight
+                    ? HomePalette.lightBorder
+                    : HomePalette.darkBorder,
+              ),
+              borderRadius: BorderRadius.circular(22),
             ),
             clipBehavior: Clip.antiAlias,
             child: Row(
@@ -1406,7 +1455,7 @@ class _ProfileHeader extends StatelessWidget {
                   child: _Stat(
                     value: '$auraPoints',
                     label: 'Aura',
-                    valueColor: isLight ? HomePalette.ink : HomePalette.primary,
+                    valueColor: HomePalette.primary,
                   ),
                 ),
                 _statDivider(scheme),
@@ -1467,9 +1516,9 @@ class _Stat extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: AppFonts.body(
+                style: AppFonts.home(
                   color: valueColor ?? scheme.onSurface,
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                   height: 1.2,
                 ),
@@ -1478,9 +1527,9 @@ class _Stat extends StatelessWidget {
               Text(
                 label,
                 maxLines: 1,
-                style: AppFonts.body(
+                style: AppFonts.home(
                   color: scheme.onSurfaceVariant,
-                  fontSize: 12,
+                  fontSize: 11,
                 ),
               ),
             ],
@@ -1514,7 +1563,6 @@ class _CompletedChallengeCard extends StatelessWidget {
       color: scheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: scheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -1575,7 +1623,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                       ),
                       child: Text(
                         difficulty,
-                        style: AppFonts.label(
+                        style: AppFonts.home(
                           color: difficulty == 'BEGINNER'
                               ? HomePalette.ink
                               : const Color(0xFF23170A),
@@ -1589,7 +1637,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                       challenge.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppFonts.display(
+                      style: AppFonts.home(
                         color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -1607,7 +1655,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           challenge.effortLabel,
-                          style: AppFonts.body(
+                          style: AppFonts.home(
                             color: Colors.white.withValues(alpha: .85),
                             fontSize: 10,
                           ),
@@ -1621,7 +1669,7 @@ class _CompletedChallengeCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${challenge.auraPoints}',
-                          style: AppFonts.body(
+                          style: AppFonts.home(
                             color: Colors.white.withValues(alpha: .85),
                             fontSize: 10,
                           ),
@@ -1864,21 +1912,26 @@ class _ParticipationFilters extends StatelessWidget {
               showCheckmark: false,
               visualDensity: VisualDensity.compact,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               selectedColor: isLight
                   ? HomePalette.lightPrimaryMuted
                   : HomePalette.darkPrimaryMuted,
-              labelStyle: AppFonts.body(
+                backgroundColor: isLight
+                  ? HomePalette.lightSurfaceAlt
+                  : HomePalette.darkSurfaceAlt,
+              labelStyle: AppFonts.home(
                 color: selected == _filters[index].$1
                     ? (isLight ? HomePalette.lightLink : HomePalette.primary)
                     : scheme.onSurfaceVariant,
-                fontSize: 11,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w600,
               ),
               side: BorderSide(
                 color: selected == _filters[index].$1
-                    ? Colors.transparent
-                    : scheme.outlineVariant,
+                    ? (isLight
+                          ? const Color(0xFFDDEB8A)
+                          : Colors.transparent)
+                    : HomePalette.border(Theme.of(context).brightness),
               ),
               shape: const StadiumBorder(),
               onSelected: (_) => onSelected(_filters[index].$1),
@@ -1947,12 +2000,12 @@ class _ProfileRowAction extends StatelessWidget {
         ? FilledButton.styleFrom(
             backgroundColor: HomePalette.primary,
             foregroundColor: HomePalette.ink,
-            minimumSize: const Size(0, 29),
-            padding: const EdgeInsets.symmetric(horizontal: 11),
+            minimumSize: const Size(0, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 13),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             shape: const StadiumBorder(),
-            textStyle: AppFonts.label(
+            textStyle: AppFonts.home(
               color: HomePalette.ink,
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -1960,15 +2013,15 @@ class _ProfileRowAction extends StatelessWidget {
           )
         : OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurface,
-            minimumSize: const Size(0, 29),
-            padding: const EdgeInsets.symmetric(horizontal: 11),
+            minimumSize: const Size(0, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 13),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
+              color: HomePalette.border(Theme.of(context).brightness),
             ),
             shape: const StadiumBorder(),
-            textStyle: AppFonts.label(
+            textStyle: AppFonts.home(
               color: Theme.of(context).colorScheme.onSurface,
               fontSize: 11,
               fontWeight: FontWeight.w700,
@@ -2012,13 +2065,15 @@ class _RowCard extends StatelessWidget {
         color: scheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: scheme.outlineVariant),
+          side: BorderSide(
+            color: HomePalette.border(Theme.of(context).brightness),
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(9),
+            padding: const EdgeInsets.all(10),
             child: Row(
               children: [
                 Container(
@@ -2054,7 +2109,7 @@ class _RowCard extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppFonts.body(
+                        style: AppFonts.home(
                           color: scheme.onSurface,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -2063,7 +2118,7 @@ class _RowCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         subtitle,
-                        style: AppFonts.body(
+                        style: AppFonts.home(
                           color: scheme.onSurfaceVariant,
                           fontSize: 11,
                         ),
@@ -2151,7 +2206,7 @@ class _ChallengeTile extends StatelessWidget {
                           challenge.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: AppFonts.body(
+                          style: AppFonts.home(
                             color: scheme.onSurface,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -2170,7 +2225,7 @@ class _ChallengeTile extends StatelessWidget {
                         const SizedBox(width: 3),
                         Text(
                           '${challenge.auraPoints} aura',
-                          style: AppFonts.body(
+                          style: AppFonts.home(
                             color: scheme.onSurfaceVariant,
                             fontSize: 10,
                             fontWeight: FontWeight.w500,

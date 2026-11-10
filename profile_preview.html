@@ -1,378 +1,558 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0f0f0e">
+  <meta name="theme-color" content="#ffffff">
   <title>NerdMaxxing | Profile Preview</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      color-scheme: dark;
-      --lime: #cfff47;
-      --mint: #9ff1c0;
-      --ink: #0b0c05;
-      --bg: #0f0f0e;
-      --surface: #161615;
-      --alt: #1b1b19;
-      --wash: #252b16;
-      --text: #ecebe3;
-      --text-2: #8c8c84;
-      --text-3: #5a5a53;
-      --border: #2c2c2a;
-      --strong: #444441;
-      --shadow: 0 24px 70px rgb(0 0 0 / 42%);
-    }
-    [data-theme="light"] {
       color-scheme: light;
+      --primary: #cfff47;
+      --ink: #0b0c05;
       --bg: #fff;
       --surface: #fff;
       --alt: #f7f7f2;
       --wash: #f4fabe;
       --text: #101008;
-      --text-2: #5c5c53;
-      --text-3: #85867c;
+      --muted: #5c5c53;
+      --dim: #85867c;
       --border: #e5e5dc;
       --strong: #cfcfc4;
-      --shadow: 0 24px 70px rgb(16 16 8 / 12%);
+      --shadow: 0 24px 60px rgb(16 16 8 / 25%);
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #0f0f0e;
+      --surface: #161615;
+      --alt: #1b1b19;
+      --wash: #252b16;
+      --text: #ecebe3;
+      --muted: #8c8c84;
+      --dim: #5a5a53;
+      --border: #2c2c2a;
+      --strong: #444441;
+      --shadow: 0 24px 60px rgb(0 0 0 / 55%);
     }
     * { box-sizing: border-box; }
     body {
       min-width: 320px;
       min-height: 100vh;
+      display: grid;
+      place-items: center;
       margin: 0;
-      background: #080907;
+      padding: 24px 12px;
+      background: #101008;
       color: var(--text);
-      font-family: "Instrument Sans", "Segoe UI", sans-serif;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
       -webkit-font-smoothing: antialiased;
     }
     button { color: inherit; font: inherit; }
-    .preview-bar {
-      width: min(100%, 460px);
-      min-height: 54px;
+    .phone {
+      width: 340px;
+      height: 700px;
+      flex: none;
+      padding: 9px;
+      overflow: hidden;
+      border-radius: 44px;
+      background: #101008;
+      box-shadow: var(--shadow), inset 0 0 0 2px rgb(255 255 255 / 8%);
+    }
+    .screen {
+      position: relative;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 36px;
+      background: var(--bg);
+      transition: background .18s ease, color .18s ease;
+    }
+    .status-bar {
+      height: 34px;
+      flex: none;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      margin: 0 auto;
-      padding: 8px 14px;
+      padding: 6px 24px 0;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
     }
-    .brand { display: flex; align-items: center; gap: 8px; color: #ecebe3; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
-    .brand-mark { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 8px 8px 8px 2px; background: var(--lime); color: var(--ink); font-family: "Bricolage Grotesque", sans-serif; font-size: 14px; }
-    .theme-toggle { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #34352e; border-radius: 50%; background: #161714; color: #ecebe3; cursor: pointer; }
-    .theme-toggle svg { width: 16px; height: 16px; }
-    .device {
-      width: min(100%, 420px);
-      height: min(860px, calc(100dvh - 64px));
-      min-height: 600px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      margin: 0 auto 18px;
-      border: 1px solid #34352e;
-      border-radius: 34px;
-      background: var(--bg);
-      box-shadow: var(--shadow);
-      transition: background .2s ease;
+    .status-right { color: var(--muted); font-size: 11px; }
+    .scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 18px 18px;
+      scrollbar-width: none;
+      overscroll-behavior: contain;
     }
-    .status { height: 34px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 3px 25px 0; color: var(--text); font-size: 10px; font-weight: 700; }
-    .status-right { color: var(--text-2); font-size: 9px; }
-    .appbar { height: 46px; flex: none; display: grid; grid-template-columns: 38px 1fr 38px; align-items: center; padding: 0 16px 6px; }
-    .icon-button { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--alt); color: var(--text); cursor: pointer; }
-    .icon-button svg { width: 17px; height: 17px; }
-    .app-title { overflow: hidden; color: var(--text); font-size: 13px; font-weight: 700; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-    .scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 0 0 18px; }
     .scroll::-webkit-scrollbar { display: none; }
-    .identity { display: flex; flex-direction: column; align-items: center; padding: 10px 20px 0; text-align: center; }
-    .avatar-wrap { position: relative; width: 92px; height: 92px; margin-bottom: 14px; }
-    .avatar { width: 92px; height: 92px; display: grid; place-items: center; border: 2px solid var(--lime); border-radius: 50%; outline: 5px solid var(--wash); background: linear-gradient(145deg, #b04ae0, #6a2a9a); color: white; font-family: "Bricolage Grotesque", sans-serif; font-size: 37px; font-weight: 700; }
-    .rank-badge { position: absolute; right: -3px; bottom: 1px; width: 27px; height: 27px; display: grid; place-items: center; border: 2px solid var(--bg); border-radius: 50%; background: var(--ink); color: var(--lime); font-size: 10px; font-weight: 800; }
-    .name { margin: 0; font-family: "Bricolage Grotesque", sans-serif; font-size: 21px; line-height: 1.15; font-weight: 700; }
-    .handle { margin: 4px 0 0; color: var(--text-2); font-size: 12px; }
-    .bio { max-width: 300px; margin: 8px 0 0; color: var(--text-2); font-size: 11px; line-height: 1.45; }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 17px 18px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: var(--alt); }
-    .stat { min-width: 0; padding: 11px 3px 10px; border: 0; border-right: 1px solid var(--border); background: transparent; color: var(--text-2); cursor: pointer; font-size: 10px; }
+    .topbar {
+      height: 34px;
+      display: grid;
+      grid-template-columns: 34px 1fr 34px;
+      align-items: center;
+    }
+    .top-name { text-align: center; font-size: 15px; font-weight: 700; }
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--alt);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .icon-button svg { width: 16px; height: 16px; }
+    .avatar {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      margin: 14px auto 0;
+      border: 3px solid var(--primary);
+      border-radius: 50%;
+      outline: 6px solid var(--wash);
+      background: linear-gradient(135deg, #b04ae0, #6a2a9a);
+      color: white;
+      font-size: 40px;
+      font-weight: 600;
+    }
+    .rank-badge {
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--bg);
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .identity { margin-top: 12px; text-align: center; }
+    .username { font-size: 13px; font-weight: 600; }
+    .bio { margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--alt);
+    }
+    .stat {
+      min-width: 0;
+      padding: 12px 2px;
+      border: 0;
+      border-right: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+    }
     .stat:last-child { border-right: 0; }
-    .stat strong { display: block; margin-bottom: 2px; color: var(--text); font-size: 20px; font-weight: 700; }
-    .stat.aura strong { color: var(--lime); }
-    .actions { display: flex; gap: 9px; margin: 11px 18px 0; }
-    .action { min-height: 39px; display: flex; flex: 1; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--border); border-radius: 999px; background: var(--alt); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 700; }
-    .action.primary { border-color: var(--lime); background: var(--lime); color: var(--ink); }
-    .action svg { width: 15px; height: 15px; }
-    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); margin: 17px 18px 0; border-bottom: 1px solid var(--border); }
-    .tab { min-width: 0; padding: 10px 2px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-2); cursor: pointer; font-size: 11px; font-weight: 650; }
-    .tab[aria-selected="true"] { border-bottom-color: var(--lime); color: var(--text); }
-    .panel { padding: 0 16px 16px; }
-    .filters { display: flex; gap: 6px; overflow-x: auto; margin: 13px 0 16px; scrollbar-width: none; }
+    .stat strong { display: block; color: var(--text); font-size: 22px; font-weight: 700; }
+    .stat:first-child strong { color: #4f6b00; }
+    [data-theme="dark"] .stat:first-child strong { color: var(--primary); }
+    .actions { display: flex; gap: 8px; margin-top: 12px; }
+    .action {
+      min-width: 0;
+      min-height: 40px;
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--alt);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .action.primary { border-color: var(--primary); background: var(--primary); color: var(--ink); }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      min-height: 39px;
+      padding: 10px 2px;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tab[aria-selected="true"] { border-bottom-color: var(--primary); color: var(--text); }
+    .filters {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-top: 14px;
+      scrollbar-width: none;
+    }
     .filters::-webkit-scrollbar { display: none; }
-    .filter { min-height: 29px; flex: none; padding: 0 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--alt); color: var(--text-2); cursor: pointer; font-size: 9px; font-weight: 650; }
-    .filter[aria-pressed="true"] { border-color: transparent; background: var(--wash); color: var(--lime); }
-    .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 12px 2px 8px; }
-    .section-head h2 { margin: 0; color: var(--text-2); font-size: 9px; font-weight: 800; letter-spacing: .12em; }
-    .section-head span { color: var(--text-3); font-size: 9px; }
-    .challenge-list { display: grid; gap: 7px; }
-    .challenge-row { min-width: 0; min-height: 66px; display: flex; align-items: center; gap: 10px; padding: 9px; border: 1px solid var(--border); border-radius: 15px; background: var(--surface); }
-    .challenge-art { width: 46px; height: 46px; flex: none; display: grid; place-items: center; border-radius: 13px; font-size: 21px; }
-    .art-lock { background: #34291e; }
-    .art-fire { background: #402418; }
-    .art-hand { background: #232b42; }
-    .art-cube { background: #263426; }
-    [data-theme="light"] .art-lock { background: #f3e5d6; }
-    [data-theme="light"] .art-fire { background: #f8e6d9; }
-    [data-theme="light"] .art-hand { background: #e3eaf7; }
-    [data-theme="light"] .art-cube { background: #e6f0df; }
+    .filter {
+      min-height: 33px;
+      flex: none;
+      padding: 0 13px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--alt);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .filter[aria-pressed="true"] { border-color: transparent; background: var(--wash); color: #4f6b00; }
+    [data-theme="dark"] .filter[aria-pressed="true"] { color: var(--primary); }
+    .challenge-list { display: grid; gap: 8px; margin-top: 8px; }
+    .challenge-row {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+    }
+    .challenge-art {
+      width: 46px;
+      height: 46px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      font-size: 22px;
+    }
+    .art-lock { background: #f3e5d6; }
+    .art-fire { background: #f8e6d9; }
+    .art-hand { background: #e3eaf7; }
     .challenge-copy { min-width: 0; flex: 1; }
-    .challenge-title { overflow: hidden; color: var(--text); font-size: 11px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
-    .challenge-status { margin-top: 3px; color: var(--text-2); font-size: 9px; }
-    .row-action { min-height: 29px; flex: none; padding: 0 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--alt); color: var(--text); cursor: pointer; font-size: 9px; font-weight: 700; }
-    .row-action.go { border-color: transparent; background: var(--lime); color: var(--ink); }
-    .completed-list { display: grid; gap: 11px; }
-    .completed-card { width: 100%; overflow: hidden; padding: 0; border: 1px solid var(--border); border-radius: 17px; background: var(--surface); color: var(--text); text-align: left; }
-    .completed-cover { position: relative; height: 150px; display: grid; place-items: center; overflow: hidden; background: linear-gradient(135deg, #19352d, #293a4c 58%, #302547); }
-    [data-theme="light"] .completed-cover { background: linear-gradient(135deg, #cce5d2, #c5d8e8 58%, #ded5ed); }
-    .completed-cover.chess-cover { background: linear-gradient(135deg, #443019, #25403b 58%, #28334a); }
-    [data-theme="light"] .completed-cover.chess-cover { background: linear-gradient(135deg, #f3dfc5, #d0e7dc 58%, #d7e2f4); }
-    .completed-cover::before { position: absolute; inset: 0; background-image: linear-gradient(135deg, transparent 49.5%, rgb(255 255 255 / 8%) 50%, transparent 50.5%), linear-gradient(45deg, transparent 49.5%, rgb(255 255 255 / 6%) 50%, transparent 50.5%); background-size: 34px 34px; content: ""; }
-    .cube-art { position: relative; width: 102px; height: 102px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 7px; transform: rotate(-8deg) perspective(360px) rotateY(-9deg); border: 5px solid #11130f; border-radius: 12px; background: #11130f; box-shadow: 0 15px 25px rgb(0 0 0 / 30%); }
-    .cube-art span { border: 1px solid rgb(0 0 0 / 18%); border-radius: 5px; background: #e44335; }
-    .cube-art span:nth-child(2), .cube-art span:nth-child(6) { background: #ffcf38; }
-    .cube-art span:nth-child(3), .cube-art span:nth-child(8) { background: #f7f5eb; }
-    .cube-art span:nth-child(4), .cube-art span:nth-child(9) { background: #2778cf; }
-    .cube-art span:nth-child(5) { background: #38ad68; }
-    .chess-art { position: relative; z-index: 1; color: #f4e3bf; font-family: Georgia, serif; font-size: 65px; line-height: 1; text-shadow: 0 10px 18px rgb(0 0 0 / 35%); }
-    [data-theme="light"] .chess-art { color: #273830; }
-    .completed-stamp { position: absolute; z-index: 1; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 999px; background: var(--lime); color: var(--ink); font-size: 8px; font-weight: 850; letter-spacing: .04em; }
-    .completed-body { padding: 12px 13px 13px; }
-    .completed-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .difficulty-tag { padding: 4px 8px; border-radius: 999px; background: #ffab3d; color: #23170a; font-size: 8px; font-weight: 800; }
-    .verified-tag { color: var(--text-2); font-size: 8px; font-weight: 700; }
-    .completed-title { margin: 8px 0 0; font-family: "Bricolage Grotesque", sans-serif; font-size: 15px; line-height: 1.18; font-weight: 700; }
-    .completed-description { margin: 5px 0 0; color: var(--text-2); font-size: 10px; line-height: 1.4; }
-    .completed-footer { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--text-2); font-size: 9px; }
-    .completed-footer span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-    .completed-footer .earned { margin-left: auto; color: var(--lime); font-weight: 750; }
-    [data-theme="light"] .completed-footer .earned { color: #4f6b00; }
-    .completed-footer svg { width: 12px; height: 12px; }
-    .empty-state { padding: 24px 16px; border: 1px dashed var(--strong); border-radius: 15px; color: var(--text-2); text-align: center; font-size: 11px; line-height: 1.5; }
-    .empty-state strong { display: block; margin-bottom: 3px; color: var(--text); font-size: 12px; }
-    .group-row { min-height: 62px; display: flex; align-items: center; gap: 11px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
-    .group-mark { width: 40px; height: 40px; display: grid; place-items: center; flex: none; border-radius: 12px; background: var(--wash); color: var(--lime); }
-    .group-mark svg { width: 18px; height: 18px; }
+    .challenge-title {
+      overflow: hidden;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .challenge-status { margin-top: 2px; color: var(--muted); font-size: 10.5px; }
+    .row-action {
+      min-height: 32px;
+      flex: none;
+      padding: 0 13px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--alt);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .row-action.primary { border-color: var(--primary); background: var(--primary); color: var(--ink); }
+    .section-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin: 22px 0 8px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .14em;
+    }
+    .section-label span { font-size: 10px; font-weight: 500; letter-spacing: 0; }
+    .empty {
+      margin-top: 8px;
+      padding: 16px;
+      border: 1.5px dashed var(--strong);
+      border-radius: 20px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .empty strong { display: block; margin-bottom: 3px; color: var(--text); font-size: 13px; }
+    .completed-list { display: grid; gap: 10px; }
+    .completed-card {
+      position: relative;
+      height: 150px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      padding: 12px 14px;
+      border: 0;
+      border-radius: 22px;
+      color: white;
+      text-align: left;
+      cursor: pointer;
+      isolation: isolate;
+    }
+    .completed-card::before {
+      position: absolute;
+      z-index: -2;
+      inset: 0;
+      background-image: linear-gradient(145deg, #778b38, #394822 48%, #20291b);
+      content: "";
+    }
+    .completed-card.sudoku::before { background-image: linear-gradient(145deg, #6ca27a, #315c4d 50%, #1c3435); }
+    .completed-card::after {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      background: linear-gradient(180deg, rgb(15 15 14 / 0%) 24%, rgb(15 15 14 / 82%) 100%);
+      content: "";
+    }
+    .cover-art {
+      position: absolute;
+      top: 8px;
+      right: 24px;
+      font-size: 58px;
+      filter: drop-shadow(0 8px 10px rgb(0 0 0 / 20%));
+      transform: rotate(-8deg);
+    }
+    .sudoku .cover-art { right: 32px; transform: rotate(7deg); }
+    .complete-check {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .completed-copy { width: 100%; }
+    .difficulty {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #ffab3d;
+      color: #23170a;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+    .difficulty.beginner { background: var(--primary); color: var(--ink); }
+    .completed-title { margin: 7px 0 6px; font-size: 15px; line-height: 1.15; font-weight: 700; }
+    .completed-meta { display: flex; gap: 8px; color: rgb(255 255 255 / 88%); font-size: 10.5px; }
+    .completed-meta span { white-space: nowrap; }
+    .groups-panel, .rewards-panel { padding: 18px 0 12px; }
+    .group-row {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 2px;
+      border-bottom: 1px solid var(--border);
+    }
+    .group-icon {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: var(--wash);
+      color: #4f6b00;
+      font-size: 18px;
+    }
     .group-copy { min-width: 0; flex: 1; }
-    .group-copy strong { display: block; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-    .group-copy span { display: block; margin-top: 3px; color: var(--text-2); font-size: 9px; }
-    .group-join { min-height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text); font-size: 9px; font-weight: 700; }
-    .reward-hero { margin-top: 14px; padding: 16px; border-radius: 18px; background: linear-gradient(135deg, var(--lime), var(--mint)); color: var(--ink); }
-    .reward-top { display: flex; justify-content: space-between; gap: 8px; font-size: 9px; font-weight: 800; letter-spacing: .1em; }
-    .reward-total { margin-top: 13px; font-family: "Bricolage Grotesque", sans-serif; font-size: 42px; line-height: 1; font-weight: 800; }
-    .reward-total small { margin-left: 5px; font-family: "Instrument Sans", sans-serif; font-size: 10px; font-weight: 700; }
-    .rank-track { height: 5px; margin-top: 14px; overflow: hidden; border-radius: 5px; background: rgb(11 12 5 / 20%); }
-    .rank-track i { display: block; width: 80%; height: 100%; border-radius: inherit; background: var(--ink); }
-    .reward-caption { display: flex; justify-content: space-between; margin-top: 6px; font-size: 9px; font-weight: 650; }
-    .reward-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .reward-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--wash); color: var(--lime); font-size: 14px; }
-    .reward-copy { flex: 1; font-size: 10px; font-weight: 650; }
-    .reward-copy small { display: block; margin-top: 3px; color: var(--text-2); font-size: 9px; font-weight: 400; }
-    .bottom-nav { flex: none; display: flex; align-items: center; justify-content: space-around; min-height: 58px; margin: 0 12px 9px; padding: 5px 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--alt); }
-    .nav-item { width: 42px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 999px; background: transparent; color: var(--text-2); }
-    .nav-item svg { width: 17px; height: 17px; fill: currentColor; }
-    .nav-item.selected { width: auto; display: flex; gap: 5px; padding: 0 12px; background: var(--lime); color: var(--ink); font-size: 9px; font-weight: 750; }
-    .toast { position: absolute; z-index: 4; left: 50%; bottom: 74px; transform: translate(-50%, 10px); padding: 9px 13px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 9px; font-weight: 700; opacity: 0; pointer-events: none; transition: .16s ease; white-space: nowrap; }
+    .group-copy strong { display: block; font-size: 13px; }
+    .group-copy small { display: block; margin-top: 3px; color: var(--muted); font-size: 10.5px; }
+    .group-open {
+      min-height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .coming-soon {
+      padding: 20px 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .bottom-nav {
+      height: 60px;
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      margin: 0 14px 12px;
+      padding: 0 8px;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      background: var(--surface);
+      box-shadow: 0 6px 20px rgb(16 16 8 / 8%);
+    }
+    .nav-item {
+      min-width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 22px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .nav-item svg { width: 19px; height: 19px; fill: currentColor; }
+    .nav-item.selected { background: var(--ink); color: var(--primary); }
+    .toast {
+      position: absolute;
+      z-index: 4;
+      left: 50%;
+      bottom: 76px;
+      transform: translate(-50%, 8px);
+      padding: 9px 13px;
+      border-radius: 999px;
+      background: var(--text);
+      color: var(--bg);
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: .16s ease;
+      white-space: nowrap;
+    }
     .toast.show { transform: translate(-50%, 0); opacity: 1; }
-    dialog { width: min(calc(100% - 28px), 390px); padding: 0; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
-    dialog::backdrop { background: rgb(0 0 0 / 58%); }
-    .sheet-head { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; }
-    .sheet-list { padding: 6px 16px 12px; }
-    .sheet-item { width: 100%; display: flex; align-items: center; gap: 11px; padding: 13px 0; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); text-align: left; font-size: 11px; }
-    .sheet-item:last-child { border-bottom: 0; }
-    .sheet-item svg { width: 17px; height: 17px; color: var(--text-2); }
     [hidden] { display: none !important; }
     @media (max-width: 520px) {
-      body { background: var(--bg); }
-      .preview-bar { min-height: 48px; padding: 6px 13px; }
-      .device { width: 100%; height: calc(100dvh - 48px); min-height: 0; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+      body { display: block; padding: 0; background: var(--bg); }
+      .phone { width: 100%; height: 100dvh; min-height: 600px; padding: 0; border-radius: 0; box-shadow: none; }
+      .screen { border-radius: 0; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
   </style>
 </head>
 <body>
-  <header class="preview-bar">
-    <div class="brand"><span class="brand-mark">N</span><span>NERDMAXXING&nbsp; / &nbsp;PROFILE</span></div>
-    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
-    </button>
-  </header>
-  <main class="device" aria-label="Profile screen preview">
-    <div class="status"><span>9:41</span><span class="status-right">▂▄▆ &nbsp; Wi-Fi &nbsp; 86%</span></div>
-    <header class="appbar">
-      <button class="icon-button" type="button" aria-label="Go back" data-toast="Back to your adventures">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-      </button>
-      <div class="app-title">Aniket</div>
-      <button class="icon-button" id="accountButton" type="button" aria-label="Account options">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
-      </button>
-    </header>
-    <div class="scroll">
-      <section class="identity" aria-label="Aniket's profile">
-        <div class="avatar-wrap"><div class="avatar">A</div><span class="rank-badge">E</span></div>
-        <h1 class="name">Aniket Surjuse</h1>
-        <p class="handle">@aniket</p>
-        <p class="bio">Hi, I am Aniket. Curious about the things I can learn by trying.</p>
-      </section>
-      <section class="stats" aria-label="Profile statistics">
-        <button class="stat aura" type="button" data-toast="80 Aura points"><strong>80</strong>Aura</button>
-        <button class="stat" type="button" data-toast="2 followers"><strong>2</strong>Followers</button>
-        <button class="stat" type="button" data-toast="Following 2 nerds"><strong>2</strong>Following</button>
-      </section>
-      <div class="actions">
-        <button class="action primary" type="button" data-toast="Edit profile opened">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5 4 4M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16z"/></svg>Edit profile
-        </button>
-        <button class="action" type="button" data-toast="Rank E · 20 Aura to rank D">Rank E &nbsp; ↗</button>
-      </div>
-      <nav class="tabs" role="tablist" aria-label="Profile sections">
-        <button class="tab" type="button" role="tab" aria-selected="true" data-tab="challenges">Challenges</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="groups">Groups</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="rewards">Rewards</button>
-      </nav>
-      <section class="panel" id="challengesPanel" role="tabpanel">
-        <div class="filters" role="group" aria-label="Filter challenges">
-          <button class="filter" type="button" aria-pressed="true" data-filter="ALL">All</button>
-          <button class="filter" type="button" aria-pressed="false" data-filter="ACCEPTED">Accepted</button>
-          <button class="filter" type="button" aria-pressed="false" data-filter="IN_PROGRESS">In progress</button>
-          <button class="filter" type="button" aria-pressed="false" data-filter="PAUSED">Paused</button>
-        </div>
-        <div class="section-head"><h2>YOUR CHALLENGES</h2><span>3 active</span></div>
-        <div class="challenge-list" id="challengeList">
-          <article class="challenge-row" data-status="IN_PROGRESS">
-            <div class="challenge-art art-lock" aria-hidden="true">🔐</div>
-            <div class="challenge-copy"><div class="challenge-title">Pick a Lock in Under 5 Minutes</div><div class="challenge-status">In progress · Milestone 1</div></div>
-            <button class="row-action" type="button" data-toast="Challenge journey opened">Continue</button>
-          </article>
-          <article class="challenge-row" data-status="ACCEPTED">
-            <div class="challenge-art art-fire" aria-hidden="true">🔥</div>
-            <div class="challenge-copy"><div class="challenge-title">Make Fire From Sticks</div><div class="challenge-status">Accepted · Ready when you are</div></div>
-            <button class="row-action go" type="button" data-toast="Challenge journey opened">Start</button>
-          </article>
-          <article class="challenge-row" data-status="PAUSED">
-            <div class="challenge-art art-hand" aria-hidden="true">🤸</div>
-            <div class="challenge-copy"><div class="challenge-title">Do a Handstand for 30 Seconds</div><div class="challenge-status">Paused · Milestone 2</div></div>
-            <button class="row-action" type="button" data-toast="Challenge journey opened">Resume</button>
-          </article>
-        </div>
-        <div class="section-head" style="margin-top:22px"><h2>CREATED BY YOU</h2><span>1 challenge</span></div>
-        <article class="challenge-row">
-          <div class="challenge-art" style="background:var(--wash);color:var(--lime)" aria-hidden="true">✦</div>
-          <div class="challenge-copy"><div class="challenge-title">Make a Paper Airplane That Flies 20m</div><div class="challenge-status">Public · 16 participants</div></div>
-          <button class="row-action" type="button" data-toast="Challenge opened">View</button>
-        </article>
-        <div class="section-head" style="margin-top:22px"><h2>COMPLETED</h2><span>2 adventures</span></div>
-        <div class="completed-list">
-          <article class="completed-card">
-            <div class="completed-cover">
-              <div class="cube-art" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-              <span class="completed-stamp">✓ VERIFIED</span>
-            </div>
-            <div class="completed-body">
-              <div class="completed-meta"><span class="difficulty-tag">INTERMEDIATE</span><span class="verified-tag">COMPLETED</span></div>
-              <h3 class="completed-title">Solve a Rubik's Cube in Under 2 Minutes</h3>
-              <p class="completed-description">Build speed and accuracy by solving a classic cube in under two minutes.</p>
-              <div class="completed-footer">
-                <span>◷ &nbsp;20m–1h</span>
-                <span>⚡ &nbsp;40 aura</span>
-                <span class="earned">Skill earned ✓</span>
-              </div>
-            </div>
-          </article>
-          <article class="completed-card">
-            <div class="completed-cover chess-cover">
-              <div class="chess-art" aria-hidden="true">♞</div>
-              <span class="completed-stamp">✓ VERIFIED</span>
-            </div>
-            <div class="completed-body">
-              <div class="completed-meta"><span class="difficulty-tag" style="background:var(--lime)">BEGINNER</span><span class="verified-tag">COMPLETED</span></div>
-              <h3 class="completed-title">Solve a Chess Puzzle in 60 Seconds</h3>
-              <p class="completed-description">Spot the tactic and find the winning move before the minute is up.</p>
-              <div class="completed-footer">
-                <span>◷ &nbsp;10m–20m</span>
-                <span>⚡ &nbsp;20 aura</span>
-                <span class="earned">Skill earned ✓</span>
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-      <section class="panel" id="groupsPanel" role="tabpanel" hidden>
-        <div class="section-head" style="margin-top:17px"><h2>MY GROUPS</h2><button class="filter" type="button" data-toast="Create a group">＋ Create</button></div>
-        <div class="group-row"><div class="group-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a6 6 0 0 1 12 0v1m2-10a3 3 0 1 0-1-5m2 8a5 5 0 0 1 3 5v1"/></svg></div><div class="group-copy"><strong>Curiosity Club</strong><span>18 members · Public</span></div><button class="group-join" type="button" data-toast="Curiosity Club opened">Open</button></div>
-        <div class="group-row"><div class="group-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7z"/><path d="M9 12h6m-3-3v6"/></svg></div><div class="group-copy"><strong>The Lockpick Lab</strong><span>7 members · Private</span></div><button class="group-join" type="button" data-toast="The Lockpick Lab opened">Open</button></div>
-        <div class="section-head" style="margin-top:24px"><h2>FIND YOUR PEOPLE</h2></div>
-        <div class="empty-state"><strong>Small adventures are better together.</strong>Explore public groups to find your next curious crew.</div>
-      </section>
-      <section class="panel" id="rewardsPanel" role="tabpanel" hidden>
-        <section class="reward-hero">
-          <div class="reward-top"><span>TOTAL AURA</span><span>RANK E</span></div>
-          <div class="reward-total">80<small>AURA POINTS</small></div>
-          <div class="rank-track"><i></i></div>
-          <div class="reward-caption"><span>20 Aura to rank D</span><span>80%</span></div>
+  <main class="phone" aria-label="Profile screen preview">
+    <div class="screen">
+      <div class="status-bar"><span>01:15</span><span class="status-right">▂▄▆ &nbsp; Wi-Fi &nbsp; 86%</span></div>
+      <div class="scroll" id="profileScroll">
+        <header class="topbar">
+          <span aria-hidden="true"></span>
+          <div class="top-name">Aniket</div>
+          <button class="icon-button" id="accountButton" type="button" aria-label="Account options" title="Account options">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+          </button>
+        </header>
+        <section aria-label="Aniket's profile">
+          <div class="avatar" aria-label="Aniket's avatar">A<span class="rank-badge">E</span></div>
+          <div class="identity"><div class="username">@aniket</div><div class="bio">Hi, I am Aniket</div></div>
+          <div class="stats" aria-label="Profile statistics">
+            <button class="stat" type="button" data-toast="80 Aura"><strong>80</strong>Aura</button>
+            <button class="stat" type="button" data-toast="2 followers"><strong>2</strong>Followers</button>
+            <button class="stat" type="button" data-toast="Following 2 nerds"><strong>2</strong>Following</button>
+          </div>
+          <div class="actions">
+            <button class="action primary" type="button" data-toast="Edit profile">Edit profile</button>
+            <button class="action" type="button" data-toast="Rank E">Rank E</button>
+          </div>
         </section>
-        <div class="section-head" style="margin-top:22px"><h2>SKILLS EARNED</h2><span>2 unlocked</span></div>
-        <div class="reward-row"><span class="reward-icon">✳</span><div class="reward-copy">Lockpicking<small>Unlocked after a verified challenge</small></div><span class="rank-badge" style="position:static">E</span></div>
-        <div class="reward-row"><span class="reward-icon">♟</span><div class="reward-copy">Strategic thinking<small>Unlocked after a verified challenge</small></div><span class="rank-badge" style="position:static">E</span></div>
-        <div class="section-head" style="margin-top:22px"><h2>YOUR NUMBERS</h2></div>
-        <div class="group-row"><div class="group-copy"><strong>Challenges completed</strong><span>2 adventures finished and verified</span></div><strong>2</strong></div>
-        <div class="group-row"><div class="group-copy"><strong>Challenges created</strong><span>One idea shared with the community</span></div><strong>1</strong></div>
-      </section>
+        <nav class="tabs" role="tablist" aria-label="Profile sections">
+          <button class="tab" type="button" role="tab" aria-selected="true" data-tab="challenges">⚑ Challenges</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="groups">Groups</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="rewards">Rewards</button>
+        </nav>
+        <section id="challengesPanel" role="tabpanel">
+          <div class="filters" role="group" aria-label="Filter challenges">
+            <button class="filter" type="button" aria-pressed="true" data-filter="ALL">All</button>
+            <button class="filter" type="button" aria-pressed="false" data-filter="ACCEPTED">Accepted</button>
+            <button class="filter" type="button" aria-pressed="false" data-filter="IN_PROGRESS">In progress</button>
+            <button class="filter" type="button" aria-pressed="false" data-filter="PAUSED">Paused</button>
+          </div>
+          <div class="challenge-list" id="challengeList">
+            <article class="challenge-row" data-status="IN_PROGRESS">
+              <div class="challenge-art art-lock" aria-hidden="true">🔐</div>
+              <div class="challenge-copy"><div class="challenge-title">Pick a Lock in Under 5 Minutes</div><div class="challenge-status">In progress</div></div>
+              <button class="row-action" type="button" data-toast="Challenge opened">Pause</button>
+            </article>
+            <article class="challenge-row" data-status="ACCEPTED">
+              <div class="challenge-art art-fire" aria-hidden="true">🔥</div>
+              <div class="challenge-copy"><div class="challenge-title">Make Fire From Sticks: Light It</div><div class="challenge-status">Accepted</div></div>
+              <button class="row-action primary" type="button" data-toast="Challenge opened">Start</button>
+            </article>
+            <article class="challenge-row" data-status="IN_PROGRESS">
+              <div class="challenge-art art-hand" aria-hidden="true">🤸</div>
+              <div class="challenge-copy"><div class="challenge-title">Do a Handstand for 30 Seconds</div><div class="challenge-status">In progress</div></div>
+              <button class="row-action" type="button" data-toast="Challenge opened">Pause</button>
+            </article>
+          </div>
+          <div class="section-label">CREATED BY YOU</div>
+          <div class="empty"><strong>No challenges yet</strong>Create your own and invite nerds to it.</div>
+          <div class="section-label">COMPLETED</div>
+          <div class="completed-list">
+            <button class="completed-card cube" type="button" data-toast="Completed challenge">
+              <span class="cover-art" aria-hidden="true">🧊</span><span class="complete-check" aria-label="Verified">✓</span>
+              <span class="completed-copy"><span class="difficulty">Intermediate</span><span class="completed-title">Solve a Rubik's Cube in Under 2 Minutes</span><span class="completed-meta"><span>◷ &nbsp;20m–1h</span><span>⚡ &nbsp;40</span></span></span>
+            </button>
+            <button class="completed-card sudoku" type="button" data-toast="Completed challenge">
+              <span class="cover-art" aria-hidden="true">🧩</span><span class="complete-check" aria-label="Verified">✓</span>
+              <span class="completed-copy"><span class="difficulty beginner">Beginner</span><span class="completed-title">Learn to Solve a Sudoku in Under 5 Minutes</span><span class="completed-meta"><span>◷ &nbsp;2h–5h</span><span>⚡ &nbsp;24</span></span></span>
+            </button>
+          </div>
+        </section>
+        <section class="groups-panel" id="groupsPanel" role="tabpanel" hidden>
+          <div class="section-label" style="margin-top:0">MY GROUPS</div>
+          <div class="group-row"><span class="group-icon">♧</span><span class="group-copy"><strong>Curiosity Club</strong><small>18 members · Public</small></span><button class="group-open" type="button" data-toast="Curiosity Club">Open</button></div>
+          <div class="group-row"><span class="group-icon">⌑</span><span class="group-copy"><strong>The Lockpick Lab</strong><small>7 members · Private</small></span><button class="group-open" type="button" data-toast="The Lockpick Lab">Open</button></div>
+        </section>
+        <section class="rewards-panel" id="rewardsPanel" role="tabpanel" hidden>
+          <div class="coming-soon">Coming soon</div>
+        </section>
+      </div>
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <button class="nav-item" type="button" aria-label="Home" data-toast="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7h-3v10h-5v-6h-2v6H6V10z"/></svg></button>
+        <button class="nav-item" type="button" aria-label="Discover" data-toast="Discover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg></button>
+        <button class="nav-item" type="button" aria-label="Rank" data-toast="Rank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg></button>
+        <button class="nav-item selected" type="button" aria-label="Profile" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></button>
+      </nav>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </div>
-    <nav class="bottom-nav" aria-label="Main navigation">
-      <button class="nav-item" type="button" aria-label="Home" data-toast="Home"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7h-3v10h-5v-6h-2v6H6V10z"/></svg></button>
-      <button class="nav-item" type="button" aria-label="Discover" data-toast="Discover"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg></button>
-      <button class="nav-item" type="button" aria-label="Rank" data-toast="Rank"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg></button>
-      <button class="nav-item selected" type="button" aria-label="Profile" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></button>
-    </nav>
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </main>
-  <dialog id="accountSheet">
-    <div class="sheet-head"><span>Account</span><button class="icon-button" id="closeSheet" type="button" aria-label="Close account options">×</button></div>
-    <div class="sheet-list">
-      <button class="sheet-item" type="button" data-toast="Edit profile opened">✎ &nbsp; Update profile</button>
-      <button class="sheet-item" id="sheetTheme" type="button">◐ &nbsp; Switch theme</button>
-      <button class="sheet-item" type="button" data-toast="Privacy policy">◎ &nbsp; Privacy policy</button>
-      <button class="sheet-item" type="button" data-toast="Signed out">↗ &nbsp; Log out</button>
-    </div>
-  </dialog>
   <script>
     const root = document.documentElement;
-    const themeToggle = document.querySelector('#themeToggle');
-    const themeMeta = document.querySelector('meta[name="theme-color"]');
-    const accountSheet = document.querySelector('#accountSheet');
     const toast = document.querySelector('#toast');
     let toastTimer;
-
-    function setTheme(light) {
-      root.dataset.theme = light ? 'light' : 'dark';
-      themeToggle.setAttribute('aria-pressed', String(light));
-      themeToggle.setAttribute('aria-label', `Switch to ${light ? 'dark' : 'light'} theme`);
-      themeMeta.content = light ? '#ffffff' : '#0f0f0e';
-    }
 
     function showToast(message) {
       toast.textContent = message;
       toast.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 1500);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 1400);
     }
 
-    themeToggle.addEventListener('click', () => setTheme(root.dataset.theme !== 'light'));
-    document.querySelector('#sheetTheme').addEventListener('click', () => {
-      setTheme(root.dataset.theme !== 'light');
-      accountSheet.close();
+    document.querySelector('#accountButton').addEventListener('click', () => {
+      showToast('Account options');
     });
-    document.querySelector('#accountButton').addEventListener('click', () => accountSheet.showModal());
-    document.querySelector('#closeSheet').addEventListener('click', () => accountSheet.close());
 
     const tabs = [...document.querySelectorAll('[data-tab]')];
     const panels = {
@@ -383,6 +563,7 @@
     tabs.forEach((tab) => tab.addEventListener('click', () => {
       tabs.forEach((item) => item.setAttribute('aria-selected', String(item === tab)));
       Object.entries(panels).forEach(([name, panel]) => { panel.hidden = name !== tab.dataset.tab; });
+      document.querySelector('#profileScroll').scrollTop = 0;
     }));
 
     const filters = [...document.querySelectorAll('[data-filter]')];
