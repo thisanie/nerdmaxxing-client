@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-state="accepted">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f0f0e">
+  <title>NerdMaxxing | Challenge Journey</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --lime: #cfff47;
+      --mint: #9ff1c0;
+      --ink: #0b0c05;
+      --bg: #0f0f0e;
+      --surface: #161615;
+      --alt: #1b1b19;
+      --muted-wash: #252b16;
+      --text: #ecebe3;
+      --text-2: #8c8c84;
+      --text-3: #5a5a53;
+      --border: #2c2c2a;
+      --strong: #444441;
+      --peach: #ffdcc6;
+      --shadow: 0 24px 70px rgb(0 0 0 / 42%);
+    }
+    [data-theme="light"] {
+      color-scheme: light;
+      --bg: #fff;
+      --surface: #fff;
+      --alt: #f7f7f2;
+      --muted-wash: #f4fabe;
+      --text: #101008;
+      --text-2: #5c5c53;
+      --text-3: #85867c;
+      --border: #e5e5dc;
+      --strong: #cfcfc4;
+      --peach: #8a4a1f;
+      --shadow: 0 24px 70px rgb(16 16 8 / 12%);
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      margin: 0;
+      background: #070806;
+      color: var(--text);
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { color: inherit; font: inherit; }
+    .preview { min-height: 100svh; padding: 18px 16px 28px; }
+    .controls {
+      width: min(100%, 420px);
+      min-height: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 0 auto 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 7px; color: #ecebe3; font-size: 12px; font-weight: 800; letter-spacing: .05em; white-space: nowrap; }
+    .brand-mark { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 7px 7px 7px 2px; background: var(--lime); color: var(--ink); font-size: 12px; }
+    .controls-right { display: flex; gap: 8px; align-items: center; }
+    .segmented { display: flex; gap: 3px; padding: 3px; border: 1px solid #353630; border-radius: 999px; background: #161714; }
+    .segmented button, .theme-button { min-height: 32px; border: 0; border-radius: 999px; background: transparent; color: #a4a59b; cursor: pointer; font-size: 10px; font-weight: 750; }
+    .segmented button { padding: 0 10px; }
+    .segmented button[aria-pressed="true"] { background: var(--lime); color: var(--ink); }
+    .theme-button { width: 34px; display: grid; place-items: center; border: 1px solid #353630; background: #161714; }
+    .theme-button svg { width: 15px; height: 15px; }
+    .device {
+      width: min(100%, 420px);
+      height: min(820px, calc(100svh - 96px));
+      min-height: 570px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      margin: 0 auto;
+      border: 1px solid #34352e;
+      border-radius: 34px;
+      background: var(--bg);
+      box-shadow: var(--shadow);
+      transition: background .2s ease;
+    }
+    .status { height: 35px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 3px 25px 0; color: var(--text); font-size: 11px; font-weight: 700; }
+    .status-right { display: flex; align-items: center; gap: 7px; color: var(--text-2); font-size: 10px; }
+    .appbar { height: 49px; flex: none; display: grid; grid-template-columns: 38px 1fr 38px; align-items: center; padding: 0 16px 9px; }
+    .icon-button { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--alt); color: var(--text); cursor: pointer; }
+    .icon-button svg { width: 17px; height: 17px; }
+    .app-title { overflow: hidden; color: var(--text-2); font-size: 12px; font-weight: 650; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+    .app-title b { color: var(--text); font-weight: 750; }
+    .scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 0 0 24px; }
+    .scroll::-webkit-scrollbar { display: none; }
+    .hero {
+      margin: 0 14px;
+      padding: 16px;
+      border-radius: 25px;
+      background: linear-gradient(135deg, var(--lime), var(--mint));
+      color: var(--ink);
+    }
+    .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
+    .kicker { display: inline-flex; align-items: center; gap: 7px; color: rgb(11 12 5 / 70%); font-size: 9px; font-weight: 850; letter-spacing: .14em; }
+    .kicker::before { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); content: ""; }
+    .since { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; border-radius: 999px; background: var(--ink); color: var(--lime); font-size: 9px; font-weight: 750; white-space: nowrap; }
+    .metric { display: flex; align-items: baseline; gap: 7px; margin-top: 12px; }
+    .metric strong { max-width: 100%; overflow: hidden; font-size: 62px; line-height: .96; font-weight: 850; letter-spacing: -.045em; text-overflow: ellipsis; white-space: nowrap; }
+    .metric small { color: rgb(11 12 5 / 65%); font-size: 16px; font-weight: 650; }
+    .metric-description { margin: 8px 0 0; color: rgb(11 12 5 / 82%); font-size: 12px; font-weight: 650; line-height: 1.4; }
+    .metric-description span { color: rgb(11 12 5 / 60%); font-weight: 500; }
+    .ruler { position: relative; height: 43px; margin-top: 19px; }
+    .ruler-current { position: absolute; top: 0; left: 17%; transform: translateX(-50%); color: var(--ink); font-size: 10px; font-weight: 850; }
+    .ruler-flag { position: absolute; top: -1px; right: 0; font-size: 13px; }
+    .ruler-track { position: absolute; inset: 25px 0 auto; height: 5px; border-radius: 5px; background: rgb(11 12 5 / 16%); }
+    .ruler-fill { width: 17%; height: 100%; border-radius: inherit; background: var(--ink); }
+    .ruler-dot { position: absolute; top: 22px; left: 17%; width: 11px; height: 11px; transform: translateX(-50%); border: 2px solid rgb(11 12 5 / 18%); border-radius: 50%; background: var(--ink); }
+    .ruler-labels { display: flex; justify-content: space-between; color: rgb(11 12 5 / 62%); font-size: 9px; font-weight: 750; }
+    .actions { display: flex; gap: 8px; margin-top: 14px; }
+    .action { min-width: 0; min-height: 42px; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid rgb(11 12 5 / 34%); border-radius: 999px; background: transparent; color: var(--ink); cursor: pointer; font-size: 11px; font-weight: 800; }
+    .action.primary { border-color: var(--ink); background: var(--ink); color: var(--lime); }
+    .action svg { width: 15px; height: 15px; }
+    .log-link { width: 100%; margin-top: 4px; padding: 9px 0 0; border: 0; background: transparent; color: rgb(11 12 5 / 75%); cursor: pointer; font-size: 10px; font-weight: 750; }
+    .section { margin: 20px 16px 0; }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 2px 10px; }
+    .section-head h2 { margin: 0; color: var(--text); font-size: 16px; line-height: 1.15; font-weight: 750; }
+    .section-head span { color: var(--text-2); font-size: 10px; white-space: nowrap; }
+    .card { border: 1px solid var(--border); border-radius: 21px; background: var(--alt); }
+    .attempts { padding: 13px 15px 12px; }
+    .attempt-bars { height: 113px; display: flex; justify-content: center; align-items: end; gap: 18px; }
+    .attempt { width: 76px; height: 100%; display: flex; flex-direction: column; justify-content: end; align-items: center; gap: 5px; color: var(--text-2); font-size: 9px; font-weight: 700; }
+    .attempt-value { color: var(--text); font-size: 10px; }
+    .attempt-bar { width: 100%; border-radius: 12px 12px 6px 6px; background: var(--strong); }
+    .attempt.latest { color: var(--text); }
+    .attempt.latest .attempt-bar { background: var(--lime); }
+    .attempt-caption { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--text-2); font-size: 9px; }
+    .attempt-caption b { color: var(--text); font-weight: 700; text-align: right; }
+    .trail { position: relative; padding-left: 2px; }
+    .trail::before { position: absolute; top: 17px; bottom: 20px; left: 17px; width: 2px; background: var(--border); content: ""; }
+    .milestone { position: relative; display: flex; align-items: flex-start; gap: 11px; padding: 7px 0 11px; }
+    .node { z-index: 1; width: 34px; height: 34px; flex: none; display: grid; place-items: center; border: 1px solid var(--strong); border-radius: 50%; background: var(--bg); color: var(--text-2); font-size: 10px; font-weight: 850; }
+    .milestone.current .node { border-color: transparent; background: var(--lime); color: var(--ink); box-shadow: 0 0 0 4px var(--muted-wash); }
+    .milestone-copy { min-width: 0; flex: 1; padding-top: 6px; }
+    .milestone.current .milestone-copy { padding-top: 3px; }
+    .milestone-title { color: var(--text); font-size: 12px; font-weight: 700; }
+    .milestone-description { margin-top: 4px; color: var(--text-2); font-size: 10px; line-height: 1.4; }
+    .milestone-progress { margin-top: 9px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 13px; background: var(--alt); }
+    .mini-track { height: 5px; overflow: hidden; border-radius: 5px; background: var(--border); }
+    .mini-track i { display: block; width: 3%; height: 100%; border-radius: inherit; background: var(--lime); }
+    .mini-labels { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; color: var(--text-2); font-size: 9px; }
+    .summit { position: relative; overflow: hidden; padding: 15px; }
+    .summit::after { position: absolute; top: -45px; right: -45px; width: 125px; height: 125px; border-radius: 50%; background: radial-gradient(circle, rgb(207 255 71 / 12%), transparent 72%); content: ""; }
+    .summit-number { font-size: 40px; line-height: .95; font-weight: 850; letter-spacing: -.035em; }
+    .summit-number small { margin-left: 5px; color: var(--text-2); font-size: 11px; font-weight: 600; letter-spacing: 0; }
+    .summit-people { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--text-2); font-size: 10px; }
+    .avatars { display: flex; padding-left: 2px; }
+    .avatar { width: 23px; height: 23px; display: grid; place-items: center; margin-left: -3px; border: 2px solid var(--alt); border-radius: 50%; background: #b88663; color: #fff; font-size: 8px; font-weight: 800; }
+    .avatar:nth-child(2) { background: #805a9d; }
+    .avatar:nth-child(3) { background: #477458; }
+    .discussion { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid var(--border); border-radius: 17px; background: var(--alt); color: var(--text); cursor: pointer; font-size: 12px; font-weight: 700; text-align: left; }
+    .discussion-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px var(--muted-wash); }
+    .discussion-arrow { margin-left: auto; color: var(--text-2); }
+    .drop { display: block; margin: 14px auto 4px; padding: 9px 15px; border: 0; background: transparent; color: #e87565; cursor: pointer; font-size: 10px; font-weight: 750; }
+
+    /* Unaccepted state */
+    .unaccepted-hero .metric { margin-top: 17px; }
+    .unaccepted-hero .metric strong { font-size: 56px; }
+    .challenge-name { max-width: 275px; margin: 9px 0 0; color: var(--ink); font-size: 17px; line-height: 1.16; font-weight: 800; }
+    .unaccepted-description { margin: 7px 0 0; color: rgb(11 12 5 / 72%); font-size: 11px; line-height: 1.45; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; padding-top: 13px; border-top: 1px solid rgb(11 12 5 / 18%); }
+    .fact-label { color: rgb(11 12 5 / 60%); font-size: 8px; font-weight: 850; letter-spacing: .1em; }
+    .fact-value { overflow: hidden; margin-top: 5px; color: var(--ink); font-size: 11px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+    .accept-row { display: flex; gap: 8px; margin-top: 14px; }
+    .accept-row .action.primary { flex: 1; }
+    .save-action { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border: 1px solid rgb(11 12 5 / 35%); border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer; }
+    .save-action svg { width: 18px; height: 18px; }
+    .why-card { padding: 14px; color: var(--text-2); font-size: 11px; line-height: 1.5; }
+    .why-card strong { display: block; margin-bottom: 5px; color: var(--text); font-size: 12px; }
+    .locked .node { border-style: dashed; }
+    .locked .milestone-title { color: var(--text-2); }
+    .locked .milestone-copy { padding-top: 7px; }
+    .verify-card { padding: 14px; }
+    .verify-title { color: var(--text); font-size: 12px; line-height: 1.4; font-weight: 700; }
+    .verify-copy { margin-top: 6px; color: var(--text-2); font-size: 10px; line-height: 1.45; }
+    .verify-row { display: flex; align-items: center; gap: 9px; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--border); color: var(--text-2); font-size: 10px; }
+    .verify-row b { margin-left: auto; color: var(--text); font-size: 10px; text-align: right; }
+    .final-accept { margin: 17px 16px 4px; padding: 15px; border-radius: 18px; background: var(--alt); }
+    .final-accept h2 { margin: 0; font-size: 16px; line-height: 1.2; }
+    .final-accept p { margin: 5px 0 12px; color: var(--text-2); font-size: 10px; }
+    .wide-accept { width: 100%; min-height: 42px; border: 0; border-radius: 999px; background: var(--lime); color: var(--ink); cursor: pointer; font-size: 11px; font-weight: 850; }
+
+    .bottom-nav { flex: none; display: flex; align-items: center; justify-content: space-around; min-height: 60px; margin: 0 12px 9px; padding: 5px 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--alt); }
+    .nav-item { min-width: 39px; height: 40px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 11px; border-radius: 999px; color: var(--text-2); font-size: 10px; font-weight: 750; }
+    .nav-item svg { width: 17px; height: 17px; fill: currentColor; }
+    .nav-item.selected { background: var(--lime); color: var(--ink); }
+    .nav-item:not(.selected) span { display: none; }
+    .toast { position: absolute; z-index: 4; left: 50%; bottom: 76px; max-width: calc(100% - 36px); transform: translate(-50%, 12px); padding: 10px 14px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 10px; font-weight: 750; opacity: 0; pointer-events: none; transition: opacity .16s ease, transform .16s ease; white-space: nowrap; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    [hidden] { display: none !important; }
+    @media (max-width: 520px) {
+      body { background: var(--bg); }
+      .preview { padding: 0; }
+      .controls { width: 100%; min-height: 52px; margin: 0; padding: 0 13px; }
+      .brand { font-size: 10px; }
+      .brand-mark { width: 21px; height: 21px; }
+      .segmented button { padding: 0 8px; font-size: 9px; }
+      .device { width: 100%; height: calc(100svh - 52px); min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .bottom-nav { margin-bottom: max(8px, env(safe-area-inset-bottom)); }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <header class="controls">
+      <div class="brand"><span class="brand-mark">N</span><span>NERD MAXXING</span></div>
+      <div class="controls-right">
+        <div class="segmented" role="group" aria-label="Challenge state">
+          <button type="button" data-state-button="accepted" aria-pressed="true">Accepted</button>
+          <button type="button" data-state-button="unaccepted" aria-pressed="false">Unaccepted</button>
+        </div>
+        <button class="theme-button" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="device" aria-label="Challenge detail preview">
+      <div class="status"><span>9:41</span><span class="status-right"><span>▂▄▆</span><span>Wi-Fi</span><span>86%</span></span></div>
+      <header class="appbar">
+        <button class="icon-button" type="button" aria-label="Back" data-toast="Back to challenges">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="app-title"><span>Intermediate</span><span> · </span><b id="statusLabel">Accepted</b></div>
+        <button class="icon-button" type="button" aria-label="Challenge options" data-toast="Challenge options">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <div class="scroll" id="journeyScroll">
+        <section class="hero accepted-view" aria-label="Your current challenge progress">
+          <div class="hero-top"><span class="kicker">YOU ARE HERE</span><span class="since">↘ 100 since start</span></div>
+          <div class="metric"><strong>800</strong><small>sec</small></div>
+          <p class="metric-description">Time to pick the lock <span>· Best so far. Target is 300.</span></p>
+          <div class="ruler" aria-label="Progress from 900 seconds to a target of 300 seconds">
+            <span class="ruler-current">800</span><span class="ruler-flag" aria-hidden="true">⚑</span>
+            <div class="ruler-track"><div class="ruler-fill"></div></div><i class="ruler-dot"></i>
+          </div>
+          <div class="ruler-labels"><span>900</span><span>300</span></div>
+          <div class="actions">
+            <button class="action primary" type="button" data-toast="Training path opened"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>Train</button>
+            <button class="action" type="button" data-toast="Evidence submission opened">Prove it</button>
+          </div>
+          <button class="log-link" type="button" data-toast="Progress logger opened">＋ Log progress</button>
+        </section>
+
+        <section class="hero unaccepted-hero unaccepted-view" aria-label="Challenge details" hidden>
+          <div class="hero-top"><span class="kicker">THE CHALLENGE</span><span class="since">⚡ 40 AURA</span></div>
+          <h1 class="challenge-name">Pick a Lock in Under 5 Minutes</h1>
+          <p class="unaccepted-description">Learn lock-picking fundamentals and work toward opening a lock in under five minutes.</p>
+          <div class="metric"><strong>300</strong><small>sec target</small></div>
+          <div class="facts">
+            <div><div class="fact-label">DIFFICULTY</div><div class="fact-value">Intermediate</div></div>
+            <div><div class="fact-label">EFFORT</div><div class="fact-value">2h–5h</div></div>
+            <div><div class="fact-label">REWARD</div><div class="fact-value">+40 aura</div></div>
+          </div>
+          <div class="accept-row">
+            <button class="action primary" type="button" data-accept>Accept challenge</button>
+            <button class="save-action" type="button" aria-label="Save challenge" data-toast="Saved for later">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.8A1.8 1.8 0 0 1 7.8 3h8.4A1.8 1.8 0 0 1 18 4.8V21l-6-4-6 4z"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <div class="accepted-view">
+          <section class="section">
+            <div class="section-head"><h2>Your attempts</h2><span>2 logged</span></div>
+            <div class="card attempts">
+              <div class="attempt-bars">
+                <div class="attempt"><span class="attempt-value">900</span><i class="attempt-bar" style="height:80px"></i><span>#1</span></div>
+                <div class="attempt latest"><span class="attempt-value">800</span><i class="attempt-bar" style="height:71px"></i><span>#2</span></div>
+              </div>
+              <div class="attempt-caption"><span>Time to pick the lock</span><b>0.9× your first</b></div>
+            </div>
+          </section>
+        </div>
+
+        <section class="section">
+          <div class="section-head"><h2 class="accepted-view">The trail</h2><h2 class="unaccepted-view" hidden>The path</h2><span class="accepted-view">0 of 4 milestones</span><span class="unaccepted-view" hidden>4 milestones</span></div>
+          <div class="trail accepted-view">
+            <article class="milestone current"><span class="node">01</span><div class="milestone-copy"><div class="milestone-title">Open Your First Lock</div><div class="milestone-description">Learn the pins and pick a padlock open, however long it takes.</div><div class="milestone-progress"><div class="mini-track"><i></i></div><div class="mini-labels"><span>0 / 1800 seconds</span><span>Next up</span></div></div></div></article>
+            <article class="milestone"><span class="node">02</span><div class="milestone-copy"><div class="milestone-title">Under 15 Minutes</div></div></article>
+            <article class="milestone"><span class="node">03</span><div class="milestone-copy"><div class="milestone-title">Under 10 Minutes</div></div></article>
+            <article class="milestone"><span class="node">04</span><div class="milestone-copy"><div class="milestone-title">Under 5 Minutes</div></div></article>
+          </div>
+          <div class="trail unaccepted-view" hidden>
+            <article class="milestone"><span class="node">01</span><div class="milestone-copy"><div class="milestone-title">Open Your First Lock</div><div class="milestone-description">Learn the pins and pick a padlock open, however long it takes.</div></div></article>
+            <article class="milestone locked"><span class="node">02</span><div class="milestone-copy"><div class="milestone-title">Under 15 Minutes</div></div></article>
+            <article class="milestone locked"><span class="node">03</span><div class="milestone-copy"><div class="milestone-title">Under 10 Minutes</div></div></article>
+            <article class="milestone locked"><span class="node">04</span><div class="milestone-copy"><div class="milestone-title">Under 5 Minutes</div></div></article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head"><h2>At the summit</h2><span class="accepted-view">0% climbed</span><span class="unaccepted-view" hidden>Challenge community</span></div>
+          <div class="card summit">
+            <div class="summit-number">0<small>have cleared it</small></div>
+            <div class="summit-people"><div class="avatars"><span class="avatar">D</span></div><span>1 nerd is on this trial</span></div>
+          </div>
+        </section>
+
+        <section class="section unaccepted-view" hidden>
+          <div class="section-head"><h2>Why take this on?</h2><span>THE PAYOFF</span></div>
+          <div class="card why-card"><strong>Build a practical skill, one attempt at a time.</strong>Start with the basics, track your best result, and follow a path from your first open to a five-minute finish.</div>
+        </section>
+
+        <section class="section unaccepted-view" hidden>
+          <div class="section-head"><h2>How you prove it</h2><span>VERIFICATION</span></div>
+          <div class="card verify-card"><div class="verify-title">Submit a video of your attempt with the lock and result clearly visible.</div><div class="verify-copy">Your result is attached to your profile and reviewed according to this challenge’s verification rules.</div><div class="verify-row"><span>Proof required</span><b>Video submission</b></div><div class="verify-row" style="margin-top:0;padding-top:9px;border-top:0"><span>Aura reward</span><b>Paid when approved</b></div></div>
+        </section>
+
+        <section class="section">
+          <button class="discussion" type="button" data-toast="Discussion opened"><span class="discussion-dot"></span><span>Discussion</span><span class="discussion-arrow">↗</span></button>
+        </section>
+
+        <section class="final-accept unaccepted-view" hidden>
+          <h2>Ready to take on this challenge?</h2><p>Accept it to open the first milestone and start tracking progress.</p>
+          <button class="wide-accept" type="button" data-accept>Accept the challenge</button>
+        </section>
+        <button class="drop accepted-view" type="button" data-toast="Drop challenge confirmation">Drop this trial</button>
+      </div>
+
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 3 3 11h3v10h6v-6h2v6h7V11h3z"/></svg><span>Home</span></div>
+        <div class="nav-item selected"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5z"/></svg><span>Discover</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
+      </nav>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+  <script>
+    const root = document.documentElement;
+    const themeToggle = document.querySelector('#themeToggle');
+    let toastTimer;
+
+    function setState(state) {
+      root.dataset.state = state;
+      document.querySelector('#statusLabel').textContent = state === 'accepted' ? 'Accepted' : 'Open trial';
+      document.querySelectorAll('[data-state-button]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.stateButton === state));
+      });
+      document.querySelectorAll('.accepted-view').forEach((element) => {
+        element.hidden = state !== 'accepted';
+      });
+      document.querySelectorAll('.unaccepted-view').forEach((element) => {
+        element.hidden = state !== 'unaccepted';
+      });
+      document.querySelector('#journeyScroll').scrollTop = 0;
+    }
+
+    function showToast(message) {
+      const toast = document.querySelector('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    document.querySelectorAll('[data-state-button]').forEach((button) => {
+      button.addEventListener('click', () => setState(button.dataset.stateButton));
+    });
+    document.querySelectorAll('[data-accept]').forEach((button) => {
+      button.addEventListener('click', () => {
+        setState('accepted');
+        showToast('Challenge accepted');
+      });
+    });
+    document.querySelectorAll('[data-toast]').forEach((button) => {
+      button.addEventListener('click', () => showToast(button.dataset.toast));
+    });
+    themeToggle.addEventListener('click', () => {
+      const light = root.dataset.theme !== 'light';
+      root.dataset.theme = light ? 'light' : 'dark';
+      themeToggle.setAttribute('aria-pressed', String(light));
+      themeToggle.setAttribute('aria-label', `Switch to ${light ? 'dark' : 'light'} theme`);
+      document.querySelector('meta[name="theme-color"]').content = light ? '#ffffff' : '#0f0f0e';
+    });
+  </script>
+</body>
+</html>
