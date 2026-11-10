@@ -354,6 +354,7 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
         if (widget.canPost) ...[
           SafeArea(
             top: false,
+            bottom: false,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: scheme.surface,

@@ -313,8 +313,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildComposer() {
     return SafeArea(
+      bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
