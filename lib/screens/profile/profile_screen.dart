@@ -1197,7 +1197,7 @@ class _RewardsPanel extends StatelessWidget {
                           ? 'Rank progress updating'
                           : nextRank == null
                           ? 'Top rank reached'
-                          : '${stats.auraToNextRank} Aura to rank $nextRank',
+                          : '${stats?.auraToNextRank ?? 0} Aura to rank $nextRank',
                       style: AppFonts.body(
                         color: HomePalette.ink.withValues(alpha: .75),
                         fontSize: 9,
