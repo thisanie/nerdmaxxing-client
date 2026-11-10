@@ -7,6 +7,7 @@ import '../../models/group_message.dart';
 import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
 import '../../services/invitations_service.dart';
+import '../../services/profile_service.dart';
 import '../../services/token_storage.dart';
 import '../../theme/app_theme.dart';
 import '../challenge/challenge_detail_screen.dart';
@@ -38,8 +39,15 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> _loadCurrentUserId() async {
-    final userId = await TokenStorage().userId;
-    if (mounted) setState(() => _currentUserId = userId);
+    final storedId = await TokenStorage().userId;
+    if (mounted && storedId != null && storedId.isNotEmpty) {
+      setState(() => _currentUserId = storedId);
+    }
+    // The stored id can be empty after a token refresh or older sign-in.
+    try {
+      final profile = await context.read<ProfileService>().getMyProfile();
+      if (mounted) setState(() => _currentUserId = profile.id);
+    } catch (_) {}
   }
 
   @override
@@ -286,7 +294,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           return _MessageBubble(
             message: message,
             isMine:
-                _currentUserId != null && message.author.id == _currentUserId,
+                _currentUserId != null &&
+                _currentUserId!.isNotEmpty &&
+                message.author.id == _currentUserId,
             responding:
                 message.challengeInvitation?.id == _respondingInvitationId,
             onInvitationResponse: message.challengeInvitation == null
