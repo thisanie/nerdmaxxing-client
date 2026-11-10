@@ -937,23 +937,29 @@ class _ResumeCard extends StatelessWidget {
             child: Row(
               children: [
                 SizedBox(
-                  width: 70,
-                  height: 70,
+                  width: 76,
+                  height: 76,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      CircularProgressIndicator(
-                        value: ringProgress,
-                        strokeWidth: 6,
-                        strokeCap: StrokeCap.round,
-                        backgroundColor: HomePalette.ink.withValues(alpha: 0.25),
-                        color: HomePalette.ink,
+                      SizedBox.expand(
+                        child: CircularProgressIndicator(
+                          value: ringProgress,
+                          strokeWidth: 6,
+                          strokeCap: StrokeCap.round,
+                          backgroundColor: HomePalette.ink.withValues(
+                            alpha: .16,
+                          ),
+                          valueColor: const AlwaysStoppedAnimation(
+                            HomePalette.ink,
+                          ),
+                        ),
                       ),
                       Container(
-                        width: 56,
-                        height: 56,
+                        width: 60,
+                        height: 60,
                         decoration: const BoxDecoration(
-                          color: HomePalette.resumeRingFill,
+                          color: Color(0xFFE8FFBC),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
