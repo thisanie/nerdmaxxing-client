@@ -1218,22 +1218,14 @@ class _GroupTile extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          _GroupInfoPill(
-                            label:
-                                '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
-                            brightness: brightness,
-                          ),
-                          _GroupInfoPill(
-                            label: group.visibility.toLowerCase() == 'private'
-                                ? 'Private'
-                                : 'Public',
-                            brightness: brightness,
-                          ),
-                        ],
+                      Text(
+                        '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'} · ${group.visibility.toLowerCase() == 'private' ? 'Private' : 'Public'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.home(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 10.5,
+                        ),
                       ),
                     ],
                   ),
@@ -1270,35 +1262,6 @@ class _GroupTile extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GroupInfoPill extends StatelessWidget {
-  final String label;
-  final Brightness brightness;
-
-  const _GroupInfoPill({required this.label, required this.brightness});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: HomePalette.surfaceAlt(brightness),
-        border: Border.all(color: HomePalette.border(brightness)),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: AppFonts.home(
-          color: HomePalette.textSecondary(brightness),
-          fontSize: 9.5,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
