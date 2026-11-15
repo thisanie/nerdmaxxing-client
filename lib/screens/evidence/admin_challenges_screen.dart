@@ -423,7 +423,7 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
                   DropdownButtonFormField<String>(
                     initialValue: _difficulty,
                     decoration: const InputDecoration(labelText: 'Difficulty'),
-                    items: const [
+                    items: [
                       for (final value in _difficultyOptions)
                         DropdownMenuItem(value: value, child: Text(value)),
                     ],
