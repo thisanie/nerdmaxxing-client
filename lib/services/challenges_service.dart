@@ -107,4 +107,28 @@ class ChallengesService {
     );
     return Challenge.fromJson(data);
   }
+
+  Future<Challenge> createAdminChallenge({
+    required Map<String, dynamic> payload,
+  }) async {
+    final data = await api.post('/admin/challenges', data: payload);
+    return Challenge.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  Future<void> scheduleDailyChallenge({
+    required String challengeId,
+    required DateTime date,
+    required double bonusMultiplier,
+  }) async {
+    await api.post(
+      '/admin/challenges/$challengeId/daily',
+      data: {
+        'daily_date':
+            '${date.year.toString().padLeft(4, '0')}-'
+            '${date.month.toString().padLeft(2, '0')}-'
+            '${date.day.toString().padLeft(2, '0')}',
+        'bonus_multiplier': bonusMultiplier,
+      },
+    );
+  }
 }

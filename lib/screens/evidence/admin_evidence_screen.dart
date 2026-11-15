@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/evidence_submission.dart';
 import '../../services/api_client.dart';
 import '../../services/evidence_service.dart';
+import 'admin_challenges_screen.dart';
 
 class AdminEvidenceScreen extends StatefulWidget {
   const AdminEvidenceScreen({super.key});
@@ -136,6 +137,15 @@ class _AdminEvidenceScreenState extends State<AdminEvidenceScreen> {
       appBar: AppBar(
         title: const Text('Evidence requests'),
         actions: [
+          IconButton(
+            tooltip: 'Create daily challenge',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const AdminChallengesScreen(),
+              ),
+            ),
+            icon: const Icon(Icons.calendar_month_rounded),
+          ),
           IconButton(
             tooltip: 'Refresh queue',
             onPressed: _loading ? null : () => _loadSubmissions(refresh: true),
