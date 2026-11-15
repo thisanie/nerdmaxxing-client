@@ -10,11 +10,48 @@ class _AdminResourceFields {
   final title = TextEditingController();
   final url = TextEditingController();
   final rationale = TextEditingController();
+  String type = 'LINK';
 
   void dispose() {
     title.dispose();
     url.dispose();
     rationale.dispose();
+  }
+}
+
+class _AdminMetricFields {
+  final key = TextEditingController();
+  final label = TextEditingController();
+  final unit = TextEditingController();
+  final target = TextEditingController();
+  final baseline = TextEditingController();
+  String kind = 'COUNT';
+  String direction = 'AT_LEAST';
+  String format = 'DECIMAL_2';
+  bool booleanTarget = true;
+  bool isPrimary = false;
+
+  void dispose() {
+    key.dispose();
+    label.dispose();
+    unit.dispose();
+    target.dispose();
+    baseline.dispose();
+  }
+}
+
+class _AdminRequirementFields {
+  final label = TextEditingController();
+  final value = TextEditingController(text: '1');
+  final unit = TextEditingController();
+  String metricKey = '';
+  String operator = 'AT_LEAST';
+  bool booleanValue = true;
+
+  void dispose() {
+    label.dispose();
+    value.dispose();
+    unit.dispose();
   }
 }
 
@@ -39,6 +76,40 @@ class AdminChallengesScreen extends StatefulWidget {
 }
 
 class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
+  static const _difficultyOptions = [
+    'BEGINNER',
+    'INTERMEDIATE',
+    'ADVANCED',
+    'EXTREME',
+  ];
+  static const _verificationOptions = [
+    'SELF_REPORTED',
+    'VIDEO_UPLOAD',
+    'EXTERNAL_ACCOUNT',
+    'VIDEO_VERIFIED',
+    'ACCOUNT_VERIFIED',
+  ];
+  static const _directionOptions = ['AT_LEAST', 'AT_MOST', 'EXACTLY', 'BOOLEAN'];
+  static const _metricKindOptions = [
+    'COUNT',
+    'DURATION',
+    'DISTANCE',
+    'PERCENTAGE',
+    'SCORE',
+    'BOOLEAN',
+  ];
+  static const _metricFormatOptions = ['INTEGER', 'DECIMAL_2', 'BOOLEAN'];
+  static const _resourceTypeOptions = [
+    'ARTICLE',
+    'VIDEO',
+    'TOOL',
+    'COURSE',
+    'COMMUNITY',
+    'INTERACTIVE_GUIDE',
+    'INTERACTIVE_TRAINER',
+    'LINK',
+  ];
+
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _imageUrl = TextEditingController();
@@ -50,6 +121,8 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
   final _verificationInstructions = TextEditingController();
   final _requiredRuns = TextEditingController(text: '1');
   final _resources = <_AdminResourceFields>[_AdminResourceFields()];
+  final _metrics = <_AdminMetricFields>[];
+  final _requirements = <_AdminRequirementFields>[];
   final _milestones = <_AdminMilestoneFields>[_AdminMilestoneFields()];
 
   String _difficulty = 'BEGINNER';
@@ -79,6 +152,12 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
     }
     for (final resource in _resources) {
       resource.dispose();
+    }
+    for (final metric in _metrics) {
+      metric.dispose();
+    }
+    for (final requirement in _requirements) {
+      requirement.dispose();
     }
     for (final milestone in _milestones) {
       milestone.dispose();
@@ -128,7 +207,7 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
             'url': _resources[index].url.text.trim().isEmpty
                 ? null
                 : _resources[index].url.text.trim(),
-            'resource_type': 'LINK',
+            'resource_type': _resources[index].type,
             'rationale': _resources[index].rationale.text.trim(),
             'order_index': index,
             'required': true,
@@ -143,8 +222,39 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
       'verification_type': _verificationType,
       'verification_instructions': _verificationInstructions.text.trim(),
       'required_runs': int.parse(_requiredRuns.text.trim()),
-      'metrics': <Map<String, dynamic>>[],
-      'requirements': <Map<String, dynamic>>[],
+      'metrics': [
+        for (final metric in _metrics)
+          {
+            'key': metric.key.text.trim(),
+            'label': metric.label.text.trim(),
+            'kind': metric.kind,
+            'unit': metric.unit.text.trim().isEmpty
+                ? null
+                : metric.unit.text.trim(),
+            'target': metric.kind == 'BOOLEAN'
+                ? metric.booleanTarget
+                : _optionalNumber(metric.target.text),
+            if (metric.kind != 'BOOLEAN' && metric.baseline.text.trim().isNotEmpty)
+              'baseline': double.parse(metric.baseline.text.trim()),
+            'direction': metric.direction,
+            'is_primary': metric.isPrimary,
+            'format': metric.format,
+          },
+      ],
+      'requirements': [
+        for (final requirement in _requirements)
+          {
+            'metric_key': requirement.metricKey,
+            'operator': requirement.operator,
+            'value': requirement.operator == 'BOOLEAN'
+                ? requirement.booleanValue
+                : double.parse(requirement.value.text.trim()),
+            'unit': requirement.unit.text.trim().isEmpty
+                ? null
+                : requirement.unit.text.trim(),
+            'label': requirement.label.text.trim(),
+          },
+      ],
       'milestones': [
         for (final milestone in _milestones)
           {
@@ -196,6 +306,42 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
   void _addResource() {
     if (_resources.length >= 20) return;
     setState(() => _resources.add(_AdminResourceFields()));
+  }
+
+  void _addMetric() {
+    if (_metrics.length >= 20) return;
+    setState(() => _metrics.add(_AdminMetricFields()));
+  }
+
+  void _removeMetric(int index) {
+    if (_metrics.isEmpty) return;
+    final removed = _metrics.removeAt(index);
+    final removedKey = removed.key.text.trim();
+    removed.dispose();
+    if (removedKey.isNotEmpty) {
+      final remainingKeys = _metrics.map((metric) => metric.key.text.trim()).toSet();
+      for (final requirement in _requirements) {
+        if (requirement.metricKey == removedKey) {
+          requirement.metricKey = remainingKeys.isEmpty ? '' : remainingKeys.first;
+        }
+      }
+    }
+    setState(() {});
+  }
+
+  void _addRequirement() {
+    if (_requirements.length >= 20 || _metrics.isEmpty) return;
+    setState(() {
+      _requirements.add(
+        _AdminRequirementFields()..metricKey = _metrics.first.key.text.trim(),
+      );
+    });
+  }
+
+  void _removeRequirement(int index) {
+    if (_requirements.isEmpty) return;
+    _requirements.removeAt(index).dispose();
+    setState(() {});
   }
 
   void _removeResource(int index) {
@@ -278,9 +424,8 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
                     initialValue: _difficulty,
                     decoration: const InputDecoration(labelText: 'Difficulty'),
                     items: const [
-                      DropdownMenuItem(value: 'BEGINNER', child: Text('Beginner')),
-                      DropdownMenuItem(value: 'INTERMEDIATE', child: Text('Intermediate')),
-                      DropdownMenuItem(value: 'ADVANCED', child: Text('Advanced')),
+                      for (final value in _difficultyOptions)
+                        DropdownMenuItem(value: value, child: Text(value)),
                     ],
                     onChanged: (value) => setState(() => _difficulty = value ?? 'BEGINNER'),
                   ),
@@ -317,6 +462,47 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
                   ),
                   const SizedBox(height: 20),
                   _SectionTitle(
+                    title: 'Metrics',
+                    subtitle: 'Define values participants will track.',
+                  ),
+                  const SizedBox(height: 12),
+                  for (var index = 0; index < _metrics.length; index++)
+                    _metricFields(index),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: _creating || _metrics.length >= 20 ? null : _addMetric,
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text('Add metric (${_metrics.length}/20)'),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _SectionTitle(
+                    title: 'Requirements',
+                    subtitle: 'Set pass conditions using the metrics above.',
+                  ),
+                  const SizedBox(height: 12),
+                  if (_metrics.isEmpty)
+                    Text(
+                      'Add a metric before defining requirements.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  for (var index = 0; index < _requirements.length; index++)
+                    _requirementFields(index),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: _creating ||
+                              _metrics.isEmpty ||
+                              _requirements.length >= 20
+                          ? null
+                          : _addRequirement,
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text('Add requirement (${_requirements.length}/20)'),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _SectionTitle(
                     title: 'Milestones',
                     subtitle: 'Define at least one milestone and its target.',
                   ),
@@ -340,9 +526,12 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
                   DropdownButtonFormField<String>(
                     initialValue: _verificationType,
                     decoration: const InputDecoration(labelText: 'Verification type'),
-                    items: const [
-                      DropdownMenuItem(value: 'SELF_REPORTED', child: Text('Self-reported')),
-                      DropdownMenuItem(value: 'ADMIN_REVIEW', child: Text('Admin review')),
+                    items: [
+                      for (final value in _verificationOptions)
+                        DropdownMenuItem(
+                          value: value,
+                          child: Text(_verificationLabel(value)),
+                        ),
                     ],
                     onChanged: (value) => setState(
                       () => _verificationType = value ?? 'SELF_REPORTED',
@@ -467,6 +656,18 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
             validator: _requiredValidator,
           ),
           const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: resource.type,
+            decoration: const InputDecoration(labelText: 'Resource type'),
+            items: [
+              for (final value in _resourceTypeOptions)
+                DropdownMenuItem(value: value, child: Text(value)),
+            ],
+            onChanged: _creating
+                ? null
+                : (value) => setState(() => resource.type = value ?? 'LINK'),
+          ),
+          const SizedBox(height: 12),
           TextFormField(
             controller: resource.url,
             decoration: const InputDecoration(labelText: 'URL (optional)'),
@@ -478,6 +679,207 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
             maxLength: 1000,
             maxLines: 2,
             decoration: const InputDecoration(labelText: 'Why this resource is useful'),
+            validator: _requiredValidator,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricFields(int index) {
+    final metric = _metrics[index];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('Metric ${index + 1}', style: Theme.of(context).textTheme.titleSmall),
+              ),
+              IconButton(
+                tooltip: 'Remove metric',
+                onPressed: _creating ? null : () => _removeMetric(index),
+                icon: const Icon(Icons.delete_outline_rounded),
+              ),
+            ],
+          ),
+          TextFormField(
+            controller: metric.key,
+            decoration: const InputDecoration(labelText: 'Key (for example, minutes_read)'),
+            validator: _metricKeyValidator,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: metric.label,
+            decoration: const InputDecoration(labelText: 'Label'),
+            validator: _requiredValidator,
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: metric.kind,
+            decoration: const InputDecoration(labelText: 'Metric kind'),
+            items: [
+              for (final value in _metricKindOptions)
+                DropdownMenuItem(value: value, child: Text(value)),
+            ],
+            onChanged: _creating
+                ? null
+                : (value) => setState(() => metric.kind = value ?? 'COUNT'),
+          ),
+          const SizedBox(height: 12),
+          if (metric.kind == 'BOOLEAN')
+            DropdownButtonFormField<bool>(
+              initialValue: metric.booleanTarget,
+              decoration: const InputDecoration(labelText: 'Target'),
+              items: const [
+                DropdownMenuItem(value: true, child: Text('True')),
+                DropdownMenuItem(value: false, child: Text('False')),
+              ],
+              onChanged: _creating
+                  ? null
+                  : (value) => setState(() => metric.booleanTarget = value ?? true),
+            )
+          else ...[
+            TextFormField(
+              controller: metric.target,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Target (optional)'),
+              validator: _optionalNumberValidator,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: metric.baseline,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Baseline (optional)'),
+              validator: _optionalNumberValidator,
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: metric.unit,
+            decoration: const InputDecoration(labelText: 'Unit (optional)'),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: metric.direction,
+            decoration: const InputDecoration(labelText: 'Metric direction'),
+            items: [
+              for (final value in _directionOptions)
+                DropdownMenuItem(value: value, child: Text(value)),
+            ],
+            onChanged: _creating
+                ? null
+                : (value) => setState(() => metric.direction = value ?? 'AT_LEAST'),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: metric.format,
+            decoration: const InputDecoration(labelText: 'Metric format'),
+            items: [
+              for (final value in _metricFormatOptions)
+                DropdownMenuItem(value: value, child: Text(value)),
+            ],
+            onChanged: _creating
+                ? null
+                : (value) => setState(() => metric.format = value ?? 'DECIMAL_2'),
+          ),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Primary metric'),
+            value: metric.isPrimary,
+            onChanged: _creating
+                ? null
+                : (value) => setState(() => metric.isPrimary = value == true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _requirementFields(int index) {
+    final requirement = _requirements[index];
+    final metricKeys = _metrics
+        .map((metric) => metric.key.text.trim())
+        .where((key) => key.isNotEmpty)
+        .toSet()
+        .toList();
+    final selectedKey = metricKeys.contains(requirement.metricKey)
+        ? requirement.metricKey
+        : (metricKeys.isEmpty ? null : metricKeys.first);
+    requirement.metricKey = selectedKey ?? '';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('Requirement ${index + 1}', style: Theme.of(context).textTheme.titleSmall),
+              ),
+              IconButton(
+                tooltip: 'Remove requirement',
+                onPressed: _creating ? null : () => _removeRequirement(index),
+                icon: const Icon(Icons.delete_outline_rounded),
+              ),
+            ],
+          ),
+          DropdownButtonFormField<String>(
+            initialValue: selectedKey,
+            decoration: const InputDecoration(labelText: 'Metric'),
+            items: [
+              for (final key in metricKeys)
+                DropdownMenuItem(value: key, child: Text(key)),
+            ],
+            validator: (value) => value == null ? 'Add a metric key first.' : null,
+            onChanged: _creating
+                ? null
+                : (value) => setState(() => requirement.metricKey = value ?? ''),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: requirement.operator,
+            decoration: const InputDecoration(labelText: 'Requirement operator'),
+            items: [
+              for (final value in _directionOptions)
+                DropdownMenuItem(value: value, child: Text(value)),
+            ],
+            onChanged: _creating
+                ? null
+                : (value) => setState(() => requirement.operator = value ?? 'AT_LEAST'),
+          ),
+          const SizedBox(height: 12),
+          if (requirement.operator == 'BOOLEAN')
+            DropdownButtonFormField<bool>(
+              initialValue: requirement.booleanValue,
+              decoration: const InputDecoration(labelText: 'Value'),
+              items: const [
+                DropdownMenuItem(value: true, child: Text('True')),
+                DropdownMenuItem(value: false, child: Text('False')),
+              ],
+              onChanged: _creating
+                  ? null
+                  : (value) => setState(() => requirement.booleanValue = value ?? true),
+            )
+          else
+            TextFormField(
+              controller: requirement.value,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Value'),
+              validator: _requiredNumberValidator,
+            ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: requirement.unit,
+            decoration: const InputDecoration(labelText: 'Unit (optional)'),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: requirement.label,
+            decoration: const InputDecoration(labelText: 'Requirement label'),
             validator: _requiredValidator,
           ),
         ],
@@ -583,6 +985,12 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
     for (final resource in _resources) {
       resource.dispose();
     }
+    for (final metric in _metrics) {
+      metric.dispose();
+    }
+    for (final requirement in _requirements) {
+      requirement.dispose();
+    }
     for (final milestone in _milestones) {
       milestone.dispose();
     }
@@ -590,6 +998,8 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
       _resources
         ..clear()
         ..add(_AdminResourceFields());
+      _metrics.clear();
+      _requirements.clear();
       _milestones
         ..clear()
         ..add(_AdminMilestoneFields());
@@ -615,6 +1025,34 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
     final parsed = double.tryParse(value?.trim() ?? '');
     return parsed == null || parsed < 0 ? 'Enter a number of 0 or more.' : null;
   }
+
+  String? _optionalNumberValidator(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    return double.tryParse(value.trim()) == null ? 'Enter a number.' : null;
+  }
+
+  String? _requiredNumberValidator(String? value) =>
+      double.tryParse(value?.trim() ?? '') == null ? 'Enter a number.' : null;
+
+  double? _optionalNumber(String value) =>
+      value.trim().isEmpty ? null : double.parse(value.trim());
+
+  String? _metricKeyValidator(String? value) {
+    final key = value?.trim() ?? '';
+    if (!RegExp(r'^[a-z][a-z0-9_]{0,49}$').hasMatch(key)) {
+      return 'Use lowercase letters, numbers, and underscores; start with a letter.';
+    }
+    final duplicates = _metrics
+        .where((metric) => metric.key.text.trim() == key)
+        .length;
+    return duplicates > 1 ? 'Metric keys must be unique.' : null;
+  }
+
+  String _verificationLabel(String value) => switch (value) {
+    'VIDEO_VERIFIED' => 'VIDEO_VERIFIED (uses VIDEO_UPLOAD evidence)',
+    'ACCOUNT_VERIFIED' => 'ACCOUNT_VERIFIED (uses EXTERNAL_ACCOUNT evidence)',
+    _ => value,
+  };
 
   String? _validateOptionalUrl(String? value) {
     if (value == null || value.trim().isEmpty) return null;
