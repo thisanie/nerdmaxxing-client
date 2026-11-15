@@ -398,7 +398,7 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
             DropdownButtonFormField<double>(
               initialValue: _bonusMultiplier,
               decoration: const InputDecoration(labelText: 'Aura bonus multiplier'),
-              items: const [1.25, 1.5, 2, 2.5, 3, 4, 5]
+              items: const <double>[1.25, 1.5, 2, 2.5, 3, 4, 5]
                   .map(
                     (multiplier) => DropdownMenuItem(
                       value: multiplier,
