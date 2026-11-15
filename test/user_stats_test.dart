@@ -12,6 +12,10 @@ void main() {
         {'date': '2026-11-09', 'active': false},
         {'date': '2026-11-10', 'active': true},
       ],
+      'aura_by_day': [
+        {'date': '2026-11-09', 'aura_points': 0},
+        {'date': '2026-11-10', 'aura_points': 25},
+      ],
     });
 
     expect(stats.activityDays, hasLength(2));
@@ -19,5 +23,10 @@ void main() {
     expect(stats.activityDays.first.active, isFalse);
     expect(stats.activityDays.last.date, '2026-11-10');
     expect(stats.activityDays.last.active, isTrue);
+    expect(stats.auraByDay, hasLength(2));
+    expect(stats.auraByDay.first.date, '2026-11-09');
+    expect(stats.auraByDay.first.auraPoints, 0);
+    expect(stats.auraByDay.last.date, '2026-11-10');
+    expect(stats.auraByDay.last.auraPoints, 25);
   });
 }

@@ -12,6 +12,20 @@ class UserActivityDay {
   }
 }
 
+class UserAuraDay {
+  final String date;
+  final int auraPoints;
+
+  const UserAuraDay({required this.date, required this.auraPoints});
+
+  factory UserAuraDay.fromJson(Map<String, dynamic> json) {
+    return UserAuraDay(
+      date: json['date'] as String? ?? '',
+      auraPoints: (json['aura_points'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
 class UserStats {
   final int activeChallengeCount;
   final int completedChallengeCount;
@@ -22,6 +36,7 @@ class UserStats {
   final String? nextRank;
   final int auraToNextRank;
   final List<UserActivityDay> activityDays;
+  final List<UserAuraDay> auraByDay;
 
   const UserStats({
     required this.activeChallengeCount,
@@ -33,6 +48,7 @@ class UserStats {
     required this.nextRank,
     required this.auraToNextRank,
     this.activityDays = const [],
+    this.auraByDay = const [],
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
@@ -51,6 +67,14 @@ class UserStats {
           .whereType<Map>()
           .map(
             (item) => UserActivityDay.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(growable: false),
+      auraByDay: (json['aura_by_day'] as List? ?? const [])
+          .whereType<Map>()
+          .map(
+            (item) => UserAuraDay.fromJson(
               Map<String, dynamic>.from(item),
             ),
           )

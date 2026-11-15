@@ -276,7 +276,7 @@ class _RankSummary extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 14),
-        const _WeeklyAuraChart(),
+        _WeeklyAuraChart(days: stats.auraByDay),
         const SizedBox(height: 14),
         Material(
           color: scheme.surface,
@@ -387,17 +387,20 @@ class _RankProgressRing extends StatelessWidget {
   }
 }
 
-const _sampleWeeklyAura = [0, 0, 0, 0, 0, 0, 80];
-
 class _WeeklyAuraChart extends StatelessWidget {
-  const _WeeklyAuraChart();
+  final List<UserAuraDay> days;
+
+  const _WeeklyAuraChart({required this.days});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    final total = _sampleWeeklyAura.fold<int>(0, (sum, value) => sum + value);
-    final maxValue = _sampleWeeklyAura.reduce((a, b) => a > b ? a : b);
+    final total = days.fold<int>(0, (sum, day) => sum + day.auraPoints);
+    final maxValue = days.fold<int>(
+      0,
+      (maximum, day) => day.auraPoints > maximum ? day.auraPoints : maximum,
+    );
+    const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
@@ -420,14 +423,6 @@ class _WeeklyAuraChart extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                'SAMPLE',
-                style: AppFonts.label(
-                  color: scheme.onSurfaceVariant,
-                  fontSize: 11,
-                ),
-              ),
-              const SizedBox(width: 9),
               Text(
                 '+$total AP',
                 style: AppFonts.body(
@@ -455,12 +450,12 @@ class _WeeklyAuraChart extends StatelessWidget {
                             alignment: Alignment.bottomCenter,
                             child: Container(
                               width: 28,
-                                height:
-                                  maxValue == 0 || _sampleWeeklyAura[index] == 0
+                              height: maxValue == 0 ||
+                                      days[index].auraPoints == 0
                                   ? 6.0
                                   : 72.0 *
-                                    _sampleWeeklyAura[index] /
-                                    maxValue,
+                                      days[index].auraPoints /
+                                      maxValue,
                               decoration: BoxDecoration(
                                 color: index == days.length - 1
                                     ? HomePalette.primary
@@ -472,7 +467,7 @@ class _WeeklyAuraChart extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          days[index],
+                          _weekdayLabel(days[index].date, weekdayLabels),
                           style: AppFonts.body(
                             color: index == days.length - 1
                                 ? scheme.onSurface
@@ -490,6 +485,12 @@ class _WeeklyAuraChart extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _weekdayLabel(String date, List<String> weekdayLabels) {
+    final parsedDate = DateTime.tryParse(date);
+    if (parsedDate == null) return '';
+    return weekdayLabels[parsedDate.weekday - 1];
   }
 }
 
