@@ -25,6 +25,7 @@ import 'services/integrations_service.dart';
 import 'services/notifications_service.dart';
 import 'services/leaderboard_service.dart';
 import 'services/discussions_service.dart';
+import 'services/daily_quests_service.dart';
 import 'services/participation_service.dart';
 import 'services/profile_service.dart';
 import 'services/push_notification_service.dart';
@@ -111,6 +112,7 @@ class NerdMaxxingApp extends StatelessWidget {
           Provider(create: (_) => GroupsService(apiClient)),
           Provider(create: (_) => InvitationsService(apiClient)),
           Provider(create: (_) => DiscussionsService(apiClient)),
+          Provider(create: (_) => DailyQuestsService(apiClient)),
           Provider.value(value: notificationsService),
           ChangeNotifierProvider.value(value: notificationBadge),
           ChangeNotifierProvider.value(value: notificationNavigation),

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,7 +27,7 @@
   .preview-head{width:min(100%,420px);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
   .preview-title{font-size:14px;font-weight:700;letter-spacing:.02em}
   .theme-toggle{border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);font:inherit;font-size:12px;font-weight:600;padding:8px 12px;cursor:pointer}
-  .phone{width:340px;height:700px;max-width:100%;flex:none;padding:10px;border-radius:44px;background:var(--frame);position:relative;box-shadow:0 24px 60px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.07)}
+  .phone{width:440px;height:700px;max-width:100%;flex:none;padding:10px;border-radius:44px;background:var(--frame);position:relative;box-shadow:0 24px 60px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.07)}
   .screen{height:100%;border-radius:35px;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;position:relative}
   .notch{position:absolute;z-index:5;top:8px;left:50%;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;background:var(--frame)}
   .status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:6px 24px 0;font-size:12px;font-weight:600}
@@ -48,7 +48,19 @@
   .day{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10px;color:var(--text2);font-weight:600}
   .day i{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--strong);display:grid;place-items:center;font-style:normal;font-size:12px}
   .day.today{color:var(--text)}
-  .day.today i{background:var(--primary);border:0;color:var(--ink);font-weight:800}
+  .day.today i{background:transparent;border:1.5px dashed currentColor;color:inherit}
+  .daily-quest{position:relative;isolation:isolate;overflow:hidden;margin-top:16px;padding:20px;border:0;border-radius:30px;background:var(--ink);color:#ECEBE3}
+  .daily-quest:before{content:"";position:absolute;z-index:-1;top:-78px;right:0;width:180px;height:190px;background:radial-gradient(ellipse,rgba(207,255,71,.12),transparent 70%);pointer-events:none}
+  .quest-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .quest-kicker{color:var(--primary);font-size:11px;font-weight:800;letter-spacing:.13em}
+  .quest-time{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);color:#ECEBE3;font-size:10.5px;font-weight:700;white-space:nowrap}
+  .quest-title{max-width:350px;margin-top:16px;color:#ECEBE3;font-size:20px;line-height:1.25;font-weight:700}
+  .quest-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .quest-tag{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.12);color:#ECEBE3;font-size:11px;font-weight:700;white-space:nowrap}
+  .quest-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:20px}
+  .quest-reward{color:var(--primary);font-size:13px;font-weight:800;white-space:nowrap}
+  .quest-cta{flex:none;padding:12px 20px;border:0;border-radius:999px;background:var(--primary);color:var(--ink);font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+  .quest-cta span{margin-left:4px;font-size:15px}
   .aura{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:24px;background:var(--alt);position:relative;overflow:hidden}
   .aura:before{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(207,255,71,.22),transparent 70%);pointer-events:none}
   html[data-theme="light"] .aura:before{background:radial-gradient(circle,rgba(207,255,71,.55),transparent 70%)}
@@ -107,7 +119,7 @@
 <body>
 <header class="preview-head">
   <div class="preview-title">NerdMaxxing · Home preview</div>
-  <button class="theme-toggle" type="button" aria-label="Switch color theme">Light theme</button>
+  <button class="theme-toggle" type="button" aria-label="Switch color theme">Dark theme</button>
 </header>
 <main class="phone" aria-label="NerdMaxxing home screen preview">
   <div class="screen">
@@ -126,8 +138,24 @@
       </div>
       <div class="week" aria-label="Weekly streak">
         <div class="day"><i></i>M</div><div class="day"><i></i>T</div><div class="day"><i></i>W</div><div class="day"><i></i>T</div>
-        <div class="day"><i></i>F</div><div class="day"><i></i>S</div><div class="day today"><i>✓</i>Today</div>
+        <div class="day"><i></i>F</div><div class="day"><i></i>S</div><div class="day today"><i></i>Today</div>
       </div>
+      <section class="daily-quest" aria-labelledby="daily-quest-title">
+        <div class="quest-top">
+          <span class="quest-kicker">DAILY QUEST</span>
+          <span class="quest-time"><span aria-hidden="true">⏱</span><span id="quest-countdown">--h --m left</span></span>
+        </div>
+        <h2 class="quest-title" id="daily-quest-title">Understand How a Two-Stroke Engine Works</h2>
+        <div class="quest-tags" aria-label="Quest details">
+          <span class="quest-tag"><span aria-hidden="true">🧠</span>Knowledge</span>
+          <span class="quest-tag"><span aria-hidden="true">📝</span>Quiz</span>
+          <span class="quest-tag">~10 min</span>
+        </div>
+        <div class="quest-footer">
+          <span class="quest-reward"><span aria-hidden="true">⚡</span> +5 aura</span>
+          <button class="quest-cta" type="button">Start quest <span aria-hidden="true">→</span></button>
+        </div>
+      </section>
       <section class="aura">
         <div class="row between"><span class="eyebrow">TOTAL AURA</span><span class="rank">Rank E</span></div>
         <div class="aura-total">80<small>AP</small></div>
@@ -166,6 +194,19 @@
     document.documentElement.dataset.theme = next;
     toggle.textContent = next === 'dark' ? 'Light theme' : 'Dark theme';
   });
+
+  const questCountdown = document.querySelector('#quest-countdown');
+  const updateQuestCountdown = () => {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const secondsLeft = Math.max(0, Math.floor((midnight - now) / 1000));
+    const hours = Math.floor(secondsLeft / 3600);
+    const minutes = Math.floor((secondsLeft % 3600) / 60);
+    questCountdown.textContent = `${hours}h ${String(minutes).padStart(2, '0')}m left`;
+  };
+  updateQuestCountdown();
+  window.setInterval(updateQuestCountdown, 60000);
 </script>
 </body>
 </html>
