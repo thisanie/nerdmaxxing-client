@@ -6,7 +6,7 @@ import '../discover/people_discover_screen.dart';
 import '../profile/profile_screen.dart';
 import '../profile/group_chat_screen.dart';
 import '../skills/skills_screen.dart';
-import '../evidence/admin_evidence_screen.dart';
+import '../evidence/admin_hub_screen.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../notifications/notifications_screen.dart';
 import '../../services/api_client.dart';
@@ -80,7 +80,7 @@ class _HomeShellState extends State<HomeShell> {
       if (adminNavigator == null) return;
       adminNavigator.pushReplacement(
         MaterialPageRoute<void>(
-          builder: (_) => const AdminEvidenceScreen(),
+          builder: (_) => const AdminHubScreen(),
         ),
       );
       setState(() {

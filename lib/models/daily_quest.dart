@@ -15,6 +15,91 @@ class DailyQuestQuestion {
   }
 }
 
+class AdminDailyQuest extends DailyQuest {
+  final String status;
+  final String? scheduledLocalDate;
+  final List<AdminDailyQuestQuestion> answerKey;
+
+  const AdminDailyQuest({
+    required super.id,
+    required super.title,
+    required super.description,
+    required super.instructions,
+    required super.category,
+    required super.estimatedMinutes,
+    required super.verificationType,
+    required super.auraReward,
+    super.articleUrl,
+    super.questions,
+    super.relatedChallengeId,
+    super.relatedChallengeSlug,
+    super.relatedChallengeTitle,
+    required this.status,
+    this.scheduledLocalDate,
+    this.answerKey = const [],
+  });
+
+  factory AdminDailyQuest.fromJson(Map<String, dynamic> json) {
+    final quest = DailyQuest.fromJson(json);
+    final rawQuestions = json['questions'];
+    return AdminDailyQuest(
+      id: quest.id,
+      title: quest.title,
+      description: quest.description,
+      instructions: quest.instructions,
+      category: quest.category,
+      estimatedMinutes: quest.estimatedMinutes,
+      verificationType: quest.verificationType,
+      auraReward: quest.auraReward,
+      articleUrl: quest.articleUrl,
+      questions: quest.questions,
+      relatedChallengeId: quest.relatedChallengeId,
+      relatedChallengeSlug: quest.relatedChallengeSlug,
+      relatedChallengeTitle: quest.relatedChallengeTitle,
+      status: _string(
+        json['status'] ?? json['publication_status'],
+        fallback: 'DRAFT',
+      ).toUpperCase(),
+      scheduledLocalDate: _optionalString(
+        json['scheduled_local_date'] ?? json['local_date'],
+      ),
+      answerKey: rawQuestions is List
+          ? rawQuestions
+                .whereType<Map>()
+                .map(
+                  (question) => AdminDailyQuestQuestion.fromJson(
+                    Map<String, dynamic>.from(question),
+                  ),
+                )
+                .toList()
+          : const [],
+    );
+  }
+}
+
+class AdminDailyQuestQuestion {
+  final String prompt;
+  final List<String> options;
+  final int correctOptionIndex;
+
+  const AdminDailyQuestQuestion({
+    required this.prompt,
+    required this.options,
+    required this.correctOptionIndex,
+  });
+
+  factory AdminDailyQuestQuestion.fromJson(Map<String, dynamic> json) {
+    final rawOptions = json['options'];
+    return AdminDailyQuestQuestion(
+      prompt: _string(json['prompt']),
+      options: rawOptions is List
+          ? rawOptions.map((option) => option.toString()).toList()
+          : const [],
+      correctOptionIndex: _integer(json['correct_option_index']),
+    );
+  }
+}
+
 class DailyQuest {
   final String id;
   final String title;

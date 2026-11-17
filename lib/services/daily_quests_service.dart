@@ -11,6 +11,53 @@ class DailyQuestsService {
 
   DailyQuestsService(this.api);
 
+  Future<List<AdminDailyQuest>> listAdminQuests() async {
+    final data = await api.get('/admin/daily-quests');
+    final items = data is List
+        ? data
+        : data is Map
+        ? data['quests'] ?? data['items'] ?? data['data']
+        : null;
+    if (items is! List) {
+      throw ApiException(null, 'The Daily Quest list could not be read.');
+    }
+    return items
+        .whereType<Map>()
+        .map(
+          (item) => AdminDailyQuest.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .toList();
+  }
+
+  Future<AdminDailyQuest> createAdminDraft({
+    required Map<String, dynamic> payload,
+  }) async {
+    final data = await api.post('/admin/daily-quests', data: payload);
+    if (data is! Map) {
+      throw ApiException(null, 'The Daily Quest draft could not be read.');
+    }
+    final response = Map<String, dynamic>.from(data);
+    final quest = response['quest'] ?? response['daily_quest'] ?? response;
+    if (quest is! Map) {
+      throw ApiException(null, 'The Daily Quest draft could not be read.');
+    }
+    return AdminDailyQuest.fromJson(Map<String, dynamic>.from(quest));
+  }
+
+  Future<void> scheduleAdminQuest({
+    required String questId,
+    required DateTime localDate,
+  }) async {
+    final formattedDate =
+        '${localDate.year.toString().padLeft(4, '0')}-'
+        '${localDate.month.toString().padLeft(2, '0')}-'
+        '${localDate.day.toString().padLeft(2, '0')}';
+    await api.post(
+      '/admin/daily-quests/$questId/schedule',
+      data: {'local_date': formattedDate},
+    );
+  }
+
   Future<String> getLocalTimezone() async {
     try {
       return (await FlutterTimezone.getLocalTimezone()).identifier;

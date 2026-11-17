@@ -201,9 +201,14 @@ class _LoginScreenState extends State<LoginScreen>
                 math.max(360.0, availableWidth * .42),
               );
               final gap = math.min(100.0, math.max(36.0, availableWidth * .07));
+              final minimumPageHeight = _showPasswordForm ? 820.0 : 690.0;
+              final verticalPadding = math.min(
+                44.0,
+                math.max(0.0, (constraints.maxHeight - minimumPageHeight) / 2),
+              );
               final pageHeight = math.max(
-                _showPasswordForm ? 820.0 : 690.0,
-                constraints.maxHeight - 88,
+                minimumPageHeight,
+                constraints.maxHeight - verticalPadding * 2,
               );
               return SingleChildScrollView(
                 controller: _pageScrollController,
@@ -213,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen>
                     child: Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: horizontalPadding,
-                        vertical: 44,
+                        vertical: verticalPadding,
                       ),
                       child: SizedBox(
                         height: pageHeight,
