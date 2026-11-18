@@ -296,6 +296,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                       label: Text(
                         _starting ? 'Starting...' : 'Start quest',
                         style: AppFonts.home(
+                          color: foreground,
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
