@@ -924,7 +924,7 @@ class _DailyQuestCard extends StatelessWidget {
               Text(
                 attempt?.isPendingReview == true ? 'View quest' : 'Start quest',
                 style: AppFonts.home(
-                  color: HomePalette.ink,
+                  color: HomePalette.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
