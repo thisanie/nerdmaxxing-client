@@ -1094,20 +1094,33 @@ class _QuestHero extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: DailyQuestPalette.heroMuted(brightness)
+                    color: DailyQuestPalette.heroText(brightness)
                         .withValues(alpha: .3),
                   ),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(
-                  status,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppFonts.home(
-                    color: DailyQuestPalette.heroMuted(brightness),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.schedule_rounded,
+                      size: 14,
+                      color: DailyQuestPalette.heroMuted(brightness),
+                    ),
+                    const SizedBox(width: 5),
+                    Flexible(
+                      child: Text(
+                        status,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.home(
+                          color: DailyQuestPalette.heroMuted(brightness),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
