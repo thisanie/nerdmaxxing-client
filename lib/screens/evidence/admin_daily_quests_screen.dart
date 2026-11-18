@@ -105,7 +105,7 @@ class _AdminDailyQuestsScreenState extends State<AdminDailyQuestsScreen> {
     final payload = <String, dynamic>{
       'title': _title.text.trim(),
       'short_description': _description.text.trim(),
-      'full_description': _instructions.text.trim(),
+      'instructions': _instructions.text.trim(),
       'category': _category,
       'estimated_minutes': _estimatedMinutes,
       'verification_type': _verificationType,
