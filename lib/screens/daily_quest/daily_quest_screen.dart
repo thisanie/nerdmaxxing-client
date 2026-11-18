@@ -16,6 +16,123 @@ import '../challenge/challenge_detail_screen.dart';
 
 enum _QuestStep { learn, prove }
 
+enum _Lucide { back, clock, bolt, book, lock, check, play }
+
+/// Draws the same Lucide glyphs the HTML preview uses (24px grid, round strokes).
+class _LucideIcon extends StatelessWidget {
+  final _Lucide icon;
+  final double size;
+  final Color? color;
+
+  const _LucideIcon(this.icon, {this.size = 20, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final resolved =
+        color ?? IconTheme.of(context).color ?? DefaultTextStyle.of(context).style.color!;
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _LucidePainter(icon, resolved),
+    );
+  }
+}
+
+class _LucidePainter extends CustomPainter {
+  final _Lucide icon;
+  final Color color;
+
+  _LucidePainter(this.icon, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.scale(size.width / 24);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.9
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final p = Path();
+    switch (icon) {
+      case _Lucide.back:
+        p
+          ..moveTo(19, 12)
+          ..lineTo(5, 12)
+          ..moveTo(12, 19)
+          ..lineTo(5, 12)
+          ..lineTo(12, 5);
+      case _Lucide.clock:
+        p
+          ..addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 10))
+          ..moveTo(12, 6)
+          ..lineTo(12, 12)
+          ..lineTo(16, 14);
+      case _Lucide.bolt:
+        p
+          ..moveTo(13, 2)
+          ..lineTo(3, 14)
+          ..lineTo(12, 14)
+          ..lineTo(11, 22)
+          ..lineTo(21, 10)
+          ..lineTo(12, 10)
+          ..close();
+      case _Lucide.book:
+        p
+          ..moveTo(2, 3)
+          ..lineTo(8, 3)
+          ..arcToPoint(const Offset(12, 7), radius: const Radius.circular(4))
+          ..lineTo(12, 21)
+          ..arcToPoint(
+            const Offset(9, 18),
+            radius: const Radius.circular(3),
+            clockwise: false,
+          )
+          ..lineTo(2, 18)
+          ..close()
+          ..moveTo(22, 3)
+          ..lineTo(16, 3)
+          ..arcToPoint(
+            const Offset(12, 7),
+            radius: const Radius.circular(4),
+            clockwise: false,
+          )
+          ..lineTo(12, 21)
+          ..arcToPoint(const Offset(15, 18), radius: const Radius.circular(3))
+          ..lineTo(22, 18)
+          ..close();
+      case _Lucide.lock:
+        p
+          ..addRRect(
+            RRect.fromRectAndRadius(
+              const Rect.fromLTWH(3, 11, 18, 11),
+              const Radius.circular(2),
+            ),
+          )
+          ..moveTo(7, 11)
+          ..lineTo(7, 7)
+          ..arcToPoint(const Offset(17, 7), radius: const Radius.circular(5))
+          ..lineTo(17, 11);
+      case _Lucide.check:
+        p
+          ..addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 10))
+          ..moveTo(9, 12)
+          ..lineTo(11, 14)
+          ..lineTo(15, 10);
+      case _Lucide.play:
+        p
+          ..moveTo(6, 3)
+          ..lineTo(20, 12)
+          ..lineTo(6, 21)
+          ..close();
+    }
+    canvas.drawPath(p, paint);
+  }
+
+  @override
+  bool shouldRepaint(_LucidePainter old) =>
+      old.icon != icon || old.color != color;
+}
+
 ThemeData _dailyQuestActionTheme(ThemeData theme) {
   final brightness = theme.brightness;
   return theme.copyWith(
@@ -112,7 +229,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                     children: [
                       IconButton(
                         onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(Icons.arrow_back_rounded, size: 20),
+                        icon: const _LucideIcon(_Lucide.back, size: 20),
                         style: IconButton.styleFrom(
                           fixedSize: const Size(38, 38),
                           padding: EdgeInsets.zero,
@@ -129,7 +246,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                         'Daily quest',
                         style: AppFonts.home(
                           color: foreground,
-                          fontSize: 19,
+                          fontSize: 21,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -169,7 +286,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.play_arrow_rounded),
+                          : const _LucideIcon(_Lucide.play, size: 18),
                       label: Text(_starting ? 'Starting...' : 'Start quest'),
                     ),
                   ),
@@ -188,7 +305,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
   Widget _buildStepSelector(Brightness brightness) {
     Widget segment({
       required _QuestStep step,
-      required IconData icon,
+      required _Lucide icon,
       required String label,
       required bool locked,
     }) {
@@ -204,7 +321,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
             borderRadius: BorderRadius.circular(999),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              height: 39,
+              height: 44,
               decoration: BoxDecoration(
                 color: selected ? DailyQuestPalette.ink : Colors.transparent,
                 borderRadius: BorderRadius.circular(999),
@@ -212,9 +329,9 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    locked ? Icons.lock_outline_rounded : icon,
-                    size: 18,
+                  _LucideIcon(
+                    locked ? _Lucide.lock : icon,
+                    size: 19,
                     color: selected
                         ? DailyQuestPalette.lime
                         : DailyQuestPalette.muted(brightness),
@@ -226,7 +343,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                       color: selected
                           ? DailyQuestPalette.lime
                           : DailyQuestPalette.muted(brightness),
-                      fontSize: 13,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -248,13 +365,13 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
         children: [
           segment(
             step: _QuestStep.learn,
-            icon: Icons.menu_book_outlined,
+            icon: _Lucide.book,
             label: 'Learn',
             locked: false,
           ),
           segment(
             step: _QuestStep.prove,
-            icon: Icons.task_alt_rounded,
+            icon: _Lucide.check,
             label: 'Prove',
             locked: _attempt == null,
           ),
@@ -278,7 +395,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
           const SizedBox(height: 8),
           Text(
             instructions,
-            style: AppFonts.body(color: muted, fontSize: 12, height: 1.4),
+            style: AppFonts.body(color: muted, fontSize: 14, height: 1.45),
           ),
         ],
         if (quest.articleUrl != null) ...[
@@ -289,9 +406,9 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
             label: const Text('Open learning resource'),
           ),
         ],
-        const SizedBox(height: 17),
+        const SizedBox(height: 20),
         _InfoLine(
-          icon: Icons.check_circle_outline_rounded,
+          icon: _Lucide.check,
           title: 'How to complete it',
           detail: quest.verificationType == 'QUIZ'
               ? 'Score at least 80% on the quiz. One retry is available before the quest expires.'
@@ -299,7 +416,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
         ),
         const SizedBox(height: 14),
         _InfoLine(
-          icon: Icons.bolt_rounded,
+          icon: _Lucide.bolt,
           title: 'Earn ${quest.auraReward} Aura',
           detail: quest.verificationType == 'QUIZ'
               ? 'Awarded once when you pass.'
@@ -1050,10 +1167,10 @@ class _QuestHero extends StatelessWidget {
         ? 'In review'
         : countdown;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
       decoration: BoxDecoration(
         color: DailyQuestPalette.ink,
-        borderRadius: BorderRadius.circular(23),
+        borderRadius: BorderRadius.circular(26),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1063,8 +1180,8 @@ class _QuestHero extends StatelessWidget {
               Flexible(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
+                    horizontal: 13,
+                    vertical: 7,
                   ),
                   decoration: BoxDecoration(
                     color: DailyQuestPalette.lime,
@@ -1083,15 +1200,15 @@ class _QuestHero extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.home(
                       color: DailyQuestPalette.ink,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: DailyQuestPalette.heroText(brightness)
@@ -1102,12 +1219,12 @@ class _QuestHero extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.schedule_rounded,
-                      size: 14,
+                    _LucideIcon(
+                      _Lucide.clock,
+                      size: 16,
                       color: DailyQuestPalette.heroMuted(brightness),
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 6),
                     Flexible(
                       child: Text(
                         status,
@@ -1115,7 +1232,7 @@ class _QuestHero extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.home(
                           color: DailyQuestPalette.heroMuted(brightness),
-                          fontSize: 11,
+                          fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1125,27 +1242,27 @@ class _QuestHero extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 22),
           Text(
             quest.title,
             style: AppFonts.home(
               color: DailyQuestPalette.heroText(brightness),
-              fontSize: 26,
+              fontSize: 30,
               fontWeight: FontWeight.w600,
-              height: 1.12,
+              height: 1.15,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Wrap(
-            spacing: 15,
-            runSpacing: 6,
+            spacing: 18,
+            runSpacing: 8,
             children: [
               _HeroMetric(
-                icon: Icons.schedule_rounded,
+                icon: _Lucide.clock,
                 label: '${quest.estimatedMinutes} min',
               ),
               _HeroMetric(
-                icon: Icons.bolt_rounded,
+                icon: _Lucide.bolt,
                 label: '+${quest.auraReward} Aura',
               ),
             ],
@@ -1157,7 +1274,7 @@ class _QuestHero extends StatelessWidget {
 }
 
 class _HeroMetric extends StatelessWidget {
-  final IconData icon;
+  final _Lucide icon;
   final String label;
 
   const _HeroMetric({required this.icon, required this.label});
@@ -1166,13 +1283,13 @@ class _HeroMetric extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Icon(icon, color: DailyQuestPalette.lime, size: 16),
-      const SizedBox(width: 6),
+      _LucideIcon(icon, color: DailyQuestPalette.lime, size: 18),
+      const SizedBox(width: 7),
       Text(
         label,
         style: AppFonts.home(
           color: DailyQuestPalette.lime,
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -1194,16 +1311,17 @@ class _SectionHeading extends StatelessWidget {
         eyebrow,
         style: AppFonts.home(
           color: DailyQuestPalette.iconAccent(Theme.of(context).brightness),
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacingEm: .04,
         ),
       ),
-      const SizedBox(height: 3),
+      const SizedBox(height: 4),
       Text(
         title,
         style: AppFonts.home(
           color: DailyQuestPalette.text(Theme.of(context).brightness),
-          fontSize: 20,
+          fontSize: 23,
           fontWeight: FontWeight.w600,
           height: 1.2,
         ),
@@ -1232,7 +1350,7 @@ class _SurfacePanel extends StatelessWidget {
 }
 
 class _InfoLine extends StatelessWidget {
-  final IconData icon;
+  final _Lucide icon;
   final String title;
   final String detail;
 
@@ -1249,16 +1367,17 @@ class _InfoLine extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 42,
-          height: 42,
+          width: 46,
+          height: 46,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: DailyQuestPalette.iconBackground(brightness),
             border: Border.all(color: DailyQuestPalette.border(brightness)),
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(
+          child: _LucideIcon(
             icon,
-            size: 21,
+            size: 22,
             color: DailyQuestPalette.iconAccent(brightness),
           ),
         ),
@@ -1267,21 +1386,21 @@ class _InfoLine extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 1),
+              const SizedBox(height: 2),
               Text(
                 title,
                 style: AppFonts.home(
                   color: DailyQuestPalette.text(brightness),
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               Text(
                 detail,
                 style: AppFonts.body(
                   color: DailyQuestPalette.muted(brightness),
-                  fontSize: 12,
+                  fontSize: 14,
                   height: 1.4,
                 ),
               ),
@@ -1357,6 +1476,7 @@ class _LockedProof extends StatelessWidget {
     title: 'Ready when you are',
     detail: "Start today's quest to unlock its proof step.",
     icon: Icons.lock_outline_rounded,
+    lucide: _Lucide.lock,
   );
 }
 
@@ -1364,11 +1484,13 @@ class _ResultPanel extends StatelessWidget {
   final String title;
   final String detail;
   final IconData icon;
+  final _Lucide? lucide;
 
   const _ResultPanel({
     required this.title,
     required this.detail,
     required this.icon,
+    this.lucide,
   });
 
   @override
@@ -1379,34 +1501,41 @@ class _ResultPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 46,
+            height: 46,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: DailyQuestPalette.iconBackground(brightness),
               border: Border.all(color: DailyQuestPalette.border(brightness)),
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              icon,
-              color: DailyQuestPalette.iconAccent(brightness),
-              size: 21,
-            ),
+            child: lucide != null
+                ? _LucideIcon(
+                    lucide!,
+                    size: 22,
+                    color: DailyQuestPalette.iconAccent(brightness),
+                  )
+                : Icon(
+                    icon,
+                    color: DailyQuestPalette.iconAccent(brightness),
+                    size: 22,
+                  ),
           ),
-          const SizedBox(height: 13),
+          const SizedBox(height: 14),
           Text(
             title,
             style: AppFonts.home(
               color: DailyQuestPalette.text(brightness),
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
+              fontSize: 19,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 5),
           Text(
             detail,
             style: AppFonts.body(
               color: DailyQuestPalette.muted(brightness),
-              fontSize: 13,
+              fontSize: 14,
               height: 1.4,
             ),
           ),
