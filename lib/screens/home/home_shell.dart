@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../discover/discover_screen.dart';
 import '../discover/people_discover_screen.dart';
+import '../daily_quest/daily_quest_screen.dart';
 import '../profile/profile_screen.dart';
 import '../profile/group_chat_screen.dart';
 import '../skills/skills_screen.dart';
@@ -11,6 +12,7 @@ import '../../providers/notification_badge_provider.dart';
 import '../notifications/notifications_screen.dart';
 import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
+import '../../services/daily_quests_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -128,6 +130,38 @@ class _HomeShellState extends State<HomeShell> {
         return;
       } on ApiException catch (_) {
         // Fall back to the notifications list when the group is unavailable.
+      }
+    }
+    final dailyQuestAttemptId = data['daily_quest_attempt_id'];
+    final dailyQuestId = data['daily_quest_id'];
+    final deepLink = data['deep_link']?.toLowerCase() ?? '';
+    if ((dailyQuestAttemptId?.isNotEmpty ?? false) ||
+        (dailyQuestId?.isNotEmpty ?? false) ||
+        deepLink.contains('daily-quest')) {
+      try {
+        final dailyQuests = context.read<DailyQuestsService>();
+        if (dailyQuestAttemptId != null && dailyQuestAttemptId.isNotEmpty) {
+          final result = await dailyQuests.getAttemptResult(dailyQuestAttemptId);
+          if (!mounted) return;
+          _navigatorKeys[0].currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => DailyQuestRewardScreen(result: result),
+            ),
+          );
+          return;
+        }
+        final today = await dailyQuests.getToday();
+        final localDate = data['daily_quest_local_date'];
+        if (!mounted) return;
+        if ((dailyQuestId == null || dailyQuestId == today.quest?.id) &&
+            (localDate == null || localDate == today.localDate)) {
+          _navigatorKeys[0].currentState?.push(
+            MaterialPageRoute(builder: (_) => DailyQuestScreen(today: today)),
+          );
+          return;
+        }
+      } on ApiException {
+        // Fall through to the notifications list if the quest result is unavailable.
       }
     }
     if (!mounted) return;

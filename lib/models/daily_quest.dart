@@ -15,6 +15,167 @@ class DailyQuestQuestion {
   }
 }
 
+class DailyQuestRelatedChallenge {
+  final String id;
+  final String slug;
+  final String title;
+  final String deepLink;
+
+  const DailyQuestRelatedChallenge({
+    required this.id,
+    required this.slug,
+    required this.title,
+    required this.deepLink,
+  });
+
+  factory DailyQuestRelatedChallenge.fromJson(Map<String, dynamic> json) =>
+      DailyQuestRelatedChallenge(
+        id: _string(json['id']),
+        slug: _string(json['slug']),
+        title: _string(json['title']),
+        deepLink: _string(json['deep_link']),
+      );
+}
+
+class DailyQuestQuizResult {
+  final String attemptId;
+  final String status;
+  final String completionStatus;
+  final bool? passed;
+  final double? scorePercent;
+  final int quizAttemptCount;
+  final int quizAttemptsRemaining;
+  final int auraAwarded;
+  final int dayStreak;
+  final String? completionDate;
+  final DailyQuestRelatedChallenge? relatedMajorChallenge;
+
+  const DailyQuestQuizResult({
+    required this.attemptId,
+    required this.status,
+    required this.completionStatus,
+    required this.quizAttemptCount,
+    required this.quizAttemptsRemaining,
+    required this.auraAwarded,
+    required this.dayStreak,
+    this.passed,
+    this.scorePercent,
+    this.completionDate,
+    this.relatedMajorChallenge,
+  });
+
+  factory DailyQuestQuizResult.fromJson(Map<String, dynamic> json) {
+    final rawScore = json['score_percent'];
+    final related = _asMap(json['related_major_challenge']);
+    return DailyQuestQuizResult(
+      attemptId: _string(json['attempt_id']),
+      status: _string(json['status']),
+      completionStatus: _string(json['completion_status']),
+      passed: json['passed'] is bool ? json['passed'] as bool : null,
+      scorePercent: rawScore is num ? rawScore.toDouble() : null,
+      quizAttemptCount: _integer(json['quiz_attempt_count']),
+      quizAttemptsRemaining: _integer(json['quiz_attempts_remaining']),
+      auraAwarded: _integer(json['aura_awarded']),
+      dayStreak: _integer(json['day_streak']),
+      completionDate: _optionalString(json['completion_date']),
+      relatedMajorChallenge: related == null
+          ? null
+          : DailyQuestRelatedChallenge.fromJson(related),
+    );
+  }
+}
+
+class DailyQuestQuizSession {
+  final String sessionId;
+  final String attemptId;
+  final int attemptNumber;
+  final DailyQuestQuestion? question;
+  final int? questionIndex;
+  final int? questionNumber;
+  final int totalQuestions;
+  final int secondsPerQuestion;
+  final DateTime? answerDeadlineAt;
+  final bool timedOut;
+  final DailyQuestQuizResult? result;
+
+  const DailyQuestQuizSession({
+    required this.sessionId,
+    required this.attemptId,
+    required this.attemptNumber,
+    required this.question,
+    required this.questionIndex,
+    required this.questionNumber,
+    required this.totalQuestions,
+    required this.secondsPerQuestion,
+    required this.answerDeadlineAt,
+    required this.timedOut,
+    required this.result,
+  });
+
+  factory DailyQuestQuizSession.fromJson(Map<String, dynamic> json) {
+    final question = _asMap(json['question']);
+    final result = _asMap(json['result']);
+    return DailyQuestQuizSession(
+      sessionId: _string(json['session_id']),
+      attemptId: _string(json['attempt_id']),
+      attemptNumber: _integer(json['attempt_number'], fallback: 1),
+      question: question == null ? null : DailyQuestQuestion.fromJson(question),
+      questionIndex: _nullableInteger(json['question_index']),
+      questionNumber: _nullableInteger(json['question_number']),
+      totalQuestions: _integer(json['total_questions']),
+      secondsPerQuestion: _integer(json['seconds_per_question'], fallback: 30),
+      answerDeadlineAt: DateTime.tryParse(_string(json['answer_deadline_at'])),
+      timedOut: json['timed_out'] == true,
+      result: result == null ? null : DailyQuestQuizResult.fromJson(result),
+    );
+  }
+}
+
+class DailyQuestAttemptResult {
+  final String attemptId;
+  final String status;
+  final String completionStatus;
+  final String? completionDate;
+  final DateTime? completedAt;
+  final int auraAwarded;
+  final int dayStreak;
+  final String timezone;
+  final double? scorePercent;
+  final DailyQuestRelatedChallenge? relatedMajorChallenge;
+
+  const DailyQuestAttemptResult({
+    required this.attemptId,
+    required this.status,
+    required this.completionStatus,
+    required this.auraAwarded,
+    required this.dayStreak,
+    required this.timezone,
+    this.completionDate,
+    this.completedAt,
+    this.scorePercent,
+    this.relatedMajorChallenge,
+  });
+
+  factory DailyQuestAttemptResult.fromJson(Map<String, dynamic> json) {
+    final rawScore = json['score_percent'];
+    final related = _asMap(json['related_major_challenge']);
+    return DailyQuestAttemptResult(
+      attemptId: _string(json['attempt_id']),
+      status: _string(json['status']),
+      completionStatus: _string(json['completion_status']),
+      completionDate: _optionalString(json['completion_date']),
+      completedAt: DateTime.tryParse(_string(json['completed_at'])),
+      auraAwarded: _integer(json['aura_awarded']),
+      dayStreak: _integer(json['day_streak']),
+      timezone: _string(json['timezone'], fallback: 'UTC'),
+      scorePercent: rawScore is num ? rawScore.toDouble() : null,
+      relatedMajorChallenge: related == null
+          ? null
+          : DailyQuestRelatedChallenge.fromJson(related),
+    );
+  }
+}
+
 class AdminDailyQuest extends DailyQuest {
   final String status;
   final String? scheduledLocalDate;
@@ -34,6 +195,7 @@ class AdminDailyQuest extends DailyQuest {
     super.relatedChallengeId,
     super.relatedChallengeSlug,
     super.relatedChallengeTitle,
+    super.relatedMajorChallenge,
     required this.status,
     this.scheduledLocalDate,
     this.answerKey = const [],
@@ -56,6 +218,7 @@ class AdminDailyQuest extends DailyQuest {
       relatedChallengeId: quest.relatedChallengeId,
       relatedChallengeSlug: quest.relatedChallengeSlug,
       relatedChallengeTitle: quest.relatedChallengeTitle,
+      relatedMajorChallenge: quest.relatedMajorChallenge,
       status: _string(
         json['status'] ?? json['publication_status'],
         fallback: 'DRAFT',
@@ -114,6 +277,7 @@ class DailyQuest {
   final String? relatedChallengeId;
   final String? relatedChallengeSlug;
   final String? relatedChallengeTitle;
+  final DailyQuestRelatedChallenge? relatedMajorChallenge;
 
   const DailyQuest({
     required this.id,
@@ -129,11 +293,13 @@ class DailyQuest {
     this.relatedChallengeId,
     this.relatedChallengeSlug,
     this.relatedChallengeTitle,
+    this.relatedMajorChallenge,
   });
 
   factory DailyQuest.fromJson(Map<String, dynamic> json) {
     final rawQuestions = json['questions'] ?? json['quiz_questions'];
     final related = _asMap(json['related_challenge']);
+    final relatedMajor = _asMap(json['related_major_challenge']);
     return DailyQuest(
       id: _string(json['id'] ?? json['quest_id']),
       title: _string(json['title'], fallback: 'Daily Quest'),
@@ -150,7 +316,7 @@ class DailyQuest {
         json['verification_type'],
         fallback: 'QUIZ',
       ).toUpperCase(),
-      articleUrl: _optionalString(json['article_url']),
+      articleUrl: _optionalString(json['resource_url'] ?? json['article_url']),
       auraReward: _integer(json['aura_reward'] ?? json['aura_points'], fallback: 2),
       questions: rawQuestions is List
           ? rawQuestions
@@ -171,20 +337,27 @@ class DailyQuest {
       relatedChallengeTitle: _optionalString(
         json['related_challenge_title'] ?? related?['title'],
       ),
+      relatedMajorChallenge: relatedMajor == null
+          ? null
+          : DailyQuestRelatedChallenge.fromJson(relatedMajor),
     );
   }
 }
 
 class DailyQuestAttempt {
+  final String? id;
   final String status;
   final int quizAttemptsUsed;
+  final int quizAttemptsRemaining;
   final int? score;
   final bool? passed;
   final String? evidenceStatus;
 
   const DailyQuestAttempt({
     required this.status,
+    this.id,
     this.quizAttemptsUsed = 0,
+    this.quizAttemptsRemaining = 0,
     this.score,
     this.passed,
     this.evidenceStatus,
@@ -203,6 +376,7 @@ class DailyQuestAttempt {
       ? (rawScore <= 1 ? (rawScore * 100).round() : rawScore.round())
       : int.tryParse('$rawScore');
     return DailyQuestAttempt(
+      id: _optionalString(json['attempt_id'] ?? json['id']),
       status: _string(
         json['status'] ?? json['state'],
         fallback: 'IN_PROGRESS',
@@ -212,14 +386,13 @@ class DailyQuestAttempt {
             json['attempts_used'] ??
             json['quiz_attempt_count'],
       ),
+      quizAttemptsRemaining: _integer(json['quiz_attempts_remaining']),
         score: parsedScore,
         passed: json['passed'] is bool
           ? json['passed'] as bool
           : json['completed'] is bool
           ? json['completed'] as bool
-          : parsedScore == null
-          ? null
-          : parsedScore >= 80,
+            : null,
       evidenceStatus: _optionalString(json['evidence_status']),
     );
   }
@@ -228,12 +401,14 @@ class DailyQuestAttempt {
 class DailyQuestToday {
   final DailyQuest? quest;
   final String localDate;
+  final String timezone;
   final DateTime? expiresAt;
   final DailyQuestAttempt? attempt;
 
   const DailyQuestToday({
     required this.quest,
     required this.localDate,
+    required this.timezone,
     required this.expiresAt,
     required this.attempt,
   });
@@ -257,10 +432,19 @@ class DailyQuestToday {
           'score': data['score'],
           'evidence_status': data['evidence_status'],
           }
-        : null);
+          : data['attempt_id'] != null || data['status'] != null
+          ? {
+              'attempt_id': data['attempt_id'],
+              'status': data['status'],
+              'quiz_attempt_count': data['quiz_attempt_count'],
+              'quiz_attempts_remaining': data['quiz_attempts_remaining'],
+              'score_percent': data['quiz_score_percent'],
+            }
+          : null);
     return DailyQuestToday(
       quest: questJson == null ? null : DailyQuest.fromJson(questJson),
       localDate: _string(data['local_date'] ?? data['date']),
+      timezone: _string(data['timezone'], fallback: 'UTC'),
       expiresAt: DateTime.tryParse(
         _string(data['expires_at'] ?? data['expires_at_utc']),
       ),
@@ -273,6 +457,7 @@ class DailyQuestToday {
   DailyQuestToday withAttempt(DailyQuestAttempt attempt) => DailyQuestToday(
     quest: quest,
     localDate: localDate,
+    timezone: timezone,
     expiresAt: expiresAt,
     attempt: attempt,
   );

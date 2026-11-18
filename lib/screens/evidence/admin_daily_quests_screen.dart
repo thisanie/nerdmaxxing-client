@@ -110,7 +110,7 @@ class _AdminDailyQuestsScreenState extends State<AdminDailyQuestsScreen> {
       'estimated_minutes': _estimatedMinutes,
       'verification_type': _verificationType,
       'aura_reward': _auraReward,
-      if (articleUrl.isNotEmpty) 'article_url': articleUrl,
+      if (articleUrl.isNotEmpty) 'resource_url': articleUrl,
       if (challengeId.isNotEmpty) 'related_challenge_id': challengeId,
       if (_verificationType == 'QUIZ')
         'questions': [

@@ -97,6 +97,41 @@ class DailyQuestsService {
     return _parseAttempt(data, fallbackStatus: 'IN_PROGRESS');
   }
 
+  Future<DailyQuestQuizSession> startQuizSession({String? timezone}) async {
+    final resolvedTimezone = timezone ?? await getLocalTimezone();
+    final data = await api.post(
+      '/daily-quests/today/quiz/session?timezone='
+      '${Uri.encodeQueryComponent(resolvedTimezone)}',
+    );
+    return DailyQuestQuizSession.fromJson(
+      Map<String, dynamic>.from(data as Map),
+    );
+  }
+
+  Future<DailyQuestQuizSession> submitQuizAnswer({
+    required String sessionId,
+    required int questionIndex,
+    int? answerOptionIndex,
+  }) async {
+    final data = await api.post(
+      '/daily-quests/today/quiz/sessions/$sessionId/answer',
+      data: {
+        'question_index': questionIndex,
+        'answer_option_index': answerOptionIndex,
+      },
+    );
+    return DailyQuestQuizSession.fromJson(
+      Map<String, dynamic>.from(data as Map),
+    );
+  }
+
+  Future<DailyQuestAttemptResult> getAttemptResult(String attemptId) async {
+    final data = await api.get('/daily-quests/attempts/$attemptId/result');
+    return DailyQuestAttemptResult.fromJson(
+      Map<String, dynamic>.from(data as Map),
+    );
+  }
+
   Future<DailyQuestAttempt> submitEvidence({
     required Uint8List bytes,
     required String filename,

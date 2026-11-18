@@ -9,8 +9,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/daily_quest.dart';
 import '../../services/api_client.dart';
+import '../../services/challenges_service.dart';
 import '../../services/daily_quests_service.dart';
 import '../../theme/app_theme.dart';
+import '../challenge/challenge_detail_screen.dart';
 
 enum _QuestStep { learn, prove }
 
@@ -27,11 +29,14 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
   final _picker = ImagePicker();
   late DailyQuestToday _today;
   late _QuestStep _step;
-  late List<int?> _answers;
   XFile? _evidenceFile;
   Uint8List? _evidenceBytes;
-  int _quizAttemptsUsed = 0;
   Timer? _countdownTimer;
+  Timer? _quizTimer;
+  DailyQuestQuizSession? _quizSession;
+  DailyQuestQuizResult? _quizResult;
+  int? _selectedAnswerIndex;
+  int _secondsRemaining = 0;
   bool _starting = false;
   bool _submitting = false;
   String? _error;
@@ -44,8 +49,6 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
     super.initState();
     _today = widget.today;
     _step = _QuestStep.learn;
-    _answers = List<int?>.filled(_today.quest?.questions.length ?? 0, null);
-    _quizAttemptsUsed = _attempt?.quizAttemptsUsed ?? 0;
     _countdownTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -54,6 +57,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    _quizTimer?.cancel();
     super.dispose();
   }
 
@@ -230,8 +234,41 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
   }
 
   Widget _buildQuiz(DailyQuest quest, Color foreground, Color muted) {
-    final cannotRetry = _quizAttemptsUsed >= 2 || _attempt!.isFailed;
-    final passed = _attempt?.isCompleted == true;
+    final result = _quizResult;
+    final session = _quizSession;
+    if (result != null) {
+      final canRetry = result.quizAttemptsRemaining > 0;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeading(eyebrow: 'QUIZ RESULT', title: 'The result is in.'),
+          const SizedBox(height: 12),
+          _ResultPanel(
+            title: result.passed == true ? 'Quest complete' : 'Not quite yet',
+            detail: result.passed == true
+                ? 'Score: ${result.scorePercent?.round() ?? 0}%. '
+                    'Aura awarded: ${result.auraAwarded}.'
+                : 'Score: ${result.scorePercent?.round() ?? 0}%. '
+                    '${canRetry ? '${result.quizAttemptsRemaining} retry remaining.' : 'No retries remain today.'}',
+            icon: result.passed == true
+                ? Icons.verified_rounded
+                : Icons.refresh_rounded,
+          ),
+          if (canRetry) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _starting ? null : _startQuizSession,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(_starting ? 'Starting...' : 'Try again'),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -240,35 +277,150 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
           title: 'Show what stuck.',
         ),
         const SizedBox(height: 8),
-        if (_attempt?.score != null && !passed)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _InlineMessage(
-              message: cannotRetry
-                  ? 'You scored ${_attempt!.score}%. This quest has expired.'
-                  : 'You scored ${_attempt!.score}%. Review the material and use your one retry.',
-              isError: cannotRetry,
-              icon: cannotRetry ? Icons.info_outline : Icons.refresh_rounded,
-            ),
-          ),
         if (quest.questions.isEmpty)
           const _InlineMessage(
             message: 'The quiz for this quest is unavailable right now.',
             isError: true,
           )
+        else if (session == null)
+          _SurfacePanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'One question at a time',
+                  style: AppFonts.body(
+                    color: foreground,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Each answer has a server-timed window. Your score and reward are confirmed when the session ends.',
+                  style: AppFonts.body(color: muted, fontSize: 13, height: 1.4),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _starting ? null : _startQuizSession,
+                    icon: _starting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.play_arrow_rounded),
+                    label: Text(_starting ? 'Starting...' : 'Begin timed quiz'),
+                  ),
+                ),
+              ],
+            ),
+          )
         else
-          for (var index = 0; index < quest.questions.length; index++)
-            _buildQuestion(quest.questions[index], index, foreground, muted),
+          _buildActiveQuestion(session, foreground),
+      ],
+    );
+  }
+
+  Widget _buildActiveQuestion(
+    DailyQuestQuizSession session,
+    Color foreground,
+  ) {
+    final question = session.question;
+    if (question == null) {
+      return const _InlineMessage(
+        message: 'The next quiz question could not be loaded.',
+        isError: true,
+      );
+    }
+    final questionNumber = session.questionNumber ??
+        (session.questionIndex == null ? 1 : session.questionIndex! + 1);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (session.timedOut) ...[
+          const _InlineMessage(
+            message: 'The previous answer timed out. Continue with this question.',
+            icon: Icons.timer_off_rounded,
+          ),
+          const SizedBox(height: 10),
+        ],
+        _SurfacePanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'QUESTION $questionNumber OF ${session.totalQuestions}',
+                      style: AppFonts.home(
+                        color: HomePalette.lightLink,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacingEm: .1,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    session.answerDeadlineAt == null
+                        ? 'TIMER --'
+                        : '$_secondsRemaining s',
+                    style: AppFonts.home(
+                      color: _secondsRemaining <= 5
+                          ? Theme.of(context).colorScheme.error
+                          : foreground,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: session.totalQuestions == 0
+                    ? 0
+                    : questionNumber / session.totalQuestions,
+                minHeight: 4,
+              ),
+              const SizedBox(height: 14),
+              Text(
+                question.prompt,
+                style: AppFonts.body(
+                  color: foreground,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (var optionIndex = 0;
+                  optionIndex < question.options.length;
+                  optionIndex++)
+                Padding(
+                  padding: const EdgeInsets.only(top: 7),
+                  child: _AnswerOption(
+                    label: question.options[optionIndex],
+                    selected: _selectedAnswerIndex == optionIndex,
+                    onTap: _submitting
+                        ? null
+                        : () => setState(
+                            () => _selectedAnswerIndex = optionIndex,
+                          ),
+                  ),
+                ),
+            ],
+          ),
+        ),
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: _submitting ||
-                    cannotRetry ||
-                    quest.questions.isEmpty ||
-                    _answers.any((answer) => answer == null)
+                onPressed: _submitting || _selectedAnswerIndex == null
                 ? null
-                : _submitQuiz,
+                : () => _submitQuizAnswer(timedOut: false),
             icon: _submitting
                 ? const SizedBox(
                     width: 18,
@@ -276,63 +428,10 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.check_rounded),
-            label: Text(_submitting ? 'Checking...' : 'Check answers'),
+            label: Text(_submitting ? 'Submitting...' : 'Submit answer'),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildQuestion(
-    DailyQuestQuestion question,
-    int questionIndex,
-    Color foreground,
-    Color muted,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: _SurfacePanel(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'QUESTION ${questionIndex + 1}',
-              style: AppFonts.home(
-                color: HomePalette.lightLink,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacingEm: .1,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              question.prompt,
-              style: AppFonts.body(
-                color: foreground,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                height: 1.3,
-              ),
-            ),
-            const SizedBox(height: 12),
-            for (var optionIndex = 0;
-                optionIndex < question.options.length;
-                optionIndex++)
-              Padding(
-                padding: const EdgeInsets.only(top: 7),
-                child: _AnswerOption(
-                  label: question.options[optionIndex],
-                  selected: _answers[questionIndex] == optionIndex,
-                  onTap: _submitting || _attempt!.isFailed
-                      ? null
-                      : () => setState(
-                          () => _answers[questionIndex] = optionIndex,
-                        ),
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -422,14 +521,12 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
       _error = null;
     });
     try {
-      final attempt = await context.read<DailyQuestsService>().startToday();
+      final attempt = await context.read<DailyQuestsService>().startToday(
+        timezone: _today.timezone,
+      );
       if (!mounted) return;
       setState(() {
         _today = _today.withAttempt(attempt);
-        _quizAttemptsUsed = math.max(
-          _quizAttemptsUsed,
-          attempt.quizAttemptsUsed,
-        ).toInt();
         _step = _QuestStep.prove;
       });
     } on ApiException catch (error) {
@@ -439,27 +536,124 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
     }
   }
 
-  Future<void> _submitQuiz() async {
+  Future<void> _startQuizSession() async {
+    setState(() {
+      _starting = true;
+      _error = null;
+      _quizResult = null;
+    });
+    try {
+      final session = await context.read<DailyQuestsService>().startQuizSession(
+        timezone: _today.timezone,
+      );
+      if (!mounted) return;
+      _acceptQuizSession(session);
+    } on ApiException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
+  }
+
+  void _acceptQuizSession(DailyQuestQuizSession session) {
+    if (session.result != null) {
+      _finishQuiz(session.result!);
+      return;
+    }
+    setState(() {
+      _quizSession = session;
+      _selectedAnswerIndex = null;
+      _error = null;
+    });
+    _startQuestionTimer();
+  }
+
+  void _startQuestionTimer() {
+    _quizTimer?.cancel();
+    final deadline = _quizSession?.answerDeadlineAt;
+    if (deadline == null) {
+      setState(() => _secondsRemaining = 0);
+      return;
+    }
+    void updateRemaining() {
+      if (!mounted || _submitting) return;
+      final remaining = deadline.difference(DateTime.now()).inMilliseconds;
+      final seconds = math.max(0, (remaining / 1000).ceil()).toInt();
+      setState(() => _secondsRemaining = seconds);
+      if (seconds == 0) _submitQuizAnswer(timedOut: true);
+    }
+
+    updateRemaining();
+    _quizTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      updateRemaining();
+    });
+  }
+
+  Future<void> _submitQuizAnswer({required bool timedOut}) async {
+    final session = _quizSession;
+    if (session == null || _submitting) return;
+    final questionIndex = session.questionIndex ??
+        (session.questionNumber == null ? null : session.questionNumber! - 1);
+    if (questionIndex == null || questionIndex < 0) {
+      setState(() => _error = 'The current quiz question could not be identified.');
+      return;
+    }
+    _quizTimer?.cancel();
     setState(() {
       _submitting = true;
       _error = null;
     });
     try {
-      final attempt = await context.read<DailyQuestsService>().submitQuiz(
-        _answers.cast<int>(),
-      );
+      final nextSession = await context
+          .read<DailyQuestsService>()
+          .submitQuizAnswer(
+            sessionId: session.sessionId,
+            questionIndex: questionIndex,
+            answerOptionIndex: timedOut ? null : _selectedAnswerIndex,
+          );
       if (!mounted) return;
-      setState(() {
-        _quizAttemptsUsed = math
-            .max(_quizAttemptsUsed + 1, attempt.quizAttemptsUsed)
-            .toInt();
-        _today = _today.withAttempt(attempt);
-        _answers = List<int?>.filled(_quest.questions.length, null);
-      });
+      if (nextSession.result != null) {
+        _finishQuiz(nextSession.result!);
+      } else {
+        _acceptQuizSession(nextSession);
+      }
     } on ApiException catch (error) {
-      if (mounted) setState(() => _error = error.message);
+      if (mounted) {
+        setState(() => _error = error.message);
+        _startQuestionTimer();
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _finishQuiz(DailyQuestQuizResult result) async {
+    _quizTimer?.cancel();
+    final attempt = DailyQuestAttempt(
+      id: result.attemptId,
+      status: result.status,
+      quizAttemptsUsed: result.quizAttemptCount,
+      quizAttemptsRemaining: result.quizAttemptsRemaining,
+      score: result.scorePercent?.round(),
+      passed: result.passed,
+    );
+    setState(() {
+      _quizResult = result;
+      _quizSession = null;
+      _today = _today.withAttempt(attempt);
+    });
+    try {
+      final attemptResult = await context
+          .read<DailyQuestsService>()
+          .getAttemptResult(result.attemptId);
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => DailyQuestRewardScreen(result: attemptResult),
+        ),
+      );
+    } on ApiException catch (error) {
+      if (mounted) setState(() => _error = error.message);
     }
   }
 
@@ -525,6 +719,191 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
         setState(() => _error = 'Could not open the learning resource.');
       }
     }
+  }
+}
+
+class DailyQuestRewardScreen extends StatelessWidget {
+  final DailyQuestAttemptResult result;
+
+  const DailyQuestRewardScreen({super.key, required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final challenge = result.relatedMajorChallenge;
+    final completed = result.completionStatus.toUpperCase() == 'COMPLETED' ||
+        result.status.toUpperCase() == 'COMPLETED' ||
+        result.status.toUpperCase() == 'APPROVED';
+    return Scaffold(
+      backgroundColor: HomePalette.background(brightness),
+      appBar: AppBar(title: const Text('Daily Quest Result')),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: .65, end: 1),
+                    duration: const Duration(milliseconds: 650),
+                    curve: Curves.elasticOut,
+                    builder: (context, scale, child) => Transform.scale(
+                      scale: scale,
+                      child: child,
+                    ),
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: HomePalette.primary.withValues(alpha: .16),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        completed ? Icons.bolt_rounded : Icons.hourglass_bottom_rounded,
+                        color: HomePalette.primary,
+                        size: 52,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    completed ? 'Quest complete' : 'Quest result',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (result.scorePercent != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Score ${result.scorePercent!.round()}%',
+                      style: AppFonts.body(
+                        color: HomePalette.textSecondary(brightness),
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 26),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _RewardMetric(
+                          icon: Icons.bolt_rounded,
+                          label: 'AURA',
+                          value: result.auraAwarded,
+                          suffix: 'earned',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _RewardMetric(
+                          icon: Icons.local_fire_department_rounded,
+                          label: 'DAY STREAK',
+                          value: result.dayStreak,
+                          suffix: 'days',
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (challenge != null) ...[
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () => _openChallenge(context, challenge),
+                        icon: const Icon(Icons.flag_rounded),
+                        label: Text('View ${challenge.title}'),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: const Text('Back to Daily Quest'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openChallenge(
+    BuildContext context,
+    DailyQuestRelatedChallenge challenge,
+  ) async {
+    try {
+      final item = await context.read<ChallengesService>().getBySlug(challenge.slug);
+      if (!context.mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChallengeDetailScreen(
+            slug: item.slug,
+            initialChallenge: item,
+          ),
+        ),
+      );
+    } on ApiException catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    }
+  }
+}
+
+class _RewardMetric extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int value;
+  final String suffix;
+
+  const _RewardMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.suffix,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return _SurfacePanel(
+      child: Column(
+        children: [
+          Icon(icon, color: HomePalette.lightLink),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: AppFonts.home(
+              color: HomePalette.textSecondary(brightness),
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: value.toDouble()),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOutCubic,
+            builder: (context, current, _) => Text(
+              '${current.round()} $suffix',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

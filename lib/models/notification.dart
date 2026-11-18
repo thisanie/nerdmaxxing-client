@@ -74,6 +74,13 @@ class AppNotification {
       if (json['target_id'] != null) 'target_id': json['target_id'],
       if (json['group_id'] != null) 'group_id': json['group_id'],
       if (json['group_name'] != null) 'group_name': json['group_name'],
+      if (json['daily_quest_id'] != null)
+        'daily_quest_id': json['daily_quest_id'],
+      if (json['daily_quest_local_date'] != null)
+        'daily_quest_local_date': json['daily_quest_local_date'],
+      if (json['daily_quest_attempt_id'] != null)
+        'daily_quest_attempt_id': json['daily_quest_attempt_id'],
+      if (json['deep_link'] != null) 'deep_link': json['deep_link'],
       if (groupData['id'] != null && json['group_id'] == null)
         'group_id': groupData['id'],
       if (groupData['name'] != null && json['group_name'] == null)
@@ -124,6 +131,15 @@ class AppNotification {
       _value('groupId') ??
       (isGroupMessage ? _value('related_id') ?? _value('entity_id') : null);
   String? get groupName => _value('group_name') ?? _value('groupName');
+  String? get dailyQuestId => _value('daily_quest_id');
+  String? get dailyQuestLocalDate => _value('daily_quest_local_date');
+  String? get dailyQuestAttemptId => _value('daily_quest_attempt_id');
+  String? get deepLink => _value('deep_link');
+
+  bool get isDailyQuest =>
+      dailyQuestId != null ||
+      dailyQuestAttemptId != null ||
+      type.toUpperCase().contains('DAILY_QUEST');
 
   bool get isFollow {
     final values = [

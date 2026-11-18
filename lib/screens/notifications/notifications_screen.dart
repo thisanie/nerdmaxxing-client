@@ -4,17 +4,20 @@ import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 
 import '../../models/challenge.dart';
+import '../../models/daily_quest.dart';
 import '../../models/notification.dart';
 import '../../models/group.dart';
 import '../../providers/app_state_providers.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
+import '../../services/daily_quests_service.dart';
 import '../../services/notifications_service.dart';
 import '../../services/groups_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_error.dart';
 import '../challenge/challenge_detail_screen.dart';
+import '../daily_quest/daily_quest_screen.dart';
 import '../profile/profile_screen.dart';
 import '../profile/group_chat_screen.dart';
 
@@ -46,7 +49,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     try {
       final notifications = await context.read<NotificationsService>().list();
       if (!mounted) return;
-      if (notifications.any((notification) => notification.isEvidenceApproved)) {
+      if (notifications.any(
+        (notification) =>
+        notification.isEvidenceApproved || notification.isDailyQuest,
+      )) {
         ref.invalidate(myStatsProvider);
       }
       setState(() => _notifications = notifications);
@@ -198,7 +204,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Future<void> _openNotification(AppNotification notification) async {
-    if (notification.isGroupMessage) {
+    if (notification.isDailyQuest) {
+      await _openDailyQuest(notification);
+    } else if (notification.isGroupMessage) {
       await _viewGroup(notification);
     } else if (notification.isFollow) {
       await _markRead(notification);
@@ -219,6 +227,43 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       await _viewChallenge(notification);
     } else {
       await _markRead(notification);
+    }
+  }
+
+  Future<void> _openDailyQuest(AppNotification notification) async {
+    await _markRead(notification);
+    if (!mounted) return;
+    final service = context.read<DailyQuestsService>();
+    try {
+      final attemptId = notification.dailyQuestAttemptId;
+      if (attemptId != null && attemptId.isNotEmpty) {
+        final result = await service.getAttemptResult(attemptId);
+        if (!mounted) return;
+        ref.invalidate(myStatsProvider);
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DailyQuestRewardScreen(result: result),
+          ),
+        );
+        return;
+      }
+
+      final today = await service.getToday();
+      if (!mounted) return;
+      if ((notification.dailyQuestId != null &&
+              notification.dailyQuestId != today.quest?.id) ||
+          (notification.dailyQuestLocalDate != null &&
+              notification.dailyQuestLocalDate != today.localDate)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('That Daily Quest is no longer available.')),
+        );
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => DailyQuestScreen(today: today)),
+      );
+    } on ApiException catch (error) {
+      if (mounted) setState(() => _error = error.message);
     }
   }
 
@@ -307,6 +352,7 @@ class _NotificationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isInvitation = notification.isChallengeInvitation;
     final isGroupMessage = notification.isGroupMessage;
+    final isDailyQuest = notification.isDailyQuest;
     final isPendingInvitation = notification.isPendingInvitation;
     final isEvidenceResult =
         notification.isEvidenceApproved || notification.isEvidenceRejected;
@@ -326,7 +372,9 @@ class _NotificationTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    isGroupMessage
+                    isDailyQuest
+                      ? Icons.bolt_rounded
+                      : isGroupMessage
                         ? Icons.groups_rounded
                         : isInvitation
                         ? Icons.mail_rounded
@@ -351,7 +399,9 @@ class _NotificationTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isGroupMessage
+                            isDailyQuest
+                              ? notification.title ?? 'Daily Quest'
+                              : isGroupMessage
                               ? notification.groupName ?? 'Group message'
                               : notification.title ??
                                     (isEvidenceResult
