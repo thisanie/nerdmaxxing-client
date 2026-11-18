@@ -1191,31 +1191,34 @@ class _QuestHero extends StatelessWidget {
         children: [
           Row(
             children: [
-              Flexible(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 13,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: DailyQuestPalette.lime,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    quest.category
-                        .toLowerCase()
-                        .split(' ')
-                        .map((word) {
-                          if (word.isEmpty) return word;
-                          return '${word[0].toUpperCase()}${word.substring(1)}';
-                        })
-                        .join(' '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppFonts.home(
-                      color: DailyQuestPalette.ink,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: DailyQuestPalette.lime,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      quest.category
+                          .toLowerCase()
+                          .split(' ')
+                          .map((word) {
+                            if (word.isEmpty) return word;
+                            return '${word[0].toUpperCase()}${word.substring(1)}';
+                          })
+                          .join(' '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppFonts.home(
+                        color: DailyQuestPalette.ink,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
