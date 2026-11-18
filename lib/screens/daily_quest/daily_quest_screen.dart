@@ -16,23 +16,50 @@ import '../challenge/challenge_detail_screen.dart';
 
 enum _QuestStep { learn, prove }
 
-class DailyQuestScreen extends StatefulWidget {
-  final DailyQuestToday today;
-
-  const DailyQuestScreen({super.key, required this.today});
-
-  @override
-  State<DailyQuestScreen> createState() => _DailyQuestScreenState();
-}
-
-class _DailyQuestScreenState extends State<DailyQuestScreen> {
-  final _picker = ImagePicker();
-  late DailyQuestToday _today;
-  late _QuestStep _step;
-  XFile? _evidenceFile;
-  Uint8List? _evidenceBytes;
+ThemeData _dailyQuestActionTheme(ThemeData theme) {
+  return theme.copyWith(
+    filledButtonTheme: FilledButtonThemeData(
+      style: theme.filledButtonTheme.style?.copyWith(
+          child: Semantics(
+            button: true,
+            selected: selected,
+            label: label,
+            child: InkWell(
+              onTap: () => setState(() {
+                _step = step;
+                _error = null;
+              }),
+              borderRadius: BorderRadius.circular(999),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                height: 39,
+                decoration: BoxDecoration(
+                  color: selected ? DailyQuestPalette.ink : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      locked ? Icons.lock_outline_rounded : icon,
+                      size: 18,
+                      color: selected
+                          ? DailyQuestPalette.lime
+                          : DailyQuestPalette.muted(brightness),
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      label,
+                      style: AppFonts.home(
+                        color: selected
+                            ? DailyQuestPalette.lime
+                            : DailyQuestPalette.muted(brightness),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
   Timer? _countdownTimer;
-  Timer? _quizTimer;
+                  ],
+                ),
   DailyQuestQuizSession? _quizSession;
   DailyQuestQuizResult? _quizResult;
   int? _selectedAnswerIndex;
@@ -72,59 +99,175 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
     }
 
     final brightness = Theme.of(context).brightness;
-    final foreground = HomePalette.textPrimary(brightness);
-    final muted = HomePalette.textSecondary(brightness);
-    return Scaffold(
-      backgroundColor: HomePalette.background(brightness),
-      appBar: AppBar(
-        title: const Text('Daily Quest'),
-        backgroundColor: HomePalette.background(brightness),
-        surfaceTintColor: Colors.transparent,
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 28),
-          children: [
-            _QuestHero(
-              quest: quest,
-              today: _today,
-              attempt: _attempt,
-            ),
-            const SizedBox(height: 18),
-            SegmentedButton<_QuestStep>(
-              showSelectedIcon: false,
-              segments: const [
-                ButtonSegment(
-                  value: _QuestStep.learn,
-                  icon: Icon(Icons.menu_book_outlined),
-                  label: Text('Learn'),
+    final theme = Theme.of(context);
+    final foreground = DailyQuestPalette.text(brightness);
+    final muted = DailyQuestPalette.muted(brightness);
+    return Theme(
+      data: _dailyQuestActionTheme(theme),
+      child: Scaffold(
+        backgroundColor: DailyQuestPalette.background(brightness),
+        body: SafeArea(
+          top: false,
+          bottom: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                child: SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        icon: const Icon(Icons.arrow_back_rounded, size: 20),
+                        style: IconButton.styleFrom(
+                          fixedSize: const Size(38, 38),
+                          padding: EdgeInsets.zero,
+                          side: BorderSide(
+                            color: DailyQuestPalette.border(brightness),
+                          ),
+                          backgroundColor: DailyQuestPalette.background(brightness),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Daily quest',
+                        style: AppFonts.home(
+                          color: foreground,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                ButtonSegment(
-                  value: _QuestStep.prove,
-                  icon: Icon(Icons.task_alt_rounded),
-                  label: Text('Prove'),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                    _QuestHero(
+                      quest: quest,
+                      today: _today,
+                      attempt: _attempt,
+                    ),
+                    const SizedBox(height: 13),
+                    _buildStepSelector(brightness),
+                    const SizedBox(height: 14),
+                    if (_step == _QuestStep.learn)
+                      _buildLearn(quest, muted)
+                    else
+                      _buildProve(quest, foreground, muted),
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      _InlineMessage(message: _error!, isError: true),
+                    ],
+                  ],
                 ),
-              ],
-              selected: {_step},
-              onSelectionChanged: (selection) {
-                setState(() {
-                  _step = selection.first;
-                  _error = null;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            if (_step == _QuestStep.learn)
-              _buildLearn(quest, muted)
-            else
-              _buildProve(quest, foreground, muted),
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              _InlineMessage(message: _error!, isError: true),
+              ),
+              if (_showStartQuestAction)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _starting ? null : _startQuest,
+                      icon: _starting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.play_arrow_rounded),
+                      label: Text(_starting ? 'Starting...' : 'Start quest'),
+                    ),
+                  ),
+                ),
             ],
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  bool get _showStartQuestAction => _step == _QuestStep.learn
+      ? _attempt?.isCompleted != true && _attempt?.isPendingReview != true
+      : _attempt == null;
+
+  Widget _buildStepSelector(Brightness brightness) {
+    Widget segment({
+      required _QuestStep step,
+      required IconData icon,
+      required String label,
+      required bool locked,
+    }) {
+      final selected = _step == step;
+      return Expanded(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() {
+              _step = step;
+              _error = null;
+            }),
+            borderRadius: BorderRadius.circular(999),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              height: 39,
+              decoration: BoxDecoration(
+                color: selected ? DailyQuestPalette.ink : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    locked ? Icons.lock_outline_rounded : icon,
+                    size: 18,
+                    color: selected
+                        ? DailyQuestPalette.lime
+                        : DailyQuestPalette.muted(brightness),
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    label,
+                    style: AppFonts.home(
+                      color: selected
+                          ? DailyQuestPalette.lime
+                          : DailyQuestPalette.muted(brightness),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: DailyQuestPalette.segment(brightness),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        children: [
+          segment(
+            step: _QuestStep.learn,
+            icon: Icons.menu_book_outlined,
+            label: 'Learn',
+            locked: false,
+          ),
+          segment(
+            step: _QuestStep.prove,
+            icon: Icons.task_alt_rounded,
+            label: 'Prove',
+            locked: _attempt == null,
+          ),
+        ],
       ),
     );
   }
@@ -138,31 +281,24 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
       children: [
         _SectionHeading(
           eyebrow: 'YOUR 10-MINUTE MISSION',
-          title: 'Learn something you can explain.',
+          title: 'Learn something you can explain',
         ),
-        const SizedBox(height: 12),
-        _SurfacePanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                instructions.isEmpty
-                    ? 'Explore the topic, then complete the proof for this quest.'
-                    : instructions,
-                style: AppFonts.body(color: muted, fontSize: 14, height: 1.5),
-              ),
-              if (quest.articleUrl != null) ...[
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: _openArticle,
-                  icon: const Icon(Icons.open_in_new_rounded),
-                  label: const Text('Open learning resource'),
-                ),
-              ],
-            ],
+        if (instructions.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            instructions,
+            style: AppFonts.body(color: muted, fontSize: 12, height: 1.4),
           ),
-        ),
-        const SizedBox(height: 14),
+        ],
+        if (quest.articleUrl != null) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _openArticle,
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: const Text('Open learning resource'),
+          ),
+        ],
+        const SizedBox(height: 17),
         _InfoLine(
           icon: Icons.check_circle_outline_rounded,
           title: 'How to complete it',
@@ -170,7 +306,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
               ? 'Score at least 80% on the quiz. One retry is available before the quest expires.'
               : 'Submit ${quest.verificationType == 'VIDEO' ? 'a video' : 'a photo'} for review. Your submission stays private.',
         ),
-        const SizedBox(height: 8),
+              const SizedBox(height: 14),
         _InfoLine(
           icon: Icons.bolt_rounded,
           title: 'Earn ${quest.auraReward} Aura',
@@ -178,7 +314,6 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
               ? 'Awarded once when you pass.'
               : 'Awarded once after your submission is approved.',
         ),
-        const SizedBox(height: 24),
         if (_attempt?.isCompleted == true)
           const _InlineMessage(
             message: 'Quest complete. Your streak is up to date.',
@@ -189,28 +324,13 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
             message: 'Your proof is in review. We will update your quest when it is checked.',
             icon: Icons.hourglass_top_rounded,
           )
-        else
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _starting ? null : _startQuest,
-              icon: _starting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.play_arrow_rounded),
-              label: Text(_starting ? 'Starting...' : 'Start quest'),
-            ),
-          ),
       ],
     );
   }
 
   Widget _buildProve(DailyQuest quest, Color foreground, Color muted) {
     if (_attempt == null) {
-      return _LockedProof(onStart: _starting ? null : _startQuest);
+      return const _LockedProof();
     }
     if (_attempt!.isCompleted) {
       return const _ResultPanel(
@@ -352,7 +472,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                     child: Text(
                       'QUESTION $questionNumber OF ${session.totalQuestions}',
                       style: AppFonts.home(
-                        color: HomePalette.lightLink,
+                        color: Theme.of(context).colorScheme.primary,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacingEm: .1,
@@ -455,7 +575,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
               Icon(
                 isVideo ? Icons.videocam_outlined : Icons.photo_outlined,
                 size: 28,
-                color: HomePalette.lightLink,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 12),
               Text(
@@ -729,10 +849,12 @@ class DailyQuestRewardScreen extends StatelessWidget {
     final completed = result.completionStatus.toUpperCase() == 'COMPLETED' ||
         result.status.toUpperCase() == 'COMPLETED' ||
         result.status.toUpperCase() == 'APPROVED';
-    return Scaffold(
-      backgroundColor: HomePalette.background(brightness),
-      appBar: AppBar(title: const Text('Daily Quest Result')),
-      body: SafeArea(
+    return Theme(
+      data: _dailyQuestActionTheme(Theme.of(context)),
+      child: Scaffold(
+        backgroundColor: HomePalette.background(brightness),
+        appBar: AppBar(title: const Text('Daily Quest Result')),
+        body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -753,12 +875,14 @@ class DailyQuestRewardScreen extends StatelessWidget {
                       width: 96,
                       height: 96,
                       decoration: BoxDecoration(
-                        color: HomePalette.primary.withValues(alpha: .16),
+                        color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         completed ? Icons.bolt_rounded : Icons.hourglass_bottom_rounded,
-                        color: HomePalette.primary,
+                        color: Theme.of(context).colorScheme.primary,
                         size: 52,
                       ),
                     ),
@@ -825,6 +949,7 @@ class DailyQuestRewardScreen extends StatelessWidget {
             ),
           ),
         ),
+        ),
       ),
     );
   }
@@ -873,7 +998,7 @@ class _RewardMetric extends StatelessWidget {
     return _SurfacePanel(
       child: Column(
         children: [
-          Icon(icon, color: HomePalette.lightLink),
+          Icon(icon, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 8),
           Text(
             label,
@@ -911,79 +1036,93 @@ class _QuestHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     final remaining = today.expiresAt?.difference(DateTime.now());
     final countdown = remaining == null
-        ? 'LOCAL DAY'
+        ? 'Today'
         : remaining.isNegative
-        ? 'EXPIRED'
-        : '${remaining.inHours}H ${remaining.inMinutes.remainder(60)}M LEFT';
+        ? 'Expired'
+        : '${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m left';
     final status = attempt?.isCompleted == true
-        ? 'COMPLETED'
+        ? 'Completed'
         : attempt?.isPendingReview == true
-        ? 'IN REVIEW'
+        ? 'In review'
         : countdown;
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: HomePalette.ink,
-        borderRadius: BorderRadius.circular(28),
-        gradient: const RadialGradient(
-          center: Alignment(1, -1),
-          radius: 1.2,
-          colors: [Color(0x24CFFF47), HomePalette.ink],
-          stops: [0, .74],
-        ),
+        color: DailyQuestPalette.ink,
+        borderRadius: BorderRadius.circular(23),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                quest.category.toUpperCase(),
-                style: AppFonts.home(
-                  color: HomePalette.primary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacingEm: .14,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: DailyQuestPalette.lime,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    quest.category.toLowerCase().split(' ').map((word) {
+                      if (word.isEmpty) return word;
+                      return '${word[0].toUpperCase()}${word.substring(1)}';
+                    }).join(' '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.home(
+                      color: DailyQuestPalette.ink,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
-              Text(
-                status,
-                style: AppFonts.home(
-                  color: Colors.white.withValues(alpha: .75),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  border: Border.all(color: DailyQuestPalette.heroMuted(brightness).withValues(alpha: .3)),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  status,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.home(
+                    color: DailyQuestPalette.heroMuted(brightness),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
           Text(
             quest.title,
             style: AppFonts.home(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              height: 1.18,
+              color: DailyQuestPalette.heroText(brightness),
+              fontSize: 26,
+              fontWeight: FontWeight.w600,
+              height: 1.12,
             ),
           ),
-          const SizedBox(height: 14),
-          Row(
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 15,
+            runSpacing: 6,
             children: [
-              const Icon(Icons.schedule_rounded, color: HomePalette.primary, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                '~${quest.estimatedMinutes} min',
-                style: AppFonts.home(color: Colors.white, fontSize: 12),
+              _HeroMetric(
+                icon: Icons.schedule_rounded,
+                label: '${quest.estimatedMinutes} min',
               ),
-              const SizedBox(width: 16),
-              const Icon(Icons.bolt_rounded, color: HomePalette.primary, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                '+${quest.auraReward} Aura',
-                style: AppFonts.home(color: Colors.white, fontSize: 12),
+              _HeroMetric(
+                icon: Icons.bolt_rounded,
+                label: '+${quest.auraReward} Aura',
               ),
             ],
           ),
@@ -991,6 +1130,30 @@ class _QuestHero extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HeroMetric extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _HeroMetric({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, color: DailyQuestPalette.lime, size: 16),
+      const SizedBox(width: 6),
+      Text(
+        label,
+        style: AppFonts.home(
+          color: DailyQuestPalette.lime,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ],
+  );
 }
 
 class _SectionHeading extends StatelessWidget {
@@ -1006,14 +1169,21 @@ class _SectionHeading extends StatelessWidget {
       Text(
         eyebrow,
         style: AppFonts.home(
-          color: HomePalette.lightLink,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          letterSpacingEm: .12,
+          color: DailyQuestPalette.iconAccent(Theme.of(context).brightness),
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
         ),
       ),
-      const SizedBox(height: 5),
-      Text(title, style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 3),
+      Text(
+        title,
+        style: AppFonts.home(
+          color: DailyQuestPalette.text(Theme.of(context).brightness),
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
+        ),
+      ),
     ],
   );
 }
@@ -1025,14 +1195,12 @@ class _SurfacePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        color: HomePalette.surface(brightness),
-        border: Border.all(color: HomePalette.border(brightness)),
-        borderRadius: BorderRadius.circular(16),
+        color: DailyQuestPalette.card(Theme.of(context).brightness),
+        borderRadius: BorderRadius.circular(19),
       ),
       child: child,
     );
@@ -1052,18 +1220,35 @@ class _InfoLine extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: HomePalette.lightLink),
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: DailyQuestPalette.iconBackground(brightness),
+            border: Border.all(color: DailyQuestPalette.border(brightness)),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(icon, size: 21, color: DailyQuestPalette.iconAccent(brightness)),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 3),
+              const SizedBox(height: 1),
+              Text(
+                title,
+                style: AppFonts.home(
+                  color: DailyQuestPalette.text(brightness),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
               Text(
                 detail,
                 style: AppFonts.body(
-                  color: HomePalette.textSecondary(brightness),
+                  color: DailyQuestPalette.muted(brightness),
                   fontSize: 12,
                   height: 1.4,
                 ),
@@ -1086,13 +1271,11 @@ class _AnswerOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final primary = brightness == Brightness.dark
-        ? HomePalette.primary
-        : HomePalette.lightLink;
+    final primary = DailyQuestPalette.iconAccent(brightness);
     return Material(
       color: selected
           ? primary.withValues(alpha: brightness == Brightness.dark ? .15 : .1)
-          : HomePalette.surface(brightness),
+          : DailyQuestPalette.background(brightness),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -1101,7 +1284,7 @@ class _AnswerOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
             border: Border.all(
-              color: selected ? primary : HomePalette.border(brightness),
+              color: selected ? primary : DailyQuestPalette.border(brightness),
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -1109,7 +1292,7 @@ class _AnswerOption extends StatelessWidget {
             children: [
               Icon(
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? primary : HomePalette.textSecondary(brightness),
+                color: selected ? primary : DailyQuestPalette.muted(brightness),
                 size: 19,
               ),
               const SizedBox(width: 10),
@@ -1117,7 +1300,7 @@ class _AnswerOption extends StatelessWidget {
                 child: Text(
                   label,
                   style: AppFonts.body(
-                    color: HomePalette.textPrimary(brightness),
+                    color: DailyQuestPalette.text(brightness),
                     fontSize: 13,
                   ),
                 ),
@@ -1131,28 +1314,13 @@ class _AnswerOption extends StatelessWidget {
 }
 
 class _LockedProof extends StatelessWidget {
-  final VoidCallback? onStart;
-
-  const _LockedProof({required this.onStart});
+  const _LockedProof();
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      const _ResultPanel(
-        title: 'Ready when you are',
-        detail: 'Start today’s quest to unlock its proof step.',
-        icon: Icons.lock_outline_rounded,
-      ),
-      const SizedBox(height: 16),
-      SizedBox(
-        width: double.infinity,
-        child: FilledButton.icon(
-          onPressed: onStart,
-          icon: const Icon(Icons.play_arrow_rounded),
-          label: const Text('Start quest'),
-        ),
-      ),
-    ],
+  Widget build(BuildContext context) => const _ResultPanel(
+    title: 'Ready when you are',
+    detail: "Start today's quest to unlock its proof step.",
+    icon: Icons.lock_outline_rounded,
   );
 }
 
@@ -1170,14 +1338,34 @@ class _ResultPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: HomePalette.lightLink, size: 28),
-          const SizedBox(height: 12),
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 5),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: DailyQuestPalette.iconBackground(brightness),
+              border: Border.all(color: DailyQuestPalette.border(brightness)),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(
+              icon,
+              color: DailyQuestPalette.iconAccent(brightness),
+              size: 21,
+            ),
+          ),
+          const SizedBox(height: 13),
+          Text(
+            title,
+            style: AppFonts.home(
+              color: DailyQuestPalette.text(brightness),
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
           Text(
             detail,
             style: AppFonts.body(
-              color: HomePalette.textSecondary(brightness),
+              color: DailyQuestPalette.muted(brightness),
               fontSize: 13,
               height: 1.4,
             ),
@@ -1203,7 +1391,7 @@ class _InlineMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isError
         ? Theme.of(context).colorScheme.error
-        : HomePalette.lightLink;
+        : DailyQuestPalette.iconAccent(Theme.of(context).brightness);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(13),

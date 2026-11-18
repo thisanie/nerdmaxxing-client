@@ -187,6 +187,64 @@ class DiscoverPalette {
   }
 }
 
+  class DailyQuestPalette {
+    static const ink = Color(0xFF0D0D0A);
+    static const lime = Color(0xFFC8FF4A);
+    static const heroTextLight = Color(0xFFFFFFFF);
+    static const heroMutedLight = Color(0xFFE6E6DC);
+
+    static const lightBackground = Color(0xFFFFFFFF);
+    static const lightText = Color(0xFF0D0D0A);
+    static const lightMuted = Color(0xFF5F5F57);
+    static const lightBorder = Color(0xFFE4E4DC);
+    static const lightCard = Color(0xFFF6F6F1);
+    static const lightIconBackground = Color(0xFFFFFFFF);
+    static const lightIconAccent = Color(0xFF3B6D11);
+    static const lightSegment = Color(0xFFF1F1EA);
+
+    static const darkBackground = Color(0xFF171815);
+    static const darkText = Color(0xFFF1F1E9);
+    static const darkMuted = Color(0xFFA4A49A);
+    static const darkBorder = Color(0xFF34352E);
+    static const darkCard = Color(0xFF20211C);
+    static const darkIconBackground = Color(0xFF292A23);
+    static const darkIconAccent = Color(0xFFC8FF4A);
+    static const darkSegment = Color(0xFF24251F);
+    static const darkHeroText = Color(0xFFF7F7EF);
+    static const darkHeroMuted = Color(0xFFC6C7BB);
+
+    static Color background(Brightness brightness) => brightness == Brightness.dark
+      ? darkBackground
+      : lightBackground;
+
+    static Color text(Brightness brightness) =>
+      brightness == Brightness.dark ? darkText : lightText;
+
+    static Color muted(Brightness brightness) =>
+      brightness == Brightness.dark ? darkMuted : lightMuted;
+
+    static Color border(Brightness brightness) =>
+      brightness == Brightness.dark ? darkBorder : lightBorder;
+
+    static Color card(Brightness brightness) =>
+      brightness == Brightness.dark ? darkCard : lightCard;
+
+    static Color iconBackground(Brightness brightness) =>
+      brightness == Brightness.dark ? darkIconBackground : lightIconBackground;
+
+    static Color iconAccent(Brightness brightness) =>
+      brightness == Brightness.dark ? darkIconAccent : lightIconAccent;
+
+    static Color segment(Brightness brightness) =>
+      brightness == Brightness.dark ? darkSegment : lightSegment;
+
+    static Color heroText(Brightness brightness) =>
+      brightness == Brightness.dark ? darkHeroText : heroTextLight;
+
+    static Color heroMuted(Brightness brightness) =>
+      brightness == Brightness.dark ? darkHeroMuted : heroMutedLight;
+  }
+
 /// Font roles, matching the HTML prototypes:
 ///  - display (Bricolage Grotesque): headlines, section titles, and the big
 ///    poster numerals ("60", "42 WPM"). Bricolage ships as a variable font
