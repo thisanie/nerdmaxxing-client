@@ -584,8 +584,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               ),
             ),
             if (isOwnProfile &&
-                _dailyQuestToday?.quest != null &&
-                _dailyQuestToday?.attempt?.isCompleted != true)
+              _dailyQuestToday?.quest != null)
               SliverToBoxAdapter(
                 child: _DailyQuestProfileStatus(
                   today: _dailyQuestToday!,
@@ -776,7 +775,9 @@ class _DailyQuestProfileStatus extends StatelessWidget {
     final quest = today.quest!;
     final attempt = today.attempt;
     final brightness = Theme.of(context).brightness;
-    final status = attempt?.isPendingReview == true
+    final status = attempt?.isCompleted == true
+      ? 'COMPLETED'
+      : attempt?.isPendingReview == true
         ? 'IN REVIEW'
         : attempt == null
         ? 'NOT STARTED'

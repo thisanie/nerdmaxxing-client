@@ -271,6 +271,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .take(2)
         .toList();
     final stats = ref.watch(myStatsProvider).valueOrNull;
+    final showActivityWeek =
+      _dailyQuestDismissed || _dailyQuestToday?.attempt?.isCompleted == true;
     if (_homeError != null &&
         _profile == null &&
         _challengesById.isEmpty &&
@@ -332,9 +334,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Greeting(name: name, streak: stats?.dayStreak ?? 0),
-                      _WeekStrip(activityDays: stats?.activityDays ?? const []),
-                        if (_dailyQuestToday?.attempt?.isCompleted != true &&
-                          !_dailyQuestDismissed) ...[
+                      if (showActivityWeek)
+                        _WeekStrip(
+                          activityDays: stats?.activityDays ?? const [],
+                          showEmptyWeek: true,
+                        )
+                      else if (_dailyQuestToday?.attempt?.isCompleted != true) ...[
                         const SizedBox(height: 16),
                         _DailyQuestCard(
                           today: _dailyQuestToday,
@@ -594,8 +599,9 @@ class _Greeting extends StatelessWidget {
 
 class _WeekStrip extends StatelessWidget {
   final List<UserActivityDay> activityDays;
+  final bool showEmptyWeek;
 
-  const _WeekStrip({required this.activityDays});
+  const _WeekStrip({required this.activityDays, this.showEmptyWeek = false});
 
   @override
   Widget build(BuildContext context) {
@@ -610,7 +616,25 @@ class _WeekStrip extends StatelessWidget {
         .where((entry) => entry.date != null)
         .toList()
       ..sort((a, b) => a.date!.compareTo(b.date!));
-    if (days.isEmpty || !days.any((entry) => entry.activity.active)) {
+    if (days.isEmpty && showEmptyWeek) {
+      final now = DateTime.now();
+      final monday = DateTime(now.year, now.month, now.day - now.weekday + 1);
+      days.addAll(
+        List.generate(7, (index) {
+          final date = monday.add(Duration(days: index));
+          final dateKey =
+              '${date.year.toString().padLeft(4, '0')}-'
+              '${date.month.toString().padLeft(2, '0')}-'
+              '${date.day.toString().padLeft(2, '0')}';
+          return (
+            activity: UserActivityDay(date: dateKey, active: false),
+            date: date,
+          );
+        }),
+      );
+    }
+    if (days.isEmpty ||
+        (!showEmptyWeek && !days.any((entry) => entry.activity.active))) {
       return const SizedBox.shrink();
     }
     final today = DateTime.now();
@@ -856,7 +880,7 @@ class _DailyQuestCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _topLine('DAILY QUEST', statusLabel),
+        _topLine('DAILY QUEST', statusLabel, onCut: onCut),
         const SizedBox(height: 16),
         Text(
           quest.title,
@@ -909,24 +933,13 @@ class _DailyQuestCard extends StatelessWidget {
               const SizedBox(width: 5),
               const Icon(Icons.arrow_forward_rounded, size: 17, color: HomePalette.ink),
             ],
-            if (attempt?.isCompleted != true && quest != null)
-              IconButton(
-                onPressed: onCut,
-                tooltip: 'Hide today\'s quest',
-                visualDensity: VisualDensity.compact,
-                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-                padding: EdgeInsets.zero,
-                color: HomePalette.primary,
-                icon: const Icon(Icons.close_rounded, size: 19),
-              ),
           ],
         ),
       ],
     );
   }
 
-  Widget _topLine(String label, String trailing) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _topLine(String label, String trailing, {VoidCallback? onCut}) => Row(
     children: [
       Text(
         label,
@@ -937,6 +950,7 @@ class _DailyQuestCard extends StatelessWidget {
           letterSpacingEm: .12,
         ),
       ),
+      const Spacer(),
       Container(
         constraints: const BoxConstraints(maxWidth: 142),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -955,6 +969,16 @@ class _DailyQuestCard extends StatelessWidget {
           ),
         ),
       ),
+      if (onCut != null)
+        IconButton(
+          onPressed: onCut,
+          tooltip: 'Hide today\'s quest',
+          visualDensity: VisualDensity.compact,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+          padding: EdgeInsets.zero,
+          color: HomePalette.primary,
+          icon: const Icon(Icons.close_rounded, size: 19),
+        ),
     ],
   );
 
