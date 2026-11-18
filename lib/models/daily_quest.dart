@@ -478,3 +478,9 @@ String? _optionalString(Object? value) {
 int _integer(Object? value, {int fallback = 0}) => value is num
     ? value.toInt()
     : int.tryParse('$value') ?? fallback;
+
+int? _nullableInteger(Object? value) => value == null
+    ? null
+    : value is num
+    ? value.toInt()
+    : int.tryParse('$value');

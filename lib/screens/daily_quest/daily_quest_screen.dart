@@ -17,49 +17,42 @@ import '../challenge/challenge_detail_screen.dart';
 enum _QuestStep { learn, prove }
 
 ThemeData _dailyQuestActionTheme(ThemeData theme) {
+  final brightness = theme.brightness;
   return theme.copyWith(
     filledButtonTheme: FilledButtonThemeData(
       style: theme.filledButtonTheme.style?.copyWith(
-          child: Semantics(
-            button: true,
-            selected: selected,
-            label: label,
-            child: InkWell(
-              onTap: () => setState(() {
-                _step = step;
-                _error = null;
-              }),
-              borderRadius: BorderRadius.circular(999),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                height: 39,
-                decoration: BoxDecoration(
-                  color: selected ? DailyQuestPalette.ink : Colors.transparent,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      locked ? Icons.lock_outline_rounded : icon,
-                      size: 18,
-                      color: selected
-                          ? DailyQuestPalette.lime
-                          : DailyQuestPalette.muted(brightness),
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      label,
-                      style: AppFonts.home(
-                        color: selected
-                            ? DailyQuestPalette.lime
-                            : DailyQuestPalette.muted(brightness),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (states) => states.contains(WidgetState.disabled)
+              ? DailyQuestPalette.segment(brightness)
+              : DailyQuestPalette.lime,
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (states) => states.contains(WidgetState.disabled)
+              ? DailyQuestPalette.muted(brightness)
+              : DailyQuestPalette.ink,
+        ),
+      ),
+    ),
+  );
+}
+
+class DailyQuestScreen extends StatefulWidget {
+  final DailyQuestToday today;
+
+  const DailyQuestScreen({super.key, required this.today});
+
+  @override
+  State<DailyQuestScreen> createState() => _DailyQuestScreenState();
+}
+
+class _DailyQuestScreenState extends State<DailyQuestScreen> {
+  final _picker = ImagePicker();
+  late DailyQuestToday _today;
+  late _QuestStep _step;
+  XFile? _evidenceFile;
+  Uint8List? _evidenceBytes;
   Timer? _countdownTimer;
-                  ],
-                ),
+  Timer? _quizTimer;
   DailyQuestQuizSession? _quizSession;
   DailyQuestQuizResult? _quizResult;
   int? _selectedAnswerIndex;
@@ -126,7 +119,9 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
                           side: BorderSide(
                             color: DailyQuestPalette.border(brightness),
                           ),
-                          backgroundColor: DailyQuestPalette.background(brightness),
+                          backgroundColor: DailyQuestPalette.background(
+                            brightness,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -146,11 +141,7 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   children: [
-                    _QuestHero(
-                      quest: quest,
-                      today: _today,
-                      attempt: _attempt,
-                    ),
+                    _QuestHero(quest: quest, today: _today, attempt: _attempt),
                     const SizedBox(height: 13),
                     _buildStepSelector(brightness),
                     const SizedBox(height: 14),
@@ -306,7 +297,7 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
               ? 'Score at least 80% on the quiz. One retry is available before the quest expires.'
               : 'Submit ${quest.verificationType == 'VIDEO' ? 'a video' : 'a photo'} for review. Your submission stays private.',
         ),
-              const SizedBox(height: 14),
+        const SizedBox(height: 14),
         _InfoLine(
           icon: Icons.bolt_rounded,
           title: 'Earn ${quest.auraReward} Aura',
@@ -323,7 +314,7 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
           const _InlineMessage(
             message: 'Your proof is in review. We will update your quest when it is checked.',
             icon: Icons.hourglass_top_rounded,
-          )
+          ),
       ],
     );
   }
@@ -367,9 +358,9 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
             title: result.passed == true ? 'Quest complete' : 'Not quite yet',
             detail: result.passed == true
                 ? 'Score: ${result.scorePercent?.round() ?? 0}%. '
-                    'Aura awarded: ${result.auraAwarded}.'
+                      'Aura awarded: ${result.auraAwarded}.'
                 : 'Score: ${result.scorePercent?.round() ?? 0}%. '
-                    '${canRetry ? '${result.quizAttemptsRemaining} retry remaining.' : 'No retries remain today.'}',
+                      '${canRetry ? '${result.quizAttemptsRemaining} retry remaining.' : 'No retries remain today.'}',
             icon: result.passed == true
                 ? Icons.verified_rounded
                 : Icons.refresh_rounded,
@@ -392,10 +383,7 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeading(
-          eyebrow: 'TIMED QUIZ',
-          title: 'Show what stuck.',
-        ),
+        _SectionHeading(eyebrow: 'TIMED QUIZ', title: 'Show what stuck.'),
         const SizedBox(height: 8),
         if (session == null)
           _SurfacePanel(
@@ -439,10 +427,7 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
     );
   }
 
-  Widget _buildActiveQuestion(
-    DailyQuestQuizSession session,
-    Color foreground,
-  ) {
+  Widget _buildActiveQuestion(DailyQuestQuizSession session, Color foreground) {
     final question = session.question;
     if (question == null) {
       return const _InlineMessage(
@@ -450,14 +435,16 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
         isError: true,
       );
     }
-    final questionNumber = session.questionNumber ??
+    final questionNumber =
+        session.questionNumber ??
         (session.questionIndex == null ? 1 : session.questionIndex! + 1);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (session.timedOut) ...[
           const _InlineMessage(
-            message: 'The previous answer timed out. Continue with this question.',
+            message:
+                'The previous answer timed out. Continue with this question.',
             icon: Icons.timer_off_rounded,
           ),
           const SizedBox(height: 10),
@@ -511,9 +498,11 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
                 ),
               ),
               const SizedBox(height: 12),
-              for (var optionIndex = 0;
-                  optionIndex < question.options.length;
-                  optionIndex++)
+              for (
+                var optionIndex = 0;
+                optionIndex < question.options.length;
+                optionIndex++
+              )
                 Padding(
                   padding: const EdgeInsets.only(top: 7),
                   child: _AnswerOption(
@@ -533,7 +522,7 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-                onPressed: _submitting || _selectedAnswerIndex == null
+            onPressed: _submitting || _selectedAnswerIndex == null
                 ? null
                 : () => _submitQuizAnswer(timedOut: false),
             icon: _submitting
@@ -598,8 +587,16 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
               const SizedBox(height: 14),
               OutlinedButton.icon(
                 onPressed: _submitting ? null : _pickEvidence,
-                icon: Icon(isVideo ? Icons.video_library_outlined : Icons.add_photo_alternate_outlined),
-                label: Text(_evidenceFile == null ? 'Choose ${isVideo ? 'video' : 'photo'}' : 'Replace file'),
+                icon: Icon(
+                  isVideo
+                      ? Icons.video_library_outlined
+                      : Icons.add_photo_alternate_outlined,
+                ),
+                label: Text(
+                  _evidenceFile == null
+                      ? 'Choose ${isVideo ? 'video' : 'photo'}'
+                      : 'Replace file',
+                ),
               ),
             ],
           ),
@@ -707,10 +704,13 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
   Future<void> _submitQuizAnswer({required bool timedOut}) async {
     final session = _quizSession;
     if (session == null || _submitting) return;
-    final questionIndex = session.questionIndex ??
+    final questionIndex =
+        session.questionIndex ??
         (session.questionNumber == null ? null : session.questionNumber! - 1);
     if (questionIndex == null || questionIndex < 0) {
-      setState(() => _error = 'The current quiz question could not be identified.');
+      setState(
+        () => _error = 'The current quiz question could not be identified.',
+      );
       return;
     }
     _quizTimer?.cancel();
@@ -829,7 +829,8 @@ ThemeData _dailyQuestActionTheme(ThemeData theme) {
     final articleUrl = _quest.articleUrl;
     if (articleUrl == null) return;
     final uri = Uri.tryParse(articleUrl);
-    if (uri == null || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         setState(() => _error = 'Could not open the learning resource.');
       }
@@ -846,7 +847,8 @@ class DailyQuestRewardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final challenge = result.relatedMajorChallenge;
-    final completed = result.completionStatus.toUpperCase() == 'COMPLETED' ||
+    final completed =
+        result.completionStatus.toUpperCase() == 'COMPLETED' ||
         result.status.toUpperCase() == 'COMPLETED' ||
         result.status.toUpperCase() == 'APPROVED';
     return Theme(
@@ -855,100 +857,97 @@ class DailyQuestRewardScreen extends StatelessWidget {
         backgroundColor: HomePalette.background(brightness),
         appBar: AppBar(title: const Text('Daily Quest Result')),
         body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: .65, end: 1),
-                    duration: const Duration(milliseconds: 650),
-                    curve: Curves.elasticOut,
-                    builder: (context, scale, child) => Transform.scale(
-                      scale: scale,
-                      child: child,
-                    ),
-                    child: Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                          .colorScheme
-                          .primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        completed ? Icons.bolt_rounded : Icons.hourglass_bottom_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 52,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    completed ? 'Quest complete' : 'Quest result',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  if (result.scorePercent != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Score ${result.scorePercent!.round()}%',
-                      style: AppFonts.body(
-                        color: HomePalette.textSecondary(brightness),
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 26),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _RewardMetric(
-                          icon: Icons.bolt_rounded,
-                          label: 'AURA',
-                          value: result.auraAwarded,
-                          suffix: 'earned',
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: .65, end: 1),
+                      duration: const Duration(milliseconds: 650),
+                      curve: Curves.elasticOut,
+                      builder: (context, scale, child) =>
+                          Transform.scale(scale: scale, child: child),
+                      child: Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          completed
+                              ? Icons.bolt_rounded
+                              : Icons.hourglass_bottom_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 52,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _RewardMetric(
-                          icon: Icons.local_fire_department_rounded,
-                          label: 'DAY STREAK',
-                          value: result.dayStreak,
-                          suffix: 'days',
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      completed ? 'Quest complete' : 'Quest result',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    if (result.scorePercent != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Score ${result.scorePercent!.round()}%',
+                        style: AppFonts.body(
+                          color: HomePalette.textSecondary(brightness),
+                          fontSize: 15,
                         ),
                       ),
                     ],
-                  ),
-                  if (challenge != null) ...[
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: () => _openChallenge(context, challenge),
-                        icon: const Icon(Icons.flag_rounded),
-                        label: Text('View ${challenge.title}'),
+                    const SizedBox(height: 26),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _RewardMetric(
+                            icon: Icons.bolt_rounded,
+                            label: 'AURA',
+                            value: result.auraAwarded,
+                            suffix: 'earned',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _RewardMetric(
+                            icon: Icons.local_fire_department_rounded,
+                            label: 'DAY STREAK',
+                            value: result.dayStreak,
+                            suffix: 'days',
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (challenge != null) ...[
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () => _openChallenge(context, challenge),
+                          icon: const Icon(Icons.flag_rounded),
+                          label: Text('View ${challenge.title}'),
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      label: const Text('Back to Daily Quest'),
                     ),
                   ],
-                  const SizedBox(height: 10),
-                  TextButton.icon(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    label: const Text('Back to Daily Quest'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -959,21 +958,20 @@ class DailyQuestRewardScreen extends StatelessWidget {
     DailyQuestRelatedChallenge challenge,
   ) async {
     try {
-      final item = await context.read<ChallengesService>().getBySlug(challenge.slug);
+      final item = await context.read<ChallengesService>().getBySlug(
+        challenge.slug,
+      );
       if (!context.mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ChallengeDetailScreen(
-            slug: item.slug,
-            initialChallenge: item,
-          ),
+          builder: (_) =>
+              ChallengeDetailScreen(slug: item.slug, initialChallenge: item),
         ),
       );
     } on ApiException catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
       }
     }
   }
@@ -1016,9 +1014,8 @@ class _RewardMetric extends StatelessWidget {
             builder: (context, current, _) => Text(
               '${current.round()} $suffix',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -1032,7 +1029,11 @@ class _QuestHero extends StatelessWidget {
   final DailyQuestToday today;
   final DailyQuestAttempt? attempt;
 
-  const _QuestHero({required this.quest, required this.today, required this.attempt});
+  const _QuestHero({
+    required this.quest,
+    required this.today,
+    required this.attempt,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1061,16 +1062,23 @@ class _QuestHero extends StatelessWidget {
             children: [
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: DailyQuestPalette.lime,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    quest.category.toLowerCase().split(' ').map((word) {
-                      if (word.isEmpty) return word;
-                      return '${word[0].toUpperCase()}${word.substring(1)}';
-                    }).join(' '),
+                    quest.category
+                        .toLowerCase()
+                        .split(' ')
+                        .map((word) {
+                          if (word.isEmpty) return word;
+                          return '${word[0].toUpperCase()}${word.substring(1)}';
+                        })
+                        .join(' '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.home(
@@ -1085,7 +1093,10 @@ class _QuestHero extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
-                  border: Border.all(color: DailyQuestPalette.heroMuted(brightness).withValues(alpha: .3)),
+                  border: Border.all(
+                    color: DailyQuestPalette.heroMuted(brightness)
+                        .withValues(alpha: .3),
+                  ),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -1212,7 +1223,11 @@ class _InfoLine extends StatelessWidget {
   final String title;
   final String detail;
 
-  const _InfoLine({required this.icon, required this.title, required this.detail});
+  const _InfoLine({
+    required this.icon,
+    required this.title,
+    required this.detail,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1228,7 +1243,11 @@ class _InfoLine extends StatelessWidget {
             border: Border.all(color: DailyQuestPalette.border(brightness)),
             borderRadius: BorderRadius.circular(13),
           ),
-          child: Icon(icon, size: 21, color: DailyQuestPalette.iconAccent(brightness)),
+          child: Icon(
+            icon,
+            size: 21,
+            color: DailyQuestPalette.iconAccent(brightness),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -1266,7 +1285,11 @@ class _AnswerOption extends StatelessWidget {
   final bool selected;
   final VoidCallback? onTap;
 
-  const _AnswerOption({required this.label, required this.selected, required this.onTap});
+  const _AnswerOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1329,7 +1352,11 @@ class _ResultPanel extends StatelessWidget {
   final String detail;
   final IconData icon;
 
-  const _ResultPanel({required this.title, required this.detail, required this.icon});
+  const _ResultPanel({
+    required this.title,
+    required this.detail,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {

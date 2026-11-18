@@ -255,7 +255,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           (notification.dailyQuestLocalDate != null &&
               notification.dailyQuestLocalDate != today.localDate)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('That Daily Quest is no longer available.')),
+          SnackBar(content: Text('That Daily Quest is no longer available.')),
         );
         return;
       }
