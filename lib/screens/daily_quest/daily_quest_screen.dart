@@ -273,16 +273,11 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeading(
-          eyebrow: 'QUIZ · ${quest.questions.length} QUESTIONS',
+          eyebrow: 'TIMED QUIZ',
           title: 'Show what stuck.',
         ),
         const SizedBox(height: 8),
-        if (quest.questions.isEmpty)
-          const _InlineMessage(
-            message: 'The quiz for this quest is unavailable right now.',
-            isError: true,
-          )
-        else if (session == null)
+        if (session == null)
           _SurfacePanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
