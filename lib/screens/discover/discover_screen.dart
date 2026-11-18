@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer, Provider;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/challenge.dart';
 import '../../models/challenge_detail.dart';
@@ -41,6 +42,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   DailyQuestToday? _dailyQuestToday;
   Object? _dailyQuestError;
   bool _dailyQuestLoading = true;
+  bool _dailyQuestDismissed = false;
   Object? _homeError;
   bool _isScrolled = false;
   Timer? _dailyQuestTicker;
@@ -193,9 +195,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     try {
       final today = await context.read<DailyQuestsService>().getToday();
+      final username = context.read<AuthProvider>().username ?? 'current';
+      final preferences = await SharedPreferences.getInstance();
+      final dismissedDate = preferences.getString(
+        'daily_quest_hidden_date_$username',
+      );
       if (!mounted) return;
       setState(() {
         _dailyQuestToday = today;
+        _dailyQuestDismissed = dismissedDate == today.localDate;
         _dailyQuestError = null;
       });
     } catch (error) {
@@ -204,6 +212,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } finally {
       if (mounted) setState(() => _dailyQuestLoading = false);
     }
+  }
+
+  Future<void> _dismissDailyQuest() async {
+    final today = _dailyQuestToday;
+    if (today == null) return;
+    final username = context.read<AuthProvider>().username ?? 'current';
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      'daily_quest_hidden_date_$username',
+      today.localDate,
+    );
+    if (mounted) setState(() => _dailyQuestDismissed = true);
   }
 
   static Participation? _selectResumeParticipation(
@@ -313,16 +333,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       _Greeting(name: name, streak: stats?.dayStreak ?? 0),
                       _WeekStrip(activityDays: stats?.activityDays ?? const []),
-                      const SizedBox(height: 16),
-                      _DailyQuestCard(
-                        today: _dailyQuestToday,
-                        loading: _dailyQuestLoading,
-                        error: _dailyQuestError,
-                        onRetry: _loadDailyQuest,
-                        onTap: _dailyQuestToday?.quest == null
-                            ? null
-                            : () => _openDailyQuest(_dailyQuestToday!),
-                      ),
+                        if (_dailyQuestToday?.attempt?.isCompleted != true &&
+                          !_dailyQuestDismissed) ...[
+                        const SizedBox(height: 16),
+                        _DailyQuestCard(
+                          today: _dailyQuestToday,
+                          loading: _dailyQuestLoading,
+                          error: _dailyQuestError,
+                          onRetry: _loadDailyQuest,
+                          onTap: _dailyQuestToday?.quest == null
+                              ? null
+                              : () => _openDailyQuest(_dailyQuestToday!),
+                            onCut: _dismissDailyQuest,
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       _AuraCard(stats: stats),
                       const SizedBox(height: 20),
@@ -665,6 +689,7 @@ class _DailyQuestCard extends StatelessWidget {
   final Object? error;
   final VoidCallback onRetry;
   final VoidCallback? onTap;
+  final VoidCallback onCut;
 
   const _DailyQuestCard({
     required this.today,
@@ -672,6 +697,7 @@ class _DailyQuestCard extends StatelessWidget {
     required this.error,
     required this.onRetry,
     required this.onTap,
+    required this.onCut,
   });
 
   @override
@@ -718,6 +744,7 @@ class _DailyQuestCard extends StatelessWidget {
                   countdown,
                   foreground,
                   subtitle,
+                  onCut,
                 ),
         ),
       ),
@@ -805,6 +832,7 @@ class _DailyQuestCard extends StatelessWidget {
     String countdown,
     Color foreground,
     Color subtitle,
+    VoidCallback onCut,
   ) {
     final category = quest.category.toLowerCase();
     final categoryIcon = switch (category) {
@@ -881,6 +909,16 @@ class _DailyQuestCard extends StatelessWidget {
               const SizedBox(width: 5),
               const Icon(Icons.arrow_forward_rounded, size: 17, color: HomePalette.ink),
             ],
+            if (attempt?.isCompleted != true && quest != null)
+              IconButton(
+                onPressed: onCut,
+                tooltip: 'Hide today\'s quest',
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                padding: EdgeInsets.zero,
+                color: HomePalette.primary,
+                icon: const Icon(Icons.close_rounded, size: 19),
+              ),
           ],
         ),
       ],

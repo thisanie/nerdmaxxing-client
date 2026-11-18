@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, ChangeNotifierProvider, Consumer;
 
 import '../../models/challenge.dart';
+import '../../models/daily_quest.dart';
 import '../../models/group.dart';
 import '../../models/participation.dart';
 import '../../models/user_profile.dart';
@@ -15,6 +16,7 @@ import '../../providers/theme_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/auth_service.dart';
 import '../../services/challenges_service.dart';
+import '../../services/daily_quests_service.dart';
 import '../../services/groups_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
@@ -22,6 +24,7 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/app_error.dart';
 import '../../widgets/privacy_policy_dialog.dart';
 import '../challenge/challenge_detail_screen.dart';
+import '../daily_quest/daily_quest_screen.dart';
 import 'group_chat_screen.dart';
 import '../auth/password_setup_screen.dart';
 import 'relationship_list_screen.dart';
@@ -59,6 +62,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
   bool _groupsLoading = false;
   String? _groupsError;
   String _participationFilter = 'ALL';
+  DailyQuestToday? _dailyQuestToday;
 
   @override
   void initState() {
@@ -103,8 +107,27 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
         } catch (_) {
           // Participation cards still show their IDs if the catalog is unavailable.
         }
+        await _loadDailyQuest();
       }
     }
+  }
+
+  Future<void> _loadDailyQuest() async {
+    try {
+      final today = await context.read<DailyQuestsService>().getToday();
+      if (mounted) setState(() => _dailyQuestToday = today);
+    } on ApiException {
+      if (mounted) setState(() => _dailyQuestToday = null);
+    }
+  }
+
+  Future<void> _openDailyQuest(DailyQuestToday today) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => DailyQuestScreen(today: today)),
+    );
+    if (!mounted) return;
+    ref.invalidate(myStatsProvider);
+    await _loadDailyQuest();
   }
 
   Future<void> _loadOwnGroups(GroupsService service) async {
@@ -560,6 +583,15 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                 onToggleFollow: _toggleFollow,
               ),
             ),
+            if (isOwnProfile &&
+                _dailyQuestToday?.quest != null &&
+                _dailyQuestToday?.attempt?.isCompleted != true)
+              SliverToBoxAdapter(
+                child: _DailyQuestProfileStatus(
+                  today: _dailyQuestToday!,
+                  onTap: () => _openDailyQuest(_dailyQuestToday!),
+                ),
+              ),
             SliverToBoxAdapter(
               child: _ProfileTabs(
                 selectedIndex: _selectedTab,
@@ -727,6 +759,86 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
               const SliverToBoxAdapter(child: SizedBox.shrink()),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyQuestProfileStatus extends StatelessWidget {
+  final DailyQuestToday today;
+  final VoidCallback onTap;
+
+  const _DailyQuestProfileStatus({required this.today, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final quest = today.quest!;
+    final attempt = today.attempt;
+    final brightness = Theme.of(context).brightness;
+    final status = attempt?.isPendingReview == true
+        ? 'IN REVIEW'
+        : attempt == null
+        ? 'NOT STARTED'
+        : attempt.isFailed
+        ? attempt.quizAttemptsRemaining > 0
+              ? 'RETRY AVAILABLE'
+              : 'NOT COMPLETED'
+        : 'IN PROGRESS';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(26, 12, 26, 4),
+      child: Material(
+        color: HomePalette.surface(brightness),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: HomePalette.border(brightness)),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.bolt_rounded, color: HomePalette.lightLink),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'DAILY QUEST · $status',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.home(
+                          color: HomePalette.textSecondary(brightness),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        quest.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.home(
+                          color: HomePalette.textPrimary(brightness),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: HomePalette.textSecondary(brightness),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
