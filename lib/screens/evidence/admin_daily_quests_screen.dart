@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/daily_quest.dart';
 import '../../services/api_client.dart';
 import '../../services/daily_quests_service.dart';
+import '../../widgets/app_error.dart';
 import '../../widgets/app_snack_bar.dart';
 
 class _QuestQuestionDraft {
@@ -492,35 +493,39 @@ class _AdminDailyQuestsScreenState extends State<AdminDailyQuestsScreen> {
               decoration: const InputDecoration(labelText: 'Prompt'),
             ),
             const SizedBox(height: 8),
-            for (var optionIndex = 0;
-                optionIndex < question.options.length;
-                optionIndex++)
-              Row(
+            RadioGroup<int>(
+              groupValue: question.correctOptionIndex,
+              onChanged: (value) => setState(
+                () => question.correctOptionIndex = value ?? 0,
+              ),
+              child: Column(
                 children: [
-                  Radio<int>(
-                    value: optionIndex,
-                    groupValue: question.correctOptionIndex,
-                    onChanged: (value) => setState(
-                      () => question.correctOptionIndex = value!,
-                    ),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: question.options[optionIndex],
-                      decoration: InputDecoration(
-                        labelText: 'Option ${optionIndex + 1}',
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  if (question.options.length > 2)
-                    IconButton(
-                      tooltip: 'Remove option',
-                      onPressed: () => _removeOption(question, optionIndex),
-                      icon: const Icon(Icons.close_rounded),
+                  for (var optionIndex = 0;
+                      optionIndex < question.options.length;
+                      optionIndex++)
+                    Row(
+                      children: [
+                        Radio<int>(value: optionIndex),
+                        Expanded(
+                          child: TextField(
+                            controller: question.options[optionIndex],
+                            decoration: InputDecoration(
+                              labelText: 'Option ${optionIndex + 1}',
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        if (question.options.length > 2)
+                          IconButton(
+                            tooltip: 'Remove option',
+                            onPressed: () => _removeOption(question, optionIndex),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                      ],
                     ),
                 ],
               ),
+            ),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
