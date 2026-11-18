@@ -279,6 +279,12 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 18,
+                        ),
+                      ),
                       onPressed: _starting ? null : _startQuest,
                       icon: _starting
                           ? const SizedBox(
@@ -287,7 +293,13 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const _LucideIcon(_Lucide.play, size: 18),
-                      label: Text(_starting ? 'Starting...' : 'Start quest'),
+                      label: Text(
+                        _starting ? 'Starting...' : 'Start quest',
+                        style: AppFonts.home(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -571,6 +583,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
@@ -1207,37 +1220,43 @@ class _QuestHero extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: DailyQuestPalette.heroText(brightness)
-                        .withValues(alpha: .3),
+              Align(
+                alignment: Alignment.topRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
                   ),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _LucideIcon(
-                      _Lucide.clock,
-                      size: 16,
-                      color: DailyQuestPalette.heroMuted(brightness),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: DailyQuestPalette.heroText(brightness)
+                          .withValues(alpha: .3),
                     ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        status,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppFonts.home(
-                          color: DailyQuestPalette.heroMuted(brightness),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _LucideIcon(
+                        _Lucide.clock,
+                        size: 16,
+                        color: DailyQuestPalette.heroMuted(brightness),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          status,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppFonts.home(
+                            color: DailyQuestPalette.heroMuted(brightness),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

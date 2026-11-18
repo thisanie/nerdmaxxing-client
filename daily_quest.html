@@ -142,7 +142,7 @@
       background: var(--hero);
       color: var(--hero-text);
     }
-    .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .tag, .time {
       display: inline-flex;
       align-items: center;
@@ -152,7 +152,7 @@
       white-space: nowrap;
     }
     .tag { padding: 5px 10px; background: var(--lime); color: var(--lime-ink); font-weight: 700; }
-    .time { gap: 5px; padding: 5px 9px; border: 1px solid rgb(255 255 255 / 30%); color: var(--hero-muted); }
+    .time { gap: 5px; margin-left: auto; padding: 5px 9px; border: 1px solid rgb(255 255 255 / 30%); color: var(--hero-muted); }
     .hero h2 { margin: 14px 0 10px; font-size: 26px; line-height: 1.12; font-weight: 650; }
     .metrics { display: flex; flex-wrap: wrap; gap: 15px; color: var(--lime); font-size: 12px; font-weight: 600; }
     .metrics span { display: inline-flex; align-items: center; gap: 6px; }
@@ -213,12 +213,13 @@
       justify-content: center;
       gap: 8px;
       margin-top: 12px;
+      padding: 12px 20px;
       border: 0;
       border-radius: 999px;
       background: var(--lime);
       color: var(--lime-ink);
       cursor: pointer;
-      font-size: 15px;
+      font-size: 17px;
       font-weight: 750;
     }
     .cta:active { transform: scale(.985); }
