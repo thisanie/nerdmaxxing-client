@@ -176,7 +176,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // Cached home data can remain visible, but the failed refresh should be
       // actionable instead of disappearing silently.
       if (mounted) {
-        AppErrorSnackbar.show(context, error, onRetry: _loadHomeData);
+        AppErrorSnackbar.show(context, error);
         if (_profile == null &&
             _challengesById.isEmpty &&
             _resumeParticipation == null) {
