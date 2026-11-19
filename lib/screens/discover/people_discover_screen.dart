@@ -168,17 +168,6 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Discover',
-                      style: AppFonts.body(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 38,
-                        height: 1.1,
-                        fontWeight: FontWeight.w500,
-                        letterSpacingEm: -0.02,
-                      ),
-                    ),
-                    const SizedBox(height: 22),
                     _SearchField(
                       controller: _searchController,
                       isLoading: _isSearching,
