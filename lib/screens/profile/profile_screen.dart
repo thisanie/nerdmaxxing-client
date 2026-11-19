@@ -477,9 +477,6 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
     final completedChallenges = isOwnProfile
         ? ref.watch(myCompletedChallengesProvider).valueOrNull ?? const []
         : provider.completedChallenges;
-    final createdChallenges = isOwnProfile
-        ? ref.watch(myCreatedChallengesProvider).valueOrNull ?? const []
-        : provider.createdChallenges;
 
     if (provider.isLoading && profile == null) {
       return Scaffold(
@@ -638,62 +635,6 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreen> {
                         onChangeStatus: _changeStatus,
                       ),
                       childCount: filteredParticipations.length,
-                    ),
-                  ),
-                SliverToBoxAdapter(
-                  child: _SectionLabel('Created by you'),
-                ),
-                if (createdChallenges.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(26, 0, 26, 12),
-                      child: CustomPaint(
-                        painter: _DashedBorderPainter(
-                          color: brightness == Brightness.dark
-                              ? HomePalette.darkBorderStrong
-                              : const Color(0xFFCFCFC4),
-                        ),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'No challenges yet',
-                                  style: AppFonts.home(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  'Create your own and invite nerds to it.',
-                                  textAlign: TextAlign.center,
-                                  style: AppFonts.home(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => _CreatedChallengeTile(
-                        challenge: createdChallenges[index],
-                      ),
-                      childCount: createdChallenges.length,
                     ),
                   ),
               ],
@@ -1475,37 +1416,6 @@ class _RefreshableState extends StatelessWidget {
   }
 }
 
-class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-
-  const _DashedBorderPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final border = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(.75, .75, size.width - 1.5, size.height - 1.5),
-          const Radius.circular(20),
-        ),
-      );
-    for (final metric in path.computeMetrics()) {
-      for (double start = 0; start < metric.length; start += 8) {
-        final end = start + 5 < metric.length ? start + 5 : metric.length;
-        canvas.drawPath(metric.extractPath(start, end), border);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) =>
-      oldDelegate.color != color;
-}
-
 class _ProfileHeader extends StatelessWidget {
   final UserProfile profile;
   final int auraPoints;
@@ -2147,46 +2057,6 @@ class _ParticipationFilters extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _CreatedChallengeTile extends StatelessWidget {
-  final Challenge challenge;
-
-  const _CreatedChallengeTile({required this.challenge});
-
-  @override
-  Widget build(BuildContext context) {
-    final isPrivate = challenge.visibility.toUpperCase() == 'PRIVATE';
-    final scheme = Theme.of(context).colorScheme;
-    return _RowCard(
-      challenge: challenge,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ChallengeDetailScreen(
-            slug: challenge.slug,
-            initialChallenge: challenge,
-          ),
-        ),
-      ),
-      leadingIcon: isPrivate ? Icons.lock_rounded : Icons.edit_note_rounded,
-      leadingColor: scheme.surfaceContainerHighest,
-      leadingIconColor: HomePalette.primary,
-      title: challenge.title,
-      subtitle:
-          '${isPrivate ? 'Private' : 'Public'} · ${challenge.enrollmentCount ?? 0} participants',
-      trailing: _ProfileRowAction(
-        label: 'View',
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => ChallengeDetailScreen(
-              slug: challenge.slug,
-              initialChallenge: challenge,
-            ),
-          ),
-        ),
       ),
     );
   }
