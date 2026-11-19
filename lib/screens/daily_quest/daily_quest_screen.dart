@@ -1133,13 +1133,13 @@ class _DailyQuestCelebration extends ConsumerStatefulWidget {
 }
 
 class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
-    with SingleTickerProviderStateMixin {
+  with TickerProviderStateMixin {
   late final AnimationController _flamePulse;
+  late final AnimationController _auraCounter;
   Timer? _flameTimer;
   Timer? _streakTimer;
   Timer? _auraChipTimer;
   Timer? _auraFlyTimer;
-  Timer? _auraCountTimer;
   int _frame = 0;
   int _streakValue = 0;
   bool _flameLit = false;
@@ -1148,7 +1148,6 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   bool _auraSequenceStarted = false;
   bool _auraChipVisible = false;
   bool _auraChipFlying = false;
-  bool _auraCountElapsed = false;
   bool _auraCountStarted = false;
   int? _auraBefore;
   int? _auraAfter;
@@ -1173,6 +1172,10 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
       vsync: this,
       duration: const Duration(milliseconds: 850),
     )..repeat(reverse: true);
+    _auraCounter = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
     final previousStats = ref.read(myStatsProvider).valueOrNull;
     _auraBefore = previousStats?.auraPoints ?? 0;
     _auraAfter = (previousStats?.auraPoints ?? 0) + _awardedAura;
@@ -1195,8 +1198,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     _streakTimer?.cancel();
     _auraChipTimer?.cancel();
     _auraFlyTimer?.cancel();
-    _auraCountTimer?.cancel();
     _flamePulse.dispose();
+    _auraCounter.dispose();
     super.dispose();
   }
 
@@ -1211,10 +1214,13 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           stats.auraPoints - previousStats.auraPoints == auraAwarded;
 
       setState(() {
-        _auraAfter = stats.auraPoints;
         _auraBefore = cachedAuraIsBefore
             ? previousStats.auraPoints
             : math.max(0, stats.auraPoints - auraAwarded).toInt();
+        _auraAfter = math.max(
+          stats.auraPoints,
+          _auraBefore! + auraAwarded,
+        ).toInt();
         _rankProgressAfter = stats.rankProgress.clamp(0, 100).toInt();
         _auraToNextAfter = stats.auraToNextRank;
         _rank = stats.rank;
@@ -1254,18 +1260,14 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     _auraFlyTimer = Timer(const Duration(milliseconds: 1150), () {
       if (mounted) setState(() => _auraChipFlying = true);
     });
-    _auraCountTimer = Timer(const Duration(milliseconds: 1750), () {
-      if (!mounted) return;
-      setState(() => _auraCountElapsed = true);
-      _maybeStartAuraCount();
-    });
   }
 
   void _maybeStartAuraCount() {
-    if (!_auraCountElapsed || _auraCountStarted || _frame != 1) {
+    if (_auraCountStarted || _frame != 1) {
       return;
     }
     setState(() => _auraCountStarted = true);
+    _auraCounter.forward(from: 0);
   }
 
   List<DateTime> _weekDates() {
@@ -1544,24 +1546,23 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               SizedBox(
                 height: 128,
                 child: Center(
-                  child: TweenAnimationBuilder<double>(
-                    key: ValueKey('aura-count-$_auraCountStarted'),
-                    tween: Tween<double>(
-                      begin: auraBefore.toDouble(),
-                      end: _auraCountStarted
-                          ? auraAfter.toDouble()
-                          : auraBefore.toDouble(),
-                    ),
-                    duration: const Duration(milliseconds: 900),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, _) => Text(
-                      value.round().toString(),
-                      style: AppFonts.poster(
-                        color: _auraCountStarted ? _primary : _textPrimary,
-                        fontSize: 88,
-                        wdth: 100,
-                      ),
-                    ),
+                  child: AnimatedBuilder(
+                    animation: _auraCounter,
+                    builder: (context, _) {
+                      final progress = Curves.easeOutCubic.transform(
+                        _auraCounter.value,
+                      );
+                      final value = auraBefore +
+                          ((auraAfter - auraBefore) * progress).round();
+                      return Text(
+                        value.toString(),
+                        style: AppFonts.poster(
+                          color: _auraCountStarted ? _primary : _textPrimary,
+                          fontSize: 88,
+                          wdth: 100,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
