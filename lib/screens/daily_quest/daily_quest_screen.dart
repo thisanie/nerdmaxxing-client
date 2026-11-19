@@ -1622,9 +1622,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       borderRadius: BorderRadius.circular(999),
                       child: SizedBox(
                         height: 10,
-                        child: _statsReady &&
-                                progressBefore != null &&
-                                progressAfter != null
+                        child: _statsReady && progressAfter != null
                             ? TweenAnimationBuilder<double>(
                                 key: ValueKey('aura-progress-$_auraCountStarted'),
                                 tween: Tween<double>(
