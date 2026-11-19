@@ -3,11 +3,14 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/daily_quest.dart';
+import '../../models/user_stats.dart';
+import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/daily_quests_service.dart';
@@ -982,6 +985,12 @@ class DailyQuestRewardScreen extends StatelessWidget {
         result.completionStatus.toUpperCase() == 'COMPLETED' ||
         result.status.toUpperCase() == 'COMPLETED' ||
         result.status.toUpperCase() == 'APPROVED';
+    if (completed) {
+      return _DailyQuestCelebration(
+        result: result,
+        onOpenChallenge: (item) => _openChallenge(context, item),
+      );
+    }
     return Theme(
       data: _dailyQuestActionTheme(Theme.of(context)),
       child: Scaffold(
@@ -1105,6 +1114,615 @@ class DailyQuestRewardScreen extends StatelessWidget {
             .showSnackBar(SnackBar(content: Text(error.message)));
       }
     }
+  }
+}
+
+class _DailyQuestCelebration extends ConsumerStatefulWidget {
+  final DailyQuestAttemptResult result;
+  final Future<void> Function(DailyQuestRelatedChallenge challenge)
+  onOpenChallenge;
+
+  const _DailyQuestCelebration({
+    required this.result,
+    required this.onOpenChallenge,
+  });
+
+  @override
+  ConsumerState<_DailyQuestCelebration> createState() =>
+      _DailyQuestCelebrationState();
+}
+
+class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _flamePulse;
+  Timer? _flameTimer;
+  Timer? _streakTimer;
+  Timer? _auraChipTimer;
+  Timer? _auraFlyTimer;
+  Timer? _auraCountTimer;
+  int _frame = 0;
+  int _streakValue = 0;
+  bool _flameLit = false;
+  bool _todayChecked = false;
+  bool _statsReady = false;
+  bool _auraSequenceStarted = false;
+  bool _auraChipVisible = false;
+  bool _auraChipFlying = false;
+  bool _auraCountStarted = false;
+  int? _auraBefore;
+  int? _auraAfter;
+  int? _rankProgressAfter;
+  int? _auraToNextAfter;
+  String _rank = 'E';
+  String? _nextRank;
+  List<UserActivityDay> _activityDays = const [];
+
+  int get _awardedAura => widget.result.auraAwarded;
+
+  @override
+  void initState() {
+    super.initState();
+    _streakValue = math.max(0, widget.result.dayStreak - 1).toInt();
+    _flamePulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 850),
+    )..repeat(reverse: true);
+    final previousStats = ref.read(myStatsProvider).valueOrNull;
+    _loadUpdatedStats(previousStats);
+    _flameTimer = Timer(const Duration(milliseconds: 700), () {
+      if (mounted) setState(() => _flameLit = true);
+    });
+    _streakTimer = Timer(const Duration(milliseconds: 1250), () {
+      if (!mounted) return;
+      setState(() {
+        _streakValue = widget.result.dayStreak;
+        _todayChecked = true;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _flameTimer?.cancel();
+    _streakTimer?.cancel();
+    _auraChipTimer?.cancel();
+    _auraFlyTimer?.cancel();
+    _auraCountTimer?.cancel();
+    _flamePulse.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUpdatedStats(UserStats? previousStats) async {
+    ref.invalidate(myStatsProvider);
+    try {
+      final stats = await ref.read(myStatsProvider.future);
+      if (!mounted) return;
+      final auraAwarded = widget.result.auraAwarded;
+      final cachedAuraIsBefore =
+          previousStats != null &&
+          stats.auraPoints - previousStats.auraPoints == auraAwarded;
+
+      setState(() {
+        _auraAfter = stats.auraPoints;
+        _auraBefore = cachedAuraIsBefore
+            ? previousStats.auraPoints
+            : math.max(0, stats.auraPoints - auraAwarded).toInt();
+        _rankProgressAfter = stats.rankProgress.clamp(0, 100).toInt();
+        _auraToNextAfter = stats.auraToNextRank;
+        _rank = stats.rank;
+        _nextRank = stats.nextRank;
+        _activityDays = stats.activityDays;
+        _statsReady = true;
+      });
+      if (_frame == 1) _startAuraAnimation();
+    } catch (_) {
+      if (!mounted || previousStats == null) return;
+      setState(() {
+        _auraBefore = previousStats.auraPoints;
+        _auraAfter = previousStats.auraPoints + widget.result.auraAwarded;
+        _rank = previousStats.rank;
+        _nextRank = previousStats.nextRank;
+        _rankProgressAfter = previousStats.rankProgress.clamp(0, 100).toInt();
+        _auraToNextAfter = previousStats.auraToNextRank;
+        _activityDays = previousStats.activityDays;
+        _statsReady = true;
+      });
+      if (_frame == 1) _startAuraAnimation();
+    }
+  }
+
+  void _openAuraFrame() {
+    setState(() => _frame = 1);
+    _startAuraAnimation();
+  }
+
+  void _startAuraAnimation() {
+    if (!_statsReady || _auraSequenceStarted) return;
+    _auraSequenceStarted = true;
+    _auraChipTimer = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) setState(() => _auraChipVisible = true);
+    });
+    _auraFlyTimer = Timer(const Duration(milliseconds: 1150), () {
+      if (mounted) setState(() => _auraChipFlying = true);
+    });
+    _auraCountTimer = Timer(const Duration(milliseconds: 1750), () {
+      if (mounted) setState(() => _auraCountStarted = true);
+    });
+  }
+
+  List<DateTime> _weekDates() {
+    final statsDates = _activityDays
+        .map((day) => DateTime.tryParse(day.date))
+        .whereType<DateTime>()
+        .toList(growable: false);
+    if (statsDates.length == 7) return statsDates;
+
+    final parsed = DateTime.tryParse(
+      widget.result.completionDate ??
+          widget.result.completedAt?.toIso8601String() ??
+          '',
+    );
+    final end = parsed == null
+        ? DateTime.now()
+        : DateTime(parsed.year, parsed.month, parsed.day);
+    return List.generate(
+      7,
+      (index) => end.subtract(Duration(days: 6 - index)),
+    );
+  }
+
+  String _dateKey(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
+
+  Widget _header(String title) => Row(
+    children: [
+      IconButton(
+        tooltip: 'Back',
+        onPressed: _frame == 0
+            ? () => Navigator.of(context).pop()
+            : () => setState(() => _frame = 0),
+        icon: const Icon(Icons.arrow_back_rounded),
+        color: HomePalette.darkTextPrimary,
+      ),
+      const SizedBox(width: 8),
+      Text(
+        title,
+        style: AppFonts.body(
+          color: HomePalette.darkTextPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ],
+  );
+
+  Widget _continueButton({required String label, required VoidCallback onTap}) =>
+      SizedBox(
+        width: double.infinity,
+        height: 54,
+        child: FilledButton(
+          onPressed: onTap,
+          style: FilledButton.styleFrom(
+            backgroundColor: HomePalette.primary,
+            foregroundColor: HomePalette.ink,
+            shape: const StadiumBorder(),
+            textStyle: AppFonts.body(
+              color: HomePalette.ink,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          child: Text(label),
+        ),
+      );
+
+  Widget _streakFrame() {
+    const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final dates = _weekDates();
+    final activeDays = {for (final day in _activityDays) day.date: day.active};
+    return Column(
+      key: const ValueKey('streak-frame'),
+      children: [
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _flamePulse,
+                builder: (context, child) {
+                  final pulse = _flamePulse.value;
+                  return AnimatedScale(
+                    scale: _flameLit ? 1 : .76,
+                    duration: const Duration(milliseconds: 650),
+                    curve: Curves.elasticOut,
+                    child: Container(
+                      width: 180,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: _flameLit
+                            ? [
+                                BoxShadow(
+                                  color: HomePalette.primary.withValues(
+                                    alpha: .2 + pulse * .32,
+                                  ),
+                                  blurRadius: 28 + pulse * 18,
+                                  spreadRadius: 5 + pulse * 6,
+                                ),
+                              ]
+                            : const [],
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.local_fire_department_rounded,
+                        size: 142,
+                        color: _flameLit
+                            ? HomePalette.primary
+                            : HomePalette.darkTextSecondary,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(
+                height: 112,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 700),
+                  transitionBuilder: (child, animation) => ClipRect(
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: animation.drive(
+                          Tween<Offset>(
+                            begin: const Offset(0, .8),
+                            end: Offset.zero,
+                          ),
+                        ),
+                        child: child,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    '$_streakValue',
+                    key: ValueKey(_streakValue),
+                    style: AppFonts.poster(
+                      color: HomePalette.primary,
+                      fontSize: 96,
+                      wdth: 100,
+                    ),
+                  ),
+                ),
+              ),
+              Text(
+                'DAY STREAK',
+                style: AppFonts.label(
+                  color: HomePalette.darkTextSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _todayChecked
+                    ? 'Streak extended. Come back tomorrow.'
+                    : 'Your daily quest keeps the streak going.',
+                textAlign: TextAlign.center,
+                style: AppFonts.body(
+                  color: HomePalette.darkTextPrimary.withValues(alpha: .82),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Row(
+          children: [
+            for (var index = 0; index < dates.length; index++) ...[
+              if (index > 0) const SizedBox(width: 4),
+              Expanded(
+                child: _weekDay(
+                  dates[index],
+                  index == dates.length - 1
+                      ? 'Today'
+                      : weekdayLabels[dates[index].weekday - 1],
+                  isToday: index == dates.length - 1,
+                  activeDays: activeDays,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 22),
+        _continueButton(label: 'Continue', onTap: _openAuraFrame),
+      ],
+    );
+  }
+
+  Widget _weekDay(
+    DateTime date,
+    String label, {
+    required bool isToday,
+    required Map<String, bool> activeDays,
+  }) {
+    final filled = isToday ? _todayChecked : activeDays[_dateKey(date)] == true;
+    return Column(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 350),
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: filled ? HomePalette.primary : Colors.transparent,
+            border: Border.all(
+              color: filled
+                  ? HomePalette.primary
+                  : HomePalette.darkTextSecondary.withValues(alpha: .4),
+              style: filled ? BorderStyle.solid : BorderStyle.solid,
+            ),
+            boxShadow: filled
+                ? [
+                    BoxShadow(
+                      color: HomePalette.primary.withValues(alpha: .28),
+                      blurRadius: 12,
+                    ),
+                  ]
+                : const [],
+          ),
+          child: Icon(
+            Icons.check_rounded,
+            size: 16,
+            color: filled ? HomePalette.ink : Colors.transparent,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          label,
+          maxLines: 1,
+          style: AppFonts.body(
+            color: HomePalette.darkTextSecondary,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _auraFrame() {
+    final auraBefore = _auraBefore;
+    final auraAfter = _auraAfter;
+    final progressAfter = _rankProgressAfter;
+    final auraToNextAfter = _auraToNextAfter;
+    return Column(
+      key: const ValueKey('aura-frame'),
+      children: [
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 13,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: HomePalette.primary,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  'Rank $_rank',
+                  style: AppFonts.body(
+                    color: HomePalette.ink,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'TOTAL AURA',
+                style: AppFonts.label(
+                  color: HomePalette.darkTextSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                height: 128,
+                child: Center(
+                  child: _statsReady && auraBefore != null && auraAfter != null
+                      ? TweenAnimationBuilder<double>(
+                          key: ValueKey('aura-count-$_auraCountStarted'),
+                          tween: Tween<double>(
+                            begin: auraBefore.toDouble(),
+                            end: _auraCountStarted
+                                ? auraAfter.toDouble()
+                                : auraBefore.toDouble(),
+                          ),
+                          duration: const Duration(milliseconds: 900),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, _) => Text(
+                            value.round().toString(),
+                            style: AppFonts.poster(
+                              color: _auraCountStarted
+                                  ? HomePalette.primary
+                                  : HomePalette.darkTextPrimary,
+                              fontSize: 88,
+                              wdth: 100,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          '…',
+                          style: AppFonts.poster(
+                            color: HomePalette.darkTextPrimary,
+                            fontSize: 88,
+                            wdth: 100,
+                          ),
+                        ),
+                ),
+              ),
+              SizedBox(
+                height: 42,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.topCenter,
+                  children: [
+                    AnimatedSlide(
+                      offset: _auraChipFlying
+                          ? const Offset(0, -2.6)
+                          : _auraChipVisible
+                          ? Offset.zero
+                          : const Offset(0, .6),
+                      duration: Duration(
+                        milliseconds: _auraChipFlying ? 550 : 450,
+                      ),
+                      curve: Curves.easeOutBack,
+                      child: AnimatedOpacity(
+                        opacity: _auraChipVisible && !_auraChipFlying ? 1 : 0,
+                        duration: const Duration(milliseconds: 350),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: HomePalette.primary,
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: HomePalette.primary.withValues(
+                                  alpha: .35,
+                                ),
+                                blurRadius: 18,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '+$_awardedAura Aura',
+                            style: AppFonts.body(
+                              color: HomePalette.ink,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: SizedBox(
+                        height: 10,
+                        child: _statsReady &&
+                                progressBefore != null &&
+                                progressAfter != null
+                            ? TweenAnimationBuilder<double>(
+                                key: ValueKey('aura-progress-$_auraCountStarted'),
+                                tween: Tween<double>(
+                                begin: 0,
+                                  end: _auraCountStarted
+                                      ? progressAfter / 100
+                                  : 0,
+                                ),
+                                duration: const Duration(milliseconds: 900),
+                                curve: Curves.easeOutCubic,
+                                builder: (context, value, _) => LinearProgressIndicator(
+                                  value: value.clamp(0, 1).toDouble(),
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: .12,
+                                  ),
+                                  valueColor: const AlwaysStoppedAnimation(
+                                    HomePalette.primary,
+                                  ),
+                                ),
+                              )
+                            : const LinearProgressIndicator(
+                                value: 0,
+                                backgroundColor: Color(0x33111111),
+                                valueColor: AlwaysStoppedAnimation(
+                                  HomePalette.primary,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${_auraCountStarted ? auraToNextAfter ?? '--' : '--'} AP to ${_nextRank ?? 'next rank'}',
+                          style: AppFonts.body(
+                            color: HomePalette.darkTextSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '${_auraCountStarted ? progressAfter ?? 0 : 0}%',
+                          style: AppFonts.body(
+                            color: HomePalette.darkTextSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (widget.result.relatedMajorChallenge case final challenge?) ...[
+          TextButton(
+            onPressed: () => widget.onOpenChallenge(challenge),
+            style: TextButton.styleFrom(foregroundColor: HomePalette.primary),
+            child: Text('View ${challenge.title}'),
+          ),
+        ],
+        _continueButton(
+          label: 'Continue',
+          onTap: () => Navigator.of(context).pop(),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(myStatsProvider);
+    return Scaffold(
+      backgroundColor: HomePalette.darkBackground,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              child: Column(
+                children: [
+                  _header(_frame == 0 ? 'Streak' : 'Quest complete'),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 350),
+                      child: _frame == 0 ? _streakFrame() : _auraFrame(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -80,11 +80,13 @@
       font-weight: 700;
     }
     .stage {
+      width: min(100%, 720px);
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       align-items: flex-start;
       gap: 28px;
+      margin: 0 auto;
     }
     .preview { width: 330px; max-width: 100%; }
     .caption {
@@ -251,11 +253,109 @@
     .nav-item svg { width: 21px; height: 21px; }
     .icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
     .nav-item .icon { width: 22px; height: 22px; }
+    .result-head { margin: 8px 2px 15px; }
+    .result-eyebrow { color: var(--icon-accent); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+    .result-title { margin: 4px 0 0; font-size: 22px; line-height: 1.1; font-weight: 750; }
+    .result-score { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .reward-block { display: flex; align-items: center; gap: 14px; margin-top: 13px; padding: 14px; border: 1px solid var(--border); border-radius: 18px; background: var(--card); }
+    .flame-orbit { width: 62px; height: 62px; flex: none; display: grid; place-items: center; position: relative; border-radius: 50%; background: rgb(255 122 61 / 10%); }
+    .flame-orbit::before { position: absolute; inset: 5px; border: 1px solid rgb(255 122 61 / 24%); border-radius: 50%; content: ""; }
+    .flame { z-index: 1; font-size: 35px; line-height: 1; filter: drop-shadow(0 3px 8px rgb(255 122 61 / 28%)); transform-origin: 50% 80%; }
+    .reward-label { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+    .streak-value { display: flex; align-items: baseline; gap: 5px; margin-top: 3px; font-size: 24px; line-height: 1; font-weight: 800; }
+    .streak-value small { color: var(--muted); font-size: 11px; font-weight: 650; }
+    .reward-hint { margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .aura-total { margin-top: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 19px; background: var(--card); }
+    .aura-total-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .aura-number-row { display: flex; align-items: baseline; gap: 6px; margin-top: 5px; }
+    .aura-number { font-size: 38px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .aura-number small { color: var(--muted); font-size: 11px; font-weight: 650; }
+    .aura-delta { padding: 7px 10px; border-radius: 999px; background: rgb(200 255 74 / 17%); color: var(--icon-accent); font-size: 11px; font-weight: 850; opacity: 0; transform: translateY(8px) scale(.92); }
+    .aura-delta.show { animation: aura-fly .75s cubic-bezier(.2,.8,.2,1) forwards; }
+    .aura-track { height: 6px; overflow: hidden; margin-top: 13px; border-radius: 999px; background: var(--border); }
+    .aura-track i { display: block; width: 32%; height: 100%; border-radius: inherit; background: var(--lime); transition: width .9s cubic-bezier(.2,.8,.2,1); }
+    .aura-note { margin: 8px 0 0; color: var(--muted); font-size: 10px; }
+    .reward-block.celebrating .flame { animation: flame-pop .85s cubic-bezier(.2,.9,.25,1.35) both; }
+    .reward-block.celebrating .flame-orbit { animation: orbit-glow 1.1s ease-out both; }
+    .reward-block.celebrating .streak-value { animation: streak-arrive .55s .15s ease-out both; }
+    @keyframes flame-pop { 0% { opacity: .4; transform: translateY(13px) scale(.45) rotate(-12deg); } 55% { opacity: 1; transform: translateY(-4px) scale(1.18) rotate(5deg); } 100% { transform: translateY(0) scale(1) rotate(0); } }
+    @keyframes orbit-glow { 0% { box-shadow: 0 0 0 0 rgb(255 122 61 / 0%); } 45% { box-shadow: 0 0 0 12px rgb(255 122 61 / 13%); } 100% { box-shadow: 0 0 0 0 rgb(255 122 61 / 0%); } }
+    @keyframes streak-arrive { from { opacity: .35; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes aura-fly { 0% { opacity: 0; transform: translateY(9px) scale(.9); } 35% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+    .preview-replay { margin: 0 0 10px; padding: 6px 11px; border: 1px solid var(--border); border-radius: 999px; background: var(--phone); color: var(--text); cursor: pointer; font-size: 10px; font-weight: 750; }
+    .reward-phone {
+      --reward-ink: #0d0d0a;
+      --reward-lime: #c8ff4a;
+      --reward-neon: #b6ff00;
+      --reward-muted: #9a9a90;
+      --reward-line: rgb(255 255 255 / 14%);
+      position: relative;
+      height: 640px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 16px 16px 20px;
+      border: 0;
+      border-radius: 28px;
+      background: var(--reward-ink);
+      color: #fff;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+    }
+    .reward-top { display: flex; align-items: center; gap: 12px; }
+    .reward-back { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 1px solid var(--reward-line); border-radius: 50%; }
+    .reward-back .icon { width: 20px; height: 20px; }
+    .reward-top strong { font-size: 20px; font-weight: 600; }
+    .reward-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .reward-label { margin-top: 4px; color: var(--reward-muted); font-size: 16px; }
+    .reward-message { max-width: 240px; margin: 14px 0 0; color: #d6d6cc; line-height: 1.4; }
+    .reward-phone .cta { width: 100%; }
+    .flame-wrap { position: relative; width: 150px; height: 190px; display: flex; align-items: center; justify-content: center; }
+    .flame-halo { position: absolute; inset: -30px; border-radius: 50%; background: radial-gradient(circle, rgb(182 255 0 / 55%), transparent 65%); opacity: .18; transition: opacity .8s ease; }
+    .flame-wrap svg { position: relative; width: 130px; height: 170px; filter: brightness(.5) saturate(.6); transform-origin: 50% 100%; animation: flame-flicker 1.6s ease-in-out infinite; transition: filter .8s ease; }
+    .flame-wrap.ignite .flame-halo { opacity: 1; }
+    .flame-wrap.ignite svg { filter: brightness(1) saturate(1) drop-shadow(0 0 10px var(--reward-neon)) drop-shadow(0 0 28px rgb(182 255 0 / 80%)); }
+    .flame-wrap.ignite { animation: flame-pop .7s cubic-bezier(.3,1.6,.5,1); }
+    .flame-ring { position: absolute; left: 50%; top: 55%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border: 2px solid var(--reward-lime); border-radius: 50%; opacity: 0; }
+    .flame-wrap.ignite .flame-ring { animation: flame-ring 1s ease-out; }
+    @keyframes flame-flicker { 0%,100% { transform: scaleY(1) skewX(0); } 30% { transform: scaleY(1.04) skewX(-1.5deg); } 60% { transform: scaleY(.98) skewX(1.5deg); } }
+    @keyframes flame-pop { 0% { transform: scale(.9); } 100% { transform: scale(1); } }
+    @keyframes flame-ring { 0% { transform: scale(.4); opacity: .9; } 100% { transform: scale(2.4); opacity: 0; } }
+    .streak-odometer { position: relative; width: 100%; height: 112px; overflow: hidden; margin-top: 6px; }
+    .streak-digit { position: absolute; left: 0; right: 0; color: var(--reward-lime); font-size: 96px; font-weight: 600; line-height: 112px; text-shadow: 0 0 24px rgb(200 255 74 / 55%); transition: transform .7s cubic-bezier(.2,.9,.2,1), opacity .7s ease; }
+    .streak-digit.next { transform: translateY(112px); opacity: 0; }
+    .streak-center.animate .streak-digit.current { transform: translateY(-112px); opacity: 0; }
+    .streak-center.animate .streak-digit.next { transform: translateY(0); opacity: 1; }
+    .reward-week { display: flex; justify-content: space-between; margin: 0 4px 20px; }
+    .reward-day { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--reward-muted); font-size: 12px; }
+    .reward-dot { width: 32px; height: 32px; display: grid; place-items: center; border: 1px dashed rgb(255 255 255 / 25%); border-radius: 50%; transition: background .4s ease, box-shadow .4s ease, border-color .4s ease; }
+    .reward-dot .icon { width: 16px; height: 16px; color: var(--reward-ink); opacity: 0; transition: opacity .3s ease; }
+    .reward-dot.filled { border: 1px solid var(--reward-lime); background: var(--reward-lime); box-shadow: 0 0 14px rgb(200 255 74 / 50%); }
+    .reward-dot.filled .icon { opacity: 1; }
+    .reward-dot.today { border-color: rgb(200 255 74 / 60%); }
+    .aura-heading { margin-top: 6px; color: var(--reward-muted); font-size: 16px; }
+    .aura-total-wrap { position: relative; margin-top: 6px; }
+    .aura-counter { color: #fff; font-size: 112px; font-weight: 600; line-height: 120px; font-variant-numeric: tabular-nums; transition: color .3s ease, text-shadow .3s ease; }
+    .aura-counter.pop { color: var(--reward-lime); text-shadow: 0 0 28px rgb(200 255 74 / 70%); animation: aura-bump .6s cubic-bezier(.3,1.6,.5,1); }
+    @keyframes aura-bump { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
+    .aura-chip { position: absolute; top: calc(100% + 10px); left: 50%; padding: 8px 20px; border-radius: 999px; background: var(--reward-lime); box-shadow: 0 0 24px rgb(200 255 74 / 60%); color: var(--reward-ink); font-size: 20px; font-weight: 600; opacity: 0; transform: translate(-50%,20px) scale(.7); transition: transform .55s cubic-bezier(.3,1.4,.5,1), opacity .4s ease; white-space: nowrap; }
+    .aura-chip.visible { opacity: 1; transform: translate(-50%,0) scale(1); }
+    .aura-chip.fly { opacity: 0; transform: translate(-50%,-150px) scale(.5); transition: transform .55s cubic-bezier(.5,0,.8,.4), opacity .55s ease .1s; }
+    .aura-progress { width: 100%; margin-top: 72px; padding: 0 8px; }
+    .aura-bar { height: 10px; overflow: hidden; border-radius: 999px; background: rgb(255 255 255 / 12%); }
+    .aura-bar i { display: block; width: 80%; height: 100%; border-radius: inherit; background: var(--reward-lime); box-shadow: 0 0 12px rgb(200 255 74 / 70%); transition: width .8s cubic-bezier(.2,.9,.2,1); }
+    .aura-progress-labels { display: flex; justify-content: space-between; margin-top: 8px; color: var(--reward-muted); font-size: 13px; }
+    .aura-progress-labels b { color: #fff; font-weight: 600; }
+    .spark { position: absolute; z-index: 3; width: 7px; height: 7px; border-radius: 50%; background: var(--reward-lime); box-shadow: 0 0 8px var(--reward-neon); pointer-events: none; }
+    .replay-control { display: block; min-height: 44px; margin: 24px auto 0; padding: 0 24px; border: 0; border-radius: 999px; background: #0d0d0a; color: #c8ff4a; cursor: pointer; font-size: 13px; font-weight: 700; }
+    .replay-control:focus-visible { outline: 2px solid #0d0d0a; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; scroll-behavior: auto !important; } }
     @media (max-width: 390px) {
       body { padding: 18px 12px 26px; }
       .preview-head { margin-bottom: 19px; }
       .stage { gap: 22px; }
       .phone { height: min(640px, calc(100dvh - 118px)); min-height: 540px; }
+      .reward-phone { height: min(640px, calc(100dvh - 118px)); min-height: 540px; }
     }
   </style>
 </head>
@@ -277,7 +377,7 @@
   <header class="preview-head">
     <div>
       <div class="preview-title">Daily quest</div>
-      <p class="preview-subtitle">Learn and prove screen preview</p>
+      <p class="preview-subtitle">Learn, prove, and celebrate the daily quest</p>
     </div>
     <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Dark theme</button>
   </header>
@@ -355,7 +455,70 @@
         </nav>
       </div>
     </section>
+
+    <section class="preview" aria-labelledby="streak-caption">
+      <h2 class="caption" id="streak-caption">Screen 1 · streak goes up</h2>
+      <div class="reward-phone">
+        <header class="reward-top">
+          <span class="reward-back" aria-hidden="true"><svg class="icon"><use href="#back"/></svg></span>
+          <strong>Streak</strong>
+        </header>
+        <div class="reward-center streak-center" id="streak-center">
+          <div class="flame-wrap" id="flame-wrap" aria-hidden="true">
+            <div class="flame-halo"></div>
+            <svg viewBox="0 0 100 130">
+              <defs>
+                <linearGradient id="flame-outer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4ff8a"/><stop offset=".55" stop-color="#b6ff00"/><stop offset="1" stop-color="#6fe000"/></linearGradient>
+                <linearGradient id="flame-inner" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#f2ffc4"/></linearGradient>
+              </defs>
+              <path fill="url(#flame-outer)" d="M50 4C54 28 82 42 82 78C82 104 68 124 50 124C32 124 18 104 18 78C18 60 28 50 34 40C36 52 42 56 46 56C44 40 44 20 50 4Z"/>
+              <path fill="url(#flame-inner)" d="M50 62C54 78 68 86 68 100C68 112 60 120 50 120C40 120 32 112 32 100C32 88 44 80 50 62Z"/>
+            </svg>
+            <div class="flame-ring"></div>
+          </div>
+          <div class="streak-odometer" aria-label="Day streak">
+            <span class="streak-digit current">1</span><span class="streak-digit next">2</span>
+          </div>
+          <p class="reward-label">DAY STREAK</p>
+          <p class="reward-message" id="streak-message">Finish today's quest to keep your streak alive.</p>
+        </div>
+        <div class="reward-week" aria-label="Weekly streak">
+          <div class="reward-day"><span class="reward-dot"></span>W</div>
+          <div class="reward-day"><span class="reward-dot"></span>T</div>
+          <div class="reward-day"><span class="reward-dot"></span>F</div>
+          <div class="reward-day"><span class="reward-dot"></span>S</div>
+          <div class="reward-day"><span class="reward-dot"></span>S</div>
+          <div class="reward-day"><span class="reward-dot filled"><svg class="icon"><use href="#check"/></svg></span>M</div>
+          <div class="reward-day"><span class="reward-dot today" id="today-dot"><svg class="icon"><use href="#check"/></svg></span>Today</div>
+        </div>
+        <button class="cta" type="button" data-toast="Continue to your Aura reward">Continue</button>
+      </div>
+    </section>
+
+    <section class="preview" aria-labelledby="aura-caption">
+      <h2 class="caption" id="aura-caption">Screen 2 · Aura points get added</h2>
+      <div class="reward-phone">
+        <header class="reward-top">
+          <span class="reward-back" aria-hidden="true"><svg class="icon"><use href="#back"/></svg></span>
+          <strong>Quest complete</strong>
+        </header>
+        <div class="reward-center">
+          <span class="tag">Rank E</span>
+          <p class="aura-heading">Total Aura</p>
+          <div class="aura-total-wrap" id="aura-wrap">
+            <div class="aura-counter" id="aura-total">80</div>
+            <div class="aura-chip" id="aura-chip">+2 Aura</div>
+          </div>
+          <div class="aura-progress">
+            <div class="aura-bar"><i id="aura-fill"></i></div>
+            <div class="aura-progress-labels"><span><b id="aura-to-rank">20</b> AP to Rank D</span><span id="aura-percent">80%</span></div>
+          </div>
+        </div>
+        <button class="cta" type="button" data-toast="Daily quest complete">Continue</button>
+      </div>
+    </section>
   </main>
+  <button class="replay-control" id="replay-reward" type="button">Replay animation</button>
 
   <script>
     const themeToggle = document.querySelector('#theme-toggle');
@@ -365,6 +528,119 @@
       themeToggle.textContent = isDark ? 'Light theme' : 'Dark theme';
       themeToggle.setAttribute('aria-pressed', String(isDark));
     });
+
+    const streakCenter = document.querySelector('#streak-center');
+    const flameWrap = document.querySelector('#flame-wrap');
+    const todayDot = document.querySelector('#today-dot');
+    const streakMessage = document.querySelector('#streak-message');
+    const auraTotal = document.querySelector('#aura-total');
+    const auraChip = document.querySelector('#aura-chip');
+    const auraFill = document.querySelector('#aura-fill');
+    const auraToRank = document.querySelector('#aura-to-rank');
+    const auraPercent = document.querySelector('#aura-percent');
+    let activeRun = 0;
+    let timers = [];
+
+    function later(run, ms, callback) {
+      timers.push(setTimeout(() => {
+        if (run === activeRun) callback();
+      }, ms));
+    }
+
+    function burst(element, run, amount) {
+      const bounds = element.getBoundingClientRect();
+      const host = element.closest('.reward-phone');
+      const hostBounds = host.getBoundingClientRect();
+      const centerX = bounds.left - hostBounds.left + bounds.width / 2;
+      const centerY = bounds.top - hostBounds.top + bounds.height / 2;
+      for (let index = 0; index < amount; index++) {
+        const spark = document.createElement('span');
+        spark.className = 'spark';
+        spark.style.left = `${centerX - 3}px`;
+        spark.style.top = `${centerY - 3}px`;
+        host.appendChild(spark);
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 70 + Math.random() * 80;
+        const animation = spark.animate([
+          { transform: 'translate(0,0) scale(1)', opacity: 1 },
+          { transform: `translate(${Math.cos(angle) * distance}px,${Math.sin(angle) * distance}px) scale(0)`, opacity: 0 },
+        ], { duration: 650 + Math.random() * 500, easing: 'cubic-bezier(.2,.8,.3,1)' });
+        animation.onfinish = () => spark.remove();
+      }
+    }
+
+    function countUp(element, from, to, duration, suffix, run) {
+      let start = null;
+      function step(now) {
+        if (run !== activeRun) return;
+        if (start === null) start = now;
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        element.textContent = `${Math.round(from + (to - from) * eased)}${suffix || ''}`;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function reset() {
+      timers.forEach(clearTimeout);
+      timers = [];
+      document.querySelectorAll('.spark').forEach((spark) => spark.remove());
+      flameWrap.classList.remove('ignite');
+      streakCenter.classList.remove('animate');
+      todayDot.classList.remove('filled');
+      streakMessage.textContent = "Finish today's quest to keep your streak alive.";
+      auraTotal.textContent = '80';
+      auraTotal.classList.remove('pop');
+      auraChip.className = 'aura-chip';
+      auraFill.style.width = '80%';
+      auraToRank.textContent = '20';
+      auraPercent.textContent = '80%';
+    }
+
+    function finishImmediately() {
+      flameWrap.classList.add('ignite');
+      streakCenter.classList.add('animate');
+      todayDot.classList.add('filled');
+      streakMessage.textContent = 'Streak extended. Come back tomorrow.';
+      auraTotal.textContent = '82';
+      auraTotal.classList.add('pop');
+      auraChip.classList.add('visible');
+      auraFill.style.width = '82%';
+      auraToRank.textContent = '18';
+      auraPercent.textContent = '82%';
+    }
+
+    function playRewardAnimation() {
+      const run = ++activeRun;
+      reset();
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        finishImmediately();
+        return;
+      }
+      later(run, 900, () => {
+        flameWrap.classList.add('ignite');
+        streakCenter.classList.add('animate');
+        burst(flameWrap, run, 16);
+      });
+      later(run, 1500, () => {
+        todayDot.classList.add('filled');
+        streakMessage.textContent = 'Streak extended. Come back tomorrow.';
+      });
+      later(run, 700, () => auraChip.classList.add('visible'));
+      later(run, 1900, () => auraChip.classList.add('fly'));
+      later(run, 2400, () => {
+        auraTotal.classList.add('pop');
+        countUp(auraTotal, 80, 82, 700, '', run);
+        countUp(auraToRank, 20, 18, 700, '', run);
+        countUp(auraPercent, 80, 82, 700, '%', run);
+        auraFill.style.width = '82%';
+        burst(auraTotal, run, 18);
+      });
+    }
+
+    document.querySelector('#replay-reward').addEventListener('click', playRewardAnimation);
+    setTimeout(playRewardAnimation, 500);
   </script>
 </body>
 </html>

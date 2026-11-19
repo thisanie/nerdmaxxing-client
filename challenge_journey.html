@@ -70,6 +70,7 @@
       width: min(100%, 420px);
       height: min(820px, calc(100svh - 96px));
       min-height: 570px;
+      position: relative;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -195,6 +196,22 @@
     .nav-item:not(.selected) span { display: none; }
     .toast { position: absolute; z-index: 4; left: 50%; bottom: 76px; max-width: calc(100% - 36px); transform: translate(-50%, 12px); padding: 10px 14px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 10px; font-weight: 750; opacity: 0; pointer-events: none; transition: opacity .16s ease, transform .16s ease; white-space: nowrap; }
     .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .modal-backdrop { position: absolute; z-index: 5; inset: 0; display: grid; align-items: end; padding: 14px; background: rgb(7 8 6 / 68%); backdrop-filter: blur(7px); }
+    .metric-dialog { padding: 19px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); color: var(--text); box-shadow: var(--shadow); animation: dialog-in .22s ease-out both; }
+    .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+    .dialog-eyebrow { color: var(--text-2); font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+    .dialog-title { margin: 4px 0 0; font-size: 21px; line-height: 1.15; }
+    .dialog-close { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--alt); color: var(--text); cursor: pointer; }
+    .dialog-close svg { width: 16px; height: 16px; }
+    .dialog-field { display: block; margin-top: 13px; color: var(--text-2); font-size: 10px; font-weight: 750; }
+    .dialog-field select, .dialog-field input, .dialog-field textarea { width: 100%; margin-top: 6px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; outline: 0; background: var(--alt); color: var(--text); font: inherit; font-size: 13px; }
+    .dialog-field input:focus, .dialog-field textarea:focus, .dialog-field select:focus { border-color: var(--lime); }
+    .dialog-field textarea { min-height: 64px; resize: vertical; }
+    .metric-input { display: grid; grid-template-columns: 1fr 54px; gap: 8px; align-items: end; }
+    .metric-unit { height: 42px; display: grid; place-items: center; margin-top: 6px; border: 1px solid var(--border); border-radius: 12px; background: var(--alt); color: var(--text-2); font-size: 12px; font-weight: 750; }
+    .dialog-submit { width: 100%; min-height: 44px; margin-top: 17px; border: 0; border-radius: 999px; background: var(--lime); color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 850; }
+    .dialog-submit:active { transform: scale(.985); }
+    @keyframes dialog-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
     [hidden] { display: none !important; }
     @media (max-width: 520px) {
       body { background: var(--bg); }
@@ -250,7 +267,7 @@
             <button class="action primary" type="button" data-toast="Training path opened"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>Train</button>
             <button class="action" type="button" data-toast="Evidence submission opened">Prove it</button>
           </div>
-          <button class="log-link" type="button" data-toast="Progress logger opened">＋ Log progress</button>
+          <button class="log-link" type="button" data-open-progress>＋ Log progress</button>
         </section>
 
         <section class="hero unaccepted-hero unaccepted-view" aria-label="Challenge details" hidden>
@@ -338,12 +355,26 @@
         <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Rank</span></div>
         <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg><span>Profile</span></div>
       </nav>
+      <div class="modal-backdrop" id="progressDialog" hidden>
+        <form class="metric-dialog" id="metricForm" role="dialog" aria-modal="true" aria-labelledby="metricDialogTitle">
+          <div class="dialog-head">
+            <div><span class="dialog-eyebrow">CHALLENGE METRIC</span><h2 class="dialog-title" id="metricDialogTitle">Log a result</h2></div>
+            <button class="dialog-close" type="button" data-close-progress aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m18 6-12 12M6 6l12 12"/></svg></button>
+          </div>
+          <label class="dialog-field">Metric<select aria-label="Metric"><option>Time to pick the lock</option></select></label>
+          <label class="dialog-field">Your result<span class="metric-input"><input name="result" type="number" min="0" step="1" value="720" required><span class="metric-unit">sec</span></span></label>
+          <label class="dialog-field">Note (optional)<textarea placeholder="Add context to this result"></textarea></label>
+          <button class="dialog-submit" type="submit">Save result</button>
+        </form>
+      </div>
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
   </main>
   <script>
     const root = document.documentElement;
     const themeToggle = document.querySelector('#themeToggle');
+    const progressDialog = document.querySelector('#progressDialog');
+    const metricForm = document.querySelector('#metricForm');
     let toastTimer;
 
     function setState(state) {
@@ -380,6 +411,35 @@
     });
     document.querySelectorAll('[data-toast]').forEach((button) => {
       button.addEventListener('click', () => showToast(button.dataset.toast));
+    });
+    document.querySelector('[data-open-progress]').addEventListener('click', () => {
+      progressDialog.hidden = false;
+      metricForm.elements.result.focus();
+    });
+    document.querySelectorAll('[data-close-progress]').forEach((button) => {
+      button.addEventListener('click', () => { progressDialog.hidden = true; });
+    });
+    progressDialog.addEventListener('click', (event) => {
+      if (event.target === progressDialog) progressDialog.hidden = true;
+    });
+    metricForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const result = Number(metricForm.elements.result.value);
+      const progress = Math.max(0, Math.min(1, (900 - result) / (900 - 300)));
+      const hero = document.querySelector('.accepted-view.hero');
+      hero.querySelector('.metric strong').textContent = String(result);
+      hero.querySelector('.ruler-current').textContent = String(result);
+      hero.querySelector('.ruler-current').style.left = `${progress * 100}%`;
+      hero.querySelector('.ruler-fill').style.width = `${progress * 100}%`;
+      hero.querySelector('.ruler-dot').style.left = `${progress * 100}%`;
+      document.querySelector('.attempt.latest .attempt-value').textContent = String(result);
+      const relative = (result / 900).toFixed(1);
+      document.querySelector('.attempt-caption b').textContent = `${relative}× your first`;
+      progressDialog.hidden = true;
+      showToast('Result saved · challenge progress updated');
+    });
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') progressDialog.hidden = true;
     });
     themeToggle.addEventListener('click', () => {
       const light = root.dataset.theme !== 'light';
