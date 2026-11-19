@@ -931,7 +931,7 @@ class _DailyQuestCard extends StatelessWidget {
               ),
             if (attempt?.isCompleted != true) ...[
               const SizedBox(width: 5),
-              const Icon(Icons.arrow_forward_rounded, size: 17, color: HomePalette.ink),
+              const Icon(Icons.arrow_forward_rounded, size: 17, color: HomePalette.primary),
             ],
           ],
         ),
