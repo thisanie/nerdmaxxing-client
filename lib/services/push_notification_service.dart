@@ -101,6 +101,12 @@ class PushNotificationService {
       }
 
       await _initializeLocalNotifications(onTap: _handleNotificationTap);
+      final launchDetails = await _localNotifications
+          .getNotificationAppLaunchDetails();
+      if (launchDetails?.didNotificationLaunchApp ?? false) {
+        _handleNotificationTap(launchDetails?.notificationResponse?.payload);
+      }
+
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(alert: true, badge: true, sound: true);
       FirebaseMessaging.onMessage.listen((message) async {
