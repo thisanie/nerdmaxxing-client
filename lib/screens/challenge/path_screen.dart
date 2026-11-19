@@ -597,8 +597,10 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                     ? Icons.play_arrow_rounded
                     : Icons.open_in_new_rounded,
                 size: 19,
+                color: _brightness == Brightness.light
+                  ? HomePalette.ink
+                  : _accent,
               ),
-              color: _accent,
               style: IconButton.styleFrom(
                 side: BorderSide(color: _ink, width: 1.5),
                 shape: const CircleBorder(),
@@ -618,7 +620,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       width: double.infinity,
       height: 112,
       decoration: BoxDecoration(
-        color: _ink,
+        color: AppColors.lightTextPrimary,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Stack(
@@ -630,7 +632,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               width: 140,
               height: 140,
               decoration: BoxDecoration(
-                color: _accent.withValues(alpha: .9),
+                color: HomePalette.primary.withValues(alpha: .9),
                 shape: BoxShape.circle,
               ),
             ),
@@ -641,7 +643,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
             child: Text(
               'VIDEO',
               style: AppFonts.label(
-                color: _accent,
+                color: HomePalette.primary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -650,8 +652,15 @@ class _PathScreenState extends ConsumerState<PathScreen> {
             child: Container(
               width: 56,
               height: 56,
-              decoration: BoxDecoration(color: _card, shape: BoxShape.circle),
-              child: Icon(Icons.play_arrow_rounded, size: 28, color: _ink),
+              decoration: const BoxDecoration(
+                color: HomePalette.lightSurface,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                size: 28,
+                color: AppColors.lightTextPrimary,
+              ),
             ),
           ),
         ],
