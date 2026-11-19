@@ -55,16 +55,14 @@ class ParticipationService {
     String participantId, {
     required String milestoneId,
     required String resourceId,
-    required int resourceMinutes,
+    int? resourceMinutes,
     String? note,
-    bool logProgress = false,
   }) async {
     final data = await api.post(
       '/participation/$participantId/milestones/$milestoneId/resources/$resourceId/complete',
       data: {
-        'resource_minutes': resourceMinutes,
+        if (resourceMinutes != null) 'resource_minutes': resourceMinutes,
         'note': note,
-        'log_progress': logProgress,
       },
     );
     final response = _responseMap(data);

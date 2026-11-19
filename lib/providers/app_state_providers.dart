@@ -121,9 +121,8 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
     String participantId, {
     required String milestoneId,
     required String resourceId,
-    required int resourceMinutes,
+    int? resourceMinutes,
     String? note,
-    bool logProgress = false,
   }) async {
     await _moveToInProgressUnlessSubmitted(participantId);
     final result = await _service.completeResource(
@@ -132,7 +131,6 @@ class ParticipationController extends AsyncNotifier<List<Participation>> {
       resourceId: resourceId,
       resourceMinutes: resourceMinutes,
       note: note,
-      logProgress: logProgress,
     );
     ref.invalidate(progressLogsProvider(participantId));
     ref.invalidate(myStatsProvider);

@@ -14,6 +14,7 @@ import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
 import '../../services/token_storage.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/metric_attempt_dialog.dart';
 
 class PathScreen extends ConsumerStatefulWidget {
   final Challenge challenge;
@@ -689,14 +690,19 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   }
 
   Future<void> _completeResource(_PathResource resource) async {
-    final input = await showDialog<_CompletionInput>(
-      context: context,
-      builder: (dialogContext) => Theme(
-        data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
-        child: _CompletionDialog(metric: _detail.primaryMetric),
-      ),
-    );
-    if (input == null) return;
+    final participation = widget.participation;
+    final metrics = _detail.metricDefinitions;
+    MetricAttemptInput? input;
+    if (participation != null && metrics.isNotEmpty) {
+      input = await showDialog<MetricAttemptInput>(
+        context: context,
+        builder: (dialogContext) => Theme(
+          data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
+          child: MetricAttemptDialog(metrics: metrics),
+        ),
+      );
+      if (input == null) return;
+    }
 
     final wasCompleted = resource.completed;
     setState(() {
@@ -708,7 +714,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
     final milestone = _detail.milestones.isEmpty
         ? null
         : _detail.milestones[_selectedMilestone];
-    final participation = widget.participation;
+    var completionSaved = false;
 
     try {
       if (participation != null &&
@@ -721,24 +727,9 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               participation.id,
               milestoneId: milestone.id,
               resourceId: resource.id,
-              resourceMinutes: input.resourceMinutes,
-              note: input.note,
-              logProgress: input.logProgress,
+              note: input?.note,
             );
-        if (input.logProgress && input.metricValue != null) {
-          final metric = _detail.primaryMetric;
-          if (metric != null) {
-            await ref
-                .read(participationControllerProvider.notifier)
-                .logMetricAttempt(
-                  participation.id,
-                  metricKey: metric.key,
-                  value: input.metricValue!,
-                  unit: metric.unit,
-                  note: input.note,
-                );
-          }
-        }
+        completionSaved = true;
       }
       final completedResource = widget.challenge.resources.where(
         (candidate) => candidate.id == resource.id,
@@ -751,6 +742,17 @@ class _PathScreenState extends ConsumerState<PathScreen> {
           if (candidate.id == resource.id) candidate.completed = true;
         }
       }
+      if (completionSaved && participation != null && input != null) {
+        await ref
+            .read(participationControllerProvider.notifier)
+            .logMetricAttempt(
+              participation.id,
+              metricKey: input.metric.key,
+              value: input.value,
+              unit: input.metric.unit,
+              note: input.note,
+            );
+      }
       if (!mounted) return;
       setState(() => resource.saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -759,26 +761,34 @@ class _PathScreenState extends ConsumerState<PathScreen> {
     } on ApiException catch (error) {
       if (mounted) {
         setState(() {
-          resource.completed = wasCompleted;
-          if (!wasCompleted) _milestone.completedResourceCount--;
+          if (!completionSaved) {
+            resource.completed = wasCompleted;
+            if (!wasCompleted) _milestone.completedResourceCount--;
+          }
           resource.saving = false;
         });
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.message)));
+        final message = completionSaved
+            ? 'Resource completed, but progress could not be logged: ${error.message}'
+            : error.message;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (error, stackTrace) {
       debugPrint('Resource completion failed: $error');
       debugPrintStack(stackTrace: stackTrace);
       if (mounted) {
         setState(() {
-          resource.completed = wasCompleted;
-          if (!wasCompleted) _milestone.completedResourceCount--;
+          if (!completionSaved) {
+            resource.completed = wasCompleted;
+            if (!wasCompleted) _milestone.completedResourceCount--;
+          }
           resource.saving = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              kDebugMode
+              completionSaved
+                  ? 'Resource completed, but progress could not be logged.'
+                  : kDebugMode
                   ? 'Resource save failed: $error'
                   : 'The resource could not be saved. Please try again.',
             ),
@@ -789,11 +799,11 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   }
 
   Future<void> _logResult() async {
-    final input = await showDialog<_MetricInput>(
+    final input = await showDialog<MetricAttemptInput>(
       context: context,
       builder: (dialogContext) => Theme(
         data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
-        child: _MetricDialog(metrics: _detail.metricDefinitions),
+        child: MetricAttemptDialog(metrics: _detail.metricDefinitions),
       ),
     );
     if (input == null || widget.participation == null) return;
@@ -1206,126 +1216,6 @@ class _PathResource {
   });
 }
 
-class _CompletionInput {
-  final int resourceMinutes;
-  final String? note;
-  final bool logProgress;
-  final double? metricValue;
-
-  const _CompletionInput({
-    required this.resourceMinutes,
-    required this.note,
-    required this.logProgress,
-    required this.metricValue,
-  });
-}
-
-class _CompletionDialog extends StatefulWidget {
-  final ChallengeMetric? metric;
-
-  const _CompletionDialog({required this.metric});
-
-  @override
-  State<_CompletionDialog> createState() => _CompletionDialogState();
-}
-
-class _CompletionDialogState extends State<_CompletionDialog> {
-  final _resourceMinutes = TextEditingController();
-  final _note = TextEditingController();
-  final _metricValue = TextEditingController();
-  bool _logProgress = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _resourceMinutes.dispose();
-    _note.dispose();
-    _metricValue.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final resourceMinutes = int.tryParse(_resourceMinutes.text.trim());
-    final metricValue = double.tryParse(_metricValue.text.trim());
-    if (resourceMinutes == null || resourceMinutes <= 0) {
-      setState(() => _error = 'Enter valid time for the resource.');
-      return;
-    }
-    if (_logProgress && widget.metric != null && metricValue == null) {
-      setState(() => _error = 'Enter the measured progress value.');
-      return;
-    }
-    Navigator.of(context).pop(
-      _CompletionInput(
-        resourceMinutes: resourceMinutes,
-        note: _note.text.trim().isEmpty ? null : _note.text.trim(),
-        logProgress: _logProgress,
-        metricValue: metricValue,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Mark resource complete'),
-    content: SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _resourceMinutes,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Minutes on this resource',
-            ),
-          ),
-          TextField(
-            controller: _note,
-            maxLines: 3,
-            maxLength: 5000,
-            decoration: const InputDecoration(
-              labelText: 'Description (optional)',
-            ),
-          ),
-          if (widget.metric != null)
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _logProgress,
-              onChanged: (value) =>
-                  setState(() => _logProgress = value ?? false),
-              title: const Text('Log my measured progress'),
-            ),
-          if (_logProgress && widget.metric != null)
-            TextField(
-              controller: _metricValue,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: InputDecoration(
-                labelText: 'Progress (${widget.metric!.unit})',
-              ),
-            ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                _error!,
-                style: const TextStyle(color: AppColors.danger),
-              ),
-            ),
-        ],
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
-      ),
-      FilledButton(onPressed: _submit, child: const Text('Complete resource')),
-    ],
-  );
-}
-
 class _DottedBorderPainter extends CustomPainter {
   final Color color;
   final double radius;
@@ -1355,111 +1245,4 @@ class _DottedBorderPainter extends CustomPainter {
   @override
   bool shouldRepaint(_DottedBorderPainter oldDelegate) =>
       color != oldDelegate.color || radius != oldDelegate.radius;
-}
-
-class _MetricInput {
-  final ChallengeMetric metric;
-  final double value;
-  final String? note;
-
-  const _MetricInput({required this.metric, required this.value, this.note});
-}
-
-class _MetricDialog extends StatefulWidget {
-  final List<ChallengeMetric> metrics;
-
-  const _MetricDialog({required this.metrics});
-
-  @override
-  State<_MetricDialog> createState() => _MetricDialogState();
-}
-
-class _MetricDialogState extends State<_MetricDialog> {
-  final _value = TextEditingController();
-  final _note = TextEditingController();
-  late ChallengeMetric _metric;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _metric = widget.metrics.first;
-  }
-
-  @override
-  void dispose() {
-    _value.dispose();
-    _note.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final value = double.tryParse(_value.text.trim());
-    if (value == null || value < 0) {
-      setState(() => _error = 'Enter a valid result.');
-      return;
-    }
-    Navigator.of(context).pop(
-      _MetricInput(
-        metric: _metric,
-        value: value,
-        note: _note.text.trim().isEmpty ? null : _note.text.trim(),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Log a result'),
-    content: SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (widget.metrics.length > 1)
-            DropdownButtonFormField<ChallengeMetric>(
-              initialValue: _metric,
-              decoration: const InputDecoration(labelText: 'Metric'),
-              items: [
-                for (final metric in widget.metrics)
-                  DropdownMenuItem(value: metric, child: Text(metric.label)),
-              ],
-              onChanged: (metric) {
-                if (metric != null) setState(() => _metric = metric);
-              },
-            ),
-          TextField(
-            controller: _value,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: _metric.label,
-              suffixText: _metric.unit,
-              hintText: 'e.g. 5',
-            ),
-          ),
-          TextField(
-            controller: _note,
-            maxLength: 5000,
-            maxLines: 3,
-            decoration: const InputDecoration(labelText: 'Note (optional)'),
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                _error!,
-                style: const TextStyle(color: AppColors.danger),
-              ),
-            ),
-        ],
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
-      ),
-      FilledButton(onPressed: _submit, child: const Text('Log result')),
-    ],
-  );
 }
