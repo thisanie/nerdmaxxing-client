@@ -11,7 +11,6 @@ import '../../services/discover_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/challenge_section.dart';
 import '../../widgets/difficulty_badge.dart';
-import '../../widgets/discover_category_icon.dart';
 import '../challenge/challenge_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import 'category_challenges_screen.dart';
@@ -386,6 +385,71 @@ class _TopicRow extends StatelessWidget {
   final List<DiscoverCategory> categories;
   final ValueChanged<DiscoverCategory> onTap;
   const _TopicRow({required this.categories, required this.onTap});
+
+  IconData _iconForCategory(DiscoverCategory category) {
+    final value = '${category.name} ${category.slug}'.toLowerCase();
+    if (value.contains('brain') || value.contains('memory')) {
+      return Icons.psychology_rounded;
+    }
+    if (value.contains('technology') || value.contains('tech')) {
+      return Icons.devices_rounded;
+    }
+    if (value.contains('game') || value.contains('strategy')) {
+      return Icons.sports_esports_rounded;
+    }
+    if (value.contains('knowledge')) return Icons.menu_book_rounded;
+    if (value.contains('creative')) return Icons.palette_rounded;
+    if (value.contains('music')) return Icons.music_note_rounded;
+    if (value.contains('language')) return Icons.translate_rounded;
+    if (value.contains('physical')) return Icons.fitness_center_rounded;
+    if (value.contains('science')) return Icons.science_rounded;
+    if (value.contains('practical')) return Icons.handyman_rounded;
+    return Icons.auto_awesome_rounded;
+  }
+
+  (Color foreground, Color background) _colorsForCategory(
+    DiscoverCategory category,
+    Brightness brightness,
+  ) {
+    final value = '${category.name} ${category.slug}'.toLowerCase();
+    final colors = value.contains('brain') ||
+            value.contains('memory') ||
+            value.contains('knowledge') ||
+            value.contains('language')
+        ? (
+            DiscoverPalette.darkLavender,
+            DiscoverPalette.darkLavenderWash,
+            DiscoverPalette.lightLavender,
+            DiscoverPalette.lightLavenderWash,
+          )
+        : value.contains('game') ||
+              value.contains('strategy') ||
+              value.contains('music') ||
+              value.contains('physical')
+        ? (
+            DiscoverPalette.darkMint,
+            DiscoverPalette.darkMintWash,
+            DiscoverPalette.lightMint,
+            DiscoverPalette.lightMintWash,
+          )
+        : value.contains('technology') || value.contains('science')
+        ? (
+            DiscoverPalette.darkSky,
+            DiscoverPalette.darkSkyWash,
+            DiscoverPalette.lightSky,
+            DiscoverPalette.lightSkyWash,
+          )
+        : (
+            DiscoverPalette.darkPeach,
+            DiscoverPalette.darkPeachWash,
+            DiscoverPalette.lightPeach,
+            DiscoverPalette.lightPeachWash,
+          );
+    return brightness == Brightness.dark
+        ? (colors.$1, colors.$2)
+        : (colors.$3, colors.$4);
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -397,8 +461,9 @@ class _TopicRow extends StatelessWidget {
             if (i > 0) const SizedBox(width: 9),
             Builder(
               builder: (context) {
-                final (foreground, background) = DiscoverPalette.topicColors(
-                  categories[i].name,
+                final (foreground, background) =
+                    _colorsForCategory(
+                  categories[i],
                   Theme.of(context).brightness,
                 );
                 return Material(
@@ -415,8 +480,9 @@ class _TopicRow extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          DiscoverCategoryIcon(
-                            category: categories[i],
+                          Icon(
+                            _iconForCategory(categories[i]),
+                            color: foreground,
                             size: 18,
                           ),
                           const SizedBox(width: 7),

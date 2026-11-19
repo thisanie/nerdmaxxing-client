@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Challenge Categories | NerdMaxxing</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #0F0F0E;
+      --surface: #161615;
+      --text: #ECEBE3;
+      --muted: #8C8C84;
+      --line: #2C2C2A;
+      --lavender: #E1D6FF;
+      --lavender-wash: #292332;
+      --mint: #BAF1DA;
+      --mint-wash: #1D3027;
+      --sky: #CEE6FE;
+      --sky-wash: #202C38;
+      --peach: #FFDCC6;
+      --peach-wash: #33271F;
+    }
+    html[data-theme="light"] {
+      color-scheme: light;
+      --page: #FFFFFF;
+      --surface: #F7F7F2;
+      --text: #101008;
+      --muted: #5C5C53;
+      --line: #E5E5DC;
+      --lavender: #4B3A82;
+      --lavender-wash: #E1D6FF;
+      --mint: #1D5A40;
+      --mint-wash: #BAF1DA;
+      --sky: #1D4A78;
+      --sky-wash: #CEE6FE;
+      --peach: #8A4A1F;
+      --peach-wash: #FFDCC6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", sans-serif;
+      transition: background .2s, color .2s;
+    }
+    main { width: min(100% - 40px, 940px); margin: 0 auto; padding: 48px 0 64px; }
+    .topline { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+    .brand { font-size: 12px; font-weight: 700; letter-spacing: .12em; color: var(--muted); }
+    .theme-toggle { display: inline-flex; gap: 3px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; }
+    .theme-toggle button { border: 0; border-radius: 999px; background: transparent; color: var(--muted); padding: 8px 13px; font: inherit; font-size: 13px; cursor: pointer; }
+    .theme-toggle button[aria-pressed="true"] { background: var(--text); color: var(--page); }
+    header { padding: 36px 0 28px; }
+    .eyebrow { margin: 0 0 10px; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .12em; }
+    h1 { margin: 0; font-size: clamp(30px, 5vw, 46px); line-height: 1.05; letter-spacing: 0; font-weight: 600; }
+    .intro { max-width: 560px; margin: 12px 0 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
+    .palette-key { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
+    .key { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+    .key-top { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tone); }
+    .hex { margin: 7px 0 0 18px; color: var(--muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .category-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .category {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid color-mix(in srgb, var(--tone) 24%, transparent);
+      border-radius: 8px;
+      background: var(--wash);
+      color: var(--tone);
+    }
+    .symbol { width: 38px; height: 38px; flex: none; padding: 8px; border: 1px solid color-mix(in srgb, var(--tone) 30%, transparent); border-radius: 8px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .copy { min-width: 0; }
+    .name { font-size: 15px; line-height: 1.3; font-weight: 600; }
+    .slug { margin-top: 3px; color: var(--tone); opacity: .76; font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+    .token { margin-left: auto; flex: none; color: var(--tone); opacity: .76; font: 10px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .lavender { --tone: var(--lavender); --wash: var(--lavender-wash); }
+    .mint { --tone: var(--mint); --wash: var(--mint-wash); }
+    .sky { --tone: var(--sky); --wash: var(--sky-wash); }
+    .peach { --tone: var(--peach); --wash: var(--peach-wash); }
+    footer { display: flex; justify-content: space-between; gap: 14px; margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.5; }
+    @media (max-width: 650px) {
+      main { width: min(100% - 32px, 520px); padding-top: 24px; }
+      .palette-key { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .category-list { grid-template-columns: 1fr; }
+      .token { font-size: 9px; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+    <symbol id="icon-brain" viewBox="0 0 24 24"><path d="M12 5.2a3.3 3.3 0 0 0-5.8 2.2 3.4 3.4 0 0 0-1.6 5.9 3.5 3.5 0 0 0 3 5.5H12zM12 5.2a3.3 3.3 0 0 1 5.8 2.2 3.4 3.4 0 0 1 1.6 5.9 3.5 3.5 0 0 1-3 5.5H12M8 9.5c1.8 0 2.3 1 2.3 2.5M16 9.5c-1.8 0-2.3 1-2.3 2.5M9 16c1-.7 2-.7 3 0m3 0c-1-.7-2-.7-3 0"/></symbol>
+    <symbol id="icon-devices" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 21h8m-4-5v5M7 7h10m-10 3h6"/></symbol>
+    <symbol id="icon-games" viewBox="0 0 24 24"><path d="M7 8h10a4 4 0 0 1 3.8 2.8l1 3.5a2.5 2.5 0 0 1-4.1 2.5L15 14H9l-2.7 2.8a2.5 2.5 0 0 1-4.1-2.5l1-3.5A4 4 0 0 1 7 8Z"/><path d="M7.5 10.5v4m-2-2h4m7-1h.01m2 2h.01"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M12 7v14m0-14C9 4.5 5.8 4 3 5v14c3-1 6-.5 9 2m0-14c3-2.5 6.2-3 9-2v14c-3-1-6-.5-9 2"/></symbol>
+    <symbol id="icon-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.7 1.7 0 0 1 1.2-2.9H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="10" r=".8"/><circle cx="11" cy="7" r=".8"/><circle cx="15.5" cy="8" r=".8"/></symbol>
+    <symbol id="icon-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+    <symbol id="icon-translate" viewBox="0 0 24 24"><path d="M3 5h12M9 3v2m5 0c-.5 5-4 9-9 11m1-8c1 3 4 6 7 7m1 6 4-10 4 10m-6.5-3h5"/></symbol>
+    <symbol id="icon-fitness" viewBox="0 0 24 24"><path d="M6 9v6m-3-4v2m18-2v2m-3-4v6M6 12h12"/></symbol>
+    <symbol id="icon-science" viewBox="0 0 24 24"><path d="M9 3h6m-5 0v7l-5.5 9A1.3 1.3 0 0 0 5.6 21h12.8a1.3 1.3 0 0 0 1.1-2l-5.5-9V3m-7 12h10"/></symbol>
+    <symbol id="icon-tools" viewBox="0 0 24 24"><path d="M14.5 6.5a5 5 0 0 0-6.8 6.8L3 18a2.1 2.1 0 0 0 3 3l4.7-4.7a5 5 0 0 0 6.8-6.8l-3 3-3-3z"/><path d="m14 14 7 7"/></symbol>
+  </svg>
+  <main>
+    <div class="topline">
+      <div class="brand">NERDMAXXING <span aria-hidden="true">/</span> DISCOVER</div>
+      <div class="theme-toggle" role="group" aria-label="Preview theme">
+        <button type="button" data-set-theme="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-set-theme="light" aria-pressed="false">Light</button>
+      </div>
+    </div>
+    <header>
+      <p class="eyebrow">CATEGORY SYSTEM · PREVIEW</p>
+      <h1>Ten challenges.<br>Four color families.</h1>
+      <p class="intro">Category chips use the same foreground and wash pairs as Discover. Switch themes to compare contrast before the Flutter mapping is implemented.</p>
+    </header>
+    <section class="palette-key" aria-label="Palette reference">
+      <div class="key lavender"><div class="key-top"><span class="dot"></span>Lavender</div><div class="hex">#E1D6FF · #292332</div></div>
+      <div class="key mint"><div class="key-top"><span class="dot"></span>Mint</div><div class="hex">#BAF1DA · #1D3027</div></div>
+      <div class="key sky"><div class="key-top"><span class="dot"></span>Sky</div><div class="hex">#CEE6FE · #202C38</div></div>
+      <div class="key peach"><div class="key-top"><span class="dot"></span>Peach</div><div class="hex">#FFDCC6 · #33271F</div></div>
+    </section>
+    <section class="category-list" aria-label="Challenge category chips">
+      <article class="category lavender"><svg class="symbol" aria-hidden="true"><use href="#icon-brain"/></svg><div class="copy"><div class="name">Brain &amp; Memory</div><div class="slug">brain-memory · psychology</div></div><span class="token">LAVENDER</span></article>
+      <article class="category sky"><svg class="symbol" aria-hidden="true"><use href="#icon-devices"/></svg><div class="copy"><div class="name">Technology</div><div class="slug">technology · devices</div></div><span class="token">SKY</span></article>
+      <article class="category mint"><svg class="symbol" aria-hidden="true"><use href="#icon-games"/></svg><div class="copy"><div class="name">Games &amp; Strategy</div><div class="slug">games-strategy · sports_esports</div></div><span class="token">MINT</span></article>
+      <article class="category lavender"><svg class="symbol" aria-hidden="true"><use href="#icon-book"/></svg><div class="copy"><div class="name">Knowledge</div><div class="slug">knowledge · menu_book</div></div><span class="token">LAVENDER</span></article>
+      <article class="category peach"><svg class="symbol" aria-hidden="true"><use href="#icon-palette"/></svg><div class="copy"><div class="name">Creative</div><div class="slug">creative · palette</div></div><span class="token">PEACH</span></article>
+      <article class="category mint"><svg class="symbol" aria-hidden="true"><use href="#icon-music"/></svg><div class="copy"><div class="name">Music</div><div class="slug">music · music_note</div></div><span class="token">MINT</span></article>
+      <article class="category lavender"><svg class="symbol" aria-hidden="true"><use href="#icon-translate"/></svg><div class="copy"><div class="name">Languages</div><div class="slug">languages · translate</div></div><span class="token">LAVENDER</span></article>
+      <article class="category mint"><svg class="symbol" aria-hidden="true"><use href="#icon-fitness"/></svg><div class="copy"><div class="name">Physical</div><div class="slug">physical · fitness_center</div></div><span class="token">MINT</span></article>
+      <article class="category sky"><svg class="symbol" aria-hidden="true"><use href="#icon-science"/></svg><div class="copy"><div class="name">Science</div><div class="slug">science · science</div></div><span class="token">SKY</span></article>
+      <article class="category peach"><svg class="symbol" aria-hidden="true"><use href="#icon-tools"/></svg><div class="copy"><div class="name">Practical</div><div class="slug">practical · handyman</div></div><span class="token">PEACH</span></article>
+    </section>
+    <footer><span>Outlined vector icons shown; labels list the proposed Flutter Material equivalents.</span><span>Category values are UI-mapped from the shared category list.</span></footer>
+  </main>
+  <script>
+    for (const button of document.querySelectorAll('[data-set-theme]')) {
+      button.addEventListener('click', () => {
+        const theme = button.dataset.setTheme;
+        document.documentElement.dataset.theme = theme;
+        for (const option of document.querySelectorAll('[data-set-theme]')) {
+          option.setAttribute('aria-pressed', String(option === button));
+        }
+      });
+    }
+  </script>
+</body>
+</html>
