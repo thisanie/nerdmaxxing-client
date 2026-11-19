@@ -561,7 +561,7 @@ class AppTheme {
         closeIconColor: brightness == Brightness.dark
             ? const Color(0xFF111111)
             : Colors.white,
-        showCloseIcon: true,
+        showCloseIcon: false,
         dismissDirection: DismissDirection.horizontal,
         insetPadding: const EdgeInsets.fromLTRB(26, 0, 26, 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
