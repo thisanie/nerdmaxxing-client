@@ -406,10 +406,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _openParticipation(Participation participation) {
+  Future<void> _openParticipation(Participation participation) async {
     final challenge = _challengesById[participation.challengeId];
     if (challenge == null) return;
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ChallengeDetailScreen(
           slug: challenge.slug,
@@ -417,6 +417,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+    if (mounted) await _loadHomeData();
   }
 
   Future<void> _openDailyQuest(DailyQuestToday today) async {
