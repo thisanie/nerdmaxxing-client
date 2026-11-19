@@ -1148,6 +1148,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   bool _auraSequenceStarted = false;
   bool _auraChipVisible = false;
   bool _auraChipFlying = false;
+  bool _auraCountElapsed = false;
   bool _auraCountStarted = false;
   int? _auraBefore;
   int? _auraAfter;
@@ -1158,6 +1159,11 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   List<UserActivityDay> _activityDays = const [];
 
   int get _awardedAura => widget.result.auraAwarded;
+  Color get _primary => Theme.of(context).colorScheme.primary;
+  Color get _onPrimary => Theme.of(context).colorScheme.onPrimary;
+  Color get _textPrimary => Theme.of(context).colorScheme.onSurface;
+  Color get _textSecondary => Theme.of(context).colorScheme.onSurfaceVariant;
+  Color get _border => Theme.of(context).colorScheme.outline;
 
   @override
   void initState() {
@@ -1214,7 +1220,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         _activityDays = stats.activityDays;
         _statsReady = true;
       });
-      if (_frame == 1) _startAuraAnimation();
+      _maybeStartAuraCount();
     } catch (_) {
       if (!mounted || previousStats == null) return;
       setState(() {
@@ -1227,7 +1233,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         _activityDays = previousStats.activityDays;
         _statsReady = true;
       });
-      if (_frame == 1) _startAuraAnimation();
+      _maybeStartAuraCount();
     }
   }
 
@@ -1237,7 +1243,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   }
 
   void _startAuraAnimation() {
-    if (!_statsReady || _auraSequenceStarted) return;
+    if (_auraSequenceStarted) return;
     _auraSequenceStarted = true;
     _auraChipTimer = Timer(const Duration(milliseconds: 250), () {
       if (mounted) setState(() => _auraChipVisible = true);
@@ -1246,8 +1252,17 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
       if (mounted) setState(() => _auraChipFlying = true);
     });
     _auraCountTimer = Timer(const Duration(milliseconds: 1750), () {
-      if (mounted) setState(() => _auraCountStarted = true);
+      if (!mounted) return;
+      setState(() => _auraCountElapsed = true);
+      _maybeStartAuraCount();
     });
+  }
+
+  void _maybeStartAuraCount() {
+    if (!_statsReady || !_auraCountElapsed || _auraCountStarted || _frame != 1) {
+      return;
+    }
+    setState(() => _auraCountStarted = true);
   }
 
   List<DateTime> _weekDates() {
@@ -1284,13 +1299,13 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             ? () => Navigator.of(context).pop()
             : () => setState(() => _frame = 0),
         icon: const Icon(Icons.arrow_back_rounded),
-        color: HomePalette.darkTextPrimary,
+        color: _textPrimary,
       ),
       const SizedBox(width: 8),
       Text(
         title,
         style: AppFonts.body(
-          color: HomePalette.darkTextPrimary,
+          color: _textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
@@ -1305,11 +1320,11 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         child: FilledButton(
           onPressed: onTap,
           style: FilledButton.styleFrom(
-            backgroundColor: HomePalette.primary,
-            foregroundColor: HomePalette.ink,
+            backgroundColor: _primary,
+            foregroundColor: _onPrimary,
             shape: const StadiumBorder(),
             textStyle: AppFonts.body(
-              color: HomePalette.ink,
+              color: _onPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -1345,7 +1360,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                         boxShadow: _flameLit
                             ? [
                                 BoxShadow(
-                                  color: HomePalette.primary.withValues(
+                                  color: _primary.withValues(
                                     alpha: .2 + pulse * .32,
                                   ),
                                   blurRadius: 28 + pulse * 18,
@@ -1358,9 +1373,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       child: Icon(
                         Icons.local_fire_department_rounded,
                         size: 142,
-                        color: _flameLit
-                            ? HomePalette.primary
-                            : HomePalette.darkTextSecondary,
+                        color: _flameLit ? _primary : _textSecondary,
                       ),
                     ),
                   );
@@ -1388,7 +1401,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                     '$_streakValue',
                     key: ValueKey(_streakValue),
                     style: AppFonts.poster(
-                      color: HomePalette.primary,
+                      color: _primary,
                       fontSize: 96,
                       wdth: 100,
                     ),
@@ -1398,7 +1411,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               Text(
                 'DAY STREAK',
                 style: AppFonts.label(
-                  color: HomePalette.darkTextSecondary,
+                  color: _textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -1409,7 +1422,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                     : 'Your daily quest keeps the streak going.',
                 textAlign: TextAlign.center,
                 style: AppFonts.body(
-                  color: HomePalette.darkTextPrimary.withValues(alpha: .82),
+                  color: _textPrimary.withValues(alpha: .82),
                   fontSize: 14,
                 ),
               ),
@@ -1454,17 +1467,14 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           height: 32,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: filled ? HomePalette.primary : Colors.transparent,
+            color: filled ? _primary : Colors.transparent,
             border: Border.all(
-              color: filled
-                  ? HomePalette.primary
-                  : HomePalette.darkTextSecondary.withValues(alpha: .4),
-              style: filled ? BorderStyle.solid : BorderStyle.solid,
+                color: filled ? _primary : _border,
             ),
             boxShadow: filled
                 ? [
                     BoxShadow(
-                      color: HomePalette.primary.withValues(alpha: .28),
+                      color: _primary.withValues(alpha: .28),
                       blurRadius: 12,
                     ),
                   ]
@@ -1473,7 +1483,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           child: Icon(
             Icons.check_rounded,
             size: 16,
-            color: filled ? HomePalette.ink : Colors.transparent,
+            color: filled ? _onPrimary : Colors.transparent,
           ),
         ),
         const SizedBox(height: 5),
@@ -1481,7 +1491,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           label,
           maxLines: 1,
           style: AppFonts.body(
-            color: HomePalette.darkTextSecondary,
+            color: _textSecondary,
             fontSize: 10,
           ),
         ),
@@ -1507,13 +1517,13 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: HomePalette.primary,
+                  color: _primary,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   'Rank $_rank',
                   style: AppFonts.body(
-                    color: HomePalette.ink,
+                    color: _onPrimary,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1523,7 +1533,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               Text(
                 'TOTAL AURA',
                 style: AppFonts.label(
-                  color: HomePalette.darkTextSecondary,
+                  color: _textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -1546,8 +1556,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                             value.round().toString(),
                             style: AppFonts.poster(
                               color: _auraCountStarted
-                                  ? HomePalette.primary
-                                  : HomePalette.darkTextPrimary,
+                                  ? _primary
+                                  : _textPrimary,
                               fontSize: 88,
                               wdth: 100,
                             ),
@@ -1556,7 +1566,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       : Text(
                           '…',
                           style: AppFonts.poster(
-                            color: HomePalette.darkTextPrimary,
+                            color: _textPrimary,
                             fontSize: 88,
                             wdth: 100,
                           ),
@@ -1588,13 +1598,11 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: HomePalette.primary,
+                            color: _primary,
                             borderRadius: BorderRadius.circular(999),
                             boxShadow: [
                               BoxShadow(
-                                color: HomePalette.primary.withValues(
-                                  alpha: .35,
-                                ),
+                                color: _primary.withValues(alpha: .35),
                                 blurRadius: 18,
                               ),
                             ],
@@ -1602,7 +1610,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                           child: Text(
                             '+$_awardedAura Aura',
                             style: AppFonts.body(
-                              color: HomePalette.ink,
+                              color: _onPrimary,
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1626,29 +1634,28 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                             ? TweenAnimationBuilder<double>(
                                 key: ValueKey('aura-progress-$_auraCountStarted'),
                                 tween: Tween<double>(
-                                begin: 0,
+                                  begin: 0,
                                   end: _auraCountStarted
                                       ? progressAfter / 100
-                                  : 0,
+                                      : 0,
                                 ),
                                 duration: const Duration(milliseconds: 900),
                                 curve: Curves.easeOutCubic,
-                                builder: (context, value, _) => LinearProgressIndicator(
+                                builder: (context, value, _) =>
+                                    LinearProgressIndicator(
                                   value: value.clamp(0, 1).toDouble(),
-                                  backgroundColor: Colors.white.withValues(
+                                  backgroundColor: _textPrimary.withValues(
                                     alpha: .12,
                                   ),
-                                  valueColor: const AlwaysStoppedAnimation(
-                                    HomePalette.primary,
-                                  ),
+                                  valueColor: AlwaysStoppedAnimation(_primary),
                                 ),
                               )
-                            : const LinearProgressIndicator(
+                            : LinearProgressIndicator(
                                 value: 0,
-                                backgroundColor: Color(0x33111111),
-                                valueColor: AlwaysStoppedAnimation(
-                                  HomePalette.primary,
+                                backgroundColor: _textPrimary.withValues(
+                                  alpha: .12,
                                 ),
+                                valueColor: AlwaysStoppedAnimation(_primary),
                               ),
                       ),
                     ),
@@ -1659,14 +1666,14 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                         Text(
                           '${_auraCountStarted ? auraToNextAfter ?? '--' : '--'} AP to ${_nextRank ?? 'next rank'}',
                           style: AppFonts.body(
-                            color: HomePalette.darkTextSecondary,
+                            color: _textSecondary,
                             fontSize: 12,
                           ),
                         ),
                         Text(
                           '${_auraCountStarted ? progressAfter ?? 0 : 0}%',
                           style: AppFonts.body(
-                            color: HomePalette.darkTextSecondary,
+                            color: _textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -1681,7 +1688,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         if (widget.result.relatedMajorChallenge case final challenge?) ...[
           TextButton(
             onPressed: () => widget.onOpenChallenge(challenge),
-            style: TextButton.styleFrom(foregroundColor: HomePalette.primary),
+            style: TextButton.styleFrom(foregroundColor: _primary),
             child: Text('View ${challenge.title}'),
           ),
         ],
@@ -1697,7 +1704,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   Widget build(BuildContext context) {
     ref.watch(myStatsProvider);
     return Scaffold(
-      backgroundColor: HomePalette.darkBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
