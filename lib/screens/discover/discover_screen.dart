@@ -1317,10 +1317,9 @@ class _ResumeCard extends StatelessWidget {
       detail?.progress.currentValue,
       fallback: metric?.current ?? baseline,
     );
-    final target = _number(
-      detail?.progress.targetValue,
-      fallback: metric?.target ?? current,
-    );
+    final target =
+        metric?.target ??
+        _number(detail?.progress.targetValue, fallback: current);
     final span = target - baseline;
     final progressValue = span <= 0
         ? 0.0
