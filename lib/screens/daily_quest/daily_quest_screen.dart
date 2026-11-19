@@ -1159,8 +1159,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   List<UserActivityDay> _activityDays = const [];
 
   int get _awardedAura => widget.result.auraAwarded;
-  Color get _primary => Theme.of(context).colorScheme.primary;
-  Color get _onPrimary => Theme.of(context).colorScheme.onPrimary;
+  Color get _primary => HomePalette.primary;
+  Color get _onPrimary => HomePalette.ink;
   Color get _textPrimary => Theme.of(context).colorScheme.onSurface;
   Color get _textSecondary => Theme.of(context).colorScheme.onSurfaceVariant;
   Color get _border => Theme.of(context).colorScheme.outline;
@@ -1174,6 +1174,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
       duration: const Duration(milliseconds: 850),
     )..repeat(reverse: true);
     final previousStats = ref.read(myStatsProvider).valueOrNull;
+    _auraBefore = previousStats?.auraPoints ?? 0;
+    _auraAfter = (previousStats?.auraPoints ?? 0) + _awardedAura;
     _loadUpdatedStats(previousStats);
     _flameTimer = Timer(const Duration(milliseconds: 700), () {
       if (mounted) setState(() => _flameLit = true);
@@ -1240,6 +1242,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   void _openAuraFrame() {
     setState(() => _frame = 1);
     _startAuraAnimation();
+    _maybeStartAuraCount();
   }
 
   void _startAuraAnimation() {
@@ -1259,7 +1262,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   }
 
   void _maybeStartAuraCount() {
-    if (!_statsReady || !_auraCountElapsed || _auraCountStarted || _frame != 1) {
+    if (!_auraCountElapsed || _auraCountStarted || _frame != 1) {
       return;
     }
     setState(() => _auraCountStarted = true);
@@ -1500,8 +1503,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   }
 
   Widget _auraFrame() {
-    final auraBefore = _auraBefore;
-    final auraAfter = _auraAfter;
+    final auraBefore = _auraBefore ?? 0;
+    final auraAfter = _auraAfter ?? _awardedAura;
     final progressAfter = _rankProgressAfter;
     final auraToNextAfter = _auraToNextAfter;
     return Column(
@@ -1541,36 +1544,25 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               SizedBox(
                 height: 128,
                 child: Center(
-                  child: _statsReady && auraBefore != null && auraAfter != null
-                      ? TweenAnimationBuilder<double>(
-                          key: ValueKey('aura-count-$_auraCountStarted'),
-                          tween: Tween<double>(
-                            begin: auraBefore.toDouble(),
-                            end: _auraCountStarted
-                                ? auraAfter.toDouble()
-                                : auraBefore.toDouble(),
-                          ),
-                          duration: const Duration(milliseconds: 900),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, _) => Text(
-                            value.round().toString(),
-                            style: AppFonts.poster(
-                              color: _auraCountStarted
-                                  ? _primary
-                                  : _textPrimary,
-                              fontSize: 88,
-                              wdth: 100,
-                            ),
-                          ),
-                        )
-                      : Text(
-                          '…',
-                          style: AppFonts.poster(
-                            color: _textPrimary,
-                            fontSize: 88,
-                            wdth: 100,
-                          ),
-                        ),
+                  child: TweenAnimationBuilder<double>(
+                    key: ValueKey('aura-count-$_auraCountStarted'),
+                    tween: Tween<double>(
+                      begin: auraBefore.toDouble(),
+                      end: _auraCountStarted
+                          ? auraAfter.toDouble()
+                          : auraBefore.toDouble(),
+                    ),
+                    duration: const Duration(milliseconds: 900),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) => Text(
+                      value.round().toString(),
+                      style: AppFonts.poster(
+                        color: _auraCountStarted ? _primary : _textPrimary,
+                        fontSize: 88,
+                        wdth: 100,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(
