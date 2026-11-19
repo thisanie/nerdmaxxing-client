@@ -19,6 +19,19 @@ import '../challenge/challenge_detail_screen.dart';
 
 enum _QuestStep { learn, prove }
 
+class _DailyQuestSpacing {
+  static const screenHorizontal = 24.0;
+  static const majorSection = 24.0;
+  static const listRow = 20.0;
+  static const relatedItems = 12.0;
+  static const cardInset = 16.0;
+  static const heroInset = 20.0;
+  static const infoTile = 44.0;
+  static const infoTileRadius = 14.0;
+  static const bannerRadius = 20.0;
+  static const bodyMaxWidth = 240.0;
+}
+
 enum _Lucide { back, clock, bolt, book, lock, check, play }
 
 /// Draws the same Lucide glyphs the HTML preview uses (24px grid, round strokes).
@@ -225,7 +238,12 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                padding: const EdgeInsets.fromLTRB(
+                  _DailyQuestSpacing.screenHorizontal,
+                  4,
+                  _DailyQuestSpacing.screenHorizontal,
+                  10,
+                ),
                 child: SizedBox(
                   height: 48,
                   child: Row(
@@ -244,13 +262,14 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: _DailyQuestSpacing.relatedItems),
                       Text(
                         'Daily quest',
                         style: AppFonts.home(
                           color: foreground,
-                          fontSize: 21,
+                          fontSize: 20,
                           fontWeight: FontWeight.w600,
+                          height: 1.4,
                         ),
                       ),
                     ],
@@ -259,12 +278,17 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
               ),
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(
+                    _DailyQuestSpacing.screenHorizontal,
+                    0,
+                    _DailyQuestSpacing.screenHorizontal,
+                    _DailyQuestSpacing.majorSection,
+                  ),
                   children: [
                     _QuestHero(quest: quest, today: _today, attempt: _attempt),
-                    const SizedBox(height: 13),
+                    const SizedBox(height: _DailyQuestSpacing.majorSection),
                     _buildStepSelector(brightness),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: _DailyQuestSpacing.majorSection),
                     if (_step == _QuestStep.learn)
                       _buildLearn(quest, muted)
                     else
@@ -276,9 +300,28 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                   ],
                 ),
               ),
-              if (_showStartQuestAction)
+              if (_attempt?.isCompleted == true && _step == _QuestStep.learn)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                  padding: const EdgeInsets.fromLTRB(
+                    _DailyQuestSpacing.screenHorizontal,
+                    _DailyQuestSpacing.majorSection,
+                    _DailyQuestSpacing.screenHorizontal,
+                    _DailyQuestSpacing.majorSection,
+                  ),
+                  child: const _InlineMessage(
+                    message: 'Quest complete. Your streak is up to date.',
+                    icon: Icons.check_circle_rounded,
+                    banner: true,
+                  ),
+                )
+              else if (_showStartQuestAction)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    _DailyQuestSpacing.screenHorizontal,
+                    _DailyQuestSpacing.relatedItems,
+                    _DailyQuestSpacing.screenHorizontal,
+                    14,
+                  ),
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
@@ -400,29 +443,40 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
     final instructions = quest.instructions.trim().isNotEmpty
         ? quest.instructions.trim()
         : quest.description.trim();
+    final duplicateInstructions =
+        instructions.toLowerCase() == quest.title.trim().toLowerCase();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeading(
-          eyebrow: 'YOUR 10-MINUTE MISSION',
+          eyebrow: 'Your 10-minute mission',
           title: 'Learn something you can explain',
         ),
-        if (instructions.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(
-            instructions,
-            style: AppFonts.body(color: muted, fontSize: 14, height: 1.45),
+        if (instructions.isNotEmpty && !duplicateInstructions) ...[
+          const SizedBox(height: _DailyQuestSpacing.relatedItems),
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: _DailyQuestSpacing.bodyMaxWidth,
+            ),
+            child: Text(
+              instructions,
+              style: AppFonts.body(
+                color: DailyQuestPalette.lightMuted,
+                fontSize: 14,
+                height: 20 / 14,
+              ),
+            ),
           ),
         ],
         if (quest.articleUrl != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: _DailyQuestSpacing.relatedItems),
           OutlinedButton.icon(
             onPressed: _openArticle,
             icon: const Icon(Icons.open_in_new_rounded),
             label: const Text('Open learning resource'),
           ),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: _DailyQuestSpacing.majorSection),
         _InfoLine(
           icon: _Lucide.check,
           title: 'How to complete it',
@@ -430,7 +484,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
               ? 'Score at least 80% on the quiz. One retry is available before the quest expires.'
               : 'Submit ${quest.verificationType == 'VIDEO' ? 'a video' : 'a photo'} for review. Your submission stays private.',
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: _DailyQuestSpacing.listRow),
         _InfoLine(
           icon: _Lucide.bolt,
           title: 'Earn ${quest.auraReward} Aura',
@@ -438,12 +492,7 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
               ? 'Awarded once when you pass.'
               : 'Awarded once after your submission is approved.',
         ),
-        if (_attempt?.isCompleted == true)
-          const _InlineMessage(
-            message: 'Quest complete. Your streak is up to date.',
-            icon: Icons.verified_rounded,
-          )
-        else if (_attempt?.isPendingReview == true)
+        if (_attempt?.isPendingReview == true)
           const _InlineMessage(
             message: 'Your proof is in review. We will update your quest when it is checked.',
             icon: Icons.hourglass_top_rounded,
@@ -1797,10 +1846,10 @@ class _QuestHero extends StatelessWidget {
         ? 'In review'
         : countdown;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+      padding: const EdgeInsets.all(_DailyQuestSpacing.heroInset),
       decoration: BoxDecoration(
         color: DailyQuestPalette.ink,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1857,12 +1906,19 @@ class _QuestHero extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _LucideIcon(
-                        _Lucide.clock,
-                        size: 16,
-                        color: DailyQuestPalette.heroMuted(brightness),
-                      ),
-                      const SizedBox(width: 6),
+                      if (attempt?.isCompleted == true)
+                        Icon(
+                          Icons.check_circle_rounded,
+                          size: 16,
+                          color: DailyQuestPalette.heroMuted(brightness),
+                        )
+                      else
+                        _LucideIcon(
+                          _Lucide.clock,
+                          size: 16,
+                          color: DailyQuestPalette.heroMuted(brightness),
+                        ),
+                      const SizedBox(width: _DailyQuestSpacing.relatedItems),
                       Flexible(
                         child: Text(
                           status,
@@ -1881,17 +1937,17 @@ class _QuestHero extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: _DailyQuestSpacing.relatedItems),
           Text(
             quest.title,
             style: AppFonts.home(
               color: DailyQuestPalette.heroText(brightness),
-              fontSize: 30,
-              fontWeight: FontWeight.w600,
-              height: 1.15,
+              fontSize: 28,
+              fontWeight: FontWeight.w500,
+              height: 34 / 28,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _DailyQuestSpacing.relatedItems),
           Wrap(
             spacing: 18,
             runSpacing: 8,
@@ -1923,7 +1979,7 @@ class _HeroMetric extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     children: [
       _LucideIcon(icon, color: DailyQuestPalette.lime, size: 18),
-      const SizedBox(width: 7),
+      const SizedBox(width: _DailyQuestSpacing.relatedItems),
       Text(
         label,
         style: AppFonts.home(
@@ -1949,22 +2005,39 @@ class _SectionHeading extends StatelessWidget {
       Text(
         eyebrow,
         style: AppFonts.home(
-          color: DailyQuestPalette.iconAccent(Theme.of(context).brightness),
+          color: const Color(0xFF3B6D11),
           fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacingEm: .04,
-        ),
+          fontWeight: FontWeight.w500,
+        ).copyWith(letterSpacing: .4),
       ),
-      const SizedBox(height: 4),
-      Text(
-        title,
-        style: AppFonts.home(
-          color: DailyQuestPalette.text(Theme.of(context).brightness),
-          fontSize: 23,
-          fontWeight: FontWeight.w600,
-          height: 1.2,
+      const SizedBox(height: _DailyQuestSpacing.relatedItems),
+      if (MediaQuery.textScalerOf(context).scale(22) <= 22)
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            title,
+            maxLines: 1,
+            style: AppFonts.home(
+              color: DailyQuestPalette.text(Theme.of(context).brightness),
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
+              height: 28 / 22,
+            ),
+          ),
+        )
+      else
+        Text(
+          title,
+          style: AppFonts.home(
+            color: DailyQuestPalette.text(Theme.of(context).brightness),
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
+            height: 28 / 22,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-      ),
     ],
   );
 }
@@ -2006,13 +2079,18 @@ class _InfoLine extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 46,
-          height: 46,
+          width: _DailyQuestSpacing.infoTile,
+          height: _DailyQuestSpacing.infoTile,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: DailyQuestPalette.iconBackground(brightness),
-            border: Border.all(color: DailyQuestPalette.border(brightness)),
-            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: DailyQuestPalette.lightBorder,
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(
+              _DailyQuestSpacing.infoTileRadius,
+            ),
           ),
           child: _LucideIcon(
             icon,
@@ -2020,27 +2098,32 @@ class _InfoLine extends StatelessWidget {
             color: DailyQuestPalette.iconAccent(brightness),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: _DailyQuestSpacing.relatedItems),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 2),
               Text(
                 title,
                 style: AppFonts.home(
                   color: DailyQuestPalette.text(brightness),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  height: 22 / 16,
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                detail,
-                style: AppFonts.body(
-                  color: DailyQuestPalette.muted(brightness),
-                  fontSize: 14,
-                  height: 1.4,
+              const SizedBox(height: 4),
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: _DailyQuestSpacing.bodyMaxWidth,
+                ),
+                child: Text(
+                  detail,
+                  style: AppFonts.body(
+                    color: DailyQuestPalette.lightMuted,
+                    fontSize: 14,
+                    height: 20 / 14,
+                  ),
                 ),
               ),
             ],
@@ -2188,35 +2271,55 @@ class _InlineMessage extends StatelessWidget {
   final String message;
   final bool isError;
   final IconData? icon;
+  final bool banner;
 
   const _InlineMessage({
     required this.message,
     this.isError = false,
     this.icon,
+    this.banner = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     final color = isError
         ? Theme.of(context).colorScheme.error
-        : DailyQuestPalette.iconAccent(Theme.of(context).brightness);
+        : DailyQuestPalette.iconAccent(brightness);
+    final textColor = banner && !isError
+        ? DailyQuestPalette.iconAccent(brightness)
+        : color;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(13),
+      padding: EdgeInsets.all(
+        banner ? _DailyQuestSpacing.cardInset : 13,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(
+          banner ? _DailyQuestSpacing.bannerRadius : 12,
+        ),
         border: Border.all(color: color.withValues(alpha: .24)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon ?? Icons.info_outline_rounded, size: 18, color: color),
-          const SizedBox(width: 9),
+          Icon(
+            icon ?? Icons.info_outline_rounded,
+            size: banner ? 24 : 18,
+            color: color,
+          ),
+          SizedBox(
+            width: banner ? _DailyQuestSpacing.relatedItems : 9,
+          ),
           Expanded(
             child: Text(
               message,
-              style: AppFonts.body(color: color, fontSize: 12, height: 1.4),
+              style: AppFonts.body(
+                color: textColor,
+                fontSize: banner ? 14 : 12,
+                height: banner ? 20 / 14 : 1.4,
+              ),
             ),
           ),
         ],
