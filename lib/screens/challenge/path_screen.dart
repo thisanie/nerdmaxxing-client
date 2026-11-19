@@ -41,17 +41,12 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   var _selectedMilestone = 0;
   var _claimingStreakCelebration = false;
 
-  bool get _light => Theme.of(context).brightness == Brightness.light;
-  Color get _ink => _light ? AppColors.lightTextPrimary : AppColors.textPrimary;
-  Color get _muted =>
-      _light ? AppColors.lightTextSecondary : AppColors.textSecondary;
-  Color get _card => _light ? AppColors.lightSurface : AppColors.surface;
-  Color get _border => _light ? AppColors.lightBorder : AppColors.border;
-  Color get _hero => _light ? AppColors.limeWash : AppColors.primaryMuted;
-  Color get _accent => _light ? AppColors.primaryLight : AppColors.primaryLight;
-  Color get _buttonForeground => Theme.of(context).colorScheme.onPrimary;
-  Color get _actionBackground => _light ? _ink : AppColors.primary;
-  Color get _actionForeground => _light ? _buttonForeground : AppColors.dark;
+  Brightness get _brightness => Theme.of(context).brightness;
+  Color get _ink => HomePalette.textPrimary(_brightness);
+  Color get _muted => HomePalette.textSecondary(_brightness);
+  Color get _card => HomePalette.surface(_brightness);
+  Color get _border => HomePalette.border(_brightness);
+  Color get _accent => HomePalette.primary;
 
   @override
   void initState() {
@@ -222,7 +217,11 @@ class _PathScreenState extends ConsumerState<PathScreen> {
     child: Container(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       decoration: BoxDecoration(
-        color: _hero,
+        gradient: const LinearGradient(
+          colors: [HomePalette.primary, HomePalette.mint],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(32),
       ),
       child: Column(
@@ -234,7 +233,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: _muted,
+                  color: HomePalette.ink,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -242,7 +241,10 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               Expanded(
                 child: Text(
                   'YOU ARE HERE',
-                  style: AppFonts.label(color: _ink, fontSize: 13),
+                  style: AppFonts.label(
+                    color: HomePalette.ink.withValues(alpha: .7),
+                    fontSize: 13,
+                  ),
                 ),
               ),
               Container(
@@ -251,14 +253,14 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: _ink,
+                  color: HomePalette.ink,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   _milestone.totalResourceCount > 0
                       ? 'Goal · ${_milestone.totalResourceCount} tasks'
                       : 'Goal · ${_milestone.resources.length} tasks',
-                  style: AppFonts.body(color: _hero, fontSize: 14),
+                  style: AppFonts.body(color: HomePalette.primary, fontSize: 14),
                 ),
               ),
             ],
@@ -269,18 +271,28 @@ class _PathScreenState extends ConsumerState<PathScreen> {
             children: [
               Text(
                 '$_milestoneCompletedCount',
-                style: AppFonts.poster(fontSize: 112, color: _ink, wdth: 100),
+                style: AppFonts.poster(
+                  fontSize: 112,
+                  color: HomePalette.ink,
+                  wdth: 100,
+                ),
               ),
               const SizedBox(width: 8),
               Text(
                 ' / $_milestoneTotalCount',
-                style: AppFonts.body(color: _muted, fontSize: 36),
+                style: AppFonts.body(
+                  color: HomePalette.ink.withValues(alpha: .65),
+                  fontSize: 36,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.only(left: 4, bottom: 12),
                 child: Text(
                   'done',
-                  style: AppFonts.body(color: _ink, fontSize: 18),
+                  style: AppFonts.body(
+                    color: HomePalette.ink.withValues(alpha: .75),
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ],
@@ -288,7 +300,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
           Text(
             _milestone.title,
             style: AppFonts.display(
-              color: _ink,
+              color: HomePalette.ink,
               fontSize: 26,
               fontWeight: FontWeight.w700,
               height: 1.1,
@@ -297,7 +309,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
           Text(
             _milestone.description,
             style: AppFonts.body(
-              color: _ink.withValues(alpha: .75),
+              color: HomePalette.ink.withValues(alpha: .75),
               fontSize: 16,
             ),
           ),
@@ -313,8 +325,8 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: index < _milestoneCompletedCount
-                        ? _ink
-                        : _hero.withValues(alpha: .55),
+                        ? HomePalette.ink
+                        : HomePalette.ink.withValues(alpha: .16),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -331,20 +343,23 @@ class _PathScreenState extends ConsumerState<PathScreen> {
                       _detail.metricDefinitions.isNotEmpty
                   ? _logResult
                   : null,
-              icon: Icon(Icons.bar_chart_rounded, color: _actionForeground),
+              icon: const Icon(
+                Icons.bar_chart_rounded,
+                color: HomePalette.primary,
+              ),
               label: const Text('Log a result'),
               style: FilledButton.styleFrom(
-                backgroundColor: _actionBackground,
-                foregroundColor: _actionForeground,
-                disabledBackgroundColor: _actionBackground.withValues(
+                backgroundColor: HomePalette.ink,
+                foregroundColor: HomePalette.primary,
+                disabledBackgroundColor: HomePalette.ink.withValues(
                   alpha: .4,
                 ),
-                disabledForegroundColor: _actionForeground.withValues(
+                disabledForegroundColor: HomePalette.primary.withValues(
                   alpha: .7,
                 ),
                 shape: const StadiumBorder(),
                 textStyle: AppFonts.body(
-                  color: _actionForeground,
+                  color: HomePalette.primary,
                   fontSize: 17,
                 ),
               ),
@@ -404,7 +419,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
       width: 190,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: index == _selectedMilestone ? _actionBackground : _card,
+        color: index == _selectedMilestone ? HomePalette.primary : _card,
         border: index == _selectedMilestone
             ? null
             : Border.all(color: _border, width: 1.5),
@@ -416,15 +431,24 @@ class _PathScreenState extends ConsumerState<PathScreen> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: _accent,
+              color: index == _selectedMilestone
+                  ? HomePalette.ink
+                  : _accent,
               shape: BoxShape.circle,
-              border: Border.all(color: _ink, width: 2),
+              border: Border.all(
+                color: index == _selectedMilestone
+                    ? HomePalette.ink
+                    : _border,
+                width: 2,
+              ),
             ),
             child: Center(
               child: Text(
                 (index + 1).toString().padLeft(2, '0'),
                 style: AppFonts.body(
-                  color: _ink,
+                  color: index == _selectedMilestone
+                      ? HomePalette.primary
+                      : HomePalette.ink,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -438,7 +462,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppFonts.body(
-                color: index == _selectedMilestone ? _actionForeground : _ink,
+                color: index == _selectedMilestone ? HomePalette.ink : _ink,
                 fontSize: 15,
                 height: 1.15,
               ),
@@ -833,7 +857,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
         margin: const EdgeInsets.only(top: 4),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: _light ? AppColors.lightSurface : _card,
+          color: _card,
           borderRadius: BorderRadius.circular(28),
         ),
         child: Row(
