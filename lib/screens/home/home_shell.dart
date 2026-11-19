@@ -241,25 +241,11 @@ class _BottomNavigationBar extends StatelessWidget {
   });
 
   static const _items = [
-    (Icons.home_outlined, 'Home'),
-    (Icons.explore_outlined, 'Discover'),
-    (Icons.emoji_events_outlined, 'Rank'),
-    (Icons.account_circle_outlined, 'Profile'),
+    (Icons.home_outlined, Icons.home_rounded, 'Home'),
+    (Icons.explore_outlined, Icons.explore_rounded, 'Discover'),
+    (Icons.emoji_events_outlined, Icons.emoji_events_rounded, 'Rank'),
+    (Icons.account_circle_outlined, Icons.account_circle_rounded, 'Profile'),
   ];
-
-  static const _pillHeight = 64.0;
-  static const _containerHeight = 76.0;
-  static const _horizontalMargin = 14.0;
-  static const _bottomPadding = 12.0;
-  static const _pillInset = 8.0;
-  static const _itemSize = 48.0;
-  static const _itemGap = 4.0;
-  static const _selectedItemInset = 14.0;
-  static const _idleItemInset = 12.0;
-  static const _itemRadius = 22.0;
-  static const _pillRadius = 30.0;
-  static const _iconSize = 24.0;
-  static const _labelGap = 4.0;
 
   @override
   Widget build(BuildContext context) {
@@ -271,31 +257,33 @@ class _BottomNavigationBar extends StatelessWidget {
     final items = [
       ..._items,
       if (isAdmin)
-        (Icons.fact_check_outlined, 'Admin'),
+        (Icons.fact_check_outlined, Icons.fact_check_rounded, 'Admin'),
     ];
+    const horizontalMargin = 14.0;
+    const itemInset = 8.0;
     return SafeArea(
       top: false,
       child: SizedBox(
-        height: _containerHeight,
+        height: 84,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-            _horizontalMargin,
+            horizontalMargin,
             0,
-            _horizontalMargin,
-            _bottomPadding,
+            horizontalMargin,
+            12,
           ),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(),
               child: Container(
                 width: double.infinity,
-                height: _pillHeight,
+                height: 72,
                 decoration: BoxDecoration(
                   color: brightness == Brightness.dark
                       ? HomePalette.darkSurfaceAlt
                       : HomePalette.lightSurface,
                   border: Border.all(color: HomePalette.border(brightness)),
-                  borderRadius: BorderRadius.circular(_pillRadius),
+                  borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(
@@ -308,22 +296,22 @@ class _BottomNavigationBar extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: _pillInset,
-                    vertical: _pillInset,
+                    horizontal: itemInset,
+                    vertical: 8,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      for (var index = 0; index < items.length; index++) ...[
-                        if (index > 0) const SizedBox(width: _itemGap),
+                      for (var index = 0; index < items.length; index++)
                         _NavigationItem(
-                          icon: items[index].$1,
-                          label: items[index].$2,
+                          icon: currentIndex == index
+                              ? items[index].$2
+                              : items[index].$1,
+                          label: items[index].$3,
                           selected: currentIndex == index,
                           reduceMotion: reduceMotion,
                           onTap: () => onTap(index),
                         ),
-                      ],
                     ],
                   ),
                 ),
@@ -354,8 +342,12 @@ class _NavigationItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final selectedBackground = HomePalette.primary;
-    final selectedForeground = HomePalette.ink;
+    final selectedBackground = brightness == Brightness.dark
+        ? HomePalette.primary
+        : HomePalette.ink;
+    final selectedForeground = brightness == Brightness.dark
+        ? HomePalette.ink
+        : HomePalette.primary;
     final color = selected
         ? selectedForeground
         : HomePalette.textSecondary(brightness);
@@ -370,24 +362,15 @@ class _NavigationItem extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(_BottomNavigationBar._itemRadius),
+          borderRadius: BorderRadius.circular(22),
           child: AnimatedContainer(
             duration: animationDuration,
             curve: Curves.easeOutBack,
-            constraints: const BoxConstraints(
-              minWidth: _BottomNavigationBar._itemSize,
-              minHeight: _BottomNavigationBar._itemSize,
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: selected
-                  ? _BottomNavigationBar._selectedItemInset
-                  : _BottomNavigationBar._idleItemInset,
-            ),
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            padding: EdgeInsets.symmetric(horizontal: selected ? 14 : 12),
             decoration: BoxDecoration(
               color: selected ? selectedBackground : Colors.transparent,
-              borderRadius: BorderRadius.circular(
-                _BottomNavigationBar._itemRadius,
-              ),
+              borderRadius: BorderRadius.circular(22),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -403,11 +386,7 @@ class _NavigationItem extends StatelessWidget {
                     scale: scale,
                     child: child,
                   ),
-                  child: Icon(
-                    icon,
-                    size: _BottomNavigationBar._iconSize,
-                    color: color,
-                  ),
+                  child: Icon(icon, size: 28, color: color),
                 ),
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: selected ? 1 : 0),
@@ -421,9 +400,7 @@ class _NavigationItem extends StatelessWidget {
                     ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.only(
-                      left: _BottomNavigationBar._labelGap,
-                    ),
+                    padding: const EdgeInsets.only(left: 6),
                     child: Text(
                       label,
                       maxLines: 1,
