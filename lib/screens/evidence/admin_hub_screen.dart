@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'admin_challenges_screen.dart';
 import 'admin_daily_quests_screen.dart';
+import 'admin_daily_quest_evidence_screen.dart';
 import 'admin_evidence_screen.dart';
 
 class AdminHubScreen extends StatelessWidget {
@@ -16,6 +17,12 @@ class AdminHubScreen extends StatelessWidget {
         title: 'Daily Quests',
         subtitle: 'Create drafts and schedule the daily quest.',
         screen: const AdminDailyQuestsScreen(),
+      ),
+      (
+        icon: Icons.rate_review_outlined,
+        title: 'Daily Quest evidence',
+        subtitle: 'Review submitted photos and videos.',
+        screen: const AdminDailyQuestEvidenceScreen(),
       ),
       (
         icon: Icons.auto_awesome_outlined,

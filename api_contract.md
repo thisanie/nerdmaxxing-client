@@ -671,6 +671,35 @@ Response `200 OK`: an [Evidence submission](#evidence-submission-object) object 
 
 Returns `404 Not Found` for a submission not owned by the caller and `409 Conflict` when the submission is no longer pending.
 
+## Daily Quest Evidence Review
+
+### `POST /api/v1/daily-quests/today/evidence`
+
+Requires authentication. Accepts the submitted image or video as a multipart `file`. The response contains the attempt ID, review status, and a message; pending evidence is available to admins through the review endpoints below.
+
+### `GET /api/v1/admin/daily-quests/attempts?status=PENDING_REVIEW`
+
+Requires an admin bearer token. Lists Daily Quest attempts with the requested status. The default status is `PENDING_REVIEW`.
+
+### `GET /api/v1/admin/daily-quests/attempts/{attempt_id}/evidence-url`
+
+Requires an admin bearer token. Returns a temporary URL for viewing the uploaded image or video.
+
+### `POST /api/v1/admin/daily-quests/attempts/{attempt_id}/review`
+
+Requires an admin bearer token. Approves or rejects an evidence submission and optionally records a review note of up to 1,000 characters.
+
+Request:
+
+```json
+{
+  "decision": "APPROVE",
+  "note": "Evidence verified."
+}
+```
+
+`decision` must be `APPROVE` or `REJECT`. A successful review returns the attempt ID, resulting status, awarded Aura, and day streak.
+
 ## Skills
 
 ### `GET /api/v1/skills/me`

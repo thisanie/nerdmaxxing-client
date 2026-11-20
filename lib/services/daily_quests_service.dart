@@ -29,6 +29,63 @@ class DailyQuestsService {
         .toList();
   }
 
+  Future<List<AdminDailyQuestAttempt>> listAdminAttempts({
+    String status = 'PENDING_REVIEW',
+  }) async {
+    final data = await api.get(
+      '/admin/daily-quests/attempts',
+      query: {'status': status},
+    );
+    final items = data is List
+        ? data
+        : data is Map
+        ? data['attempts'] ?? data['items'] ?? data['data']
+        : null;
+    if (items is! List) {
+      throw ApiException(null, 'Daily Quest evidence could not be read.');
+    }
+    return items
+        .whereType<Map>()
+        .map(
+          (item) => AdminDailyQuestAttempt.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .toList();
+  }
+
+  Future<String> getAdminAttemptEvidenceUrl(String attemptId) async {
+    final data = await api.get(
+      '/admin/daily-quests/attempts/$attemptId/evidence-url',
+    );
+    if (data is String && data.isNotEmpty) return data;
+    if (data is Map) {
+      final response = Map<String, dynamic>.from(data);
+      for (final key in ['url', 'evidence_url', 'signed_url', 'download_url']) {
+        final value = response[key];
+        if (value is String && value.isNotEmpty) return value;
+      }
+      for (final value in response.values) {
+        if (value is String && value.isNotEmpty) return value;
+      }
+    }
+    throw ApiException(null, 'The Daily Quest evidence link could not be read.');
+  }
+
+  Future<void> reviewAdminAttempt({
+    required String attemptId,
+    required String decision,
+    String? note,
+  }) async {
+    await api.post(
+      '/admin/daily-quests/attempts/$attemptId/review',
+      data: {
+        'decision': decision,
+        if (note != null && note.isNotEmpty) 'note': note,
+      },
+    );
+  }
+
   Future<AdminDailyQuest> createAdminDraft({
     required Map<String, dynamic> payload,
   }) async {

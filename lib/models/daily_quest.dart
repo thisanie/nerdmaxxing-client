@@ -263,6 +263,46 @@ class AdminDailyQuestQuestion {
   }
 }
 
+class AdminDailyQuestAttempt {
+  final String id;
+  final String questId;
+  final String userId;
+  final String localDate;
+  final String timezone;
+  final String status;
+  final String? evidenceContentType;
+  final String? reviewNote;
+  final DateTime? createdAt;
+  final DateTime? reviewedAt;
+
+  const AdminDailyQuestAttempt({
+    required this.id,
+    required this.questId,
+    required this.userId,
+    required this.localDate,
+    required this.timezone,
+    required this.status,
+    this.evidenceContentType,
+    this.reviewNote,
+    this.createdAt,
+    this.reviewedAt,
+  });
+
+  factory AdminDailyQuestAttempt.fromJson(Map<String, dynamic> json) =>
+      AdminDailyQuestAttempt(
+        id: _string(json['id']),
+        questId: _string(json['quest_id']),
+        userId: _string(json['user_id']),
+        localDate: _string(json['local_date']),
+        timezone: _string(json['timezone'], fallback: 'UTC'),
+        status: _string(json['status'], fallback: 'PENDING_REVIEW').toUpperCase(),
+        evidenceContentType: _optionalString(json['evidence_content_type']),
+        reviewNote: _optionalString(json['review_note']),
+        createdAt: DateTime.tryParse(_string(json['created_at'])),
+        reviewedAt: DateTime.tryParse(_string(json['reviewed_at'])),
+      );
+}
+
 class DailyQuest {
   final String id;
   final String title;
