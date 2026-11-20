@@ -1990,11 +1990,16 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             ],
           ),
         ),
-        if (widget.result.relatedMajorChallenge case final challenge?) ...[
-          TextButton(
-            onPressed: () => widget.onOpenChallenge(challenge),
-            style: TextButton.styleFrom(foregroundColor: _primary),
-            child: Text('View ${challenge.title}'),
+        if (widget.result.relatedMajorChallenge != null) ...[
+          Builder(
+            builder: (context) {
+              final challenge = widget.result.relatedMajorChallenge!;
+              return TextButton(
+                onPressed: () => widget.onOpenChallenge(challenge),
+                style: TextButton.styleFrom(foregroundColor: _primary),
+                child: Text('View ${challenge.title}'),
+              );
+            },
           ),
         ],
         _continueButton(
@@ -2008,25 +2013,20 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   @override
   Widget build(BuildContext context) {
     final watchedStats = ref.watch(myStatsProvider).valueOrNull;
+    final progress = _streakShake.value;
+    final offsetY = progress < .25
+        ? 5 * progress / .25
+        : progress < .5
+        ? 5 - 8 * (progress - .25) / .25
+        : progress < .75
+        ? -3 + 5 * (progress - .5) / .25
+        : 2 - 2 * (progress - .75) / .25;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: AnimatedBuilder(
-          animation: _streakShake,
-          builder: (context, child) {
-            final progress = _streakShake.value;
-            final offsetY = progress < .25
-                ? 5 * progress / .25
-                : progress < .5
-                ? 5 - 8 * (progress - .25) / .25
-                : progress < .75
-                ? -3 + 5 * (progress - .5) / .25
-                : 2 - 2 * (progress - .75) / .25;
-            return Transform.translate(
-              offset: Offset(0, offsetY),
-              child: child,
-            );
-          },
+        child: Transform.translate(
+          offset: Offset(0, offsetY),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
@@ -2045,7 +2045,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),

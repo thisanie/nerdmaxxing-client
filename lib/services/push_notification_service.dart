@@ -112,9 +112,7 @@ class PushNotificationService {
       FirebaseMessaging.onMessage.listen((message) async {
         await _showLocalNotification(message);
         onNotificationReceived?.call(
-          message.data.map(
-            (key, value) => MapEntry(key, value.toString()),
-          ),
+          message.data.map((key, value) => MapEntry(key, value.toString())),
         );
       });
       FirebaseMessaging.onMessageOpenedApp.listen(
@@ -172,6 +170,9 @@ class PushNotificationService {
     if (kIsWeb) return;
     try {
       final token = await FirebaseMessaging.instance.getToken();
+      if (kDebugMode) {
+        debugPrint('FCM token: ${token ?? "null"}');
+      }
       if (token != null) await registerToken(token);
     } catch (error) {
       debugPrint('FCM token registration skipped: $error');
