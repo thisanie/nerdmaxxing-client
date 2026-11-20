@@ -242,7 +242,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ref.invalidate(myStatsProvider);
         await Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => DailyQuestRewardScreen(result: result),
+            builder: (_) => DailyQuestRewardScreen(
+              result: result,
+              rewardAlreadyApplied: true,
+            ),
           ),
         );
         return;

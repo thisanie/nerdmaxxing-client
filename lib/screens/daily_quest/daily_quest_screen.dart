@@ -1023,8 +1023,13 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
 
 class DailyQuestRewardScreen extends StatelessWidget {
   final DailyQuestAttemptResult result;
+  final bool rewardAlreadyApplied;
 
-  const DailyQuestRewardScreen({super.key, required this.result});
+  const DailyQuestRewardScreen({
+    super.key,
+    required this.result,
+    this.rewardAlreadyApplied = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1037,6 +1042,7 @@ class DailyQuestRewardScreen extends StatelessWidget {
     if (completed) {
       return _DailyQuestCelebration(
         result: result,
+        rewardAlreadyApplied: rewardAlreadyApplied,
         onOpenChallenge: (item) => _openChallenge(context, item),
       );
     }
@@ -1168,11 +1174,13 @@ class DailyQuestRewardScreen extends StatelessWidget {
 
 class _DailyQuestCelebration extends ConsumerStatefulWidget {
   final DailyQuestAttemptResult result;
+  final bool rewardAlreadyApplied;
   final Future<void> Function(DailyQuestRelatedChallenge challenge)
   onOpenChallenge;
 
   const _DailyQuestCelebration({
     required this.result,
+    required this.rewardAlreadyApplied,
     required this.onOpenChallenge,
   });
 
@@ -1226,8 +1234,13 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
       duration: const Duration(milliseconds: 1400),
     );
     final previousStats = ref.read(myStatsProvider).valueOrNull;
-    _auraBefore = previousStats?.auraPoints ?? 0;
-    _auraAfter = (previousStats?.auraPoints ?? 0) + _awardedAura;
+    final currentAura = previousStats?.auraPoints ?? 0;
+    _auraBefore = widget.rewardAlreadyApplied
+      ? math.max(0, currentAura - _awardedAura).toInt()
+      : currentAura;
+    _auraAfter = widget.rewardAlreadyApplied
+      ? currentAura
+      : currentAura + _awardedAura;
     _loadUpdatedStats(previousStats);
     _flameTimer = Timer(const Duration(milliseconds: 700), () {
       if (mounted) setState(() => _flameLit = true);
@@ -1263,13 +1276,17 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           stats.auraPoints - previousStats.auraPoints == auraAwarded;
 
       setState(() {
-        _auraBefore = cachedAuraIsBefore
+        _auraBefore = widget.rewardAlreadyApplied
+            ? math.max(0, stats.auraPoints - auraAwarded).toInt()
+            : cachedAuraIsBefore
             ? previousStats.auraPoints
             : math.max(0, stats.auraPoints - auraAwarded).toInt();
-        _auraAfter = math.max(
-          stats.auraPoints,
-          _auraBefore! + auraAwarded,
-        ).toInt();
+        _auraAfter = widget.rewardAlreadyApplied
+            ? stats.auraPoints
+            : math.max(
+                stats.auraPoints,
+                _auraBefore! + auraAwarded,
+              ).toInt();
         _rankProgressAfter = stats.rankProgress.clamp(0, 100).toInt();
         _auraToNextAfter = stats.auraToNextRank;
         _rank = stats.rank;
@@ -1279,15 +1296,21 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
       });
       _maybeStartAuraCount();
     } catch (_) {
-      if (!mounted || previousStats == null) return;
+      if (!mounted) return;
       setState(() {
-        _auraBefore = previousStats.auraPoints;
-        _auraAfter = previousStats.auraPoints + widget.result.auraAwarded;
-        _rank = previousStats.rank;
-        _nextRank = previousStats.nextRank;
-        _rankProgressAfter = previousStats.rankProgress.clamp(0, 100).toInt();
-        _auraToNextAfter = previousStats.auraToNextRank;
-        _activityDays = previousStats.activityDays;
+        if (previousStats != null) {
+          _auraBefore = widget.rewardAlreadyApplied
+              ? math.max(0, previousStats.auraPoints - _awardedAura).toInt()
+              : previousStats.auraPoints;
+          _auraAfter = widget.rewardAlreadyApplied
+              ? previousStats.auraPoints
+              : previousStats.auraPoints + _awardedAura;
+          _rank = previousStats.rank;
+          _nextRank = previousStats.nextRank;
+          _rankProgressAfter = previousStats.rankProgress.clamp(0, 100).toInt();
+          _auraToNextAfter = previousStats.auraToNextRank;
+          _activityDays = previousStats.activityDays;
+        }
         _statsReady = true;
       });
       _maybeStartAuraCount();
@@ -1312,7 +1335,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   }
 
   void _maybeStartAuraCount() {
-    if (_auraCountStarted || _frame != 1) {
+    if (_auraCountStarted || _frame != 1 || !_statsReady) {
       return;
     }
     setState(() => _auraCountStarted = true);
@@ -1558,6 +1581,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     final auraAfter = _auraAfter ?? _awardedAura;
     final progressAfter = _rankProgressAfter;
     final auraToNextAfter = _auraToNextAfter;
+    final isMaxRank = _nextRank == null;
+    final rankProgress = isMaxRank ? 100 : progressAfter ?? 0;
     return Column(
       key: const ValueKey('aura-frame'),
       children: [
@@ -1672,14 +1697,12 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       borderRadius: BorderRadius.circular(999),
                       child: SizedBox(
                         height: 10,
-                        child: _statsReady && progressAfter != null
+                        child: _statsReady && (isMaxRank || progressAfter != null)
                             ? TweenAnimationBuilder<double>(
-                                key: ValueKey('aura-progress-$_auraCountStarted'),
+                                key: ValueKey('aura-progress-$_statsReady'),
                                 tween: Tween<double>(
                                   begin: 0,
-                                  end: _auraCountStarted
-                                      ? progressAfter / 100
-                                      : 0,
+                                  end: rankProgress / 100,
                                 ),
                                 duration: const Duration(milliseconds: 900),
                                 curve: Curves.easeOutCubic,
@@ -1706,14 +1729,18 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${_auraCountStarted ? auraToNextAfter ?? '--' : '--'} AP to ${_nextRank ?? 'next rank'}',
+                          !_statsReady
+                              ? '-- AP to next rank'
+                              : isMaxRank
+                              ? 'MAX RANK'
+                              : '${auraToNextAfter ?? '--'} AP to $_nextRank',
                           style: AppFonts.body(
                             color: _textSecondary,
                             fontSize: 12,
                           ),
                         ),
                         Text(
-                          '${_auraCountStarted ? progressAfter ?? 0 : 0}%',
+                          '${_statsReady ? rankProgress : 0}%',
                           style: AppFonts.body(
                             color: _textSecondary,
                             fontSize: 12,

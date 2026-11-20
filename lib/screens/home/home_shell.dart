@@ -145,7 +145,10 @@ class _HomeShellState extends State<HomeShell> {
           if (!mounted) return;
           _navigatorKeys[0].currentState?.push(
             MaterialPageRoute(
-              builder: (_) => DailyQuestRewardScreen(result: result),
+              builder: (_) => DailyQuestRewardScreen(
+                result: result,
+                rewardAlreadyApplied: true,
+              ),
             ),
           );
           return;
