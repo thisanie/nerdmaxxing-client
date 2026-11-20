@@ -1172,6 +1172,99 @@ class DailyQuestRewardScreen extends StatelessWidget {
   }
 }
 
+class _DailyQuestFlamePainter extends CustomPainter {
+  final double progress;
+
+  const _DailyQuestFlamePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 120, size.height / 140);
+
+    final outer = Path()
+      ..moveTo(72, 6)
+      ..cubicTo(72, 26, 98, 44, 98, 82)
+      ..cubicTo(98, 112, 80, 132, 58, 132)
+      ..cubicTo(36, 132, 20, 114, 22, 90)
+      ..cubicTo(24, 72, 36, 62, 44, 46)
+      ..cubicTo(46, 58, 52, 62, 58, 58)
+      ..cubicTo(62, 40, 54, 22, 72, 6)
+      ..close();
+    final middle = Path()
+      ..moveTo(62, 62)
+      ..cubicTo(68, 80, 82, 88, 80, 106)
+      ..cubicTo(79, 120, 70, 126, 58, 126)
+      ..cubicTo(46, 126, 38, 118, 40, 104)
+      ..cubicTo(42, 90, 56, 80, 62, 62)
+      ..close();
+    final core = Path()
+      ..moveTo(58, 98)
+      ..cubicTo(62, 106, 68, 110, 66, 116)
+      ..cubicTo(65, 121, 62, 124, 58, 124)
+      ..cubicTo(54, 124, 50, 121, 50, 116)
+      ..cubicTo(50, 110, 54, 106, 58, 98)
+      ..close();
+
+    Color flameColor(Color color) => Color.lerp(
+      const Color(0xFF77776F).withValues(alpha: .35),
+      color,
+      (progress / .35).clamp(0, 1).toDouble(),
+    )!;
+
+    canvas
+      ..drawPath(outer, Paint()..color = flameColor(const Color(0xFFFF5A1F)))
+      ..drawPath(middle, Paint()..color = flameColor(const Color(0xFFFFA31A)))
+      ..drawPath(core, Paint()..color = flameColor(const Color(0xFFFFE066)))
+      ..restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _DailyQuestFlamePainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+class _AuraBurstPainter extends CustomPainter {
+  final double progress;
+  final bool active;
+
+  const _AuraBurstPainter({required this.progress, required this.active});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (!active || progress >= 1) return;
+    final center = size.center(Offset.zero);
+    final ringProgress = (progress / .9).clamp(0, 1).toDouble();
+    final ringPaint = Paint()
+      ..color = const Color(0xFF0B0B08).withValues(
+        alpha: .9 * (1 - ringProgress),
+      )
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawCircle(center, 16 + 74 * ringProgress, ringPaint);
+
+    final sparkProgress = (progress / .8).clamp(0, 1).toDouble();
+    for (var index = 0; index < 12; index++) {
+      final angle = index * math.pi / 6;
+      final distance = 24 + (index % 3) * 10 + 64 * sparkProgress;
+      final position = center + Offset(
+        math.cos(angle) * distance,
+        math.sin(angle) * distance,
+      );
+      final paint = Paint()
+        ..color = (index.isEven
+                ? const Color(0xFFFF7A1A)
+                : const Color(0xFF0B0B08))
+            .withValues(alpha: 1 - sparkProgress);
+      canvas.drawCircle(position, 4 * (1 - sparkProgress * .7), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AuraBurstPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
 class _DailyQuestCelebration extends ConsumerStatefulWidget {
   final DailyQuestAttemptResult result;
   final bool rewardAlreadyApplied;
@@ -1191,21 +1284,31 @@ class _DailyQuestCelebration extends ConsumerStatefulWidget {
 
 class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   with TickerProviderStateMixin {
+  late final AnimationController _flameIgnition;
   late final AnimationController _flamePulse;
+  late final AnimationController _streakShake;
   late final AnimationController _auraCounter;
-  Timer? _flameTimer;
+  late final AnimationController _auraChip;
+  late final AnimationController _auraBurst;
+  late final AnimationController _auraPop;
+  late final AnimationController _auraRankPop;
+  Timer? _flameIgnitionTimer;
+  Timer? _flameFlickerTimer;
   Timer? _streakTimer;
+  Timer? _todayTimer;
+  Timer? _streakShakeTimer;
   Timer? _auraChipTimer;
-  Timer? _auraFlyTimer;
+  Timer? _auraCountTimer;
+  Timer? _auraProgressTimer;
   int _frame = 0;
   int _streakValue = 0;
-  bool _flameLit = false;
   bool _todayChecked = false;
   bool _statsReady = false;
   bool _auraSequenceStarted = false;
-  bool _auraChipVisible = false;
-  bool _auraChipFlying = false;
+  bool _auraPopStarted = false;
+  bool _auraBurstStarted = false;
   bool _auraCountStarted = false;
+  bool _auraProgressStarted = false;
   int? _auraBefore;
   int? _auraAfter;
   int? _rankProgressAfter;
@@ -1217,6 +1320,10 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   int get _awardedAura => widget.result.auraAwarded;
   Color get _primary => HomePalette.primary;
   Color get _onPrimary => HomePalette.ink;
+  Color get _auraNumberColor =>
+      Theme.of(context).brightness == Brightness.dark
+      ? HomePalette.primary
+      : HomePalette.ink;
   Color get _textPrimary => Theme.of(context).colorScheme.onSurface;
   Color get _textSecondary => Theme.of(context).colorScheme.onSurfaceVariant;
   Color get _border => Theme.of(context).colorScheme.outline;
@@ -1225,13 +1332,37 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   void initState() {
     super.initState();
     _streakValue = math.max(0, widget.result.dayStreak - 1).toInt();
+    _flameIgnition = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
     _flamePulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 850),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 550),
+    );
+    _streakShake = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
     _auraCounter = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
+    );
+    _auraChip = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+    _auraBurst = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _auraPop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _auraRankPop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
     );
     final previousStats = ref.read(myStatsProvider).valueOrNull;
     final currentAura = previousStats?.auraPoints ?? 0;
@@ -1250,26 +1381,42 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
       _statsReady = true;
     }
     _loadUpdatedStats(previousStats);
-    _flameTimer = Timer(const Duration(milliseconds: 700), () {
-      if (mounted) setState(() => _flameLit = true);
+    _flameIgnitionTimer = Timer(const Duration(milliseconds: 200), () {
+      if (mounted) _flameIgnition.forward();
     });
-    _streakTimer = Timer(const Duration(milliseconds: 1250), () {
+    _flameFlickerTimer = Timer(const Duration(milliseconds: 1300), () {
+      if (mounted) _flamePulse.repeat(reverse: true);
+    });
+    _streakTimer = Timer(const Duration(milliseconds: 1100), () {
       if (!mounted) return;
-      setState(() {
-        _streakValue = widget.result.dayStreak;
-        _todayChecked = true;
-      });
+      setState(() => _streakValue = widget.result.dayStreak);
+    });
+    _todayTimer = Timer(const Duration(milliseconds: 2100), () {
+      if (mounted) setState(() => _todayChecked = true);
+    });
+    _streakShakeTimer = Timer(const Duration(milliseconds: 1420), () {
+      if (mounted) _streakShake.forward();
     });
   }
 
   @override
   void dispose() {
-    _flameTimer?.cancel();
+    _flameIgnitionTimer?.cancel();
+    _flameFlickerTimer?.cancel();
     _streakTimer?.cancel();
+    _todayTimer?.cancel();
+    _streakShakeTimer?.cancel();
     _auraChipTimer?.cancel();
-    _auraFlyTimer?.cancel();
+    _auraCountTimer?.cancel();
+    _auraProgressTimer?.cancel();
+    _flameIgnition.dispose();
     _flamePulse.dispose();
+    _streakShake.dispose();
     _auraCounter.dispose();
+    _auraChip.dispose();
+    _auraBurst.dispose();
+    _auraPop.dispose();
+    _auraRankPop.dispose();
     super.dispose();
   }
 
@@ -1302,7 +1449,6 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         _activityDays = stats.activityDays;
         _statsReady = previousStats != null;
       });
-      _maybeStartAuraCount();
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -1321,24 +1467,33 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         }
         _statsReady = true;
       });
-      _maybeStartAuraCount();
     }
   }
 
   void _openAuraFrame() {
     setState(() => _frame = 1);
     _startAuraAnimation();
-    _maybeStartAuraCount();
   }
 
   void _startAuraAnimation() {
     if (_auraSequenceStarted) return;
     _auraSequenceStarted = true;
-    _auraChipTimer = Timer(const Duration(milliseconds: 250), () {
-      if (mounted) setState(() => _auraChipVisible = true);
+    _auraChipTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _auraChip.forward(from: 0);
     });
-    _auraFlyTimer = Timer(const Duration(milliseconds: 1150), () {
-      if (mounted) setState(() => _auraChipFlying = true);
+    _auraCountTimer = Timer(const Duration(milliseconds: 1450), () {
+      if (!mounted) return;
+      _maybeStartAuraCount();
+      setState(() {
+        _auraPopStarted = true;
+        _auraBurstStarted = true;
+      });
+      _auraBurst.forward(from: 0);
+      _auraPop.forward(from: 0);
+      _auraRankPop.forward(from: 0);
+    });
+    _auraProgressTimer = Timer(const Duration(milliseconds: 1700), () {
+      if (mounted) setState(() => _auraProgressStarted = true);
     });
   }
 
@@ -1430,23 +1585,30 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedBuilder(
-                animation: _flamePulse,
+                animation: Listenable.merge([_flameIgnition, _flamePulse]),
                 builder: (context, child) {
+                  final ignition = _flameIgnition.value;
                   final pulse = _flamePulse.value;
-                  return AnimatedScale(
-                    scale: _flameLit ? 1 : .76,
-                    duration: const Duration(milliseconds: 650),
-                    curve: Curves.elasticOut,
+                  final flameScale = ignition < .35
+                      ? .55 + .45 * Curves.easeOut.transform(ignition / .35)
+                      : ignition < .55
+                      ? 1 + .18 * Curves.easeOut.transform((ignition - .35) / .2)
+                      : ignition < .78
+                      ? 1.18 - .22 * Curves.easeInOut.transform((ignition - .55) / .23)
+                      : .96 + .04 * Curves.easeOut.transform((ignition - .78) / .22);
+                  final glow = ((ignition - .1) / .9).clamp(0, 1).toDouble();
+                  return Transform.scale(
+                    scale: flameScale * (1 + pulse * .025),
                     child: Container(
                       width: 180,
                       height: 180,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        boxShadow: _flameLit
+                        boxShadow: glow > 0
                             ? [
                                 BoxShadow(
-                                  color: _primary.withValues(
-                                    alpha: .2 + pulse * .32,
+                                  color: const Color(0xFFFF9628).withValues(
+                                    alpha: glow * (.2 + pulse * .32),
                                   ),
                                   blurRadius: 28 + pulse * 18,
                                   spreadRadius: 5 + pulse * 6,
@@ -1455,10 +1617,9 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                             : const [],
                       ),
                       alignment: Alignment.center,
-                      child: Icon(
-                        Icons.local_fire_department_rounded,
-                        size: 142,
-                        color: _flameLit ? _primary : _textSecondary,
+                      child: CustomPaint(
+                        size: const Size(120, 140),
+                        painter: _DailyQuestFlamePainter(progress: ignition),
                       ),
                     ),
                   );
@@ -1467,21 +1628,37 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               SizedBox(
                 height: 112,
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 700),
-                  transitionBuilder: (child, animation) => ClipRect(
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: animation.drive(
-                          Tween<Offset>(
-                            begin: const Offset(0, .8),
-                            end: Offset.zero,
-                          ),
-                        ),
-                        child: child,
+                  duration: const Duration(milliseconds: 600),
+                  transitionBuilder: (child, animation) {
+                    final scale = TweenSequence<double>([
+                      TweenSequenceItem(
+                        tween: Tween(begin: 3.2, end: .9),
+                        weight: 55,
                       ),
-                    ),
-                  ),
+                      TweenSequenceItem(
+                        tween: Tween(begin: .9, end: 1.06),
+                        weight: 20,
+                      ),
+                      TweenSequenceItem(
+                        tween: Tween(begin: 1.06, end: 1),
+                        weight: 25,
+                      ),
+                    ]).animate(animation);
+                    final rotation = Tween<double>(
+                      begin: -8 / 360,
+                      end: 0,
+                    ).animate(animation);
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: scale,
+                        child: RotationTransition(
+                          turns: rotation,
+                          child: child,
+                        ),
+                      ),
+                    );
+                  },
                   child: Text(
                     '$_streakValue',
                     key: ValueKey(_streakValue),
@@ -1600,21 +1777,28 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 13,
-                  vertical: 6,
+              AnimatedBuilder(
+                animation: _auraRankPop,
+                builder: (context, child) => Transform.scale(
+                  scale: 1 + .2 * math.sin(math.pi * _auraRankPop.value),
+                  child: child,
                 ),
-                decoration: BoxDecoration(
-                  color: _primary,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  'Rank $_rank',
-                  style: AppFonts.body(
-                    color: _onPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Rank $_rank',
+                    style: AppFonts.body(
+                      color: _onPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -1630,23 +1814,50 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               SizedBox(
                 height: 128,
                 child: Center(
-                  child: AnimatedBuilder(
-                    animation: _auraCounter,
-                    builder: (context, _) {
-                      final progress = Curves.easeOutCubic.transform(
-                        _auraCounter.value,
-                      );
-                      final value = auraBefore +
-                          ((auraAfter - auraBefore) * progress).round();
-                      return Text(
-                        value.toString(),
-                        style: AppFonts.poster(
-                          color: _auraCountStarted ? _primary : _textPrimary,
-                          fontSize: 88,
-                          wdth: 100,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _auraBurst,
+                        builder: (context, _) => CustomPaint(
+                          size: const Size(240, 128),
+                          painter: _AuraBurstPainter(
+                            progress: _auraBurst.value,
+                            active: _auraBurstStarted,
+                          ),
                         ),
-                      );
-                    },
+                      ),
+                      AnimatedBuilder(
+                        animation: Listenable.merge([_auraCounter, _auraPop]),
+                        builder: (context, _) {
+                          final progress = Curves.easeOutCubic.transform(
+                            _auraCounter.value,
+                          );
+                          final value = auraBefore +
+                              ((auraAfter - auraBefore) * progress).round();
+                          final pop = _auraPop.value;
+                            final scale = !_auraPopStarted
+                              ? 1.0
+                              : pop < .6
+                              ? 1.5 - .58 * Curves.easeOut.transform(pop / .6)
+                              : pop < .75
+                              ? .92 + .14 * Curves.easeOut.transform((pop - .6) / .15)
+                              : 1.06 - .06 * Curves.easeOut.transform((pop - .75) / .25);
+                          return Transform.scale(
+                            scale: scale,
+                            child: Text(
+                              value.toString(),
+                              style: AppFonts.poster(
+                                color: _auraNumberColor,
+                                fontSize: 88,
+                                wdth: 100,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -1656,20 +1867,32 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                   clipBehavior: Clip.none,
                   alignment: Alignment.topCenter,
                   children: [
-                    AnimatedSlide(
-                      offset: _auraChipFlying
-                          ? const Offset(0, -2.6)
-                          : _auraChipVisible
-                          ? Offset.zero
-                          : const Offset(0, .6),
-                      duration: Duration(
-                        milliseconds: _auraChipFlying ? 550 : 450,
-                      ),
-                      curve: Curves.easeOutBack,
-                      child: AnimatedOpacity(
-                        opacity: _auraChipVisible && !_auraChipFlying ? 1 : 0,
-                        duration: const Duration(milliseconds: 350),
-                        child: Container(
+                    AnimatedBuilder(
+                      animation: _auraChip,
+                      builder: (context, child) {
+                        final progress = _auraChip.value;
+                        final opacity = progress < .25
+                            ? progress / .25
+                            : progress < .6
+                            ? 1.0
+                            : (1 - (progress - .6) / .4).clamp(0, 1).toDouble();
+                        final scale = progress < .25
+                            ? .6 + .4 * (progress / .25)
+                            : progress < .6
+                            ? 1.0
+                            : 1 - .6 * ((progress - .6) / .4);
+                        final offsetY = progress < .6
+                            ? 0.0
+                            : -80 * ((progress - .6) / .4);
+                        return Opacity(
+                          opacity: opacity,
+                          child: Transform.translate(
+                            offset: Offset(0, offsetY),
+                            child: Transform.scale(scale: scale, child: child),
+                          ),
+                        );
+                      },
+                      child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 8,
@@ -1685,14 +1908,13 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                             ],
                           ),
                           child: Text(
-                            '+$_awardedAura Aura',
+                            '+$_awardedAura AP',
                             style: AppFonts.body(
                               color: _onPrimary,
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
                       ),
                     ),
                   ],
@@ -1709,12 +1931,16 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                         height: 10,
                         child: hasRankStats && (isMaxRank || progressAfter != null)
                             ? TweenAnimationBuilder<double>(
-                                key: ValueKey('aura-progress-$_statsReady'),
+                                key: ValueKey(
+                                  'aura-progress-$_auraProgressStarted',
+                                ),
                                 tween: Tween<double>(
                                   begin: 0,
-                                  end: rankProgress / 100,
+                                  end: _auraProgressStarted
+                                      ? rankProgress / 100
+                                      : 0,
                                 ),
-                                duration: const Duration(milliseconds: 900),
+                                duration: const Duration(milliseconds: 800),
                                 curve: Curves.easeOutCubic,
                                 builder: (context, value, _) =>
                                     LinearProgressIndicator(
@@ -1750,7 +1976,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                           ),
                         ),
                         Text(
-                          '${hasRankStats ? rankProgress : 0}%',
+                          '${_auraProgressStarted && hasRankStats ? rankProgress : 0}%',
                           style: AppFonts.body(
                             color: _textSecondary,
                             fontSize: 12,
@@ -1785,23 +2011,40 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-              child: Column(
-                children: [
-                  _header(_frame == 0 ? 'Streak' : 'Quest complete'),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 350),
+        child: AnimatedBuilder(
+          animation: _streakShake,
+          builder: (context, child) {
+            final progress = _streakShake.value;
+            final offsetY = progress < .25
+                ? 5 * progress / .25
+                : progress < .5
+                ? 5 - 8 * (progress - .25) / .25
+                : progress < .75
+                ? -3 + 5 * (progress - .5) / .25
+                : 2 - 2 * (progress - .75) / .25;
+            return Transform.translate(
+              offset: Offset(0, offsetY),
+              child: child,
+            );
+          },
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                child: Column(
+                  children: [
+                    _header(_frame == 0 ? 'Streak' : 'Quest complete'),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 350),
                         child: _frame == 0
-                          ? _streakFrame()
-                          : _auraFrame(watchedStats),
+                            ? _streakFrame()
+                            : _auraFrame(watchedStats),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
