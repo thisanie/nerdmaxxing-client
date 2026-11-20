@@ -41,11 +41,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ChallengeDetail? _resumeDetail;
   DailyQuestToday? _dailyQuestToday;
   Object? _dailyQuestError;
-  bool _dailyQuestLoading = true;
   bool _dailyQuestDismissed = false;
   Object? _homeError;
   bool _isScrolled = false;
   Timer? _dailyQuestTicker;
+  Timer? _dailyQuestHoldTimer;
 
   @override
   void initState() {
@@ -63,6 +63,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _dailyQuestTicker?.cancel();
+    _dailyQuestHoldTimer?.cancel();
     super.dispose();
   }
 
@@ -188,10 +189,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadDailyQuest() async {
     if (mounted) {
-      setState(() {
-        _dailyQuestLoading = true;
-        _dailyQuestError = null;
-      });
+      setState(() => _dailyQuestError = null);
     }
     try {
       final today = await context.read<DailyQuestsService>().getToday();
@@ -209,8 +207,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _dailyQuestError = error);
-    } finally {
-      if (mounted) setState(() => _dailyQuestLoading = false);
     }
   }
 
@@ -224,6 +220,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       today.localDate,
     );
     if (mounted) setState(() => _dailyQuestDismissed = true);
+  }
+
+  Future<bool> _confirmDailyQuestDismissal() async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Dismiss today\'s quest?'),
+          content: const Text(
+            'This quest will be hidden from Home for the rest of today.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Keep quest'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Dismiss'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  void _startDailyQuestHold() {
+    _dailyQuestHoldTimer?.cancel();
+    _dailyQuestHoldTimer = Timer(const Duration(seconds: 3), () async {
+      _dailyQuestHoldTimer = null;
+      if (!mounted || !await _confirmDailyQuestDismissal()) return;
+      await _dismissDailyQuest();
+    });
+  }
+
+  void _cancelDailyQuestHold() {
+    _dailyQuestHoldTimer?.cancel();
+    _dailyQuestHoldTimer = null;
   }
 
   static Participation? _selectResumeParticipation(
@@ -341,19 +373,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           activityDays: stats?.activityDays ?? const [],
                           showEmptyWeek: true,
                         )
-                        else if (_dailyQuestToday != null &&
+                      else if (_dailyQuestToday != null &&
                           _dailyQuestToday?.attempt?.isCompleted != true) ...[
                         const SizedBox(height: 16),
-                        _DailyQuestCard(
-                          today: _dailyQuestToday,
-                            loading:
-                              _dailyQuestLoading && _dailyQuestToday == null,
-                          error: _dailyQuestError,
-                          onRetry: _loadDailyQuest,
-                          onTap: _dailyQuestToday?.quest == null
-                              ? null
-                              : () => _openDailyQuest(_dailyQuestToday!),
-                            onCut: _dismissDailyQuest,
+                        GestureDetector(
+                          onLongPressDown: (_) => _startDailyQuestHold(),
+                          onLongPressEnd: (_) => _cancelDailyQuestHold(),
+                          onLongPressCancel: _cancelDailyQuestHold,
+                          child: Dismissible(
+                            key: ValueKey(
+                              'daily-quest-${_dailyQuestToday!.localDate}',
+                            ),
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (_) =>
+                                _confirmDailyQuestDismissal(),
+                            onDismissed: (_) => _dismissDailyQuest(),
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 24),
+                              decoration: BoxDecoration(
+                                color: HomePalette.primaryMuted(brightness),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.visibility_off_outlined,
+                                    color: HomePalette.textPrimary(brightness),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Dismiss',
+                                    style: AppFonts.home(
+                                      color: HomePalette.textPrimary(brightness),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            child: _DailyQuestCard(
+                              today: _dailyQuestToday,
+                              error: _dailyQuestError,
+                              onRetry: _loadDailyQuest,
+                                onTap: _dailyQuestToday?.quest == null
+                                  ? null
+                                  : () => _openDailyQuest(_dailyQuestToday!),
+                            ),
+                          ),
                         ),
                       ],
                       const SizedBox(height: 20),
@@ -714,19 +783,15 @@ class _WeekStrip extends StatelessWidget {
 
 class _DailyQuestCard extends StatelessWidget {
   final DailyQuestToday? today;
-  final bool loading;
   final Object? error;
   final VoidCallback onRetry;
   final VoidCallback? onTap;
-  final VoidCallback onCut;
 
   const _DailyQuestCard({
     required this.today,
-    required this.loading,
     required this.error,
     required this.onRetry,
     required this.onTap,
-    required this.onCut,
   });
 
   @override
@@ -738,76 +803,39 @@ class _DailyQuestCard extends StatelessWidget {
     final expiry = today?.expiresAt;
     final remaining = expiry == null ? null : expiry.difference(DateTime.now());
     final countdown = remaining == null
-        ? 'TODAY'
+        ? 'Today'
         : remaining.isNegative
         ? 'Expired'
         : '${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m left';
 
     return Material(
       color: HomePalette.ink,
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.circular(28),
       child: InkWell(
-        onTap: loading || error != null || quest == null ? null : onTap,
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
+        onTap: quest == null ? null : onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            gradient: const RadialGradient(
-              center: Alignment(0.95, -0.8),
-              radius: 1.15,
-              colors: [Color(0x1FCFFF47), HomePalette.ink],
-              stops: [0, .78],
-            ),
+            color: HomePalette.ink,
+            borderRadius: BorderRadius.circular(28),
           ),
-          child: loading
-              ? _buildLoading(foreground, subtitle)
+          child: Padding(
+            padding: const EdgeInsets.all(22),
+            child: quest != null
+              ? _buildQuest(quest, attempt, countdown, foreground, subtitle)
               : error != null
               ? _buildUnavailable(foreground, subtitle)
-              : quest == null
-              ? _buildUnscheduled(foreground, subtitle)
-              : _buildQuest(
-                  quest,
-                  attempt,
-                  countdown,
-                  foreground,
-                  subtitle,
-                  onCut,
-                ),
+              : _buildUnscheduled(foreground, subtitle),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLoading(Color foreground, Color subtitle) => SizedBox(
-    height: 118,
-    child: Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: HomePalette.primary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'Loading today\'s quest',
-            style: AppFonts.home(color: foreground, fontSize: 13),
-          ),
-        ],
-      ),
-    ),
-  );
-
   Widget _buildUnavailable(Color foreground, Color subtitle) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      _topLine('DAILY QUEST', 'Unavailable'),
+      _topLine('Daily quest', 'Unavailable'),
       const SizedBox(height: 18),
       Text(
         'Could not load today\'s quest',
@@ -837,7 +865,7 @@ class _DailyQuestCard extends StatelessWidget {
   Widget _buildUnscheduled(Color foreground, Color subtitle) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      _topLine('DAILY QUEST', 'TODAY'),
+      _topLine('Daily quest', 'Today'),
       const SizedBox(height: 18),
       Text(
         'A new quest is on its way',
@@ -861,156 +889,129 @@ class _DailyQuestCard extends StatelessWidget {
     String countdown,
     Color foreground,
     Color subtitle,
-    VoidCallback onCut,
   ) {
-    final category = quest.category.toLowerCase();
-    final categoryIcon = switch (category) {
-      'physical' => Icons.fitness_center_rounded,
-      'creative' => Icons.palette_outlined,
-      'practical' => Icons.handyman_outlined,
-      'mental' => Icons.lightbulb_outline_rounded,
-      _ => Icons.psychology_alt_rounded,
-    };
-    final verificationIcon = switch (quest.verificationType) {
-      'VIDEO' => Icons.videocam_outlined,
-      'IMAGE' => Icons.photo_outlined,
-      _ => Icons.quiz_outlined,
-    };
     final statusLabel = attempt?.isCompleted == true
         ? 'COMPLETED'
         : attempt?.isPendingReview == true
-        ? 'IN REVIEW'
+        ? 'In review'
         : countdown;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _topLine('DAILY QUEST', statusLabel, onCut: onCut),
-        const SizedBox(height: 16),
+        _topLine(
+          'Daily quest',
+          statusLabel,
+          showClock: attempt?.isPendingReview != true,
+        ),
+        const SizedBox(height: 22),
         Text(
           quest.title,
-          maxLines: 3,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: AppFonts.home(
             color: foreground,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            height: 1.2,
+            fontSize: 26,
+            fontWeight: FontWeight.w600,
+            height: 1.15,
           ),
         ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 7,
-          runSpacing: 7,
-          children: [
-            _tag(categoryIcon, _capitalize(quest.category)),
-            _tag(verificationIcon, _capitalize(quest.verificationType)),
-            _tag(null, '~${quest.estimatedMinutes} min'),
-          ],
+        const SizedBox(height: 8),
+        Text(
+          '${_capitalize(quest.category)} · '
+          '${_capitalize(quest.verificationType)} · '
+          '${quest.estimatedMinutes} min',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppFonts.home(
+            color: subtitle,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 24),
         Row(
           children: [
-            Icon(Icons.bolt_rounded, color: HomePalette.primary, size: 18),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                '+${quest.auraReward} aura',
-                style: AppFonts.home(
-                  color: HomePalette.primary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                ),
+            Icon(Icons.bolt_rounded, color: HomePalette.primary, size: 22),
+            const SizedBox(width: 6),
+            Text(
+              '+${quest.auraReward} aura',
+              style: AppFonts.home(
+                color: HomePalette.primary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            if (attempt?.isCompleted == true)
-              const Icon(Icons.check_circle_rounded, color: HomePalette.primary)
-            else
-              Text(
-                attempt?.isPendingReview == true ? 'View quest' : 'Start quest',
-                style: AppFonts.home(
-                  color: HomePalette.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+              decoration: BoxDecoration(
+                color: HomePalette.primary,
+                borderRadius: BorderRadius.circular(999),
               ),
-            if (attempt?.isCompleted != true) ...[
-              const SizedBox(width: 5),
-              const Icon(Icons.arrow_forward_rounded, size: 17, color: HomePalette.primary),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    attempt?.isPendingReview == true
+                        ? 'View quest'
+                        : 'Start quest',
+                    style: AppFonts.home(
+                      color: HomePalette.ink,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: HomePalette.ink,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _topLine(String label, String trailing, {VoidCallback? onCut}) => Row(
-    children: [
-      Text(
-        label,
-        style: AppFonts.home(
-          color: HomePalette.primary,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          letterSpacingEm: .12,
-        ),
-      ),
-      const Spacer(),
-      Container(
-        constraints: const BoxConstraints(maxWidth: 142),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          trailing,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppFonts.home(
-            color: Colors.white.withValues(alpha: .9),
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
+  Widget _topLine(String label, String trailing, {bool showClock = false}) =>
+      Row(
+        children: [
+          Text(
+            label,
+            style: AppFonts.home(
+              color: HomePalette.primary,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-      ),
-      if (onCut != null)
-        IconButton(
-          onPressed: onCut,
-          tooltip: 'Hide today\'s quest',
-          visualDensity: VisualDensity.compact,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-          padding: EdgeInsets.zero,
-          color: HomePalette.primary,
-          icon: const Icon(Icons.close_rounded, size: 19),
-        ),
-    ],
-  );
-
-  Widget _tag(IconData? icon, String label) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(999),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (icon != null) ...[
-          Icon(icon, size: 13, color: Colors.white.withValues(alpha: .9)),
-          const SizedBox(width: 5),
+          const Spacer(),
+          if (showClock) ...[
+            Icon(
+              Icons.access_time_rounded,
+              color: Colors.white.withValues(alpha: .75),
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Text(
+              trailing,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: AppFonts.home(
+                color: Colors.white.withValues(alpha: .85),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
-        Text(
-          label,
-          style: AppFonts.home(
-            color: Colors.white.withValues(alpha: .92),
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 
   String _capitalize(String value) => value.isEmpty
       ? value
@@ -1042,8 +1043,9 @@ class _DottedCirclePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DottedCirclePainter oldDelegate) =>
-      color != oldDelegate.color;
+  bool shouldRepaint(covariant _DottedCirclePainter oldDelegate) =>
+      oldDelegate.color != color;
+}
 }
 
 class _AuraCard extends StatelessWidget {
