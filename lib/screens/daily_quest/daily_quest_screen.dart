@@ -1324,6 +1324,10 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
       Theme.of(context).brightness == Brightness.dark
       ? HomePalette.primary
       : HomePalette.ink;
+    Color get _streakNumberColor =>
+      Theme.of(context).brightness == Brightness.dark
+      ? HomePalette.primary
+      : HomePalette.ink;
   Color get _textPrimary => Theme.of(context).colorScheme.onSurface;
   Color get _textSecondary => Theme.of(context).colorScheme.onSurfaceVariant;
   Color get _border => Theme.of(context).colorScheme.outline;
@@ -1663,7 +1667,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                     '$_streakValue',
                     key: ValueKey(_streakValue),
                     style: AppFonts.poster(
-                      color: _primary,
+                      color: _streakNumberColor,
                       fontSize: 96,
                       wdth: 100,
                     ),
