@@ -1241,6 +1241,14 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     _auraAfter = widget.rewardAlreadyApplied
       ? currentAura
       : currentAura + _awardedAura;
+    if (previousStats != null) {
+      _rank = previousStats.rank;
+      _nextRank = previousStats.nextRank;
+      _rankProgressAfter = previousStats.rankProgress.clamp(0, 100).toInt();
+      _auraToNextAfter = previousStats.auraToNextRank;
+      _activityDays = previousStats.activityDays;
+      _statsReady = true;
+    }
     _loadUpdatedStats(previousStats);
     _flameTimer = Timer(const Duration(milliseconds: 700), () {
       if (mounted) setState(() => _flameLit = true);
@@ -1292,7 +1300,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         _rank = stats.rank;
         _nextRank = stats.nextRank;
         _activityDays = stats.activityDays;
-        _statsReady = true;
+        _statsReady = previousStats != null;
       });
       _maybeStartAuraCount();
     } catch (_) {
@@ -1335,7 +1343,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   }
 
   void _maybeStartAuraCount() {
-    if (_auraCountStarted || _frame != 1 || !_statsReady) {
+    if (_auraCountStarted || _frame != 1) {
       return;
     }
     setState(() => _auraCountStarted = true);
@@ -1576,12 +1584,14 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     );
   }
 
-  Widget _auraFrame() {
+  Widget _auraFrame(UserStats? watchedStats) {
     final auraBefore = _auraBefore ?? 0;
     final auraAfter = _auraAfter ?? _awardedAura;
-    final progressAfter = _rankProgressAfter;
-    final auraToNextAfter = _auraToNextAfter;
-    final isMaxRank = _nextRank == null;
+    final progressAfter = _rankProgressAfter ?? watchedStats?.rankProgress;
+    final auraToNextAfter = _auraToNextAfter ?? watchedStats?.auraToNextRank;
+    final nextRank = _nextRank ?? watchedStats?.nextRank;
+    final hasRankStats = _statsReady || watchedStats != null;
+    final isMaxRank = hasRankStats && nextRank == null;
     final rankProgress = isMaxRank ? 100 : progressAfter ?? 0;
     return Column(
       key: const ValueKey('aura-frame'),
@@ -1697,7 +1707,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       borderRadius: BorderRadius.circular(999),
                       child: SizedBox(
                         height: 10,
-                        child: _statsReady && (isMaxRank || progressAfter != null)
+                        child: hasRankStats && (isMaxRank || progressAfter != null)
                             ? TweenAnimationBuilder<double>(
                                 key: ValueKey('aura-progress-$_statsReady'),
                                 tween: Tween<double>(
@@ -1729,18 +1739,18 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          !_statsReady
-                              ? '-- AP to next rank'
+                            !hasRankStats
+                              ? 'Loading next rank'
                               : isMaxRank
                               ? 'MAX RANK'
-                              : '${auraToNextAfter ?? '--'} AP to $_nextRank',
+                              : '${auraToNextAfter ?? 0} AP to ${nextRank ?? 'next rank'}',
                           style: AppFonts.body(
                             color: _textSecondary,
                             fontSize: 12,
                           ),
                         ),
                         Text(
-                          '${_statsReady ? rankProgress : 0}%',
+                          '${hasRankStats ? rankProgress : 0}%',
                           style: AppFonts.body(
                             color: _textSecondary,
                             fontSize: 12,
@@ -1771,7 +1781,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(myStatsProvider);
+    final watchedStats = ref.watch(myStatsProvider).valueOrNull;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -1787,7 +1797,9 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 350),
-                      child: _frame == 0 ? _streakFrame() : _auraFrame(),
+                        child: _frame == 0
+                          ? _streakFrame()
+                          : _auraFrame(watchedStats),
                     ),
                   ),
                 ],
