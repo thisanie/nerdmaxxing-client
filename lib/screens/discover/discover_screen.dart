@@ -272,7 +272,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .toList();
     final stats = ref.watch(myStatsProvider).valueOrNull;
     final showActivityWeek =
-      _dailyQuestDismissed || _dailyQuestToday?.attempt?.isCompleted == true;
+      _dailyQuestDismissed ||
+      _dailyQuestToday == null ||
+      _dailyQuestToday?.attempt?.isCompleted == true;
     if (_homeError != null &&
         _profile == null &&
         _challengesById.isEmpty &&
@@ -339,11 +341,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           activityDays: stats?.activityDays ?? const [],
                           showEmptyWeek: true,
                         )
-                      else if (_dailyQuestToday?.attempt?.isCompleted != true) ...[
+                        else if (_dailyQuestToday != null &&
+                          _dailyQuestToday?.attempt?.isCompleted != true) ...[
                         const SizedBox(height: 16),
                         _DailyQuestCard(
                           today: _dailyQuestToday,
-                          loading: _dailyQuestLoading,
+                            loading:
+                              _dailyQuestLoading && _dailyQuestToday == null,
                           error: _dailyQuestError,
                           onRetry: _loadDailyQuest,
                           onTap: _dailyQuestToday?.quest == null

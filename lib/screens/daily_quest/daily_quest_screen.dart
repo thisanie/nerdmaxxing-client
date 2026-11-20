@@ -29,7 +29,7 @@ class _DailyQuestSpacing {
   static const infoTile = 44.0;
   static const infoTileRadius = 14.0;
   static const bannerRadius = 20.0;
-  static const bodyMaxWidth = 240.0;
+  static const bodyMaxWidth = 480.0;
 }
 
 enum _Lucide { back, clock, bolt, book, lock, check, play }
