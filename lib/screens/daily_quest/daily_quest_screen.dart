@@ -342,7 +342,9 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
                       label: Text(
                         _starting ? 'Starting...' : 'Start quest',
                         style: AppFonts.home(
-                          color: foreground,
+                          color: brightness == Brightness.dark
+                              ? DailyQuestPalette.ink
+                              : foreground,
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
@@ -461,7 +463,9 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
             child: Text(
               instructions,
               style: AppFonts.body(
-                color: DailyQuestPalette.lightMuted,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? DailyQuestPalette.darkHeroMuted
+                    : muted,
                 fontSize: 14,
                 height: 20 / 14,
               ),
@@ -961,7 +965,9 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
         ? await _picker.pickVideo(source: ImageSource.gallery)
         : await _picker.pickImage(
             source: ImageSource.gallery,
-            imageQuality: 88,
+            maxWidth: 2560,
+            maxHeight: 2560,
+            imageQuality: 60,
           );
     if (file == null) return;
     final size = await file.length();
