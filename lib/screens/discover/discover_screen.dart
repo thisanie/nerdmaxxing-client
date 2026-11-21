@@ -45,7 +45,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Object? _homeError;
   bool _isScrolled = false;
   Timer? _dailyQuestTicker;
-  Timer? _dailyQuestHoldTimer;
 
   @override
   void initState() {
@@ -63,7 +62,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _dailyQuestTicker?.cancel();
-    _dailyQuestHoldTimer?.cancel();
     super.dispose();
   }
 
@@ -222,42 +220,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (mounted) setState(() => _dailyQuestDismissed = true);
   }
 
-  Future<bool> _confirmDailyQuestDismissal() async =>
-      await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Dismiss today\'s quest?'),
-          content: const Text(
-            'This quest will be hidden from Home for the rest of today.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Keep quest'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Dismiss'),
-            ),
-          ],
-        ),
-      ) ??
-      false;
-
-  void _startDailyQuestHold() {
-    _dailyQuestHoldTimer?.cancel();
-    _dailyQuestHoldTimer = Timer(const Duration(seconds: 3), () async {
-      _dailyQuestHoldTimer = null;
-      if (!mounted || !await _confirmDailyQuestDismissal()) return;
-      await _dismissDailyQuest();
-    });
-  }
-
-  void _cancelDailyQuestHold() {
-    _dailyQuestHoldTimer?.cancel();
-    _dailyQuestHoldTimer = null;
-  }
-
   static Participation? _selectResumeParticipation(
     List<Participation> participations,
   ) {
@@ -304,9 +266,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .toList();
     final stats = ref.watch(myStatsProvider).valueOrNull;
     final showActivityWeek =
-      _dailyQuestDismissed ||
-      _dailyQuestToday == null ||
-      _dailyQuestToday?.attempt?.isCompleted == true;
+        _dailyQuestDismissed ||
+        _dailyQuestToday == null ||
+        _dailyQuestToday?.attempt?.isCompleted == true;
+
     if (_homeError != null &&
         _profile == null &&
         _challengesById.isEmpty &&
@@ -376,52 +339,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       else if (_dailyQuestToday != null &&
                           _dailyQuestToday?.attempt?.isCompleted != true) ...[
                         const SizedBox(height: 16),
-                        GestureDetector(
-                          onLongPressDown: (_) => _startDailyQuestHold(),
-                          onLongPressEnd: (_) => _cancelDailyQuestHold(),
-                          onLongPressCancel: _cancelDailyQuestHold,
-                          child: Dismissible(
-                            key: ValueKey(
-                              'daily-quest-${_dailyQuestToday!.localDate}',
+                        Dismissible(
+                          key: ValueKey(
+                            'daily-quest-${_dailyQuestToday!.localDate}',
+                          ),
+                          direction: DismissDirection.endToStart,
+                          dismissThresholds: const {
+                            DismissDirection.endToStart: 0.5,
+                          },
+                          onDismissed: (_) => _dismissDailyQuest(),
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            decoration: BoxDecoration(
+                              color: HomePalette.primaryMuted(brightness),
+                              borderRadius: BorderRadius.circular(30),
                             ),
-                            direction: DismissDirection.endToStart,
-                            confirmDismiss: (_) =>
-                                _confirmDailyQuestDismissal(),
-                            onDismissed: (_) => _dismissDailyQuest(),
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 24),
-                              decoration: BoxDecoration(
-                                color: HomePalette.primaryMuted(brightness),
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.visibility_off_outlined,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.visibility_off_outlined,
+                                  color: HomePalette.textPrimary(brightness),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Dismiss',
+                                  style: AppFonts.home(
                                     color: HomePalette.textPrimary(brightness),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Dismiss',
-                                    style: AppFonts.home(
-                                      color: HomePalette.textPrimary(brightness),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            child: _DailyQuestCard(
-                              today: _dailyQuestToday,
-                              error: _dailyQuestError,
-                              onRetry: _loadDailyQuest,
-                                onTap: _dailyQuestToday?.quest == null
-                                  ? null
-                                  : () => _openDailyQuest(_dailyQuestToday!),
-                            ),
+                          ),
+                          child: _DailyQuestCard(
+                            today: _dailyQuestToday,
+                            error: _dailyQuestError,
+                            onRetry: _loadDailyQuest,
+                            onTap: _dailyQuestToday?.quest == null
+                                ? null
+                                : () => _openDailyQuest(_dailyQuestToday!),
                           ),
                         ),
                       ],
