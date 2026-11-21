@@ -1046,7 +1046,7 @@ class _DottedCirclePainter extends CustomPainter {
   bool shouldRepaint(covariant _DottedCirclePainter oldDelegate) =>
       oldDelegate.color != color;
 }
-}
+
 
 class _AuraCard extends StatelessWidget {
   final UserStats? stats;
