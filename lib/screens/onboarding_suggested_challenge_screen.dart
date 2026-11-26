@@ -45,7 +45,9 @@ class _SuggestedChallengeScreenState
           .getSuggestedOrigamiChallenge();
       if (mounted) setState(() => _challenge = challenge);
     } catch (_) {
-      _loadError = 'Could not load the suggested challenge.';
+      if (mounted) {
+        _loadError = 'Could not load the suggested challenge.';
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -59,7 +61,7 @@ class _SuggestedChallengeScreenState
       await ref
           .read(participationControllerProvider.notifier)
           .accept(challenge.slug);
-        await widget.onJoined(challenge.slug);
+      await widget.onJoined(challenge.slug);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -80,6 +82,30 @@ class _SuggestedChallengeScreenState
           slug: challenge.slug,
           initialChallenge: challenge,
           onAccepted: () => widget.onAcceptedFromJourney(challenge.slug),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChallengeImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return const Center(
+        child: Icon(
+          Icons.change_history_rounded,
+          size: 88,
+          color: HomePalette.ink,
+        ),
+      );
+    }
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => const Center(
+        child: Icon(
+          Icons.change_history_rounded,
+          size: 88,
+          color: HomePalette.ink,
         ),
       ),
     );
@@ -146,27 +172,7 @@ class _SuggestedChallengeScreenState
                                 color: HomePalette.peach,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: imageUrl != null && imageUrl.isNotEmpty
-                                  ? Image.network(
-                                      imageUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              const Center(
-                                                child: Icon(
-                                                  Icons.change_history_rounded,
-                                                  size: 88,
-                                                  color: HomePalette.ink,
-                                                ),
-                                              ),
-                                    )
-                                  : const Center(
-                                      child: Icon(
-                                        Icons.change_history_rounded,
-                                        size: 88,
-                                        color: HomePalette.ink,
-                                      ),
-                                    ),
+                              child: _buildChallengeImage(imageUrl),
                             ),
                             const SizedBox(height: 24),
                             Text(
@@ -203,19 +209,16 @@ class _SuggestedChallengeScreenState
                                 ),
                               ],
                             ),
-                            if (!_loading && !available) ...[
-                              const SizedBox(height: 16),
+                            if (!_loading && !available)
                               Text(
-                                _loadError ??
-                                    'This challenge is not available yet. You can still explore Discover.',
+                                _loadError ?? 'This challenge is not available yet. You can still explore Discover.',
                                 style: AppFonts.body(
                                   color: muted,
                                   fontSize: 13,
                                   height: 1.35,
                                 ),
                               ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ),
@@ -243,7 +246,9 @@ class _SuggestedChallengeScreenState
                               dimension: 21,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(_joining ? 'Joining...' : 'Join this challenge'),
+                          : Text(
+                              _joining ? 'Joining...' : 'Join this challenge',
+                            ),
                     ),
                   ),
                   TextButton.icon(
