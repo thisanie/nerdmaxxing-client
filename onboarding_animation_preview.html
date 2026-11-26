@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nerdmaxxing Onboarding Animation Preview</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #ecebe6;
+  --page-ink: #20201d;
+  --lime: #cdfd4a;
+  --lime-soft: #eefab9;
+  --ink: #11110d;
+  --muted: #6b6b63;
+  --line: #e2e2d9;
+  --paper: #fff;
+  --card: #f6f6f1;
+  --bezel: #18181a;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; margin: 0; }
+body {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 14px 22px;
+  background: var(--page);
+  color: var(--page-ink);
+}
+button { font: inherit; }
+.topline {
+  width: min(100%, 360px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+}
+.kicker { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--muted); }
+.quiet-button, .replay-button {
+  border: 1px solid currentColor;
+  border-radius: 20px;
+  padding: 7px 15px;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.quiet-button:hover, .replay-button:hover { background: rgba(0,0,0,.06); }
+.phone {
+  width: min(320px, calc((100svh - 160px) * .485), calc(100vw - 28px));
+  min-width: 0;
+  aspect-ratio: 320 / 660;
+  flex: 0 1 auto;
+  padding: 9px;
+  position: relative;
+  border-radius: 40px;
+  background: var(--bezel);
+  box-shadow: 0 16px 36px rgba(0,0,0,.24);
+}
+.screen {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 32px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.notch {
+  position: absolute;
+  z-index: 20;
+  top: 7px;
+  left: 50%;
+  width: 70px;
+  height: 15px;
+  transform: translateX(-50%);
+  border-radius: 10px;
+  background: var(--bezel);
+}
+.status {
+  position: absolute;
+  z-index: 15;
+  inset: 0 0 auto;
+  height: 32px;
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 19px 0;
+  background: var(--paper);
+  font-size: 10px;
+  font-weight: 700;
+}
+.scene {
+  position: absolute;
+  inset: 32px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 9px 15px 10px;
+  opacity: 0;
+  transform: translateY(9px);
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--paper);
+  transition: opacity .32s ease, transform .38s cubic-bezier(.2,.8,.2,1);
+}
+.scene.active { opacity: 1; transform: none; pointer-events: auto; }
+.brand { display: flex; align-items: center; justify-content: space-between; min-height: 25px; font-size: 14px; font-weight: 700; }
+.brand strong { margin-left: 3px; padding: 2px 6px; border-radius: 5px; background: var(--lime); font-weight: 900; }
+.title { margin: 8px 0 0; font-size: 22px; line-height: 1.08; font-weight: 800; }
+.sub { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.section-title { margin: 3px 0 0; font-size: 14px; font-weight: 800; }
+.searchbox {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+  font-size: 12px;
+}
+.search-icon { color: var(--muted); font-size: 18px; }
+.caret { width: 1px; height: 15px; background: #6da51b; animation: blink .7s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.challenge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 70px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  transition: transform .22s, background .25s, border-color .25s;
+}
+.challenge.selected { transform: scale(.97); border-color: #9ac53b; background: var(--lime-soft); }
+.art {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(140deg, #cdfd4a, #9ff1c0);
+  font-size: 22px;
+}
+.challenge-copy { flex: 1; min-width: 0; }
+.challenge-copy b { display: block; font-size: 11px; line-height: 1.25; }
+.tags { display: flex; gap: 5px; margin-top: 6px; }
+.tag { padding: 4px 7px; border-radius: 8px; background: var(--lime-soft); color: #49620f; font-size: 9px; font-weight: 700; white-space: nowrap; }
+.tag.neutral { background: #efefe8; color: #55554f; }
+.arrow { color: var(--muted); font-size: 21px; }
+.nav {
+  height: 49px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin: auto -6px 0;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--paper);
+  box-shadow: 0 4px 12px rgba(0,0,0,.07);
+}
+.nav span { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 20px; color: #666; font-size: 14px; }
+.nav span.on { width: auto; display: flex; gap: 5px; padding: 0 10px; background: var(--ink); color: var(--lime); font-size: 10px; font-weight: 800; }
+.hero {
+  padding: 14px;
+  border-radius: 19px;
+  background: linear-gradient(135deg, #cdfd4a, #a2f0c0);
+}
+.hero-kicker { color: #3b5a10; font-size: 9px; font-weight: 800; letter-spacing: .13em; }
+.value-row { display: flex; align-items: baseline; gap: 6px; margin: 5px 0; }
+.value { font-size: 49px; line-height: .96; font-weight: 900; font-variant-numeric: tabular-nums; }
+.unit { color: #3b5a10; font-size: 17px; font-weight: 700; }
+.track { height: 7px; position: relative; margin: 14px 0 5px; border-radius: 5px; background: rgba(0,0,0,.18); }
+.track-fill { width: 0; height: 100%; border-radius: inherit; background: var(--ink); transition: width .08s linear; }
+.track-dot { position: absolute; top: 50%; left: 0; width: 13px; height: 13px; border-radius: 50%; background: var(--ink); transform: translate(-50%, -50%); transition: left .08s linear; }
+.range { display: flex; justify-content: space-between; font-size: 9px; }
+.attempt-card { flex: 1; min-height: 100px; display: flex; align-items: flex-end; justify-content: space-around; padding: 11px 9px 7px; border: 1px solid var(--line); border-radius: 15px; }
+.bar-wrap { width: 30px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; }
+.bar-label { opacity: 0; font-size: 9px; transition: opacity .3s; }
+.bar-label.visible { opacity: 1; }
+.bar { width: 25px; height: 0; border-radius: 7px 7px 2px 2px; background: #d1d0c4; transition: height .35s ease; }
+.bar.last { background: var(--lime); }
+.milestone-hero { padding: 12px; border-radius: 18px; background: linear-gradient(135deg, #cdfd4a, #a2f0c0); }
+.segment-row { display: flex; gap: 5px; margin: 8px 0; }
+.segment-row i { height: 5px; flex: 1; border-radius: 5px; background: rgba(0,0,0,.17); transition: background .3s; }
+.segment-row i.done { background: var(--ink); }
+.result-btn, .submit-btn { height: 37px; display: grid; place-items: center; border: 0; border-radius: 20px; background: var(--ink); color: var(--lime); font-size: 11px; font-weight: 800; }
+.check-list { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 6px; }
+.check-row { display: flex; flex: 1; min-height: 48px; align-items: center; gap: 8px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); transition: background .35s, border-color .35s; }
+.check-row.complete { border-color: #c9dfa0; background: #fbfff0; }
+.check {
+  width: 21px; height: 21px; flex: 0 0 auto; display: grid; place-items: center;
+  border: 1.5px solid #999; border-radius: 50%; color: transparent; font-size: 13px;
+  transition: background .25s, border-color .25s, color .25s, transform .25s;
+}
+.check-row.complete .check { transform: scale(1.07); border-color: #4a7a10; background: var(--lime); color: var(--ink); }
+.check-copy { min-width: 0; }
+.check-copy small { display: block; color: var(--muted); font-size: 8px; letter-spacing: .08em; }
+.check-copy b { display: block; margin: 2px 0; font-size: 10px; }
+.check-copy span { display: block; overflow: hidden; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.lock-state { display: flex; align-items: center; gap: 8px; min-height: 37px; padding: 8px; border: 1.5px dashed #bbb; border-radius: 13px; color: #666; font-size: 9px; transition: all .35s; }
+.lock-state.open { border-style: solid; border-color: #9ac53b; background: var(--lime-soft); color: #36530a; }
+.drop {
+  height: 117px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 2px dashed #b9b9ad;
+  border-radius: 17px;
+  color: #55554f;
+  transition: background .3s, border-color .3s;
+}
+.drop.hot { border-color: #6aa00f; background: var(--lime-soft); }
+.drop-icon { font-size: 23px; }
+.file {
+  min-height: 63px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  opacity: 0;
+  transform: translateY(7px);
+  transition: opacity .35s, transform .35s;
+}
+.file.visible { opacity: 1; transform: none; }
+.thumb { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 10px; background: linear-gradient(145deg, #a7cf33, #14140f 70%); color: white; font-size: 17px; }
+.file-copy { min-width: 0; flex: 1; }
+.file-copy b { display: block; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.file-copy small { color: var(--muted); font-size: 9px; }
+.upload-track { height: 5px; margin-top: 4px; overflow: hidden; border-radius: 5px; background: #e3e3da; }
+.upload-track i { display: block; width: 0; height: 100%; background: #8fd01c; }
+.proof-scene .submit-btn { margin-top: auto; }
+.aura-scene { justify-content: center; align-items: center; text-align: center; background: linear-gradient(160deg, #f3ffd0, #fff 58%); }
+.completion { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .14em; }
+.reward-name { margin-top: 5px; font-size: 17px; font-weight: 900; }
+.ring { margin: 23px 0 10px; }
+.aura-total { font-size: 76px; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums; }
+.aura-label { margin-top: 5px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .15em; }
+.bonus { display: inline-block; padding: 7px 15px; border-radius: 20px; background: var(--ink); color: var(--lime); font-size: 12px; font-weight: 800; opacity: 0; transform: scale(.75); transition: opacity .3s, transform .35s; }
+.bonus.visible { opacity: 1; transform: scale(1); }
+.rank { margin-top: 18px; padding: 8px 15px; border-radius: 20px; background: var(--ink); color: var(--lime); font-size: 11px; font-weight: 800; transition: transform .3s, box-shadow .3s; }
+.rank.pop { transform: scale(1.12); box-shadow: 0 0 18px rgba(150,205,40,.55); }
+.rank-note { margin-top: 8px; color: var(--muted); font-size: 10px; }
+.cursor {
+  position: absolute;
+  z-index: 30;
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: rgba(0,0,0,.33);
+  color: white;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%,-50%);
+  transition: left .7s ease, top .7s ease, opacity .2s;
+}
+.cursor.show { opacity: 1; }
+.cursor.tap { animation: tap .35s ease; }
+@keyframes tap { 50% { transform: translate(-50%,-50%) scale(.68); } }
+.caption { width: min(100%, 360px); min-height: 20px; text-align: center; font-size: 14px; font-weight: 700; }
+.dots { display: flex; gap: 7px; align-items: center; }
+.dots i { width: 7px; height: 5px; border-radius: 4px; background: var(--page-ink); opacity: .2; transition: width .25s, opacity .25s; }
+.dots i.on { width: 22px; opacity: .85; }
+.controls { min-height: 38px; display: flex; gap: 9px; }
+.primary-button { border: 0; border-radius: 22px; padding: 9px 19px; background: var(--ink); color: var(--lime); font-size: 12px; font-weight: 800; cursor: pointer; }
+.primary-button:hover { transform: translateY(-1px); }
+.finish { display: none; }
+.finish.visible { display: flex; }
+@media (max-height: 760px) {
+  body { justify-content: flex-start; gap: 8px; padding-top: 8px; }
+  .topline { min-height: 26px; }
+  .caption { min-height: 18px; font-size: 12px; }
+  .phone { width: min(300px, calc((100svh - 160px) * .485), calc(100vw - 28px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+  <div class="topline">
+    <span class="kicker">ONBOARDING MOTION PREVIEW</span>
+    <button class="quiet-button" id="skip" type="button">Skip</button>
+  </div>
+
+  <main class="phone" aria-label="Nerdmaxxing onboarding preview">
+    <div class="screen" id="screen">
+      <div class="notch"></div>
+      <div class="status"><span>11:25</span><span>5G · 53%</span></div>
+
+      <section class="scene active" id="scene1" aria-label="Search for a challenge">
+        <div class="brand"><span>NERD<strong>MAXXING</strong></span><span aria-hidden="true">♧</span></div>
+        <div>
+          <h1 class="title">Find a challenge<br>to take on</h1>
+          <p class="sub">Build a skill, one attempt at a time.</p>
+        </div>
+        <div class="searchbox"><span class="search-icon" aria-hidden="true">⌕</span><span id="query"></span><i class="caret" id="caret"></i></div>
+        <div class="section-title">Challenge results</div>
+        <div class="challenge" id="challenge">
+          <div class="art" aria-hidden="true">▰</div>
+          <div class="challenge-copy">
+            <b>Hold a Plank for 3 Minutes</b>
+            <div class="tags"><span class="tag">Beginner</span><span class="tag neutral">32 Aura</span></div>
+          </div>
+          <span class="arrow" aria-hidden="true">›</span>
+        </div>
+        <div class="sub" id="searchHint">A steady core. A clear goal.</div>
+        <nav class="nav" aria-label="App navigation"><span>⌂</span><span class="on">◎ Discover</span><span>♜</span><span>◉</span></nav>
+      </section>
+
+      <section class="scene" id="scene2" aria-label="Accepted challenge progress">
+        <div class="sub" style="display:flex;justify-content:space-between"><span>‹</span><span>Advanced · <b>Accepted</b></span><span>⋮</span></div>
+        <div class="hero">
+          <div class="hero-kicker">● &nbsp; YOU ARE HERE</div>
+          <div class="value-row"><strong class="value" id="seconds">3</strong><span class="unit">seconds</span></div>
+          <b style="font-size:12px">Freestanding hold</b>
+          <div class="sub" style="margin-top:3px;color:#3b5a10">Best so far. Target is 30.</div>
+          <div class="track"><div class="track-fill" id="trackFill"></div><i class="track-dot" id="trackDot"></i></div>
+          <div class="range"><span>3 sec</span><span>30 sec</span></div>
+        </div>
+        <div class="section-title">Your attempts <span class="sub" style="float:right">5 logged</span></div>
+        <div class="attempt-card" id="attempts"></div>
+        <nav class="nav" aria-label="App navigation"><span class="on">⌂ Home</span><span>◎</span><span>♜</span><span>◉</span></nav>
+      </section>
+
+      <section class="scene" id="scene3" aria-label="Complete milestones">
+        <div class="sub" style="display:flex;justify-content:space-between"><span>‹</span><span>The Grind · <b>Milestone 01</b></span><span>⋮</span></div>
+        <div class="milestone-hero">
+          <div class="hero-kicker">● &nbsp; YOU ARE HERE</div>
+          <div class="value-row"><strong class="value" id="doneCount">0</strong><span class="unit">/ 3 done</span></div>
+          <b style="font-size:15px">Prepare Your Body</b>
+          <div class="segment-row" id="segments"><i></i><i></i><i></i></div>
+          <button class="result-btn" id="logButton" type="button">Log a result</button>
+        </div>
+        <div class="check-list" id="checkList">
+          <div class="check-row"><span class="check">✓</span><div class="check-copy"><small>01 / ARTICLE</small><b>Complete Beginner's Guide</b><span>Starter guide with the full progression.</span></div></div>
+          <div class="check-row"><span class="check">✓</span><div class="check-copy"><small>02 / VIDEO</small><b>Wrist Strength &amp; Mobility</b><span>A step-by-step wrist warm-up.</span></div></div>
+          <div class="check-row"><span class="check">✓</span><div class="check-copy"><small>03 / VIDEO</small><b>Warm-Up Routine</b><span>Wrists, shoulders and leg squeezes.</span></div></div>
+        </div>
+        <div class="lock-state" id="lockState"><span id="lockIcon">♙</span><span id="lockText">Locked. Finish this checklist to unlock the next milestone.</span></div>
+      </section>
+
+      <section class="scene proof-scene" id="scene4" aria-label="Submit video proof">
+        <div class="sub" style="display:flex;justify-content:space-between"><span>‹</span><b>Prove it</b><span></span></div>
+        <div>
+          <h2 class="title" style="margin:0">Submit video proof</h2>
+          <p class="sub">Record your freestanding hold and upload it so it can be verified.</p>
+        </div>
+        <div class="drop" id="drop"><span class="drop-icon">⇧</span><b style="font-size:11px">Tap to upload a video</b><span class="sub">MP4 or MOV · up to 60 s</span></div>
+        <div class="file" id="file">
+          <div class="thumb">▶</div>
+          <div class="file-copy"><b>freestanding_hold.mp4</b><small><span id="uploadPercent">0</span>% · 12.4 MB</small><div class="upload-track"><i id="uploadFill"></i></div></div>
+          <span id="uploadCheck" style="opacity:0;color:#4a7a10;font-size:19px">✓</span>
+        </div>
+        <button class="submit-btn" id="submitProof" type="button">Submit proof</button>
+      </section>
+
+      <section class="scene aura-scene" id="scene5" aria-label="Aura reward and rank up">
+        <div class="completion">CHALLENGE COMPLETE</div>
+        <div class="reward-name">Hold a Plank for 3 Minutes</div>
+        <div class="ring"><div class="aura-total" id="auraTotal">94</div><div class="aura-label">AURA POINTS</div></div>
+        <div class="bonus" id="bonus">+32 aura</div>
+        <div class="rank" id="rank">♜ &nbsp; Rank E</div>
+        <div class="rank-note" id="rankNote">6 AP to Rank D</div>
+        <div class="track" style="width:75%;margin-top:12px"><div class="track-fill" id="rankFill"></div><i class="track-dot" id="rankDot"></i></div>
+        <nav class="nav" aria-label="App navigation"><span>⌂</span><span>◎</span><span class="on">♜ Rank</span><span>◉</span></nav>
+      </section>
+
+      <div class="cursor" id="cursor" aria-hidden="true">●</div>
+    </div>
+  </main>
+
+  <div class="caption" id="caption" aria-live="polite">Find a challenge and choose it</div>
+  <div class="dots" id="dots" aria-label="Animation progress"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+  <div class="controls">
+    <button class="replay-button" id="replay" type="button">Replay</button>
+    <button class="primary-button finish" id="finish" type="button">Get started</button>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const captions = [
+  'Search and choose a challenge',
+  'Accept it and watch your progress grow',
+  'Log a result and complete each milestone',
+  'Submit a video as proof',
+  'Earn Aura and rank up',
+];
+const sceneDurations = [4300, 4700, 5700, 4700, 5700];
+let runId = 0;
+let timers = [];
+
+function later(fn, ms) {
+  const timer = setTimeout(fn, ms);
+  timers.push(timer);
+  return timer;
+}
+function cancelRun() {
+  runId++;
+  timers.forEach(clearTimeout);
+  timers = [];
+  $('cursor').classList.remove('show', 'tap');
+  return runId;
+}
+function showScene(number) {
+  document.querySelectorAll('.scene').forEach((scene, index) => {
+    scene.classList.toggle('active', index === number - 1);
+  });
+  $('caption').textContent = captions[number - 1];
+  document.querySelectorAll('#dots i').forEach((dot, index) => {
+    dot.classList.toggle('on', index === number - 1);
+  });
+}
+function animate(ms, update, id) {
+  return new Promise((resolve) => {
+    const start = performance.now();
+    function frame(now) {
+      if (id !== runId) return resolve();
+      const amount = Math.min(1, (now - start) / ms);
+      update(1 - Math.pow(1 - amount, 3));
+      if (amount < 1) requestAnimationFrame(frame);
+      else resolve();
+    }
+    requestAnimationFrame(frame);
+  });
+}
+async function tap(element, id) {
+  const cursor = $('cursor');
+  const screen = $('screen').getBoundingClientRect();
+  const target = element.getBoundingClientRect();
+  cursor.style.left = `${target.left - screen.left + target.width / 2}px`;
+  cursor.style.top = `${target.top - screen.top + target.height / 2}px`;
+  cursor.classList.add('show');
+  await sleep(580);
+  if (id !== runId) return;
+  cursor.classList.remove('tap');
+  void cursor.offsetWidth;
+  cursor.classList.add('tap');
+  await sleep(300);
+}
+function reset() {
+  $('query').textContent = '';
+  $('caret').style.display = '';
+  $('challenge').classList.remove('selected');
+  $('searchHint').textContent = 'A steady core. A clear goal.';
+  $('seconds').textContent = '3';
+  $('trackFill').style.width = '0%';
+  $('trackDot').style.left = '0%';
+  $('attempts').replaceChildren();
+  [7, 8, 10, 10, 11].forEach((height, index) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bar-wrap';
+    wrap.innerHTML = `<span class="bar-label">${height}</span><i class="bar${index === 4 ? ' last' : ''}"></i>`;
+    $('attempts').append(wrap);
+  });
+  $('doneCount').textContent = '0';
+  document.querySelectorAll('#segments i').forEach((segment) => segment.classList.remove('done'));
+  document.querySelectorAll('.check-row').forEach((row) => row.classList.remove('complete'));
+  $('lockState').classList.remove('open');
+  $('lockIcon').textContent = '♙';
+  $('lockText').textContent = 'Locked. Finish this checklist to unlock the next milestone.';
+  $('logButton').textContent = 'Log a result';
+  $('drop').classList.remove('hot');
+  $('file').classList.remove('visible');
+  $('uploadPercent').textContent = '0';
+  $('uploadFill').style.width = '0%';
+  $('uploadCheck').style.opacity = '0';
+  $('submitProof').textContent = 'Submit proof';
+  $('submitProof').style.opacity = '.4';
+  $('auraTotal').textContent = '94';
+  $('bonus').classList.remove('visible');
+  $('rank').textContent = '♜  Rank E';
+  $('rank').classList.remove('pop');
+  $('rankNote').textContent = '6 AP to Rank D';
+  $('rankFill').style.width = '0%';
+  $('rankDot').style.left = '0%';
+  $('finish').classList.remove('visible');
+  $('replay').classList.remove('finish');
+}
+async function play() {
+  const id = cancelRun();
+  reset();
+  showScene(1);
+  await sleep(400);
+  if (id !== runId) return;
+
+  const query = 'plank';
+  for (let index = 1; index <= query.length; index++) {
+    $('query').textContent = query.slice(0, index);
+    await sleep(110);
+    if (id !== runId) return;
+  }
+  $('caret').style.display = 'none';
+  await sleep(450);
+  if (id !== runId) return;
+  await tap($('challenge'), id);
+  if (id !== runId) return;
+  $('challenge').classList.add('selected');
+  $('searchHint').textContent = 'Challenge accepted. Your first attempt starts now.';
+  await sleep(400);
+  if (id !== runId) return;
+
+  showScene(2);
+  const bars = [...document.querySelectorAll('.bar-wrap')];
+  const progressTask = animate(2600, (amount) => {
+    const seconds = Math.round(3 + 8 * amount);
+    const percent = ((seconds - 3) / 27) * 100;
+    $('seconds').textContent = String(seconds);
+    $('trackFill').style.width = `${percent}%`;
+    $('trackDot').style.left = `${percent}%`;
+  }, id);
+  for (const [index, wrap] of bars.entries()) {
+    if (id !== runId) return;
+    const bar = wrap.querySelector('.bar');
+    const label = wrap.querySelector('.bar-label');
+    bar.style.height = `${[7, 8, 10, 10, 11][index] * 6}px`;
+    await sleep(280);
+    label.classList.add('visible');
+  }
+  await progressTask;
+  if (id !== runId) return;
+  await sleep(500);
+
+  showScene(3);
+  await sleep(330);
+  if (id !== runId) return;
+  $('logButton').textContent = 'Result logged: 18 seconds';
+  for (let index = 0; index < 3; index++) {
+    await sleep(880);
+    if (id !== runId) return;
+    document.querySelectorAll('.check-row')[index].classList.add('complete');
+    document.querySelectorAll('#segments i')[index].classList.add('done');
+    $('doneCount').textContent = String(index + 1);
+  }
+  $('lockState').classList.add('open');
+  $('lockIcon').textContent = '♧';
+  $('lockText').textContent = 'Milestone complete. Next milestone unlocked!';
+  await sleep(650);
+  if (id !== runId) return;
+
+  showScene(4);
+  await sleep(380);
+  if (id !== runId) return;
+  await tap($('drop'), id);
+  if (id !== runId) return;
+  $('drop').classList.add('hot');
+  $('file').classList.add('visible');
+  await sleep(300);
+  const uploadTask = animate(1700, (amount) => {
+    const percent = Math.round(amount * 100);
+    $('uploadPercent').textContent = String(percent);
+    $('uploadFill').style.width = `${percent}%`;
+  }, id);
+  await uploadTask;
+  if (id !== runId) return;
+  $('uploadCheck').style.opacity = '1';
+  $('submitProof').style.opacity = '1';
+  await sleep(250);
+  if (id !== runId) return;
+  await tap($('submitProof'), id);
+  if (id !== runId) return;
+  $('submitProof').textContent = 'Proof submitted for review';
+  await sleep(350);
+  if (id !== runId) return;
+
+  showScene(5);
+  await sleep(320);
+  if (id !== runId) return;
+  $('bonus').classList.add('visible');
+  const startAura = 94;
+  await animate(2300, (amount) => {
+    const aura = Math.round(startAura + 32 * amount);
+    $('auraTotal').textContent = String(aura);
+    const rankProgress = Math.min(100, ((aura - 94) / 6) * 100);
+    $('rankFill').style.width = `${rankProgress}%`;
+    $('rankDot').style.left = `${rankProgress}%`;
+    if (aura >= 100 && $('rank').textContent.includes('Rank E')) {
+      $('rank').textContent = '♜  Rank D';
+      $('rank').classList.add('pop');
+      $('rankNote').textContent = 'Rank D unlocked';
+    }
+  }, id);
+  if (id !== runId) return;
+  $('rankNote').textContent = 'Rank D unlocked · 26 Aura beyond the threshold';
+  later(() => {
+    if (id !== runId) return;
+    $('finish').classList.add('visible');
+    $('replay').classList.add('finish');
+  }, 450);
+}
+function skip() {
+  cancelRun();
+  document.querySelectorAll('.scene').forEach((scene, index) => scene.classList.toggle('active', index === 4));
+  $('auraTotal').textContent = '126';
+  $('bonus').classList.add('visible');
+  $('rank').textContent = '♜  Rank D';
+  $('rank').classList.add('pop');
+  $('rankNote').textContent = 'Rank D unlocked · 26 Aura beyond the threshold';
+  $('rankFill').style.width = '100%';
+  $('rankDot').style.left = '100%';
+  $('caption').textContent = 'The full journey, from challenge to Aura.';
+  document.querySelectorAll('#dots i').forEach((dot, index) => dot.classList.toggle('on', index === 4));
+  $('finish').classList.add('visible');
+  $('replay').classList.add('finish');
+}
+$('skip').addEventListener('click', skip);
+$('replay').addEventListener('click', play);
+$('finish').addEventListener('click', skip);
+play();
+</script>
+</body>
+</html>

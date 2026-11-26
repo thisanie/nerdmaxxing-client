@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -93,31 +92,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _startScene();
   }
 
-  Widget _statusBar() => Padding(
-    padding: const EdgeInsets.fromLTRB(17, 7, 17, 4),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          '11:25',
-          style: TextStyle(
-            color: _ink,
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Text(
-          '5G  |  53%',
-          style: TextStyle(
-            color: _ink,
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    ),
-  );
-
   Widget _brand() => Row(
     children: [
       Text(
@@ -149,62 +123,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       const Spacer(),
       Icon(Icons.notifications_none_rounded, color: _muted, size: 20),
     ],
-  );
-
-  Widget _bottomNav(int selected) => Container(
-    height: 52,
-    margin: const EdgeInsets.fromLTRB(9, 0, 9, 8),
-    decoration: BoxDecoration(
-      color: _paper,
-      border: Border.all(color: _line),
-      borderRadius: BorderRadius.circular(28),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: .08),
-          blurRadius: 10,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _navItem(Icons.home_outlined, 'Home', selected == 0),
-        _navItem(Icons.explore_outlined, 'Discover', selected == 1),
-        _navItem(Icons.emoji_events_outlined, 'Rank', selected == 2),
-        _navItem(Icons.account_circle_outlined, 'Profile', selected == 3),
-      ],
-    ),
-  );
-
-  Widget _navItem(
-    IconData icon,
-    String label,
-    bool selected,
-  ) => AnimatedContainer(
-    duration: const Duration(milliseconds: 250),
-    padding: EdgeInsets.symmetric(horizontal: selected ? 10 : 7, vertical: 7),
-    decoration: BoxDecoration(
-      color: selected ? HomePalette.ink : Colors.transparent,
-      borderRadius: BorderRadius.circular(22),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 17, color: selected ? HomePalette.primary : _muted),
-        if (selected) ...[
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppFonts.body(
-              color: HomePalette.primary,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ],
-    ),
   );
 
   Widget _label(String text) => Text(
@@ -1216,86 +1134,35 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               _progressIndicators(HomePalette.border(brightness)),
               const SizedBox(height: 11),
               Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = math
-                        .min(
-                          330.0,
-                          math.min(
-                            constraints.maxWidth,
-                            constraints.maxHeight / 1.78,
-                          ),
-                        )
-                        .toDouble();
-                    return Center(
-                      child: SizedBox(
-                        width: width,
-                        child: Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF18181A),
-                            borderRadius: BorderRadius.circular(34),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: .22),
-                                blurRadius: 26,
-                                offset: const Offset(0, 12),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: SizedBox.expand(
+                      child: AnimatedBuilder(
+                        animation: _progress,
+                        builder: (context, _) => AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 360),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(.045, .02),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
                               ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(27),
-                            child: ColoredBox(
-                              color: _paper,
-                              child: Column(
-                                children: [
-                                  _statusBar(),
-                                  Expanded(
-                                    child: AnimatedBuilder(
-                                      animation: _progress,
-                                      builder: (context, _) => AnimatedSwitcher(
-                                        duration: const Duration(
-                                          milliseconds: 360,
-                                        ),
-                                        switchInCurve: Curves.easeOutCubic,
-                                        switchOutCurve: Curves.easeInCubic,
-                                        transitionBuilder: (child, animation) =>
-                                            FadeTransition(
-                                              opacity: animation,
-                                              child: SlideTransition(
-                                                position: Tween<Offset>(
-                                                  begin: const Offset(
-                                                    .045,
-                                                    .02,
-                                                  ),
-                                                  end: Offset.zero,
-                                                ).animate(animation),
-                                                child: child,
-                                              ),
-                                            ),
-                                        child: KeyedSubtree(
-                                          key: ValueKey(_step),
-                                          child: _scene(_progress.value),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (_step != 2 && _step != 3)
-                                    _bottomNav(
-                                      _step == 0
-                                          ? 1
-                                          : _step == 4
-                                          ? 2
-                                          : 0,
-                                    ),
-                                ],
-                              ),
-                            ),
+                          child: KeyedSubtree(
+                            key: ValueKey(_step),
+                            child: _scene(_progress.value),
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 9),
