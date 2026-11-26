@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
 
@@ -20,7 +21,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     Duration(milliseconds: 4700),
     Duration(milliseconds: 5700),
     Duration(milliseconds: 4700),
-    Duration(milliseconds: 2300),
+    Duration(milliseconds: 3800),
   ];
   static const _captions = [
     'Find a challenge and choose it',
@@ -417,18 +418,26 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 border: Border.all(color: _line),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  for (var index = 0; index < heights.length; index++)
-                    _attemptBar(
-                      heights[index],
-                      progress,
-                      index,
-                      index == heights.length - 1,
-                    ),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxBar = (constraints.maxHeight - 22)
+                      .clamp(20.0, 400.0)
+                      .toDouble();
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      for (var index = 0; index < heights.length; index++)
+                        _attemptBar(
+                          heights[index],
+                          maxBar,
+                          progress,
+                          index,
+                          index == heights.length - 1,
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -481,16 +490,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   Widget _attemptBar(
     int height,
+    double maxBar,
     double progress,
     int index,
     bool highlighted,
   ) {
-    final reveal = ((progress - (.04 + index * .13)) / .1)
-        .clamp(0.0, 1.0)
-        .toDouble();
-    final currentHeight = height * 6.0 * reveal;
+    final reveal = Curves.easeOutBack.transform(
+      ((progress - (.04 + index * .13)) / .16).clamp(0.0, 1.0).toDouble(),
+    );
+    final currentHeight = height / 11 * maxBar * reveal;
     return SizedBox(
-      width: 27,
+      width: 38,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -503,9 +513,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
           const SizedBox(height: 3),
           AnimatedContainer(
-            duration: const Duration(milliseconds: 80),
-            width: 27,
-            height: currentHeight,
+            width: 38,
+            height: currentHeight < 0 ? 0 : currentHeight,
             decoration: BoxDecoration(
               color: highlighted
                   ? HomePalette.primary
@@ -942,7 +951,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Widget _auraScene(double progress) {
-    final aura = 94 + (32 * progress).round();
+    final count = Curves.easeOutCubic.transform(
+      ((progress - .12) / .68).clamp(0.0, 1.0).toDouble(),
+    );
+    final aura = 94 + (32 * count).round();
     final rankedUp = aura >= 100;
     return Container(
       decoration: BoxDecoration(
@@ -973,7 +985,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             const SizedBox(height: 28),
             Text(
               '$aura',
-              style: AppFonts.poster(color: _ink, fontSize: 75, wdth: 100),
+              style: AppFonts.poster(
+                color: _ink,
+                fontSize: 75,
+                wdth: 100,
+              ).copyWith(
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
             _label('Aura points'),
             const SizedBox(height: 14),
@@ -1145,8 +1163,37 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
-                    child: SizedBox.expand(
-                      child: AnimatedBuilder(
+                    child: LayoutBuilder(
+                      builder: (context, box) {
+                        final scale = (box.maxWidth / 340).clamp(1.0, 1.5);
+                        return SizedBox(
+                          width: box.maxWidth,
+                          height: box.maxHeight,
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: box.maxWidth / scale,
+                              height: box.maxHeight / scale,
+                              child: _animatedScene(),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 9),
+              _captionAndFooter(foreground, muted),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _animatedScene() => AnimatedBuilder(
                         animation: _progress,
                         builder: (context, _) => AnimatedSwitcher(
                           duration: const Duration(milliseconds: 360),
@@ -1165,15 +1212,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               ),
                           child: KeyedSubtree(
                             key: ValueKey(_step),
-                            child: _scene(_progress.value),
+                            child: _scene(
+                              Curves.easeInOut.transform(_progress.value),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 9),
+                      );
+
+  Widget _captionAndFooter(Color foreground, Color muted) => Column(
+            children: [
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child: Text(
@@ -1235,9 +1282,5 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   style: AppFonts.body(color: muted, fontSize: 10),
                 ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
+          );
 }
