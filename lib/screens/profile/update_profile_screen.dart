@@ -68,7 +68,18 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
             : MultipartFile.fromBytes(_avatarBytes!, filename: _avatar!.name),
       );
       if (username != (widget.profile.username ?? '')) {
-        await profileService.updateUsername(username);
+        try {
+          await profileService.updateUsername(username);
+        } on ApiException catch (e) {
+          if (e.statusCode != 409) rethrow;
+          if (!mounted) return;
+          AppErrorSnackbar.show(
+            context,
+            e,
+            message: 'That username is already taken.',
+          );
+          return;
+        }
       }
       if (!mounted) return;
       Navigator.of(context).pop(true);
