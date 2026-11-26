@@ -39,8 +39,8 @@ class _HomeShellState extends State<HomeShell> {
   late final List<GlobalKey<NavigatorState>> _navigatorKeys;
   late final List<Widget> _tabNavigators;
 
-  static const _baseScreens = [
-    HomeScreen(),
+  List<Widget> get _baseScreens => [
+    HomeScreen(onDiscover: () => _onNavigationTap(1)),
     PeopleDiscoverScreen(),
     SkillsScreen(),
     ProfileScreen(),

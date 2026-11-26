@@ -27,7 +27,9 @@ import '../daily_quest/daily_quest_screen.dart';
 import '../profile/profile_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onDiscover;
+
+  const HomeScreen({super.key, this.onDiscover});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -394,7 +396,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   .challengeId],
                         detail: _resumeDetail,
                         onTap: _resumeParticipation == null
-                            ? null
+                          ? widget.onDiscover
                             : () => _openParticipation(_resumeParticipation!),
                       ),
                       const SizedBox(height: 22),
