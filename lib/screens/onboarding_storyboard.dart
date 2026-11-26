@@ -837,11 +837,6 @@ class _MilestoneScene extends StatelessWidget {
     'Wrist Strength & Mobility',
     'Warm-Up Routine',
   ];
-  static const _subs = [
-    'Starter guide with full progression.',
-    'A step-by-step practice guide.',
-    'A step-by-step practice guide.',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -873,7 +868,7 @@ class _MilestoneScene extends StatelessWidget {
                       '$done',
                       style: AppFonts.poster(
                         color: HomePalette.ink,
-                        fontSize: 60,
+                        fontSize: 52,
                         wdth: 100,
                       ),
                     ),
@@ -886,12 +881,16 @@ class _MilestoneScene extends StatelessWidget {
                     ),
                   ],
                 ),
-                Text(
-                  'Prepare Your Body',
-                  style: AppFonts.body(
-                    color: HomePalette.ink,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Text(
+                    unlocked ? 'Next milestone unlocked!' : 'Prepare Your Body',
+                    key: ValueKey(unlocked),
+                    style: AppFonts.body(
+                      color: HomePalette.ink,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -914,71 +913,15 @@ class _MilestoneScene extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: DecoratedBox(
-                    decoration: const ShapeDecoration(
-                      color: HomePalette.ink,
-                      shape: StadiumBorder(),
-                    ),
-                    child: Center(
-                      child: Text(
-                        t < .2 ? 'Log a result' : 'Result logged',
-                        style: AppFonts.body(
-                          color: HomePalette.primary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Expanded(
             child: Column(
               children: [
                 for (var i = 0; i < _titles.length; i++)
                   Expanded(child: _row(i, i < done)),
-              ],
-            ),
-          ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 420),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: unlocked ? pal.wash : Colors.transparent,
-              border: Border.all(
-                color: unlocked ? HomePalette.primary : Colors.transparent,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  unlocked
-                      ? Icons.lock_open_rounded
-                      : Icons.lock_outline_rounded,
-                  size: 22,
-                  color: unlocked ? pal.tagText : pal.muted,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    unlocked
-                        ? 'Milestone complete. Next one unlocked!'
-                        : 'Finish the checklist to unlock the next milestone.',
-                    style: AppFonts.body(
-                      color: unlocked ? pal.ink : pal.muted,
-                      fontSize: 14,
-                      fontWeight: unlocked ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -1020,7 +963,7 @@ class _MilestoneScene extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _Label(pal, '0${i + 1} / ${i == 0 ? 'Article' : 'Video'}'),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 _titles[i],
                 maxLines: 1,
@@ -1032,12 +975,6 @@ class _MilestoneScene extends StatelessWidget {
                 ).copyWith(
                   decoration: done ? TextDecoration.lineThrough : null,
                 ),
-              ),
-              Text(
-                _subs[i],
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppFonts.body(color: pal.muted, fontSize: 12),
               ),
             ],
           ),
