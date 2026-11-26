@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../services/challenges_service.dart';
 import '../theme/app_theme.dart';
@@ -966,7 +967,11 @@ class _MilestoneScene extends StatelessWidget {
             border: Border.all(color: done ? pal.ok : pal.muted, width: 1.6),
           ),
           child: done
-              ? const Icon(Icons.check_rounded, color: HomePalette.ink, size: 20)
+              ? const Icon(
+                  Icons.check_rounded,
+                  color: HomePalette.ink,
+                  size: 20,
+                )
               : null,
         ),
         const SizedBox(width: 14),
@@ -981,13 +986,14 @@ class _MilestoneScene extends StatelessWidget {
                 _titles[i],
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppFonts.body(
-                  color: pal.ink,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ).copyWith(
-                  decoration: done ? TextDecoration.lineThrough : null,
-                ),
+                style:
+                    AppFonts.body(
+                      color: pal.ink,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ).copyWith(
+                      decoration: done ? TextDecoration.lineThrough : null,
+                    ),
               ),
             ],
           ),
@@ -1210,14 +1216,11 @@ class _AuraScene extends StatelessWidget {
               scale: pulse,
               child: Text(
                 '$aura',
-                style:
-                    AppFonts.poster(
-                      color: pal.ink,
-                      fontSize: 120,
-                      wdth: 100,
-                    ).copyWith(
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+                style: AppFonts.poster(
+                  color: pal.ink,
+                  fontSize: 120,
+                  wdth: 100,
+                ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
               ),
             ),
             _Label(pal, 'Aura points'),
