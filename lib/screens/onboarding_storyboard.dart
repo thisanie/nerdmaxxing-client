@@ -513,6 +513,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
           const SizedBox(height: 3),
           AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
             width: 38,
             height: currentHeight < 0 ? 0 : currentHeight,
             decoration: BoxDecoration(
@@ -989,9 +990,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 color: _ink,
                 fontSize: 75,
                 wdth: 100,
-              ).copyWith(
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+              ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
             ),
             _label('Aura points'),
             const SizedBox(height: 14),
@@ -1194,93 +1193,88 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Widget _animatedScene() => AnimatedBuilder(
-                        animation: _progress,
-                        builder: (context, _) => AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 360),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          transitionBuilder: (child, animation) =>
-                              FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(.045, .02),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
-                                ),
-                              ),
-                          child: KeyedSubtree(
-                            key: ValueKey(_step),
-                            child: _scene(
-                              Curves.easeInOut.transform(_progress.value),
-                            ),
-                          ),
-                        ),
-                      );
+    animation: _progress,
+    builder: (context, _) => AnimatedSwitcher(
+      duration: const Duration(milliseconds: 360),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(.045, .02),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: KeyedSubtree(
+        key: ValueKey(_step),
+        child: _scene(Curves.easeInOut.transform(_progress.value)),
+      ),
+    ),
+  );
 
   Widget _captionAndFooter(Color foreground, Color muted) => Column(
-            children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: Text(
-                  _captions[_step],
-                  key: ValueKey(_step),
-                  textAlign: TextAlign.center,
-                  style: AppFonts.body(
-                    color: foreground,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+    children: [
+      AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: Text(
+          _captions[_step],
+          key: ValueKey(_step),
+          textAlign: TextAlign.center,
+          style: AppFonts.body(
+            color: foreground,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      const SizedBox(height: 6),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (var index = 0; index < _durations.length; index++)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: index == _step ? 22 : 7,
+              height: 5,
+              decoration: BoxDecoration(
+                color: foreground.withValues(alpha: index == _step ? .85 : .2),
+                borderRadius: BorderRadius.circular(4),
               ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (var index = 0; index < _durations.length; index++)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: index == _step ? 22 : 7,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: foreground.withValues(
-                          alpha: index == _step ? .85 : .2,
-                        ),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                ],
+            ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      if (_finished)
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _replay,
+                child: const Text('Replay'),
               ),
-              const SizedBox(height: 8),
-              if (_finished)
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _replay,
-                        child: const Text('Replay'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: _complete,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: HomePalette.primary,
-                          foregroundColor: HomePalette.ink,
-                        ),
-                        child: const Text('Get started'),
-                      ),
-                    ),
-                  ],
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton(
+                onPressed: _complete,
+                style: FilledButton.styleFrom(
+                  backgroundColor: HomePalette.primary,
+                  foregroundColor: HomePalette.ink,
                 ),
-              if (!_finished)
-                Text(
-                  '${_step + 1} / ${_durations.length}',
-                  style: AppFonts.body(color: muted, fontSize: 10),
-                ),
-            ],
-          );
+                child: const Text('Get started'),
+              ),
+            ),
+          ],
+        ),
+      if (!_finished)
+        Text(
+          '${_step + 1} / ${_durations.length}',
+          style: AppFonts.body(color: muted, fontSize: 10),
+        ),
+    ],
+  );
 }
