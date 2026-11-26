@@ -241,6 +241,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: pal.ink,
                                     side: BorderSide(color: pal.line),
+                                    minimumSize: const Size.fromHeight(56),
                                     shape: const StadiumBorder(),
                                     textStyle: const TextStyle(
                                       fontSize: 17,
@@ -282,6 +283,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   ButtonStyle _ctaStyle() => FilledButton.styleFrom(
     backgroundColor: HomePalette.primary,
     foregroundColor: HomePalette.ink,
+    minimumSize: const Size.fromHeight(56),
     shape: const StadiumBorder(),
     textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
   );
