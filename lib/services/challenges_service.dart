@@ -11,6 +11,7 @@ import 'app_cache.dart';
 class ChallengesService {
   final ApiClient api;
   ChallengesService(this.api);
+  Future<Challenge?>? _suggestedOrigamiChallenge;
 
   Future<List<Challenge>> list({
     int limit = 20,
@@ -40,6 +41,25 @@ class ChallengesService {
   Future<Challenge> getBySlug(String slug) async {
     final data = await api.get('/challenges/$slug');
     return Challenge.fromJson(data);
+  }
+
+  Future<Challenge?> getSuggestedOrigamiChallenge() {
+    return _suggestedOrigamiChallenge ??= _findSuggestedOrigamiChallenge();
+  }
+
+  Future<Challenge?> _findSuggestedOrigamiChallenge() async {
+    const pageSize = 100;
+    for (var offset = 0; offset < 10000; offset += pageSize) {
+      final challenges = await list(limit: pageSize, offset: offset);
+      for (final challenge in challenges) {
+        final title = challenge.title.toLowerCase();
+        if (title.contains('origami') && title.contains('crane')) {
+          return challenge;
+        }
+      }
+      if (challenges.length < pageSize) break;
+    }
+    return null;
   }
 
   Future<ChallengeDetail> getDetailBySlug(String slug) async {

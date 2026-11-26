@@ -37,19 +37,10 @@ class _SuggestedChallengeScreenState
 
   Future<void> _loadChallenge() async {
     try {
-      final service = context.read<ChallengesService>();
-      const pageSize = 100;
-      for (var offset = 0; offset < 10000; offset += pageSize) {
-        final challenges = await service.list(limit: pageSize, offset: offset);
-        for (final challenge in challenges) {
-          final title = challenge.title.toLowerCase();
-          if (title.contains('origami') && title.contains('crane')) {
-            if (mounted) setState(() => _challenge = challenge);
-            return;
-          }
-        }
-        if (challenges.length < pageSize) break;
-      }
+      final challenge = await context
+          .read<ChallengesService>()
+          .getSuggestedOrigamiChallenge();
+      if (mounted) setState(() => _challenge = challenge);
     } catch (_) {
       _loadError = 'Could not load the suggested challenge.';
     } finally {
@@ -92,6 +83,7 @@ class _SuggestedChallengeScreenState
         : HomePalette.lightTextSecondary;
     final border = isDark ? HomePalette.darkBorder : HomePalette.lightBorder;
     final available = _challenge != null;
+    final imageUrl = _challenge?.imageUrl;
 
     return Scaffold(
       backgroundColor: background,
@@ -127,17 +119,31 @@ class _SuggestedChallengeScreenState
                         Container(
                           height: 178,
                           width: double.infinity,
+                          clipBehavior: Clip.antiAlias,
                           decoration: BoxDecoration(
                             color: HomePalette.peach,
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.change_history_rounded,
-                              size: 88,
-                              color: HomePalette.ink,
-                            ),
-                          ),
+                          child: imageUrl != null && imageUrl.isNotEmpty
+                              ? Image.network(
+                                  imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Center(
+                                        child: Icon(
+                                          Icons.change_history_rounded,
+                                          size: 88,
+                                          color: HomePalette.ink,
+                                        ),
+                                      ),
+                                )
+                              : const Center(
+                                  child: Icon(
+                                    Icons.change_history_rounded,
+                                    size: 88,
+                                    color: HomePalette.ink,
+                                  ),
+                                ),
                         ),
                         const SizedBox(height: 24),
                         Text(

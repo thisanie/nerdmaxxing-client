@@ -3,6 +3,7 @@ import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
 
+import '../services/challenges_service.dart';
 import '../theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -40,7 +41,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   void initState() {
     super.initState();
     _progress = AnimationController(vsync: this);
+    _prefetchSuggestedChallenge();
     _startScene();
+  }
+
+  Future<void> _prefetchSuggestedChallenge() async {
+    try {
+      final challenge = await context
+          .read<ChallengesService>()
+          .getSuggestedOrigamiChallenge();
+      final imageUrl = challenge?.imageUrl;
+      if (!mounted || imageUrl == null || imageUrl.isEmpty) return;
+      await precacheImage(NetworkImage(imageUrl), context);
+    } catch (_) {}
   }
 
   @override
