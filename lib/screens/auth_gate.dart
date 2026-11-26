@@ -7,7 +7,7 @@ import 'auth/login_screen.dart';
 import 'auth/password_setup_screen.dart';
 import 'auth/username_setup_screen.dart';
 import 'home/home_shell.dart';
-import 'onboarding_screen.dart';
+import 'onboarding_storyboard.dart';
 
 /// Routes to the correct top-level screen based on auth state.
 class AuthGate extends StatefulWidget {
