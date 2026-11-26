@@ -339,12 +339,33 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
             ),
           ],
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _submitting ||
-                    (_mode == EvidenceMode.account && !_accountConnected)
-                ? null
-                : _submit,
-            child: Text(_submitting ? 'Submitting...' : 'Submit evidence'),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: FilledButton(
+              onPressed: _submitting ||
+                      (_mode == EvidenceMode.account && !_accountConnected)
+                  ? null
+                  : _submit,
+              style: FilledButton.styleFrom(
+                backgroundColor: HomePalette.ink,
+                foregroundColor: HomePalette.primary,
+                disabledBackgroundColor: HomePalette.ink.withValues(
+                  alpha: .35,
+                ),
+                disabledForegroundColor: HomePalette.primary.withValues(
+                  alpha: .6,
+                ),
+                minimumSize: const Size.fromHeight(54),
+                shape: const StadiumBorder(),
+                textStyle: AppFonts.body(
+                  color: HomePalette.primary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              child: Text(_submitting ? 'Submitting...' : 'Submit evidence'),
+            ),
           ),
         ],
       ),
@@ -385,34 +406,88 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     ],
   );
 
-  Widget _buildVideoProof() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _proofCard(
-        icon: Icons.videocam_rounded,
-        title: _video?.name ?? 'No video selected',
-        detail: _video == null
-            ? 'Choose a video from your device. Keep it clear and under the challenge limit.'
-            : 'Ready to upload as evidence.',
-        action: FilledButton.icon(
-          onPressed: _submitting ? null : _pickVideo,
-          icon: const Icon(Icons.video_library_rounded),
-          label: Text(_video == null ? 'Choose video' : 'Replace video'),
+  Widget _buildVideoProof() {
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    final selected = _video != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Material(
+          color: selected
+              ? HomePalette.primaryMuted(brightness)
+              : HomePalette.surfaceAlt(brightness),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: selected
+                  ? HomePalette.primary
+                  : HomePalette.border(brightness),
+              width: selected ? 2 : 1,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _submitting ? null : _pickVideo,
+            child: SizedBox(
+              width: double.infinity,
+              height: 160,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    selected
+                        ? Icons.check_circle_rounded
+                        : Icons.video_library_outlined,
+                    color: selected
+                        ? HomePalette.link(brightness)
+                        : theme.colorScheme.onSurface,
+                    size: 40,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    selected ? 'Video selected' : 'Tap to choose a video',
+                    style: AppFonts.body(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      selected
+                          ? _video!.name
+                          : 'Choose a video from your device',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppFonts.body(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-      ),
-      const SizedBox(height: 18),
-      TextFormField(
-        controller: _explanation,
-        maxLines: 3,
-        decoration: InputDecoration(
-          labelText: widget.evidenceRules.requiresExplanation
-              ? 'What should we notice?'
-              : 'What should we notice? (optional)',
+        const SizedBox(height: 18),
+        TextFormField(
+          controller: _explanation,
+          maxLines: 3,
+          decoration: InputDecoration(
+            labelText: widget.evidenceRules.requiresExplanation
+                ? 'What should we notice?'
+                : 'What should we notice? (optional)',
+          ),
+          validator: _explanationValidator,
         ),
-        validator: _explanationValidator,
-      ),
-    ],
-  );
+      ],
+    );
+  }
 
   String? _explanationValidator(String? v) =>
       widget.evidenceRules.requiresExplanation && (v == null || v.trim().isEmpty)
