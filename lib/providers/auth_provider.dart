@@ -16,11 +16,14 @@ enum AuthStatus {
   needsUsername,
   needsPasswordSetup,
   needsOnboarding,
+  needsWelcomeBonus,
+  needsSuggestedChallenge,
   authenticated,
 }
 
 class AuthProvider extends ChangeNotifier {
   static const _pendingOnboardingUserKey = 'pending_onboarding_user_id';
+  static const _pendingOnboardingStageKey = 'pending_onboarding_stage';
 
   final AuthService authService;
   final PushNotificationService pushNotificationService;
@@ -61,6 +64,8 @@ class AuthProvider extends ChangeNotifier {
   String? errorMessage;
   bool isBusy = false;
   bool _isNewUser = false;
+  String _onboardingStage = 'slides';
+  int initialHomeTab = 0;
 
   void clearErrorMessage() {
     if (errorMessage == null) return;
@@ -73,13 +78,14 @@ class AuthProvider extends ChangeNotifier {
     final storedUsername = await tokenStorage.username;
     userId = await tokenStorage.userId;
     _isNewUser = await _hasPendingOnboarding(userId);
+    _onboardingStage = await _pendingOnboardingStage() ?? 'slides';
     username = storedUsername;
     if (token == null) {
       status = AuthStatus.signedOut;
     } else if (storedUsername == null) {
       status = AuthStatus.needsUsername;
     } else if (_isNewUser) {
-      status = AuthStatus.needsOnboarding;
+      status = _pendingOnboardingStatus();
     } else {
       status = AuthStatus.authenticated;
     }
@@ -119,8 +125,8 @@ class AuthProvider extends ChangeNotifier {
     status = session.needsUsername
         ? AuthStatus.needsUsername
         : _isNewUser
-        ? AuthStatus.needsOnboarding
-        : AuthStatus.authenticated;
+            ? _pendingOnboardingStatus()
+            : AuthStatus.authenticated;
   }
 
   Future<void> _trackNewUser(AuthSession session) async {
@@ -132,6 +138,7 @@ class AuthProvider extends ChangeNotifier {
           _pendingOnboardingUserKey,
           session.userId,
         );
+        await preferences.setString(_pendingOnboardingStageKey, 'slides');
       } catch (_) {
         // Keep the new-user flow working if the local marker cannot be saved.
       }
@@ -149,12 +156,39 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<String?> _pendingOnboardingStage() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      return preferences.getString(_pendingOnboardingStageKey);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  AuthStatus _pendingOnboardingStatus() => switch (_onboardingStage) {
+    'bonus' => AuthStatus.needsWelcomeBonus,
+    'suggested_challenge' => AuthStatus.needsSuggestedChallenge,
+    _ => AuthStatus.needsOnboarding,
+  };
+
+  Future<void> _setOnboardingStage(String stage) async {
+    _onboardingStage = stage;
+    if (userId == null || userId!.isEmpty) return;
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString(_pendingOnboardingStageKey, stage);
+    } catch (_) {
+      // Keep onboarding moving if the local stage cannot be saved.
+    }
+  }
+
   Future<void> _clearPendingOnboarding(String? id) async {
     if (id == null || id.isEmpty) return;
     try {
       final preferences = await SharedPreferences.getInstance();
       if (preferences.getString(_pendingOnboardingUserKey) == id) {
         await preferences.remove(_pendingOnboardingUserKey);
+        await preferences.remove(_pendingOnboardingStageKey);
       }
     } catch (_) {
       // Continue even if the local marker cannot be cleared.
@@ -162,8 +196,21 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> completeOnboarding() async {
+    await _setOnboardingStage('bonus');
+    status = AuthStatus.needsWelcomeBonus;
+    notifyListeners();
+  }
+
+  Future<void> completeWelcomeBonus() async {
+    await _setOnboardingStage('suggested_challenge');
+    status = AuthStatus.needsSuggestedChallenge;
+    notifyListeners();
+  }
+
+  Future<void> completeSuggestedChallenge({bool openDiscover = false}) async {
     await _clearPendingOnboarding(userId);
     _isNewUser = false;
+    initialHomeTab = openDiscover ? 1 : 0;
     status = AuthStatus.authenticated;
     notifyListeners();
   }
@@ -206,8 +253,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await authService.setupPassword(password);
-        status = _isNewUser
-          ? AuthStatus.needsOnboarding
+      status = _isNewUser
+          ? _pendingOnboardingStatus()
           : AuthStatus.authenticated;
     } catch (e) {
       errorMessage = e.toString();
@@ -240,7 +287,9 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void skipPasswordSetup() {
-    status = _isNewUser ? AuthStatus.needsOnboarding : AuthStatus.authenticated;
+    status = _isNewUser
+        ? _pendingOnboardingStatus()
+        : AuthStatus.authenticated;
     notifyListeners();
   }
 
@@ -261,7 +310,7 @@ class AuthProvider extends ChangeNotifier {
       displayName = session.displayName;
       avatarUrl = session.avatarUrl;
       status = _isNewUser
-          ? AuthStatus.needsOnboarding
+          ? _pendingOnboardingStatus()
           : AuthStatus.authenticated;
       unawaited(pushNotificationService.registerCurrentToken());
     } catch (e) {

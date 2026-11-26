@@ -7,6 +7,8 @@ import 'auth/password_setup_screen.dart';
 import 'auth/username_setup_screen.dart';
 import 'home/home_shell.dart';
 import 'onboarding_storyboard.dart';
+import 'onboarding_suggested_challenge_screen.dart';
+import 'onboarding_welcome_bonus_screen.dart';
 
 /// Routes to the correct top-level screen based on auth state.
 class AuthGate extends StatefulWidget {
@@ -30,6 +32,13 @@ class _AuthGateState extends State<AuthGate> {
         return const SizedBox.shrink();
       case AuthStatus.needsOnboarding:
         return OnboardingScreen(onComplete: auth.completeOnboarding);
+      case AuthStatus.needsWelcomeBonus:
+        return WelcomeBonusScreen(onContinue: auth.completeWelcomeBonus);
+      case AuthStatus.needsSuggestedChallenge:
+        return SuggestedChallengeScreen(
+          onDiscover: () => auth.completeSuggestedChallenge(openDiscover: true),
+          onJoined: auth.completeSuggestedChallenge,
+        );
       case AuthStatus.signedOut:
         return const LoginScreen();
       case AuthStatus.needsUsername:
@@ -37,7 +46,7 @@ class _AuthGateState extends State<AuthGate> {
       case AuthStatus.needsPasswordSetup:
         return const PasswordSetupScreen();
       case AuthStatus.authenticated:
-        return const HomeShell();
+        return HomeShell(initialIndex: auth.initialHomeTab);
     }
   }
 }

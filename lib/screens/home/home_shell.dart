@@ -17,14 +17,16 @@ import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  final int initialIndex;
+
+  const HomeShell({super.key, this.initialIndex = 0});
 
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
+  late int _index;
   bool _isAdmin = false;
   late final List<bool> _tabAtRoot;
   late final List<Widget> _screens;
@@ -41,6 +43,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
+    _index = widget.initialIndex.clamp(0, _baseScreens.length - 1);
     _screens = [..._baseScreens, const SizedBox.shrink()];
     _tabAtRoot = List.filled(_screens.length, true);
     _navigatorKeys = [
