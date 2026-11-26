@@ -22,6 +22,9 @@ class SubmitEvidenceScreen extends ConsumerStatefulWidget {
   final VerificationProvider? provider;
   final VerificationEvidenceRules evidenceRules;
   final String? submissionId;
+  final bool onboardingDemo;
+  final bool demoUploading;
+  final bool demoSubmitted;
 
   const SubmitEvidenceScreen({
     super.key,
@@ -32,6 +35,9 @@ class SubmitEvidenceScreen extends ConsumerStatefulWidget {
     this.provider,
     this.evidenceRules = const VerificationEvidenceRules(),
     this.submissionId,
+    this.onboardingDemo = false,
+    this.demoUploading = false,
+    this.demoSubmitted = false,
   });
 
   @override
@@ -61,6 +67,27 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     super.initState();
     _accountConnected = widget.provider?.connected == true;
     _account = widget.provider?.account;
+    if (widget.onboardingDemo) {
+      _loadingStatus = false;
+      _submitting = widget.demoUploading;
+      _video = XFile('handstand-proof.mp4');
+      _explanation.text = 'A controlled hold from start to finish.';
+      _hasSubmitted = widget.demoSubmitted;
+      if (widget.demoSubmitted) {
+        _submission = EvidenceSubmission(
+          id: 'onboarding-proof',
+          challengeId: widget.participation.challengeId,
+          participantId: widget.participation.id,
+          userId: widget.participation.userId,
+          status: 'APPROVED',
+          fileName: 'handstand-proof.mp4',
+          mimeType: 'video/mp4',
+          submittedAt: DateTime(2026, 11, 26),
+          reviewedAt: DateTime(2026, 11, 26),
+        );
+      }
+      return;
+    }
     _loadStatus();
   }
 

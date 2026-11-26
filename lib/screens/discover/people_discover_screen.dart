@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/challenge.dart';
 import '../../models/discover.dart';
+import '../../models/onboarding_demo.dart';
 import '../../providers/discover_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/discover_service.dart';
@@ -16,7 +17,9 @@ import '../profile/profile_screen.dart';
 import 'category_challenges_screen.dart';
 
 class PeopleDiscoverScreen extends StatefulWidget {
-  const PeopleDiscoverScreen({super.key});
+  final bool onboardingDemo;
+
+  const PeopleDiscoverScreen({super.key, this.onboardingDemo = false});
 
   @override
   State<PeopleDiscoverScreen> createState() => _PeopleDiscoverScreenState();
@@ -29,18 +32,53 @@ class _PeopleDiscoverScreenState extends State<PeopleDiscoverScreen> {
   List<Challenge> _challengeResults = [];
   String? _searchError;
   bool _isSearching = false;
+  Timer? _demoSearchTimer;
 
   @override
   void initState() {
     super.initState();
+    if (widget.onboardingDemo) {
+      _playDemoSearch();
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DiscoverProvider>().load();
+    });
+  }
+
+  void _playDemoSearch() {
+    const query = 'handstand';
+    var index = 0;
+    _isSearching = true;
+    _demoSearchTimer = Timer.periodic(const Duration(milliseconds: 105), (
+      timer,
+    ) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      index++;
+      final length = index > query.length ? query.length : index;
+      _searchController.value = TextEditingValue(
+        text: query.substring(0, length),
+        selection: TextSelection.collapsed(offset: length),
+      );
+      if (index >= query.length) {
+        timer.cancel();
+        setState(() {
+          _challengeResults = [OnboardingDemoData.challenge];
+          _isSearching = false;
+        });
+      } else {
+        setState(() {});
+      }
     });
   }
 
   @override
   void dispose() {
     _searchDebounce?.cancel();
+    _demoSearchTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }

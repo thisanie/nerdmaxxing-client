@@ -78,6 +78,7 @@ class ChallengeJourney extends StatefulWidget {
   final bool invited;
   final Future<void> Function()? onRefresh;
   final EvidenceService evidenceService;
+  final bool demoMode;
 
   const ChallengeJourney({
     super.key,
@@ -104,6 +105,7 @@ class ChallengeJourney extends StatefulWidget {
     this.invited = false,
     this.onRefresh,
     required this.evidenceService,
+    this.demoMode = false,
   });
 
   @override
@@ -132,6 +134,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   }
 
   Future<void> _loadEvidenceStatus() async {
+    if (widget.demoMode) return;
     final participation = widget.participation;
     if (participation == null) {
       if (mounted) setState(() => _evidenceSubmitted = false);

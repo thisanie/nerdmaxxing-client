@@ -1030,11 +1030,13 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
 class DailyQuestRewardScreen extends StatelessWidget {
   final DailyQuestAttemptResult result;
   final bool rewardAlreadyApplied;
+  final bool demoMode;
 
   const DailyQuestRewardScreen({
     super.key,
     required this.result,
     this.rewardAlreadyApplied = false,
+    this.demoMode = false,
   });
 
   @override
@@ -1049,6 +1051,7 @@ class DailyQuestRewardScreen extends StatelessWidget {
       return _DailyQuestCelebration(
         result: result,
         rewardAlreadyApplied: rewardAlreadyApplied,
+        demoMode: demoMode,
         onOpenChallenge: (item) => _openChallenge(context, item),
       );
     }
@@ -1274,12 +1277,14 @@ class _AuraBurstPainter extends CustomPainter {
 class _DailyQuestCelebration extends ConsumerStatefulWidget {
   final DailyQuestAttemptResult result;
   final bool rewardAlreadyApplied;
+  final bool demoMode;
   final Future<void> Function(DailyQuestRelatedChallenge challenge)
   onOpenChallenge;
 
   const _DailyQuestCelebration({
     required this.result,
     required this.rewardAlreadyApplied,
+    required this.demoMode,
     required this.onOpenChallenge,
   });
 
@@ -1374,6 +1379,20 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
+    if (widget.demoMode) {
+      _frame = 1;
+      _auraBefore = 120;
+      _auraAfter = 120 + _awardedAura;
+      _rank = 'E';
+      _nextRank = 'D';
+      _rankProgressAfter = 18;
+      _auraToNextAfter = 32;
+      _statsReady = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _startAuraAnimation();
+      });
+      return;
+    }
     final previousStats = ref.read(myStatsProvider).valueOrNull;
     final currentAura = previousStats?.auraPoints ?? 0;
     _auraBefore = widget.rewardAlreadyApplied
@@ -2022,7 +2041,9 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
 
   @override
   Widget build(BuildContext context) {
-    final watchedStats = ref.watch(myStatsProvider).valueOrNull;
+    final watchedStats = widget.demoMode
+        ? null
+        : ref.watch(myStatsProvider).valueOrNull;
     final progress = _streakShake.value;
     final offsetY = progress < .25
         ? 5 * progress / .25
@@ -2044,7 +2065,13 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                 child: Column(
                   children: [
-                    _header(_frame == 0 ? 'Streak' : 'Quest complete'),
+                    _header(
+                      widget.demoMode
+                          ? 'Challenge complete'
+                          : _frame == 0
+                          ? 'Streak'
+                          : 'Quest complete',
+                    ),
                     const SizedBox(height: 12),
                     Expanded(
                       child: AnimatedSwitcher(
