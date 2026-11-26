@@ -124,9 +124,9 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                           ),
                         )
                       : _available == true
-                      ? const Icon(
+                        ? Icon(
                           Icons.check_circle_rounded,
-                          color: AppColors.success,
+                          color: Theme.of(context).colorScheme.primary,
                         )
                       : (_available == false
                             ? const Icon(
@@ -158,15 +158,26 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
               const Spacer(),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                height: 56,
+                child: FilledButton(
                   onPressed: canSubmit ? _submit : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: HomePalette.primary,
+                    foregroundColor: HomePalette.ink,
+                    minimumSize: const Size.fromHeight(56),
+                    shape: const StadiumBorder(),
+                    textStyle: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   child: _submitting
                       ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: HomePalette.ink,
                           ),
                         )
                       : const Text('Continue'),

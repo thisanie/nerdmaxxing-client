@@ -157,15 +157,26 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
               const Spacer(),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                height: 56,
+                child: FilledButton(
                   onPressed: auth.isBusy ? null : _submit,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: HomePalette.primary,
+                    foregroundColor: HomePalette.ink,
+                    minimumSize: const Size.fromHeight(56),
+                    shape: const StadiumBorder(),
+                    textStyle: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   child: auth.isBusy
                       ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: HomePalette.ink,
                           ),
                         )
                       : Text(
