@@ -20,7 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     Duration(milliseconds: 4700),
     Duration(milliseconds: 5700),
     Duration(milliseconds: 4700),
-    Duration(milliseconds: 5700),
+    Duration(milliseconds: 2300),
   ];
   static const _captions = [
     'Find a challenge and choose it',
@@ -425,6 +425,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     _attemptBar(
                       heights[index],
                       progress,
+                      index,
                       index == heights.length - 1,
                     ),
                 ],
@@ -478,8 +479,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     },
   );
 
-  Widget _attemptBar(int height, double progress, bool highlighted) {
-    final reveal = ((progress - .08) / .72).clamp(0.0, 1.0);
+  Widget _attemptBar(
+    int height,
+    double progress,
+    int index,
+    bool highlighted,
+  ) {
+    final reveal = ((progress - (.04 + index * .13)) / .1)
+        .clamp(0.0, 1.0)
+        .toDouble();
     final currentHeight = height * 6.0 * reveal;
     return SizedBox(
       width: 27,
