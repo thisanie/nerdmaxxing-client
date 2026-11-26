@@ -37,7 +37,10 @@ class _AuthGateState extends State<AuthGate> {
       case AuthStatus.needsSuggestedChallenge:
         return SuggestedChallengeScreen(
           onDiscover: () => auth.completeSuggestedChallenge(openDiscover: true),
-          onJoined: auth.completeSuggestedChallenge,
+          onJoined: (slug) =>
+              auth.completeSuggestedChallenge(challengeSlug: slug),
+            onAcceptedFromJourney: (slug) =>
+              auth.completeSuggestedChallenge(challengeSlug: slug),
         );
       case AuthStatus.signedOut:
         return const LoginScreen();
@@ -46,7 +49,10 @@ class _AuthGateState extends State<AuthGate> {
       case AuthStatus.needsPasswordSetup:
         return const PasswordSetupScreen();
       case AuthStatus.authenticated:
-        return HomeShell(initialIndex: auth.initialHomeTab);
+        return HomeShell(
+          initialIndex: auth.initialHomeTab,
+          initialChallengeSlug: auth.initialChallengeSlug,
+        );
     }
   }
 }

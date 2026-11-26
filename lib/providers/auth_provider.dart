@@ -66,6 +66,7 @@ class AuthProvider extends ChangeNotifier {
   bool _isNewUser = false;
   String _onboardingStage = 'slides';
   int initialHomeTab = 0;
+  String? initialChallengeSlug;
 
   void clearErrorMessage() {
     if (errorMessage == null) return;
@@ -207,10 +208,14 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> completeSuggestedChallenge({bool openDiscover = false}) async {
+  Future<void> completeSuggestedChallenge({
+    bool openDiscover = false,
+    String? challengeSlug,
+  }) async {
     await _clearPendingOnboarding(userId);
     _isNewUser = false;
-    initialHomeTab = openDiscover ? 1 : 0;
+    initialHomeTab = challengeSlug == null && openDiscover ? 1 : 0;
+    initialChallengeSlug = challengeSlug;
     status = AuthStatus.authenticated;
     notifyListeners();
   }
@@ -332,6 +337,7 @@ class AuthProvider extends ChangeNotifier {
     displayName = null;
     avatarUrl = null;
     _isNewUser = false;
+    initialChallengeSlug = null;
     status = AuthStatus.signedOut;
     notifyListeners();
   }
@@ -343,6 +349,7 @@ class AuthProvider extends ChangeNotifier {
     username = null;
     userId = null;
     _isNewUser = false;
+    initialChallengeSlug = null;
     status = AuthStatus.signedOut;
     notifyListeners();
   }

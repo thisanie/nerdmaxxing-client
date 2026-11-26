@@ -4,17 +4,20 @@ import 'package:provider/provider.dart';
 
 import '../models/challenge.dart';
 import '../providers/app_state_providers.dart';
+import 'challenge/challenge_detail_screen.dart';
 import '../services/challenges_service.dart';
 import '../theme/app_theme.dart';
 
 class SuggestedChallengeScreen extends ConsumerStatefulWidget {
   final Future<void> Function() onDiscover;
-  final Future<void> Function() onJoined;
+  final Future<void> Function(String slug) onJoined;
+  final Future<void> Function(String slug) onAcceptedFromJourney;
 
   const SuggestedChallengeScreen({
     super.key,
     required this.onDiscover,
     required this.onJoined,
+    required this.onAcceptedFromJourney,
   });
 
   @override
@@ -56,7 +59,7 @@ class _SuggestedChallengeScreenState
       await ref
           .read(participationControllerProvider.notifier)
           .accept(challenge.slug);
-      await widget.onJoined();
+        await widget.onJoined(challenge.slug);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,6 +69,20 @@ class _SuggestedChallengeScreenState
       );
       setState(() => _joining = false);
     }
+  }
+
+  Future<void> _openChallenge() async {
+    final challenge = _challenge;
+    if (challenge == null) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ChallengeDetailScreen(
+          slug: challenge.slug,
+          initialChallenge: challenge,
+          onAccepted: () => widget.onAcceptedFromJourney(challenge.slug),
+        ),
+      ),
+    );
   }
 
   @override
@@ -105,94 +122,102 @@ class _SuggestedChallengeScreenState
                     ),
                   ),
                   const Spacer(),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      color: surface,
-                      border: Border.all(color: border),
+                  Material(
+                    color: surface,
+                    borderRadius: BorderRadius.circular(22),
+                    child: InkWell(
+                      onTap: available ? _openChallenge : null,
                       borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 178,
-                          width: double.infinity,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            color: HomePalette.peach,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: imageUrl != null && imageUrl.isNotEmpty
-                              ? Image.network(
-                                  imageUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Center(
-                                        child: Icon(
-                                          Icons.change_history_rounded,
-                                          size: 88,
-                                          color: HomePalette.ink,
-                                        ),
-                                      ),
-                                )
-                              : const Center(
-                                  child: Icon(
-                                    Icons.change_history_rounded,
-                                    size: 88,
-                                    color: HomePalette.ink,
-                                  ),
-                                ),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: border),
+                          borderRadius: BorderRadius.circular(22),
                         ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Fold an origami crane',
-                          style: AppFonts.body(
-                            color: ink,
-                            fontSize: 25,
-                            fontWeight: FontWeight.w800,
-                            height: 1.15,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'A small, satisfying first adventure. Learn a few folds and turn a single sheet of paper into a crane.',
-                          style: AppFonts.body(
-                            color: muted,
-                            fontSize: 15,
-                            height: 1.45,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _DetailPill(
-                              label: 'BEGINNER',
-                              ink: ink,
-                              border: border,
+                            Container(
+                              height: 178,
+                              width: double.infinity,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                color: HomePalette.peach,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: imageUrl != null && imageUrl.isNotEmpty
+                                  ? Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Center(
+                                                child: Icon(
+                                                  Icons.change_history_rounded,
+                                                  size: 88,
+                                                  color: HomePalette.ink,
+                                                ),
+                                              ),
+                                    )
+                                  : const Center(
+                                      child: Icon(
+                                        Icons.change_history_rounded,
+                                        size: 88,
+                                        color: HomePalette.ink,
+                                      ),
+                                    ),
                             ),
-                            const SizedBox(width: 8),
-                            _DetailPill(
-                              label: '10-15 MIN',
-                              ink: ink,
-                              border: border,
+                            const SizedBox(height: 24),
+                            Text(
+                              'Fold an origami crane',
+                              style: AppFonts.body(
+                                color: ink,
+                                fontSize: 25,
+                                fontWeight: FontWeight.w800,
+                                height: 1.15,
+                              ),
                             ),
-                          ],
-                        ),
-                        if (!_loading && !available) ...[
-                          const SizedBox(height: 16),
-                          Text(
-                            _loadError ??
-                                'This challenge is not available yet. You can still explore Discover.',
-                            style: AppFonts.body(
-                              color: muted,
-                              fontSize: 13,
-                              height: 1.35,
+                            const SizedBox(height: 10),
+                            Text(
+                              'A small, satisfying first adventure. Learn a few folds and turn a single sheet of paper into a crane.',
+                              style: AppFonts.body(
+                                color: muted,
+                                fontSize: 15,
+                                height: 1.45,
+                              ),
                             ),
+                            const SizedBox(height: 18),
+                            Row(
+                              children: [
+                                _DetailPill(
+                                  label: 'BEGINNER',
+                                  ink: ink,
+                                  border: border,
+                                ),
+                                const SizedBox(width: 8),
+                                _DetailPill(
+                                  label: '10-15 MIN',
+                                  ink: ink,
+                                  border: border,
+                                ),
+                              ],
+                            ),
+                            if (!_loading && !available) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                _loadError ??
+                                    'This challenge is not available yet. You can still explore Discover.',
+                                style: AppFonts.body(
+                                  color: muted,
+                                  fontSize: 13,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ],
+                        ),
+                      ),
                     ),
                   ),
                   const Spacer(),

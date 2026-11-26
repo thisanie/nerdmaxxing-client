@@ -33,6 +33,7 @@ class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final AppNotification? invitation;
   final String? initialDiscussionId;
   final String? initialReplyId;
+  final Future<void> Function()? onAccepted;
 
   const ChallengeDetailScreen({
     super.key,
@@ -41,6 +42,7 @@ class ChallengeDetailScreen extends ConsumerStatefulWidget {
     this.invitation,
     this.initialDiscussionId,
     this.initialReplyId,
+    this.onAccepted,
   });
 
   @override
@@ -122,7 +124,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       await ref
           .read(participationControllerProvider.notifier)
           .accept(widget.slug);
+        await widget.onAccepted?.call();
       if (!mounted) return;
+        if (widget.onAccepted != null) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Challenge accepted. Ready when you are.'),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../discover/discover_screen.dart';
 import '../discover/people_discover_screen.dart';
+import '../challenge/challenge_detail_screen.dart';
 import '../daily_quest/daily_quest_screen.dart';
 import '../profile/profile_screen.dart';
 import '../profile/group_chat_screen.dart';
@@ -18,8 +19,13 @@ import '../../theme/app_theme.dart';
 
 class HomeShell extends StatefulWidget {
   final int initialIndex;
+  final String? initialChallengeSlug;
 
-  const HomeShell({super.key, this.initialIndex = 0});
+  const HomeShell({
+    super.key,
+    this.initialIndex = 0,
+    this.initialChallengeSlug,
+  });
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -43,7 +49,9 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
-    _index = widget.initialIndex.clamp(0, _baseScreens.length - 1);
+    _index = widget.initialChallengeSlug != null
+        ? 0
+        : widget.initialIndex.clamp(0, _baseScreens.length - 1);
     _screens = [..._baseScreens, const SizedBox.shrink()];
     _tabAtRoot = List.filled(_screens.length, true);
     _navigatorKeys = [
@@ -56,8 +64,19 @@ class _HomeShellState extends State<HomeShell> {
       final navigation = context.read<NotificationNavigationController>();
       navigation.addListener(_handleNotificationRequest);
       _handleNotificationRequest();
+      _openInitialChallenge();
       _loadAdminAccess();
     });
+  }
+
+  void _openInitialChallenge() {
+    final slug = widget.initialChallengeSlug;
+    if (slug == null) return;
+    _navigatorKeys[0].currentState?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => ChallengeDetailScreen(slug: slug),
+      ),
+    );
   }
 
   Widget _createTabNavigator(int index) {
