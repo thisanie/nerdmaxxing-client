@@ -21,6 +21,7 @@ import '../../services/daily_quests_service.dart';
 import '../../services/participation_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/compact_number_formatter.dart';
 import '../../widgets/app_error.dart';
 import '../challenge/challenge_detail_screen.dart';
 import '../daily_quest/daily_quest_screen.dart';
@@ -1089,7 +1090,7 @@ class _AuraCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${stats?.auraPoints ?? 0}',
+                  formatCompactCount(stats?.auraPoints ?? 0),
                   style: AppFonts.home(
                     color: brightness == Brightness.dark
                         ? HomePalette.primary

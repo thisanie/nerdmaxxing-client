@@ -5,6 +5,7 @@ import '../../models/leaderboard.dart';
 import '../../models/user_stats.dart';
 import '../../providers/app_state_providers.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/compact_number_formatter.dart';
 import '../../widgets/app_error.dart';
 import '../profile/profile_screen.dart';
 
@@ -177,7 +178,7 @@ class _RankSummary extends ConsumerWidget {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      '${stats.auraPoints}',
+                      formatCompactCount(stats.auraPoints),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.poster(
@@ -623,7 +624,7 @@ class _WeeklyAuraChart extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '${stats.auraPoints}',
+                            formatCompactCount(stats.auraPoints),
                             style: AppFonts.poster(
                               fontSize: 88,
                               color: scheme.onSurface,

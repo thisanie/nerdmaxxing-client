@@ -20,6 +20,7 @@ import '../../services/daily_quests_service.dart';
 import '../../services/groups_service.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/compact_number_formatter.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/app_error.dart';
 import '../../widgets/privacy_policy_dialog.dart';
@@ -1544,7 +1545,7 @@ class _ProfileHeader extends StatelessWidget {
               children: [
                 Expanded(
                   child: _Stat(
-                    value: '$auraPoints',
+                    value: formatCompactCount(auraPoints),
                     label: 'Aura',
                     valueColor: isLight
                       ? HomePalette.lightLink
@@ -1554,7 +1555,7 @@ class _ProfileHeader extends StatelessWidget {
                 _statDivider(scheme),
                 Expanded(
                   child: _Stat(
-                    value: '${profile.followerCount}',
+                    value: formatCompactCount(profile.followerCount),
                     label: 'Followers',
                     onTap: onFollowersTap,
                   ),
@@ -1562,7 +1563,7 @@ class _ProfileHeader extends StatelessWidget {
                 _statDivider(scheme),
                 Expanded(
                   child: _Stat(
-                    value: '${profile.followingCount}',
+                    value: formatCompactCount(profile.followingCount),
                     label: 'Following',
                     onTap: onFollowingTap,
                   ),
