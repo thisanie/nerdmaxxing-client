@@ -103,6 +103,25 @@ Future<Uint8List> exportCardPng(GlobalKey key) async {
   }
 }
 
+Future<void> shareAchievementCardPng(
+  GlobalKey key, {
+  required String title,
+  required int aura,
+}) async {
+  final image = await exportCardPng(key);
+  await Share.shareXFiles(
+    [
+      XFile.fromData(
+        image,
+        mimeType: 'image/png',
+        name: 'nerdmaxxing-achievement.png',
+      ),
+    ],
+    subject: 'NerdMaxxing achievement',
+    text: 'I completed $title and earned $aura Aura!',
+  );
+}
+
 class AchievementCard extends StatelessWidget {
   final CardType type;
   final String title;

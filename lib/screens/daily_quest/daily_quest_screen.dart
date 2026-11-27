@@ -1351,6 +1351,7 @@ class _DailyQuestCelebration extends ConsumerStatefulWidget {
 
 class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     with TickerProviderStateMixin {
+  final GlobalKey _achievementCardKey = GlobalKey();
   late final AnimationController _flameIgnition;
   late final AnimationController _flamePulse;
   late final AnimationController _streakShake;
@@ -2137,6 +2138,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                 child: SizedBox(
                   width: width,
                   child: AchievementCard(
+                    key: _achievementCardKey,
                     type: widget.cardType,
                     title: widget.achievementTitle,
                     aura: widget.auraAwarded,
@@ -2155,14 +2157,22 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               child: _continueButton(
                 label: 'Share',
                 icon: Icons.ios_share_rounded,
-                onTap: () => showAchievementCardShareSheet(
-                  context,
-                  type: widget.cardType,
-                  title: widget.achievementTitle,
-                  aura: widget.auraAwarded,
-                  username: widget.username,
-                  rank: widget.rank,
-                ),
+                onTap: () async {
+                  try {
+                    await shareAchievementCardPng(
+                      _achievementCardKey,
+                      title: widget.achievementTitle,
+                      aura: widget.auraAwarded,
+                    );
+                  } catch (_) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Could not share this achievement.'),
+                      ),
+                    );
+                  }
+                },
               ),
             ),
             const SizedBox(width: 12),
