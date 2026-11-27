@@ -1542,6 +1542,10 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     _startAuraAnimation();
   }
 
+  void _openAchievementFrame() {
+    setState(() => _frame = 2);
+  }
+
   void _startAuraAnimation() {
     if (_auraSequenceStarted) return;
     _auraSequenceStarted = true;
@@ -1597,7 +1601,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         tooltip: 'Back',
         onPressed: _frame == 0
             ? () => Navigator.of(context).pop()
-            : () => setState(() => _frame = 0),
+            : () => setState(() => _frame = _frame == 2 ? 1 : 0),
         icon: const Icon(Icons.arrow_back_rounded),
         color: _textPrimary,
       ),
@@ -2079,20 +2083,77 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             },
           ),
         ],
-        TextButton.icon(
-          onPressed: () => showAchievementCardShareSheet(
-            context,
-            type: widget.cardType,
-            title: widget.achievementTitle,
-            aura: widget.auraAwarded,
-            username: widget.username,
-            rank: widget.rank,
+        if (widget.cardType == CardType.challenge)
+          _continueButton(
+            label: 'View achievement card',
+            onTap: _openAchievementFrame,
+          )
+        else
+          TextButton.icon(
+            onPressed: () => showAchievementCardShareSheet(
+              context,
+              type: widget.cardType,
+              title: widget.achievementTitle,
+              aura: widget.auraAwarded,
+              username: widget.username,
+              rank: widget.rank,
+            ),
+            icon: const Icon(Icons.ios_share_rounded),
+            label: const Text('View & share achievement'),
           ),
-          icon: const Icon(Icons.ios_share_rounded),
-          label: const Text('View & share achievement'),
-        ),
         _continueButton(
-          label: 'Continue',
+          label: widget.cardType == CardType.challenge ? 'Done' : 'Continue',
+          onTap: () => Navigator.of(context).pop(),
+        ),
+      ],
+    );
+  }
+
+  Widget _achievementFrame() {
+    return Column(
+      key: const ValueKey('achievement-frame'),
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = math.min(
+                constraints.maxWidth,
+                constraints.maxHeight * .8,
+              );
+              return Center(
+                child: SizedBox(
+                  width: width,
+                  child: AchievementCard(
+                    type: widget.cardType,
+                    title: widget.achievementTitle,
+                    aura: widget.auraAwarded,
+                    username: widget.username,
+                    rank: widget.rank,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => showAchievementCardShareSheet(
+              context,
+              type: widget.cardType,
+              title: widget.achievementTitle,
+              aura: widget.auraAwarded,
+              username: widget.username,
+              rank: widget.rank,
+            ),
+            icon: const Icon(Icons.ios_share_rounded),
+            label: const Text('Share achievement'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        _continueButton(
+          label: 'Done',
           onTap: () => Navigator.of(context).pop(),
         ),
       ],
@@ -2126,6 +2187,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                     _header(
                       _frame == 0
                           ? 'Streak'
+                          : _frame == 2
+                          ? 'Achievement card'
                           : widget.cardType == CardType.challenge
                           ? 'Challenge complete'
                           : 'Quest complete',
@@ -2135,8 +2198,10 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 350),
                         child: _frame == 0
-                            ? _streakFrame()
-                            : _auraFrame(watchedStats),
+                          ? _streakFrame()
+                          : _frame == 1
+                          ? _auraFrame(watchedStats)
+                          : _achievementFrame(),
                       ),
                     ),
                   ],
