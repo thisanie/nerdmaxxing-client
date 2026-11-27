@@ -103,6 +103,10 @@ class _RankSummary extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final auraText = formatCompactCount(
+      stats.auraPoints,
+      compactThreshold: 1000,
+    );
     final weeklyLeaderboard = ref.watch(
       leaderboardProvider((period: 'week', metric: 'aura', playerRank: null)),
     ).valueOrNull;
@@ -178,14 +182,11 @@ class _RankSummary extends ConsumerWidget {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      formatCompactCount(
-                        stats.auraPoints,
-                        compactThreshold: 1000,
-                      ),
+                      auraText,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.poster(
-                        fontSize: 56,
+                        fontSize: auraText.length >= 4 ? 48 : 56,
                         color: HomePalette.ink,
                         wdth: 100,
                       ),
