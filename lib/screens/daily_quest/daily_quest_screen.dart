@@ -1620,6 +1620,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   Widget _continueButton({
     required String label,
     required VoidCallback onTap,
+    IconData? icon,
   }) => SizedBox(
     width: double.infinity,
     height: 54,
@@ -1635,7 +1636,16 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           fontWeight: FontWeight.w700,
         ),
       ),
-      child: Text(label),
+      child: icon == null
+          ? Text(label)
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18),
+                const SizedBox(width: 8),
+                Text(label),
+              ],
+            ),
     ),
   );
 
@@ -2085,7 +2095,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         ],
         if (widget.cardType == CardType.challenge)
           _continueButton(
-            label: 'View achievement card',
+            label: 'Continue',
             onTap: _openAchievementFrame,
           )
         else
@@ -2101,10 +2111,11 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             icon: const Icon(Icons.ios_share_rounded),
             label: const Text('View & share achievement'),
           ),
-        _continueButton(
-          label: widget.cardType == CardType.challenge ? 'Done' : 'Continue',
-          onTap: () => Navigator.of(context).pop(),
-        ),
+        if (widget.cardType == CardType.quest)
+          _continueButton(
+            label: 'Continue',
+            onTap: () => Navigator.of(context).pop(),
+          ),
       ],
     );
   }
@@ -2138,8 +2149,10 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () => showAchievementCardShareSheet(
+          child: _continueButton(
+            label: 'Share',
+            icon: Icons.ios_share_rounded,
+            onTap: () => showAchievementCardShareSheet(
               context,
               type: widget.cardType,
               title: widget.achievementTitle,
@@ -2147,8 +2160,6 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               username: widget.username,
               rank: widget.rank,
             ),
-            icon: const Icon(Icons.ios_share_rounded),
-            label: const Text('Share achievement'),
           ),
         ),
         const SizedBox(height: 8),
