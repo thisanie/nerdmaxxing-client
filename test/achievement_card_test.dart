@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nerdmaxxing_client/models/evidence_submission.dart';
+import 'package:nerdmaxxing_client/models/notification.dart';
 import 'package:nerdmaxxing_client/widgets/achievement_card.dart';
 
 void main() {
@@ -43,11 +44,11 @@ void main() {
     });
   });
 
-  test('evidence approval parses backend aura_rewared and day_streak keys', () {
+  test('evidence approval parses backend aura_rewarded and day_streak keys', () {
     final submission = EvidenceSubmission.fromJson({
       'id': 'submission-1',
       'status': 'VERIFIED',
-      'aura_rewared': 150,
+      'aura_rewarded': 150,
       'day_streak': 4,
     });
 
@@ -65,6 +66,38 @@ void main() {
 
     expect(submission.auraAwarded, 120);
     expect(submission.dayStreak, 3);
+  });
+
+  test('evidence approval accepts the previous aura_rewared typo', () {
+    final submission = EvidenceSubmission.fromJson({
+      'id': 'submission-1',
+      'status': 'VERIFIED',
+      'aura_rewared': 80,
+      'day_streak': 2,
+    });
+
+    expect(submission.auraAwarded, 80);
+    expect(submission.dayStreak, 2);
+  });
+
+  test('evidence notification extracts submission reward data', () {
+    final notification = AppNotification.fromJson({
+      'id': 'notification-1',
+      'type': 'EVIDENCE_APPROVED',
+      'body': 'Your challenge evidence was approved.',
+      'is_read': false,
+      'data': {
+        'submission_id': 'submission-1',
+        'challenge_title': 'Hold a handstand',
+        'aura_rewarded': 150,
+        'day_streak': 4,
+      },
+    });
+
+    expect(notification.isEvidenceApproved, isTrue);
+    expect(notification.evidenceSubmissionId, 'submission-1');
+    expect(notification.data['aura_rewarded'], 150);
+    expect(notification.data['day_streak'], 4);
   });
 
   testWidgets('renders long titles and usernames without layout errors', (

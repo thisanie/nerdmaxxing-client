@@ -80,6 +80,15 @@ class AppNotification {
         'daily_quest_local_date': json['daily_quest_local_date'],
       if (json['daily_quest_attempt_id'] != null)
         'daily_quest_attempt_id': json['daily_quest_attempt_id'],
+      if (json['submission_id'] != null)
+        'submission_id': json['submission_id'],
+      if (json['evidence_submission_id'] != null)
+        'evidence_submission_id': json['evidence_submission_id'],
+      if (json['aura_rewared'] != null)
+        'aura_rewared': json['aura_rewared'],
+      if (json['aura_rewarded'] != null)
+        'aura_rewarded': json['aura_rewarded'],
+      if (json['day_streak'] != null) 'day_streak': json['day_streak'],
       if (json['deep_link'] != null) 'deep_link': json['deep_link'],
       if (groupData['id'] != null && json['group_id'] == null)
         'group_id': groupData['id'],
@@ -134,6 +143,8 @@ class AppNotification {
   String? get dailyQuestId => _value('daily_quest_id');
   String? get dailyQuestLocalDate => _value('daily_quest_local_date');
   String? get dailyQuestAttemptId => _value('daily_quest_attempt_id');
+  String? get evidenceSubmissionId =>
+      _value('submission_id') ?? _value('evidence_submission_id');
   String? get deepLink => _value('deep_link');
 
   bool get isDailyQuest =>

@@ -667,7 +667,7 @@ Returns `404 Not Found` for a participation not owned by the caller and `409 Con
 
 Requires authentication. Verifies the caller's pending evidence submission. This completes the participation and awards a verified skill named after the challenge if it has not already been awarded.
 
-Response `200 OK`: an [Evidence submission](#evidence-submission-object) object with `status` set to `VERIFIED`, plus `aura_rewared` and `day_streak` for the completion reward and resulting streak.
+Response `200 OK`: an [Evidence submission](#evidence-submission-object) object with `status` set to `VERIFIED`, plus `aura_rewarded` and `day_streak` for the completion reward and resulting streak.
 
 Returns `404 Not Found` for a submission not owned by the caller and `409 Conflict` when the submission is no longer pending.
 

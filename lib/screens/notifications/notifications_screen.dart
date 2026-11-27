@@ -13,6 +13,7 @@ import '../../providers/notification_badge_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/daily_quests_service.dart';
+import '../../services/evidence_service.dart';
 import '../../services/notifications_service.dart';
 import '../../services/groups_service.dart';
 import '../../theme/app_theme.dart';
@@ -207,6 +208,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Future<void> _openNotification(AppNotification notification) async {
     if (notification.isDailyQuest) {
       await _openDailyQuest(notification);
+    } else if (notification.isEvidenceApproved) {
+      await _openChallengeReward(notification);
     } else if (notification.isGroupMessage) {
       await _viewGroup(notification);
     } else if (notification.isFollow) {
@@ -228,6 +231,61 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       await _viewChallenge(notification);
     } else {
       await _markRead(notification);
+    }
+  }
+
+  Future<void> _openChallengeReward(AppNotification notification) async {
+    await _markRead(notification);
+    if (!mounted) return;
+
+    final submissionId = notification.evidenceSubmissionId;
+    final notificationAura =
+      notification.data['aura_rewarded'] ??
+      notification.data['aura_rewared'];
+    final notificationStreak = notification.data['day_streak'];
+    final notificationAuraValue = notificationAura is num
+        ? notificationAura.toInt()
+        : int.tryParse('$notificationAura');
+    final notificationStreakValue = notificationStreak is num
+        ? notificationStreak.toInt()
+        : int.tryParse('$notificationStreak');
+
+    try {
+      ref.invalidate(myStatsProvider);
+      final submission = submissionId == null || submissionId.isEmpty
+          ? null
+          : await context.read<EvidenceService>().getSubmission(submissionId);
+      if (!mounted) return;
+
+      final stats = await ref.read(myStatsProvider.future);
+      if (!mounted) return;
+      final challengeSlug = notification.challengeSlug;
+      final challenge = challengeSlug == null || challengeSlug.isEmpty
+          ? null
+          : await context.read<ChallengesService>().getBySlug(challengeSlug);
+      if (!mounted) return;
+
+      final title = notification.challengeTitle?.trim().isNotEmpty == true
+          ? notification.challengeTitle!.trim()
+          : challenge?.title ?? 'Challenge completed';
+      final auraAwarded = submission?.auraAwarded ?? notificationAuraValue ?? 0;
+      final dayStreak = submission?.dayStreak ??
+          notificationStreakValue ??
+          stats.dayStreak;
+
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChallengeCompletionRewardScreen(
+            challengeTitle: title,
+            auraAwarded: auraAwarded,
+            dayStreak: dayStreak,
+            username: context.read<AuthProvider>().username ?? 'you',
+            rank: stats.rank,
+          ),
+        ),
+      );
+    } on ApiException catch (error) {
+      if (mounted) setState(() => _error = error.message);
     }
   }
 

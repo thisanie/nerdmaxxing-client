@@ -36,7 +36,8 @@ class EvidenceSubmission {
   });
 
   factory EvidenceSubmission.fromJson(Map<String, dynamic> json) {
-    final rawAuraAwarded = json['aura_rewared'] ?? json['aura_awarded'];
+    final rawAuraAwarded =
+      json['aura_rewarded'] ?? json['aura_rewared'] ?? json['aura_awarded'];
     return EvidenceSubmission(
       id: json['id']?.toString() ?? '',
       challengeId: json['challenge_id']?.toString() ?? '',

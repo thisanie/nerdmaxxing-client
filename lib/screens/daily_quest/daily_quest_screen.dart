@@ -1057,9 +1057,14 @@ class DailyQuestRewardScreen extends StatelessWidget {
         result.status.toUpperCase() == 'APPROVED';
     if (completed) {
       return _DailyQuestCelebration(
-        result: result,
-        questTitle: questTitle,
+        auraAwarded: result.auraAwarded,
+        dayStreak: result.dayStreak,
+        achievementTitle: questTitle,
         username: username,
+        cardType: CardType.quest,
+        completionDate: result.completionDate ??
+            result.completedAt?.toIso8601String(),
+        relatedChallenge: result.relatedMajorChallenge,
         rewardAlreadyApplied: rewardAlreadyApplied,
         onOpenChallenge: (item) => _openChallenge(context, item),
       );
@@ -1190,6 +1195,37 @@ class DailyQuestRewardScreen extends StatelessWidget {
   }
 }
 
+class ChallengeCompletionRewardScreen extends StatelessWidget {
+  final String challengeTitle;
+  final int auraAwarded;
+  final int dayStreak;
+  final String username;
+  final String? rank;
+
+  const ChallengeCompletionRewardScreen({
+    super.key,
+    required this.challengeTitle,
+    required this.auraAwarded,
+    required this.dayStreak,
+    required this.username,
+    this.rank,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _DailyQuestCelebration(
+      auraAwarded: auraAwarded,
+      dayStreak: dayStreak,
+      achievementTitle: challengeTitle,
+      username: username,
+      cardType: CardType.challenge,
+      rank: rank,
+      completionDate: DateTime.now().toIso8601String(),
+      rewardAlreadyApplied: true,
+    );
+  }
+}
+
 class _DailyQuestFlamePainter extends CustomPainter {
   final double progress;
 
@@ -1284,19 +1320,29 @@ class _AuraBurstPainter extends CustomPainter {
 }
 
 class _DailyQuestCelebration extends ConsumerStatefulWidget {
-  final DailyQuestAttemptResult result;
-  final String questTitle;
+  final int auraAwarded;
+  final int dayStreak;
+  final String achievementTitle;
   final String username;
+  final CardType cardType;
+  final String? rank;
+  final String? completionDate;
+  final DailyQuestRelatedChallenge? relatedChallenge;
   final bool rewardAlreadyApplied;
   final Future<void> Function(DailyQuestRelatedChallenge challenge)
-  onOpenChallenge;
+  ? onOpenChallenge;
 
   const _DailyQuestCelebration({
-    required this.result,
-    required this.questTitle,
+    required this.auraAwarded,
+    required this.dayStreak,
+    required this.achievementTitle,
     required this.username,
+    required this.cardType,
+    this.rank,
+    this.completionDate,
+    this.relatedChallenge,
     required this.rewardAlreadyApplied,
-    required this.onOpenChallenge,
+    this.onOpenChallenge,
   });
 
   @override
@@ -1339,7 +1385,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   String? _nextRank;
   List<UserActivityDay> _activityDays = const [];
 
-  int get _awardedAura => widget.result.auraAwarded;
+  int get _awardedAura => widget.auraAwarded;
   Color get _primary => HomePalette.primary;
   Color get _onPrimary => HomePalette.ink;
   Color get _auraNumberColor =>
@@ -1357,7 +1403,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   @override
   void initState() {
     super.initState();
-    _streakValue = math.max(0, widget.result.dayStreak - 1).toInt();
+    _streakValue = math.max(0, widget.dayStreak - 1).toInt();
     _flameIgnition = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -1415,7 +1461,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     });
     _streakTimer = Timer(const Duration(milliseconds: 1100), () {
       if (!mounted) return;
-      setState(() => _streakValue = widget.result.dayStreak);
+      setState(() => _streakValue = widget.dayStreak);
     });
     _todayTimer = Timer(const Duration(milliseconds: 2100), () {
       if (mounted) setState(() => _todayChecked = true);
@@ -1451,7 +1497,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     try {
       final stats = await ref.read(myStatsProvider.future);
       if (!mounted) return;
-      final auraAwarded = widget.result.auraAwarded;
+      final auraAwarded = widget.auraAwarded;
       final cachedAuraIsBefore =
           previousStats != null &&
           stats.auraPoints - previousStats.auraPoints == auraAwarded;
@@ -1539,9 +1585,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     if (statsDates.length == 7) return statsDates;
 
     final parsed = DateTime.tryParse(
-      widget.result.completionDate ??
-          widget.result.completedAt?.toIso8601String() ??
-          '',
+      widget.completionDate ?? '',
     );
     final end = parsed == null
         ? DateTime.now()
@@ -1707,6 +1751,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               Text(
                 _todayChecked
                     ? 'Streak extended. Come back tomorrow.'
+                    : widget.cardType == CardType.challenge
+                    ? 'Your challenge keeps the streak going.'
                     : 'Your daily quest keeps the streak going.',
                 textAlign: TextAlign.center,
                 style: AppFonts.body(
@@ -2016,10 +2062,10 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             ],
           ),
         ),
-        if (widget.result.relatedMajorChallenge != null) ...[
+        if (widget.relatedChallenge != null && widget.onOpenChallenge != null) ...[
           Builder(
             builder: (context) {
-              final challenge = widget.result.relatedMajorChallenge!;
+              final challenge = widget.relatedChallenge!;
               return TextButton(
                 onPressed: () => widget.onOpenChallenge(challenge),
                 style: TextButton.styleFrom(foregroundColor: _primary),
@@ -2031,10 +2077,11 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         TextButton.icon(
           onPressed: () => showAchievementCardShareSheet(
             context,
-            type: CardType.quest,
-            title: widget.questTitle,
-            aura: widget.result.auraAwarded,
+            type: widget.cardType,
+            title: widget.achievementTitle,
+            aura: widget.auraAwarded,
             username: widget.username,
+            rank: widget.rank,
           ),
           icon: const Icon(Icons.ios_share_rounded),
           label: const Text('View & share achievement'),
@@ -2071,7 +2118,13 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                 child: Column(
                   children: [
-                    _header(_frame == 0 ? 'Streak' : 'Quest complete'),
+                    _header(
+                      _frame == 0
+                          ? 'Streak'
+                          : widget.cardType == CardType.challenge
+                          ? 'Challenge complete'
+                          : 'Quest complete',
+                    ),
                     const SizedBox(height: 12),
                     Expanded(
                       child: AnimatedSwitcher(
