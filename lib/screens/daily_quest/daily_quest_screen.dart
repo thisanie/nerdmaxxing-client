@@ -1621,17 +1621,19 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     required String label,
     required VoidCallback onTap,
     IconData? icon,
+    Color? backgroundColor,
+    Color? foregroundColor,
   }) => SizedBox(
     width: double.infinity,
     height: 54,
     child: FilledButton(
       onPressed: onTap,
       style: FilledButton.styleFrom(
-        backgroundColor: _primary,
-        foregroundColor: _onPrimary,
+        backgroundColor: backgroundColor ?? _primary,
+        foregroundColor: foregroundColor ?? _onPrimary,
         shape: const StadiumBorder(),
         textStyle: AppFonts.body(
-          color: _onPrimary,
+          color: foregroundColor ?? _onPrimary,
           fontSize: 16,
           fontWeight: FontWeight.w700,
         ),
@@ -2147,25 +2149,32 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: _continueButton(
-            label: 'Share',
-            icon: Icons.ios_share_rounded,
-            onTap: () => showAchievementCardShareSheet(
-              context,
-              type: widget.cardType,
-              title: widget.achievementTitle,
-              aura: widget.auraAwarded,
-              username: widget.username,
-              rank: widget.rank,
+        Row(
+          children: [
+            Expanded(
+              child: _continueButton(
+                label: 'Share',
+                icon: Icons.ios_share_rounded,
+                onTap: () => showAchievementCardShareSheet(
+                  context,
+                  type: widget.cardType,
+                  title: widget.achievementTitle,
+                  aura: widget.auraAwarded,
+                  username: widget.username,
+                  rank: widget.rank,
+                ),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        _continueButton(
-          label: 'Done',
-          onTap: () => Navigator.of(context).pop(),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _continueButton(
+                label: 'Done',
+                onTap: () => Navigator.of(context).pop(),
+                backgroundColor: const Color(0xFFF5F5F0),
+                foregroundColor: const Color(0xFF0B0B08),
+              ),
+            ),
+          ],
         ),
       ],
     );
