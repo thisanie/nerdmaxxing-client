@@ -178,7 +178,10 @@ class _RankSummary extends ConsumerWidget {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      formatCompactCount(stats.auraPoints),
+                      formatCompactCount(
+                        stats.auraPoints,
+                        compactThreshold: 1000,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.poster(
@@ -624,7 +627,10 @@ class _WeeklyAuraChart extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            formatCompactCount(stats.auraPoints),
+                            formatCompactCount(
+                              stats.auraPoints,
+                              compactThreshold: 1000,
+                            ),
                             style: AppFonts.poster(
                               fontSize: 88,
                               color: scheme.onSurface,

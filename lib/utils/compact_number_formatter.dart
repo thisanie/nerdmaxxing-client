@@ -1,10 +1,10 @@
-String formatCompactCount(int value) {
-  if (value.abs() < 10000) return value.toString();
+String formatCompactCount(int value, {int compactThreshold = 10000}) {
+  if (value.abs() < compactThreshold) return value.toString();
 
   const suffixes = ['K', 'M', 'B', 'T', 'Q'];
   final sign = value.isNegative ? '-' : '';
   var amount = value.abs().toDouble();
-  var suffixIndex = 0;
+  var suffixIndex = -1;
 
   while (amount >= 1000 && suffixIndex < suffixes.length - 1) {
     amount /= 1000;
@@ -16,7 +16,7 @@ String formatCompactCount(int value) {
     rounded = amount >= 100
         ? amount.roundToDouble()
         : (amount * 10).roundToDouble() / 10;
-    if (rounded < 1000 || suffixIndex == suffixes.length - 1) break;
+    if (rounded < 1000 || suffixIndex >= suffixes.length - 1) break;
     amount /= 1000;
     suffixIndex++;
   }
