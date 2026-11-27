@@ -577,6 +577,10 @@ class _WeeklyAuraChart extends StatelessWidget {
         Widget build(BuildContext context) {
           final scheme = Theme.of(context).colorScheme;
           final isDark = Theme.of(context).brightness == Brightness.dark;
+          final auraText = formatCompactCount(
+            stats.auraPoints,
+            compactThreshold: 1000,
+          );
           return RefreshIndicator(
             onRefresh: onRefresh,
             child: ListView(
@@ -627,12 +631,9 @@ class _WeeklyAuraChart extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            formatCompactCount(
-                              stats.auraPoints,
-                              compactThreshold: 1000,
-                            ),
+                            auraText,
                             style: AppFonts.poster(
-                              fontSize: 88,
+                              fontSize: auraText.length >= 4 ? 72 : 88,
                               color: scheme.onSurface,
                               wdth: 100,
                             ),
