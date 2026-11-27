@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 
 enum CardType { challenge, quest }
 
@@ -544,5 +545,89 @@ TextStyle _inter({
     color: color,
     letterSpacing: letterSpacing,
     height: height,
+  );
+}
+
+Future<void> showAchievementCardShareSheet(
+  BuildContext context, {
+  required CardType type,
+  required String title,
+  required int aura,
+  required String username,
+  String? result,
+  String? rank,
+}) async {
+  final cardKey = GlobalKey();
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final width = math.min(MediaQuery.sizeOf(sheetContext).width - 40, 340.0);
+      return SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            20 + MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Your achievement card',
+                  style: Theme.of(sheetContext).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: width,
+                  child: AchievementCard(
+                    key: cardKey,
+                    type: type,
+                    title: title,
+                    aura: aura,
+                    username: username,
+                    result: result,
+                    rank: rank,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () async {
+                      try {
+                        final image = await exportCardPng(cardKey);
+                        await Share.shareXFiles(
+                          [
+                            XFile.fromData(
+                              image,
+                              mimeType: 'image/png',
+                              name: 'nerdmaxxing-achievement.png',
+                            ),
+                          ],
+                          subject: 'NerdMaxxing achievement',
+                          text: 'I completed $title and earned $aura Aura!',
+                        );
+                      } catch (_) {
+                        if (!sheetContext.mounted) return;
+                        ScaffoldMessenger.of(sheetContext).showSnackBar(
+                          const SnackBar(
+                            content: Text('Could not share this achievement.'),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.ios_share_rounded),
+                    label: const Text('Share image'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
   );
 }

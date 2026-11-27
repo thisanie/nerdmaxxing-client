@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:nerdmaxxing_client/models/evidence_submission.dart';
 import 'package:nerdmaxxing_client/widgets/achievement_card.dart';
 
 void main() {
@@ -40,6 +41,30 @@ void main() {
       expect(dark.accent, const Color(0xFFFF4D6D));
       expect(dark.title, const Color(0xFFFFE08A));
     });
+  });
+
+  test('evidence approval parses backend aura_rewared and day_streak keys', () {
+    final submission = EvidenceSubmission.fromJson({
+      'id': 'submission-1',
+      'status': 'VERIFIED',
+      'aura_rewared': 150,
+      'day_streak': 4,
+    });
+
+    expect(submission.auraAwarded, 150);
+    expect(submission.dayStreak, 4);
+  });
+
+  test('evidence approval accepts the previous aura_awarded key', () {
+    final submission = EvidenceSubmission.fromJson({
+      'id': 'submission-1',
+      'status': 'VERIFIED',
+      'aura_awarded': 120,
+      'day_streak': 3,
+    });
+
+    expect(submission.auraAwarded, 120);
+    expect(submission.dayStreak, 3);
   });
 
   testWidgets('renders long titles and usernames without layout errors', (

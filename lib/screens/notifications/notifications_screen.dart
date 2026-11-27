@@ -8,6 +8,7 @@ import '../../models/daily_quest.dart';
 import '../../models/notification.dart';
 import '../../models/group.dart';
 import '../../providers/app_state_providers.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/notification_badge_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
@@ -244,6 +245,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           MaterialPageRoute(
             builder: (_) => DailyQuestRewardScreen(
               result: result,
+              username: context.read<AuthProvider>().username ?? 'you',
               rewardAlreadyApplied: true,
             ),
           ),

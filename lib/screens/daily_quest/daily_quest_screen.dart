@@ -10,11 +10,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/daily_quest.dart';
 import '../../models/user_stats.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/app_state_providers.dart';
 import '../../services/api_client.dart';
 import '../../services/challenges_service.dart';
 import '../../services/daily_quests_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/achievement_card.dart';
 import '../challenge/challenge_detail_screen.dart';
 
 enum _QuestStep { learn, prove }
@@ -951,7 +953,11 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => DailyQuestRewardScreen(result: attemptResult),
+          builder: (_) => DailyQuestRewardScreen(
+            result: attemptResult,
+            questTitle: _quest.title,
+            username: context.read<AuthProvider>().username ?? 'you',
+          ),
         ),
       );
     } on ApiException catch (error) {
@@ -1029,11 +1035,15 @@ class _DailyQuestScreenState extends State<DailyQuestScreen> {
 
 class DailyQuestRewardScreen extends StatelessWidget {
   final DailyQuestAttemptResult result;
+  final String questTitle;
+  final String username;
   final bool rewardAlreadyApplied;
 
   const DailyQuestRewardScreen({
     super.key,
     required this.result,
+    this.questTitle = 'Daily Quest',
+    this.username = 'you',
     this.rewardAlreadyApplied = false,
   });
 
@@ -1048,6 +1058,8 @@ class DailyQuestRewardScreen extends StatelessWidget {
     if (completed) {
       return _DailyQuestCelebration(
         result: result,
+        questTitle: questTitle,
+        username: username,
         rewardAlreadyApplied: rewardAlreadyApplied,
         onOpenChallenge: (item) => _openChallenge(context, item),
       );
@@ -1273,12 +1285,16 @@ class _AuraBurstPainter extends CustomPainter {
 
 class _DailyQuestCelebration extends ConsumerStatefulWidget {
   final DailyQuestAttemptResult result;
+  final String questTitle;
+  final String username;
   final bool rewardAlreadyApplied;
   final Future<void> Function(DailyQuestRelatedChallenge challenge)
   onOpenChallenge;
 
   const _DailyQuestCelebration({
     required this.result,
+    required this.questTitle,
+    required this.username,
     required this.rewardAlreadyApplied,
     required this.onOpenChallenge,
   });
@@ -2012,6 +2028,17 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             },
           ),
         ],
+        TextButton.icon(
+          onPressed: () => showAchievementCardShareSheet(
+            context,
+            type: CardType.quest,
+            title: widget.questTitle,
+            aura: widget.result.auraAwarded,
+            username: widget.username,
+          ),
+          icon: const Icon(Icons.ios_share_rounded),
+          label: const Text('View & share achievement'),
+        ),
         _continueButton(
           label: 'Continue',
           onTap: () => Navigator.of(context).pop(),

@@ -135,6 +135,8 @@ class EvidenceService {
               'explanation': submission.explanation,
               'submitted_at': submission.submittedAt?.toIso8601String(),
               'reviewed_at': submission.reviewedAt?.toIso8601String(),
+              'aura_awarded': submission.auraAwarded,
+              'day_streak': submission.dayStreak,
             },
     );
   }

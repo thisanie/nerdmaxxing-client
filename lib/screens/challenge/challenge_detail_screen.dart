@@ -264,6 +264,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
             builder: (_) => SubmitEvidenceScreen(
               participation: participation,
               challengeTitle: challenge.title,
+              challengeAura: challenge.auraPoints,
+              username: context.read<AuthProvider>().username ?? 'you',
+              rank: ref.read(myStatsProvider).valueOrNull?.rank,
               verificationType: detail.verification.kind,
               instructions: detail.verification.instructions,
               provider: detail.verification.provider,

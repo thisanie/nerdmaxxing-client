@@ -10,6 +10,7 @@ import '../profile/group_chat_screen.dart';
 import '../skills/skills_screen.dart';
 import '../evidence/admin_hub_screen.dart';
 import '../../providers/notification_badge_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../notifications/notifications_screen.dart';
 import '../../services/api_client.dart';
 import '../../services/groups_service.dart';
@@ -169,6 +170,7 @@ class _HomeShellState extends State<HomeShell> {
             MaterialPageRoute(
               builder: (_) => DailyQuestRewardScreen(
                 result: result,
+                username: context.read<AuthProvider>().username ?? 'you',
                 rewardAlreadyApplied: true,
               ),
             ),

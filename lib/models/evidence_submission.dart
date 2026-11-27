@@ -13,6 +13,8 @@ class EvidenceSubmission {
   final String? fileName;
   final String? mimeType;
   final String? reviewReason;
+  final int? auraAwarded;
+  final int? dayStreak;
 
   EvidenceSubmission({
     required this.id,
@@ -29,9 +31,12 @@ class EvidenceSubmission {
     this.fileName,
     this.mimeType,
     this.reviewReason,
+    this.auraAwarded,
+    this.dayStreak,
   });
 
   factory EvidenceSubmission.fromJson(Map<String, dynamic> json) {
+    final rawAuraAwarded = json['aura_rewared'] ?? json['aura_awarded'];
     return EvidenceSubmission(
       id: json['id']?.toString() ?? '',
       challengeId: json['challenge_id']?.toString() ?? '',
@@ -51,6 +56,8 @@ class EvidenceSubmission {
       fileName: json['file_name']?.toString(),
       mimeType: json['mime_type']?.toString(),
       reviewReason: json['review_reason']?.toString(),
+      auraAwarded: (rawAuraAwarded as num?)?.toInt(),
+      dayStreak: (json['day_streak'] as num?)?.toInt(),
     );
   }
 }

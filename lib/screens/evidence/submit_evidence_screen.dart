@@ -11,12 +11,16 @@ import '../../services/api_client.dart';
 import '../../services/evidence_service.dart';
 import '../../services/integrations_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/achievement_card.dart';
 
 enum EvidenceMode { account, video, selfReported }
 
 class SubmitEvidenceScreen extends ConsumerStatefulWidget {
   final Participation participation;
   final String challengeTitle;
+  final int challengeAura;
+  final String username;
+  final String? rank;
   final String verificationType;
   final String instructions;
   final VerificationProvider? provider;
@@ -27,6 +31,9 @@ class SubmitEvidenceScreen extends ConsumerStatefulWidget {
     super.key,
     required this.participation,
     this.challengeTitle = 'this challenge',
+    this.challengeAura = 0,
+    this.username = 'you',
+    this.rank,
     this.verificationType = 'SELF_REPORTED',
     this.instructions = '',
     this.provider,
@@ -87,6 +94,16 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
           approvalStatus = await service.getApprovalStatus(freshSubmission.id);
         } on ApiException {
           // The evidence response already contains a review reason when available.
+        }
+      }
+      final isVerified = const {'VERIFIED', 'APPROVED'}
+          .contains(freshSubmission?.status.toUpperCase());
+      if (isVerified) {
+        ref.invalidate(myStatsProvider);
+        try {
+          await ref.read(myStatsProvider.future);
+        } catch (_) {
+          // Keep the approved state visible even if stats are temporarily unavailable.
         }
       }
       final wasRejected =
@@ -569,8 +586,10 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
   Widget _buildVerify() {
     final status = _submission?.status.toUpperCase();
     final verified = status == 'VERIFIED' || status == 'APPROVED';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final stats = ref.watch(myStatsProvider).valueOrNull;
+    final auraAwarded = _submission?.auraAwarded ?? widget.challengeAura;
+    final dayStreak = _submission?.dayStreak ?? stats?.dayStreak ?? 0;
+    return ListView(
       children: [
         Text('Evidence progress', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 8),
@@ -598,14 +617,67 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
               : 'You will be notified after your evidence is reviewed.',
           action: const SizedBox.shrink(),
         ),
+        if (verified) ...[
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _completionReward(
+                  label: 'AURA EARNED',
+                  value: '+$auraAwarded',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _completionReward(
+                  label: 'DAY STREAK',
+                  value: '$dayStreak days',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => showAchievementCardShareSheet(
+                context,
+                type: CardType.challenge,
+                title: widget.challengeTitle,
+                aura: auraAwarded,
+                username: widget.username,
+                rank: widget.rank,
+              ),
+              icon: const Icon(Icons.ios_share_rounded),
+              label: const Text('View & share achievement'),
+            ),
+          ),
+        ],
         if (_approvalNote?.isNotEmpty == true) ...[
           const SizedBox(height: 16),
           Text('Reviewer note', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 6),
           Text(_approvalNote!),
         ],
-        const Spacer(),
       ],
+    );
+  }
+
+  Widget _completionReward({required String label, required String value}) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 4),
+          Text(value, style: Theme.of(context).textTheme.titleMedium),
+        ],
+      ),
     );
   }
 
