@@ -47,7 +47,9 @@ class _LucideIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolved =
-        color ?? IconTheme.of(context).color ?? DefaultTextStyle.of(context).style.color!;
+        color ??
+        IconTheme.of(context).color ??
+        DefaultTextStyle.of(context).style.color!;
     return CustomPaint(
       size: Size.square(size),
       painter: _LucidePainter(icon, resolved),
@@ -1062,8 +1064,8 @@ class DailyQuestRewardScreen extends StatelessWidget {
         achievementTitle: questTitle,
         username: username,
         cardType: CardType.quest,
-        completionDate: result.completionDate ??
-            result.completedAt?.toIso8601String(),
+        completionDate:
+            result.completionDate ?? result.completedAt?.toIso8601String(),
         relatedChallenge: result.relatedMajorChallenge,
         rewardAlreadyApplied: rewardAlreadyApplied,
         onOpenChallenge: (item) => _openChallenge(context, item),
@@ -1290,9 +1292,8 @@ class _AuraBurstPainter extends CustomPainter {
     final center = size.center(Offset.zero);
     final ringProgress = (progress / .9).clamp(0, 1).toDouble();
     final ringPaint = Paint()
-      ..color = const Color(0xFF0B0B08).withValues(
-        alpha: .9 * (1 - ringProgress),
-      )
+      ..color = const Color(0xFF0B0B08)
+          .withValues(alpha: .9 * (1 - ringProgress))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
     canvas.drawCircle(center, 16 + 74 * ringProgress, ringPaint);
@@ -1301,15 +1302,13 @@ class _AuraBurstPainter extends CustomPainter {
     for (var index = 0; index < 12; index++) {
       final angle = index * math.pi / 6;
       final distance = 24 + (index % 3) * 10 + 64 * sparkProgress;
-      final position = center + Offset(
-        math.cos(angle) * distance,
-        math.sin(angle) * distance,
-      );
+      final position =
+          center +
+          Offset(math.cos(angle) * distance, math.sin(angle) * distance);
       final paint = Paint()
-        ..color = (index.isEven
-                ? const Color(0xFFFF7A1A)
-                : const Color(0xFF0B0B08))
-            .withValues(alpha: 1 - sparkProgress);
+        ..color =
+            (index.isEven ? const Color(0xFFFF7A1A) : const Color(0xFF0B0B08))
+                .withValues(alpha: 1 - sparkProgress);
       canvas.drawCircle(position, 4 * (1 - sparkProgress * .7), paint);
     }
   }
@@ -1329,8 +1328,8 @@ class _DailyQuestCelebration extends ConsumerStatefulWidget {
   final String? completionDate;
   final DailyQuestRelatedChallenge? relatedChallenge;
   final bool rewardAlreadyApplied;
-  final Future<void> Function(DailyQuestRelatedChallenge challenge)
-  ? onOpenChallenge;
+  final Future<void> Function(DailyQuestRelatedChallenge challenge)?
+  onOpenChallenge;
 
   const _DailyQuestCelebration({
     required this.auraAwarded,
@@ -1351,7 +1350,7 @@ class _DailyQuestCelebration extends ConsumerStatefulWidget {
 }
 
 class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
-  with TickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _flameIgnition;
   late final AnimationController _flamePulse;
   late final AnimationController _streakShake;
@@ -1388,11 +1387,10 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
   int get _awardedAura => widget.auraAwarded;
   Color get _primary => HomePalette.primary;
   Color get _onPrimary => HomePalette.ink;
-  Color get _auraNumberColor =>
-      Theme.of(context).brightness == Brightness.dark
+  Color get _auraNumberColor => Theme.of(context).brightness == Brightness.dark
       ? HomePalette.primary
       : HomePalette.ink;
-    Color get _streakNumberColor =>
+  Color get _streakNumberColor =>
       Theme.of(context).brightness == Brightness.dark
       ? HomePalette.primary
       : HomePalette.ink;
@@ -1439,11 +1437,11 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     final previousStats = ref.read(myStatsProvider).valueOrNull;
     final currentAura = previousStats?.auraPoints ?? 0;
     _auraBefore = widget.rewardAlreadyApplied
-      ? math.max(0, currentAura - _awardedAura).toInt()
-      : currentAura;
+        ? math.max(0, currentAura - _awardedAura).toInt()
+        : currentAura;
     _auraAfter = widget.rewardAlreadyApplied
-      ? currentAura
-      : currentAura + _awardedAura;
+        ? currentAura
+        : currentAura + _awardedAura;
     if (previousStats != null) {
       _rank = previousStats.rank;
       _nextRank = previousStats.nextRank;
@@ -1510,10 +1508,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             : math.max(0, stats.auraPoints - auraAwarded).toInt();
         _auraAfter = widget.rewardAlreadyApplied
             ? stats.auraPoints
-            : math.max(
-                stats.auraPoints,
-                _auraBefore! + auraAwarded,
-              ).toInt();
+            : math.max(stats.auraPoints, _auraBefore! + auraAwarded).toInt();
         _rankProgressAfter = stats.rankProgress.clamp(0, 100).toInt();
         _auraToNextAfter = stats.auraToNextRank;
         _rank = stats.rank;
@@ -1584,16 +1579,11 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         .toList(growable: false);
     if (statsDates.length == 7) return statsDates;
 
-    final parsed = DateTime.tryParse(
-      widget.completionDate ?? '',
-    );
+    final parsed = DateTime.tryParse(widget.completionDate ?? '');
     final end = parsed == null
         ? DateTime.now()
         : DateTime(parsed.year, parsed.month, parsed.day);
-    return List.generate(
-      7,
-      (index) => end.subtract(Duration(days: 6 - index)),
-    );
+    return List.generate(7, (index) => end.subtract(Duration(days: 6 - index)));
   }
 
   String _dateKey(DateTime date) =>
@@ -1623,25 +1613,27 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
     ],
   );
 
-  Widget _continueButton({required String label, required VoidCallback onTap}) =>
-      SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: FilledButton(
-          onPressed: onTap,
-          style: FilledButton.styleFrom(
-            backgroundColor: _primary,
-            foregroundColor: _onPrimary,
-            shape: const StadiumBorder(),
-            textStyle: AppFonts.body(
-              color: _onPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          child: Text(label),
+  Widget _continueButton({
+    required String label,
+    required VoidCallback onTap,
+  }) => SizedBox(
+    width: double.infinity,
+    height: 54,
+    child: FilledButton(
+      onPressed: onTap,
+      style: FilledButton.styleFrom(
+        backgroundColor: _primary,
+        foregroundColor: _onPrimary,
+        shape: const StadiumBorder(),
+        textStyle: AppFonts.body(
+          color: _onPrimary,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
         ),
-      );
+      ),
+      child: Text(label),
+    ),
+  );
 
   Widget _streakFrame() {
     const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -1662,10 +1654,20 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                   final flameScale = ignition < .35
                       ? .55 + .45 * Curves.easeOut.transform(ignition / .35)
                       : ignition < .55
-                      ? 1 + .18 * Curves.easeOut.transform((ignition - .35) / .2)
+                      ? 1 +
+                            .18 *
+                                Curves.easeOut.transform((ignition - .35) / .2)
                       : ignition < .78
-                      ? 1.18 - .22 * Curves.easeInOut.transform((ignition - .55) / .23)
-                      : .96 + .04 * Curves.easeOut.transform((ignition - .78) / .22);
+                      ? 1.18 -
+                            .22 *
+                                Curves.easeInOut.transform(
+                                  (ignition - .55) / .23,
+                                )
+                      : .96 +
+                            .04 *
+                                Curves.easeOut.transform(
+                                  (ignition - .78) / .22,
+                                );
                   final glow = ((ignition - .1) / .9).clamp(0, 1).toDouble();
                   return Transform.scale(
                     scale: flameScale * (1 + pulse * .025),
@@ -1742,10 +1744,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               ),
               Text(
                 'DAY STREAK',
-                style: AppFonts.label(
-                  color: _textSecondary,
-                  fontSize: 14,
-                ),
+                style: AppFonts.label(color: _textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 12),
               Text(
@@ -1802,9 +1801,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: filled ? _primary : Colors.transparent,
-            border: Border.all(
-                color: filled ? _primary : _border,
-            ),
+            border: Border.all(color: filled ? _primary : _border),
             boxShadow: filled
                 ? [
                     BoxShadow(
@@ -1824,10 +1821,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
         Text(
           label,
           maxLines: 1,
-          style: AppFonts.body(
-            color: _textSecondary,
-            fontSize: 10,
-          ),
+          style: AppFonts.body(color: _textSecondary, fontSize: 10),
         ),
       ],
     );
@@ -1877,10 +1871,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
               const SizedBox(height: 10),
               Text(
                 'TOTAL AURA',
-                style: AppFonts.label(
-                  color: _textSecondary,
-                  fontSize: 14,
-                ),
+                style: AppFonts.label(color: _textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 4),
               SizedBox(
@@ -1906,16 +1897,25 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                           final progress = Curves.easeOutCubic.transform(
                             _auraCounter.value,
                           );
-                          final value = auraBefore +
+                          final value =
+                              auraBefore +
                               ((auraAfter - auraBefore) * progress).round();
                           final pop = _auraPop.value;
-                            final scale = !_auraPopStarted
+                          final scale = !_auraPopStarted
                               ? 1.0
                               : pop < .6
                               ? 1.5 - .58 * Curves.easeOut.transform(pop / .6)
                               : pop < .75
-                              ? .92 + .14 * Curves.easeOut.transform((pop - .6) / .15)
-                              : 1.06 - .06 * Curves.easeOut.transform((pop - .75) / .25);
+                              ? .92 +
+                                    .14 *
+                                        Curves.easeOut.transform(
+                                          (pop - .6) / .15,
+                                        )
+                              : 1.06 -
+                                    .06 *
+                                        Curves.easeOut.transform(
+                                          (pop - .75) / .25,
+                                        );
                           return Transform.scale(
                             scale: scale,
                             child: Text(
@@ -1965,28 +1965,28 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                         );
                       },
                       child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _primary,
-                            borderRadius: BorderRadius.circular(999),
-                            boxShadow: [
-                              BoxShadow(
-                                color: _primary.withValues(alpha: .35),
-                                blurRadius: 18,
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            '+$_awardedAura AP',
-                            style: AppFonts.body(
-                              color: _onPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _primary,
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _primary.withValues(alpha: .35),
+                              blurRadius: 18,
                             ),
+                          ],
+                        ),
+                        child: Text(
+                          '+$_awardedAura AP',
+                          style: AppFonts.body(
+                            color: _onPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                           ),
+                        ),
                       ),
                     ),
                   ],
@@ -2001,7 +2001,8 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       borderRadius: BorderRadius.circular(999),
                       child: SizedBox(
                         height: 10,
-                        child: hasRankStats && (isMaxRank || progressAfter != null)
+                        child:
+                            hasRankStats && (isMaxRank || progressAfter != null)
                             ? TweenAnimationBuilder<double>(
                                 key: ValueKey(
                                   'aura-progress-$_auraProgressStarted',
@@ -2016,12 +2017,14 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                                 curve: Curves.easeOutCubic,
                                 builder: (context, value, _) =>
                                     LinearProgressIndicator(
-                                  value: value.clamp(0, 1).toDouble(),
-                                  backgroundColor: _textPrimary.withValues(
-                                    alpha: .12,
-                                  ),
-                                  valueColor: AlwaysStoppedAnimation(_primary),
-                                ),
+                                      value: value.clamp(0, 1).toDouble(),
+                                      backgroundColor: _textPrimary.withValues(
+                                        alpha: .12,
+                                      ),
+                                      valueColor: AlwaysStoppedAnimation(
+                                        _primary,
+                                      ),
+                                    ),
                               )
                             : LinearProgressIndicator(
                                 value: 0,
@@ -2037,7 +2040,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                            !hasRankStats
+                          !hasRankStats
                               ? 'Loading next rank'
                               : isMaxRank
                               ? 'MAX RANK'
@@ -2062,12 +2065,14 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             ],
           ),
         ),
-        if (widget.relatedChallenge != null && widget.onOpenChallenge != null) ...[
+        if (widget.relatedChallenge != null &&
+            widget.onOpenChallenge != null) ...[
           Builder(
             builder: (context) {
               final challenge = widget.relatedChallenge!;
+              final onOpenChallenge = widget.onOpenChallenge!;
               return TextButton(
-                onPressed: () => widget.onOpenChallenge(challenge),
+                onPressed: () => onOpenChallenge(challenge),
                 style: TextButton.styleFrom(foregroundColor: _primary),
                 child: Text('View ${challenge.title}'),
               );
@@ -2456,10 +2461,7 @@ class _InfoLine extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: DailyQuestPalette.iconBackground(brightness),
-            border: Border.all(
-              color: DailyQuestPalette.lightBorder,
-              width: 1,
-            ),
+            border: Border.all(color: DailyQuestPalette.lightBorder, width: 1),
             borderRadius: BorderRadius.circular(
               _DailyQuestSpacing.infoTileRadius,
             ),
@@ -2663,9 +2665,7 @@ class _InlineMessage extends StatelessWidget {
         : color;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(
-        banner ? _DailyQuestSpacing.cardInset : 13,
-      ),
+      padding: EdgeInsets.all(banner ? _DailyQuestSpacing.cardInset : 13),
       decoration: BoxDecoration(
         color: color.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(
@@ -2681,9 +2681,7 @@ class _InlineMessage extends StatelessWidget {
             size: banner ? 24 : 18,
             color: color,
           ),
-          SizedBox(
-            width: banner ? _DailyQuestSpacing.relatedItems : 9,
-          ),
+          SizedBox(width: banner ? _DailyQuestSpacing.relatedItems : 9),
           Expanded(
             child: Text(
               message,
