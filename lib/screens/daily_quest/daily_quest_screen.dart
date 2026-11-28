@@ -2096,29 +2096,7 @@ class _DailyQuestCelebrationState extends ConsumerState<_DailyQuestCelebration>
             },
           ),
         ],
-        if (widget.cardType == CardType.challenge)
-          _continueButton(
-            label: 'Continue',
-            onTap: _openAchievementFrame,
-          )
-        else
-          TextButton.icon(
-            onPressed: () => showAchievementCardShareSheet(
-              context,
-              type: widget.cardType,
-              title: widget.achievementTitle,
-              aura: widget.auraAwarded,
-              username: widget.username,
-              rank: widget.rank,
-            ),
-            icon: const Icon(Icons.ios_share_rounded),
-            label: const Text('View & share achievement'),
-          ),
-        if (widget.cardType == CardType.quest)
-          _continueButton(
-            label: 'Continue',
-            onTap: () => Navigator.of(context).pop(),
-          ),
+        _continueButton(label: 'Continue', onTap: _openAchievementFrame),
       ],
     );
   }
