@@ -76,6 +76,9 @@ class AppNotification {
       if (json['group_name'] != null) 'group_name': json['group_name'],
       if (json['daily_quest_id'] != null)
         'daily_quest_id': json['daily_quest_id'],
+      if (json['daily_quest_title'] != null)
+        'daily_quest_title': json['daily_quest_title'],
+      if (json['quest_title'] != null) 'quest_title': json['quest_title'],
       if (json['daily_quest_local_date'] != null)
         'daily_quest_local_date': json['daily_quest_local_date'],
       if (json['daily_quest_attempt_id'] != null)
@@ -141,6 +144,11 @@ class AppNotification {
       (isGroupMessage ? _value('related_id') ?? _value('entity_id') : null);
   String? get groupName => _value('group_name') ?? _value('groupName');
   String? get dailyQuestId => _value('daily_quest_id');
+  String? get dailyQuestTitle {
+    final quest = data['daily_quest'] ?? data['quest'];
+    final nestedTitle = quest is Map ? quest['title']?.toString() : null;
+    return _value('daily_quest_title') ?? _value('quest_title') ?? nestedTitle;
+  }
   String? get dailyQuestLocalDate => _value('daily_quest_local_date');
   String? get dailyQuestAttemptId => _value('daily_quest_attempt_id');
   String? get evidenceSubmissionId =>

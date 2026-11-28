@@ -298,11 +298,23 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       if (attemptId != null && attemptId.isNotEmpty) {
         final result = await service.getAttemptResult(attemptId);
         if (!mounted) return;
+        var questTitle = result.questTitle ?? notification.dailyQuestTitle;
+        if (questTitle == null) {
+          final today = await service.getToday();
+          if (!mounted) return;
+          final matchesNotification =
+              (notification.dailyQuestId == null ||
+                  notification.dailyQuestId == today.quest?.id) &&
+              (notification.dailyQuestLocalDate == null ||
+                  notification.dailyQuestLocalDate == today.localDate);
+          if (matchesNotification) questTitle = today.quest?.title;
+        }
         ref.invalidate(myStatsProvider);
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => DailyQuestRewardScreen(
               result: result,
+              questTitle: questTitle ?? 'Daily Quest',
               username: context.read<AuthProvider>().username ?? 'you',
               rewardAlreadyApplied: true,
             ),

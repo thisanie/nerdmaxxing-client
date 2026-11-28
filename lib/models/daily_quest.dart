@@ -135,6 +135,7 @@ class DailyQuestAttemptResult {
   final String attemptId;
   final String status;
   final String completionStatus;
+  final String? questTitle;
   final String? completionDate;
   final DateTime? completedAt;
   final int auraAwarded;
@@ -150,6 +151,7 @@ class DailyQuestAttemptResult {
     required this.auraAwarded,
     required this.dayStreak,
     required this.timezone,
+    this.questTitle,
     this.completionDate,
     this.completedAt,
     this.scorePercent,
@@ -159,10 +161,14 @@ class DailyQuestAttemptResult {
   factory DailyQuestAttemptResult.fromJson(Map<String, dynamic> json) {
     final rawScore = json['score_percent'];
     final related = _asMap(json['related_major_challenge']);
+    final quest = _asMap(json['quest']) ?? _asMap(json['daily_quest']);
     return DailyQuestAttemptResult(
       attemptId: _string(json['attempt_id']),
       status: _string(json['status']),
       completionStatus: _string(json['completion_status']),
+      questTitle: _optionalString(
+        json['quest_title'] ?? json['daily_quest_title'] ?? quest?['title'],
+      ),
       completionDate: _optionalString(json['completion_date']),
       completedAt: DateTime.tryParse(_string(json['completed_at'])),
       auraAwarded: _integer(json['aura_awarded']),
