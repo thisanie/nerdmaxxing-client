@@ -1,4 +1,4 @@
-package com.nerdmaxxing.nerdmaxxing_client
+package com.nerdmaxxing.nerdmaxxing
 
 import io.flutter.embedding.android.FlutterActivity
 
