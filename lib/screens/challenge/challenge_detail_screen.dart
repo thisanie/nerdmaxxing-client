@@ -67,10 +67,9 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
 
   Future<void> _load() async {
     try {
+      final challengesService = context.read<ChallengesService>();
       await _refreshDetail();
-      final saved = await context.read<ChallengesService>().getSaveStatus(
-        widget.slug,
-      );
+      final saved = await challengesService.getSaveStatus(widget.slug);
       if (mounted) setState(() => _saved = saved);
     } on ApiException {
       // Initial-load errors are represented by _error when no fallback exists.
@@ -527,10 +526,11 @@ class _InviteFriendsDialogState extends State<_InviteFriendsDialog> {
         throw ApiException(null, 'Your profile is not ready yet.');
       }
       final profileService = context.read<ProfileService>();
+      final groupsService = context.read<GroupsService>();
       final profile = await profileService.getProfile(username);
       final results = await Future.wait([
         profileService.listFollowers(profile.id),
-        context.read<GroupsService>().listMine(),
+        groupsService.listMine(),
       ]);
       final followers = results[0] as List<UserSummary>;
       final groups = results[1] as List<Group>;

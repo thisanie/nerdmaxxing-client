@@ -193,8 +193,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       setState(() => _dailyQuestError = null);
     }
     try {
-      final today = await context.read<DailyQuestsService>().getToday();
       final username = context.read<AuthProvider>().username ?? 'current';
+      final dailyQuests = context.read<DailyQuestsService>();
+      final today = await dailyQuests.getToday();
       final preferences = await SharedPreferences.getInstance();
       final dismissedDate = preferences.getString(
         'daily_quest_hidden_date_$username',
@@ -302,9 +303,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     builder: (_) => const NotificationsScreen(),
                   ),
                 )
-                .then(
-                  (_) => context.read<NotificationBadgeController>().refresh(),
-                );
+                .then((_) => badge.refresh());
           },
         ),
       ),
@@ -763,7 +762,7 @@ class _DailyQuestCard extends StatelessWidget {
     final foreground = Colors.white.withValues(alpha: .92);
     final subtitle = Colors.white.withValues(alpha: .65);
     final expiry = today?.expiresAt;
-    final remaining = expiry == null ? null : expiry.difference(DateTime.now());
+    final remaining = expiry?.difference(DateTime.now());
     final countdown = remaining == null
         ? 'Today'
         : remaining.isNegative

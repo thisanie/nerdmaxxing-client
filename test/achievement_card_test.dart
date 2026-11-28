@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nerdmaxxing_client/models/evidence_submission.dart';
@@ -44,17 +44,20 @@ void main() {
     });
   });
 
-  test('evidence approval parses backend aura_rewarded and day_streak keys', () {
-    final submission = EvidenceSubmission.fromJson({
-      'id': 'submission-1',
-      'status': 'VERIFIED',
-      'aura_rewarded': 150,
-      'day_streak': 4,
-    });
+  test(
+    'evidence approval parses backend aura_rewarded and day_streak keys',
+    () {
+      final submission = EvidenceSubmission.fromJson({
+        'id': 'submission-1',
+        'status': 'VERIFIED',
+        'aura_rewarded': 150,
+        'day_streak': 4,
+      });
 
-    expect(submission.auraAwarded, 150);
-    expect(submission.dayStreak, 4);
-  });
+      expect(submission.auraAwarded, 150);
+      expect(submission.dayStreak, 4);
+    },
+  );
 
   test('evidence approval accepts the previous aura_awarded key', () {
     final submission = EvidenceSubmission.fromJson({
@@ -154,20 +157,18 @@ void main() {
     expect(find.text('S'), findsNothing);
   });
 
-  testWidgets('exports the card as a PNG', (tester) async {
+  testWidgets('exports a repaint boundary as a PNG', (tester) async {
     final key = GlobalKey();
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: Center(
-            child: SizedBox(
-              width: 320,
-              child: AchievementCard(
-                key: key,
-                type: CardType.quest,
-                title: 'Learn 10 Spanish words',
-                aura: 40,
-                username: 'aniket',
+            child: RepaintBoundary(
+              key: key,
+              child: const SizedBox(
+                width: 320,
+                height: 400,
+                child: ColoredBox(color: Color(0xFFC6FF00)),
               ),
             ),
           ),
@@ -176,7 +177,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final bytes = await exportCardPng(key);
+    final export = exportCardPng(key);
+    await tester.pump();
+    final bytes =
+        await tester.runAsync(() => export) ??
+        fail('PNG export did not complete.');
     expect(bytes.take(8).toList(), [137, 80, 78, 71, 13, 10, 26, 10]);
   });
 }

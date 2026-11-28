@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide SnackBar;
+
 import 'app_snack_bar.dart';
 
 import '../models/discussion_comment.dart';
@@ -92,11 +93,12 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
           _loadingMore = false;
         });
+      }
     }
   }
 
@@ -124,8 +126,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
 
   Future<void> _post() async {
     final body = _composer.text.trim();
-    if (!widget.canPost || body.isEmpty || body.length > 2200 || _posting)
+    if (!widget.canPost || body.isEmpty || body.length > 2200 || _posting) {
       return;
+    }
     final parentComment = _replyingTo;
     setState(() => _posting = true);
     try {
@@ -187,23 +190,23 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
       builder: (dialogContext) => Theme(
         data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
         child: AlertDialog(
-        title: const Text('Edit comment'),
-        content: TextFormField(
-          maxLength: 2200,
-          maxLines: 5,
-          initialValue: comment.body,
-          onChanged: (value) => draft = value,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('CANCEL'),
+          title: const Text('Edit comment'),
+          content: TextFormField(
+            maxLength: 2200,
+            maxLines: 5,
+            initialValue: comment.body,
+            onChanged: (value) => draft = value,
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, draft.trim()),
-            child: const Text('SAVE'),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('CANCEL'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, draft.trim()),
+              child: const Text('SAVE'),
+            ),
+          ],
         ),
       ),
     );
@@ -222,25 +225,26 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
       builder: (dialogContext) => Theme(
         data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
         child: AlertDialog(
-        title: const Text('Delete comment?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('CANCEL'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('DELETE'),
-          ),
-        ],
+          title: const Text('Delete comment?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('CANCEL'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('DELETE'),
+            ),
+          ],
         ),
       ),
     );
     if (confirmed != true) return;
     try {
       await widget.service.delete(comment.id);
-      if (mounted)
+      if (mounted) {
         setState(() => _replaceComment(comment.copyWith(deleted: true)));
+      }
     } on ApiException catch (e) {
       if (mounted) _showError(e.message);
     }
@@ -249,8 +253,9 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   Future<void> _resolve(DiscussionComment comment) async {
     try {
       await widget.service.resolve(comment.id);
-      if (mounted)
+      if (mounted) {
         setState(() => _replaceComment(comment.copyWith(resolved: true)));
+      }
     } on ApiException catch (e) {
       if (mounted) _showError(e.message);
     }
@@ -263,23 +268,23 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
       builder: (dialogContext) => Theme(
         data: AppTheme.neutralActionTheme(Theme.of(dialogContext)),
         child: AlertDialog(
-        title: const Text('Edit reply'),
-        content: TextFormField(
-          maxLength: 2200,
-          maxLines: 5,
-          initialValue: reply.body,
-          onChanged: (value) => draft = value,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('CANCEL'),
+          title: const Text('Edit reply'),
+          content: TextFormField(
+            maxLength: 2200,
+            maxLines: 5,
+            initialValue: reply.body,
+            onChanged: (value) => draft = value,
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, draft.trim()),
-            child: const Text('SAVE'),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('CANCEL'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, draft.trim()),
+              child: const Text('SAVE'),
+            ),
+          ],
         ),
       ),
     );
@@ -302,10 +307,11 @@ class _ChallengeDiscussionState extends State<ChallengeDiscussion> {
   ) async {
     try {
       await widget.service.deleteReply(discussionId, reply.id);
-      if (mounted)
+      if (mounted) {
         setState(
           () => _replaceReply(discussionId, reply.copyWith(deleted: true)),
         );
+      }
     } on ApiException catch (e) {
       if (mounted) _showError(e.message);
     }

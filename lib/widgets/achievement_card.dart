@@ -56,7 +56,10 @@ CardTheme resolveTheme({String? rank, Color? fill}) {
     );
   }
 
-  final luma = 0.299 * fill.red + 0.587 * fill.green + 0.114 * fill.blue;
+  final red = (fill.r * 255).round().clamp(0, 255);
+  final green = (fill.g * 255).round().clamp(0, 255);
+  final blue = (fill.b * 255).round().clamp(0, 255);
+  final luma = 0.299 * red + 0.587 * green + 0.114 * blue;
   if (luma > 150) {
     return CardTheme(
       background: fill,
@@ -71,7 +74,7 @@ CardTheme resolveTheme({String? rank, Color? fill}) {
     background: fill,
     text: const Color(0xFFF5F5F0),
     muted: const Color(0xFFA9AEC0),
-    accent: fill.value == base.value
+    accent: fill.toARGB32() == base.toARGB32()
         ? const Color(0xFFF5F5F0)
         : base,
     title: isRankE ? const Color(0xFFFFE08A) : const Color(0xFFF5F5F0),
@@ -85,7 +88,7 @@ Future<Uint8List> exportCardPng(GlobalKey key) async {
   await WidgetsBinding.instance.endOfFrame;
   final renderObject = key.currentContext?.findRenderObject();
   if (renderObject is! RenderRepaintBoundary) {
-    throw StateError('The key must be attached to an AchievementCard.');
+    throw StateError('The key must be attached to a RepaintBoundary.');
   }
 
   final image = await renderObject.toImage(pixelRatio: 2);

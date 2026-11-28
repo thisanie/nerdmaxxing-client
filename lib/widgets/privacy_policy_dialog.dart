@@ -68,7 +68,7 @@ Future<bool?> showPrivacyPolicyDialog(
                       ),
                       const Icon(
                         Icons.verified_user_outlined,
-                        color: const Color(0xFF37382F),
+                        color: Color(0xFF37382F),
                         size: 23,
                       ),
                     ],

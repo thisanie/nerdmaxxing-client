@@ -18,7 +18,7 @@ class LeaderboardService {
       query: {
         'period': period,
         'metric': metric,
-        if (playerRank != null) 'player_rank': playerRank,
+        'player_rank': ?playerRank,
         'limit': limit,
         'offset': offset,
       },

@@ -224,45 +224,6 @@ class _SubmitEvidenceScreenState extends ConsumerState<SubmitEvidenceScreen> {
     ];
   }
 
-  Widget _stepper(int current) {
-    Widget step(int index, String label) {
-      final done = index < current;
-      final active = index == current;
-      final scheme = Theme.of(context).colorScheme;
-    final color = done || active ? scheme.primary : scheme.outlineVariant;
-      return Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 4,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: AppFonts.body(
-                color: active ? scheme.onSurface : scheme.onSurfaceVariant,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        step(0, '1. Submit evidence'),
-        const SizedBox(width: 8),
-        step(1, '2. Confirm'),
-      ],
-    );
-  }
-
   Widget _requirementChips() {
     final items = _requirements;
     if (items.isEmpty) return const SizedBox.shrink();

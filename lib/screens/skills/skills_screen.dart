@@ -186,7 +186,7 @@ class _RankSummary extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.poster(
-                        fontSize: auraText.length >= 4 ? 48 : 56,
+                        fontSize: auraText.length >= 4 ? 44 : 56,
                         color: HomePalette.ink,
                         wdth: 100,
                       ),
@@ -966,7 +966,8 @@ class _LeaderboardTabState extends ConsumerState<_LeaderboardTab> {
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
-              await ref.refresh(leaderboardProvider(filters).future);
+              ref.invalidate(leaderboardProvider(filters));
+              await ref.read(leaderboardProvider(filters).future);
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -1692,7 +1693,6 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
     final (background, foreground) = switch (tone) {
       _StatTone.streak => (

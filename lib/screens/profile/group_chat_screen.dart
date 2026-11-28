@@ -29,10 +29,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   List<GroupMessage> _messages = [];
   bool _loading = true;
   bool _sending = false;
-  String? _errorValue;
-  String? get _error => _errorValue;
   set _error(String? value) {
-    _errorValue = value;
     if (value == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) AppErrorSnackbar.show(context, value, message: value);
@@ -49,13 +46,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> _loadCurrentUserId() async {
+    final profileService = context.read<ProfileService>();
     final storedId = await TokenStorage().userId;
     if (mounted && storedId != null && storedId.isNotEmpty) {
       setState(() => _currentUserId = storedId);
     }
     // The stored id can be empty after a token refresh or older sign-in.
     try {
-      final profile = await context.read<ProfileService>().getMyProfile();
+      final profile = await profileService.getMyProfile();
       if (mounted) setState(() => _currentUserId = profile.id);
     } catch (_) {}
   }
@@ -347,17 +345,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         ),
       ),
     );
-  }
-
-  String _formatTime(DateTime date) {
-    final local = date.toLocal();
-    final hour = local.hour == 0
-        ? 12
-        : local.hour > 12
-        ? local.hour - 12
-        : local.hour;
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$hour:$minute ${local.hour >= 12 ? 'PM' : 'AM'}';
   }
 
   String _formatDate(DateTime date) {

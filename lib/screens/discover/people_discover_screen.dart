@@ -308,7 +308,6 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final brightness = Theme.of(context).brightness;
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,

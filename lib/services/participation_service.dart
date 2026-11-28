@@ -61,7 +61,7 @@ class ParticipationService {
     final data = await api.post(
       '/participation/$participantId/milestones/$milestoneId/resources/$resourceId/complete',
       data: {
-        if (resourceMinutes != null) 'resource_minutes': resourceMinutes,
+        'resource_minutes': ?resourceMinutes,
         'note': note,
       },
     );

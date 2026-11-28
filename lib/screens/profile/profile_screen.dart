@@ -8,7 +8,6 @@ import '../../models/daily_quest.dart';
 import '../../models/group.dart';
 import '../../models/participation.dart';
 import '../../models/user_profile.dart';
-import '../../models/user_stats.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/app_state_providers.dart';
 import '../../providers/profile_provider.dart';
@@ -861,9 +860,8 @@ class _ProfileTabs extends StatelessWidget {
 
 class _SectionLabel extends StatelessWidget {
   final String text;
-  final String? count;
 
-  const _SectionLabel(this.text, {this.count});
+  const _SectionLabel(this.text);
 
   @override
   Widget build(BuildContext context) {
@@ -881,14 +879,6 @@ class _SectionLabel extends StatelessWidget {
               letterSpacingEm: 0.14,
             ),
           ),
-          if (count != null)
-            Text(
-              count!,
-              style: AppFonts.home(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 12,
-              ),
-            ),
         ],
       ),
     );
@@ -913,7 +903,6 @@ class _ProfileActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final brightness = Theme.of(context).brightness;
     const shape = StadiumBorder();
     final spinner = SizedBox(
       width: 16,
@@ -2118,7 +2107,6 @@ class _RowCard extends StatelessWidget {
   final VoidCallback? onTap;
   final IconData leadingIcon;
   final Color leadingColor;
-  final Color? leadingIconColor;
   final String title;
   final String subtitle;
   final Widget? trailing;
@@ -2128,7 +2116,6 @@ class _RowCard extends StatelessWidget {
     required this.onTap,
     required this.leadingIcon,
     required this.leadingColor,
-    this.leadingIconColor,
     required this.title,
     required this.subtitle,
     this.trailing,
@@ -2171,13 +2158,13 @@ class _RowCard extends StatelessWidget {
                           errorBuilder: (context, error, stackTrace) => Icon(
                             leadingIcon,
                             size: 26,
-                            color: leadingIconColor ?? scheme.onSurface,
+                            color: scheme.onSurface,
                           ),
                         )
                       : Icon(
                           leadingIcon,
                           size: 26,
-                          color: leadingIconColor ?? scheme.onSurface,
+                          color: scheme.onSurface,
                         ),
                 ),
                 const SizedBox(width: 14),
@@ -2214,124 +2201,4 @@ class _RowCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ChallengeTile extends StatelessWidget {
-  final Challenge challenge;
-  const _ChallengeTile({required this.challenge});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: scheme.outlineVariant),
-      ),
-      child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => ChallengeDetailScreen(slug: challenge.slug),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (challenge.imageUrl != null)
-                    Image.network(
-                      challenge.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _fallback(context),
-                    )
-                  else
-                    _fallback(context),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      width: 23,
-                      height: 23,
-                      decoration: BoxDecoration(
-                        color: scheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.check_rounded,
-                        color: scheme.onPrimary,
-                        size: 15,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 7, 8, 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          challenge.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppFonts.home(
-                            color: scheme.onSurface,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            height: 1.15,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.bolt_rounded,
-                          size: 13,
-                          color: scheme.primary,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${challenge.auraPoints} aura',
-                          style: AppFonts.home(
-                            color: scheme.onSurfaceVariant,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _fallback(BuildContext context) => Container(
-    color: Theme.of(context).brightness == Brightness.dark
-        ? AppColors.primaryMuted
-        : AppColors.limeWash,
-    alignment: Alignment.center,
-    child: const Icon(
-      Icons.flag_rounded,
-      color: AppColors.primaryLight,
-      size: 28,
-    ),
-  );
 }

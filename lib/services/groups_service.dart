@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 import '../models/group.dart';
 import '../models/group_member.dart';
 import '../models/group_message.dart';
@@ -31,26 +29,7 @@ class GroupsService {
   Future<List<GroupMember>> listMembers(String groupId) async {
     final encodedId = _groupPathId(groupId);
     final path = '/groups/$encodedId/members';
-    final accessToken = await api.tokenStorage.accessToken;
-    debugPrint(
-      '[Groups] members auth: bearerPresent=${accessToken != null} '
-      'tokenLength=${accessToken?.length ?? 0}',
-    );
-    debugPrint(
-      '[Groups] members request: GET ${ApiClient.baseUrl}$path '
-      'payload={group_id: $groupId}',
-    );
-    dynamic data;
-    try {
-      data = await api.get(path);
-    } on ApiException catch (error) {
-      debugPrint(
-        '[Groups] members response: status=${error.statusCode} '
-        'message=${error.message}',
-      );
-      rethrow;
-    }
-    debugPrint('[Groups] members response payload: $data');
+    final data = await api.get(path);
     final rawItems = _findList(data);
     if (rawItems == null) return const [];
     return rawItems

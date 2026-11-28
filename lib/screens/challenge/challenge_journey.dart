@@ -36,7 +36,7 @@ class _Tone {
             ink: HomePalette.lightTextPrimary,
             muted: HomePalette.lightTextSecondary,
             border: HomePalette.lightBorder,
-            strong: const Color(0xFFCFCFC4),
+            strong: Color(0xFFCFCFC4),
             hero: HomePalette.mint,
             accent: HomePalette.primary,
           )

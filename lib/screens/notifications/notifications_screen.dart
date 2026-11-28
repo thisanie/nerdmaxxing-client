@@ -4,9 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 
 import '../../models/challenge.dart';
-import '../../models/daily_quest.dart';
 import '../../models/notification.dart';
-import '../../models/group.dart';
 import '../../providers/app_state_providers.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_badge_provider.dart';
@@ -67,9 +65,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _markRead(AppNotification notification) async {
     if (notification.isRead) return;
+    final notifications = context.read<NotificationsService>();
+    final badge = context.read<NotificationBadgeController>();
     try {
-      await context.read<NotificationsService>().markRead(notification.id);
-      context.read<NotificationBadgeController>().markRead();
+      await notifications.markRead(notification.id);
+      badge.markRead();
       if (!mounted) return;
       setState(() {
         _notifications = _notifications
@@ -89,13 +89,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final invitationId = notification.invitationId;
     if (invitationId == null) return;
     final notifications = context.read<NotificationsService>();
+    final badge = context.read<NotificationBadgeController>();
     final participations = ref.read(participationControllerProvider.notifier);
     setState(() => _workingId = notification.id);
     try {
       final participation = await notifications.acceptInvitation(invitationId);
       participations.add(participation);
       await notifications.markRead(notification.id);
-      context.read<NotificationBadgeController>().markRead();
+      badge.markRead();
       if (!mounted) return;
       setState(() {
         _notifications = _notifications
@@ -119,11 +120,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final invitationId = notification.invitationId;
     if (invitationId == null) return;
     final notifications = context.read<NotificationsService>();
+    final badge = context.read<NotificationBadgeController>();
     setState(() => _workingId = notification.id);
     try {
       await notifications.declineInvitation(invitationId);
       await notifications.markRead(notification.id);
-      context.read<NotificationBadgeController>().markRead();
+      badge.markRead();
       if (!mounted) return;
       setState(() {
         _notifications = _notifications
@@ -343,7 +345,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Future<void> _viewGroup(AppNotification notification) async {
+    final groups = context.read<GroupsService>();
     await _markRead(notification);
+    if (!mounted) return;
     final groupId = notification.groupId;
     if (groupId == null || groupId.isEmpty) {
       if (mounted) {
@@ -354,7 +358,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       return;
     }
     try {
-      final group = await context.read<GroupsService>().get(groupId);
+      final group = await groups.get(groupId);
       if (!mounted) return;
       Navigator.of(
         context,
