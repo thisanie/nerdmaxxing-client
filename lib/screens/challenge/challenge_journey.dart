@@ -373,7 +373,7 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
     final unit = primary?.unit ?? '';
     final metricLabel = primary?.label ?? challenge.title;
     final target = _formatValue(primary?.target);
-    final current = _formatValue(_progressMetricValue);
+    final current = _formatValue(_bestProgressMetricValue);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(26, 16, 26, 0),
@@ -1699,6 +1699,13 @@ class _ChallengeJourneyState extends State<ChallengeJourney> {
   double? get _progressMetricValue {
     final value = widget.detail.progress.currentValue;
     return value is num ? value.toDouble() : double.tryParse('$value');
+  }
+
+  double? get _bestProgressMetricValue {
+    final value = widget.detail.progress.bestValue;
+    return value is num
+        ? value.toDouble()
+        : double.tryParse('$value') ?? _progressMetricValue;
   }
 
   double? get _progressBaselineValue {

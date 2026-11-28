@@ -47,6 +47,13 @@ void main() {
           'label': 'Complete 10 km',
         },
       ],
+      'progress': {
+        'current_value': 6.4,
+        'best_value': 8.2,
+        'target_value': 10,
+        'baseline_value': 0,
+        'unit': 'km',
+      },
       'attempts': [
         {
           'id': 'attempt-1',
@@ -73,6 +80,7 @@ void main() {
     expect(detail.primaryMetric?.target, 10);
     expect(detail.primaryMetric?.current, 6.4);
     expect(detail.primaryMetric?.unit, 'km');
+    expect(detail.progress.bestValue, 8.2);
     expect(detail.effectiveRequirements.single.label, 'Complete 10 km');
     expect(detail.attempts.single.metrics['distance'], 6.4);
   });

@@ -2,6 +2,7 @@ import 'challenge.dart';
 
 class ChallengeProgressSnapshot {
   final Object? currentValue;
+  final Object? bestValue;
   final Object? targetValue;
   final Object? baselineValue;
   final String unit;
@@ -15,6 +16,7 @@ class ChallengeProgressSnapshot {
 
   const ChallengeProgressSnapshot({
     this.currentValue,
+    this.bestValue,
     this.targetValue,
     this.baselineValue,
     required this.unit,
@@ -30,6 +32,7 @@ class ChallengeProgressSnapshot {
   factory ChallengeProgressSnapshot.fromJson(Map<String, dynamic> json) {
     return ChallengeProgressSnapshot(
       currentValue: json['current_value'],
+      bestValue: json['best_value'],
       targetValue: json['target_value'],
       baselineValue: json['baseline_value'],
       unit: json['unit']?.toString() ?? '',
